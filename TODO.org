@@ -1,0 +1,2 @@
+* TODO Make skeleton test suite
+* TODO Finish Pretty instance for Exp
