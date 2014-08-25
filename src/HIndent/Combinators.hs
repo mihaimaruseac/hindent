@@ -79,15 +79,20 @@ lined ps =
     (intersperse newline
                  ps)
 
--- | Print all the printers separated by spaces.
-prefixedLined :: Printer () -> [Printer ()] -> Printer ()
-prefixedLined pref ps =
-  sequence_
-    (intersperse
-       newline
-       (take 1 ps ++
-        map (depend pref)
-            (drop 1 ps)) )
+-- | Print all the printers separated newlines and optionally a line
+-- prefix.
+prefixedLined :: Char -> [Printer ()] -> Printer ()
+prefixedLined pref ps' =
+  case ps' of
+    [] -> return ()
+    (p:ps) ->
+      do p
+         indented (-1)
+                  (mapM_ (\p' ->
+                            do newline
+                               depend (string [pref])
+                                      p')
+                         ps)
 
 -- | Set the (newline-) indent level to the given column for the given
 -- printer.
