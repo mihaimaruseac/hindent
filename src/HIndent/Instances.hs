@@ -39,7 +39,8 @@ instance Pretty Pat where
                        (pretty b))
       PApp f args ->
         depend (do pretty f
-                   space)
+                   unless (null args)
+                          space)
                (spaced (map pretty args))
       PTuple boxed pats ->
         depend (write (case boxed of
@@ -185,10 +186,12 @@ exp (If p t e) =
                        (pretty e))
 exp (Paren e) =
   parens (pretty e)
-exp (MultiIf _) =
-  error "FIXME: No implementation for MultiIf."
-exp (Case _ _) =
-  error "FIXME: No implementation for Case."
+exp (Case e alts) =
+  do depend (write "case ")
+            (do pretty e
+                write " of ")
+     newline
+     indented indentSpaces (lined (map pretty alts))
 exp (Do stmts) =
   depend (write "do ")
          (lined (map pretty stmts))
@@ -303,6 +306,7 @@ exp (LeftArrHighApp _ _) = error "FIXME: No implementation for LeftArrHighApp."
 exp (RightArrHighApp _ _) = error "FIXME: No implementation for RightArrHighApp."
 exp (LCase _) = error "FIXME: No implementation for LCase."
 exp ParComp{} = error "FIXME: No implementation for ParComp."
+exp (MultiIf _) = error "FIXME: No implementation for MultiIf."
 
 instance Pretty Stmt where
   pretty x =
@@ -338,14 +342,13 @@ decl (PatBind _ pat mty rhs binds) =
     Just{} -> error "Unimlpemented (Maybe Type) in PatBind."
     Nothing ->
       do pretty pat
-         write " = "
-         newline
-         indented indentSpaces
-                  (do pretty rhs
-                      unless (nullBinds binds)
-                             (do newline
-                                 depend (write "where ")
-                                        (pretty binds)))
+         pretty rhs
+         unless (nullBinds binds)
+                (do newline
+                    indented indentSpaces
+                             (depend (write "where ")
+                                     (pretty binds)))
+
 decl (TypeDecl _ _ _ _) =
   error "FIXME: No implementation for TypeDecl."
 decl (TypeFamDecl _ _ _ _) =
@@ -407,7 +410,14 @@ decl (AnnPragma _ _) =
 instance Pretty Alt where
   pretty x =
     case x of
-      Alt _ _ _ _ -> error "FIXME: No implementation for Alt."
+      Alt _ p galts binds ->
+        do pretty p
+           pretty galts
+           unless (nullBinds binds)
+                  (do newline
+                      indented indentSpaces
+                               (depend (write "where ")
+                                       (pretty binds)))
 
 instance Pretty Asst where
   pretty x =
@@ -468,21 +478,44 @@ instance Pretty GadtDecl where
     case x of
       GadtDecl _ _ _ -> error "FIXME: No implementation for GadtDecl."
 
-instance Pretty GuardedAlt where
-  pretty x =
-    case x of
-      GuardedAlt _ _ _ -> error "FIXME: No implementation for GuardedAlt."
-
 instance Pretty GuardedAlts where
   pretty x =
     case x of
-      UnGuardedAlt _ -> error "FIXME: No implementation for UnGuardedAlt."
-      GuardedAlts _ -> error "FIXME: No implementation for GuardedAlts."
+      UnGuardedAlt e ->
+        depend (write " -> ")
+               (pretty e)
+      GuardedAlts gas ->
+        do newline
+           indented
+             2
+             (lined (map (\p -> do write "|"
+                                   pretty p) gas))
+
+instance Pretty GuardedAlt where
+  pretty x =
+    case x of
+      GuardedAlt _ stmts e ->
+        indented
+          1
+          (do (prefixedLined ','
+                             (map (\p -> do space
+                                            pretty p) stmts))
+              write " -> "
+              newline
+              indented 1 (pretty e))
 
 instance Pretty GuardedRhs where
   pretty x =
     case x of
-      GuardedRhs _ _ _ -> error "FIXME: No implementation for GuardedRhs."
+      GuardedRhs _ stmts e ->
+        indented
+          1
+          (do (prefixedLined ','
+                             (map (\p -> do space
+                                            pretty p) stmts))
+              write " = "
+              newline
+              indented 1 (pretty e))
 
 instance Pretty IPBind where
   pretty x =
@@ -507,15 +540,12 @@ instance Pretty Match where
           Nothing ->
             do depend (do pretty name
                           space)
-                      (do spaced (map pretty pats)
-                          write " = ")
-               newline
-               indented indentSpaces
-                        (do pretty rhs
-                            unless (nullBinds binds)
-                                   (do newline
-                                       depend (write "where ")
-                                              (pretty binds)))
+                      (spaced (map pretty pats))
+               pretty rhs
+               unless (nullBinds binds)
+                      (do newline
+                          depend (write "where ")
+                                 (pretty binds))
 
 nullBinds :: Binds -> Bool
 nullBinds (BDecls x) = null x
@@ -546,8 +576,17 @@ instance Pretty QualConDecl where
 instance Pretty Rhs where
   pretty x =
     case x of
-      UnGuardedRhs e -> pretty e
-      GuardedRhss _ -> error "FIXME: No implementation for GuardedRhss."
+      UnGuardedRhs e ->
+        indented indentSpaces
+                 (do write " = "
+                     newline
+                     pretty e)
+      GuardedRhss gas ->
+        do newline
+           indented
+             2
+             (lined (map (\p -> do write "|"
+                                   pretty p) gas))
 
 instance Pretty Rule where
   pretty x =
