@@ -13,83 +13,70 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy.Builder as T
 import           Language.Haskell.Exts.Syntax
 
-instance Pretty Alt where
+instance Pretty Stmt where
   pretty x =
     case x of
-      Alt _ _ _ _ ->
-        undefined
+      Generator _ _ _ -> undefined
+      Qualifier _ -> undefined
+      LetStmt _ -> undefined
+      RecStmt _ -> undefined
 
-instance Pretty Asst where
+instance Pretty QualStmt where
   pretty x =
     case x of
-      ClassA _ _ -> undefined
-      InfixA _ _ _ -> undefined
-      IParam _ _ -> undefined
-      EqualP _ _ -> undefined
+      QualStmt _ -> undefined
+      ThenTrans _ -> undefined
+      ThenBy _ _ -> undefined
+      GroupBy _ -> undefined
+      GroupUsing _ -> undefined
+      GroupByUsing _ _ -> undefined
 
-instance Pretty BangType where
+instance Pretty Pat where
   pretty x =
     case x of
-      BangedTy _ -> undefined
-      UnBangedTy _ -> undefined
-      UnpackedTy _ -> undefined
+      PLit l ->
+        pretty l
+      PNeg l ->
+        depend (write "-")
+               (pretty l)
+      PNPlusK n k -> depend (do pretty n
+                                write "-")
+                            (int k)
+      PInfixApp _ _ _ -> undefined
+      PApp _ _ -> undefined
+      PTuple _ _ -> undefined
+      PList _ -> undefined
+      PParen _ -> undefined
+      PRec _ _ -> undefined
+      PAsPat _ _ -> undefined
+      PWildCard -> undefined
+      PIrrPat _ -> undefined
+      PatTypeSig _ _ _ -> undefined
+      PViewPat _ _ -> undefined
+      PQuasiQuote _ _ -> undefined
+      PBangPat _ -> undefined
+      PRPat{} -> pretty' x
+      PXTag{} -> pretty' x
+      PXETag{} -> pretty' x
+      PXPcdata{} -> pretty' x
+      PXPatTag{} -> pretty' x
+      PXRPats{} -> pretty' x
+      PVar{} -> pretty' x
 
-instance Pretty Binds where
+instance Pretty Type where
   pretty x =
     case x of
-      BDecls _ -> undefined
-      IPBinds _ -> undefined
-
-instance Pretty Bracket where
-  pretty x =
-    case x of
-      ExpBracket _ -> undefined
-      PatBracket _ -> undefined
-      TypeBracket _ -> undefined
-      DeclBracket _ -> undefined
-
-instance Pretty ClassDecl where
-  pretty _ =
-    undefined
-
-instance Pretty ConDecl where
-  pretty x =
-    case x of
-      ConDecl _ _ -> undefined
-      InfixConDecl _ _ _ -> undefined
-      RecDecl _ _ -> undefined
-
-instance Pretty Decl where
-  pretty x =
-    case x of
-      TypeDecl _ _ _ _ -> undefined
-      TypeFamDecl _ _ _ _ -> undefined
-      DataDecl _ _ _ _ _ _ _ -> undefined
-      GDataDecl _ _ _ _ _ _ _ _ -> undefined
-      DataFamDecl _ _ _ _ _ -> undefined
-      TypeInsDecl _ _ _ -> undefined
-      DataInsDecl _ _ _ _ _ -> undefined
-      GDataInsDecl _ _ _ _ _ _ -> undefined
-      ClassDecl _ _ _ _ _ _ -> undefined
-      InstDecl _ _ _ _ _ -> undefined
-      DerivDecl _ _ _ _ -> undefined
-      InfixDecl _ _ _ _ -> undefined
-      DefaultDecl _ _ -> undefined
-      SpliceDecl _ _ -> undefined
-      TypeSig _ _ _ -> undefined
-      FunBind _ -> undefined
-      PatBind _ _ _ _ _ -> undefined
-      ForImp _ _ _ _ _ _ -> undefined
-      ForExp _ _ _ _ _ -> undefined
-      RulePragmaDecl _ _ -> undefined
-      DeprPragmaDecl _ _ -> undefined
-      WarnPragmaDecl _ _ -> undefined
-      InlineSig _ _ _ _ -> undefined
-      InlineConlikeSig _ _ _ -> undefined
-      SpecSig _ _ _ _ -> undefined
-      SpecInlineSig _ _ _ _ _ -> undefined
-      InstSig _ _ _ _ -> undefined
-      AnnPragma _ _ -> undefined
+      TyForall _ _ _ -> undefined
+      TyFun _ _ -> undefined
+      TyTuple _ _ -> undefined
+      TyList _ -> undefined
+      TyApp _ _ -> undefined
+      TyVar _ -> undefined
+      TyCon _ -> undefined
+      TyParen _ -> undefined
+      TyInfix _ _ _ -> undefined
+      TyKind _ _ -> undefined
+      TyPromoted _ -> undefined
 
 instance Pretty Exp where
   pretty x =
@@ -182,10 +169,87 @@ instance Pretty Exp where
       IPVar{} -> pretty' x
       Con{} -> pretty' x
       Lit{} -> pretty' x
+    where flatten :: Exp -> [Exp] -> (Exp,[Exp])
+          flatten (App f a) b = flatten f (a : b)
+          flatten f as = (f,as)
 
-flatten :: Exp -> [Exp] -> (Exp,[Exp])
-flatten (App f a) b = flatten f (a : b)
-flatten f as = (f,as)
+instance Pretty Decl where
+  pretty x =
+    case x of
+      TypeDecl _ _ _ _ -> undefined
+      TypeFamDecl _ _ _ _ -> undefined
+      DataDecl _ _ _ _ _ _ _ -> undefined
+      GDataDecl _ _ _ _ _ _ _ _ -> undefined
+      DataFamDecl _ _ _ _ _ -> undefined
+      TypeInsDecl _ _ _ -> undefined
+      DataInsDecl _ _ _ _ _ -> undefined
+      GDataInsDecl _ _ _ _ _ _ -> undefined
+      ClassDecl _ _ _ _ _ _ -> undefined
+      InstDecl _ _ _ _ _ -> undefined
+      DerivDecl _ _ _ _ -> undefined
+      InfixDecl _ _ _ _ -> undefined
+      DefaultDecl _ _ -> undefined
+      SpliceDecl _ _ -> undefined
+      TypeSig _ _ _ -> undefined
+      FunBind _ -> undefined
+      PatBind _ _ _ _ _ -> undefined
+      ForImp _ _ _ _ _ _ -> undefined
+      ForExp _ _ _ _ _ -> undefined
+      RulePragmaDecl _ _ -> undefined
+      DeprPragmaDecl _ _ -> undefined
+      WarnPragmaDecl _ _ -> undefined
+      InlineSig _ _ _ _ -> undefined
+      InlineConlikeSig _ _ _ -> undefined
+      SpecSig _ _ _ _ -> undefined
+      SpecInlineSig _ _ _ _ _ -> undefined
+      InstSig _ _ _ _ -> undefined
+      AnnPragma _ _ -> undefined
+
+instance Pretty Alt where
+  pretty x =
+    case x of
+      Alt _ _ _ _ ->
+        undefined
+
+instance Pretty Asst where
+  pretty x =
+    case x of
+      ClassA _ _ -> undefined
+      InfixA _ _ _ -> undefined
+      IParam _ _ -> undefined
+      EqualP _ _ -> undefined
+
+instance Pretty BangType where
+  pretty x =
+    case x of
+      BangedTy _ -> undefined
+      UnBangedTy _ -> undefined
+      UnpackedTy _ -> undefined
+
+instance Pretty Binds where
+  pretty x =
+    case x of
+      BDecls _ -> undefined
+      IPBinds _ -> undefined
+
+instance Pretty Bracket where
+  pretty x =
+    case x of
+      ExpBracket _ -> undefined
+      PatBracket _ -> undefined
+      TypeBracket _ -> undefined
+      DeclBracket _ -> undefined
+
+instance Pretty ClassDecl where
+  pretty _ =
+    undefined
+
+instance Pretty ConDecl where
+  pretty x =
+    case x of
+      ConDecl _ _ -> undefined
+      InfixConDecl _ _ _ -> undefined
+      RecDecl _ _ -> undefined
 
 instance Pretty FieldUpdate where
   pretty x =
@@ -239,38 +303,6 @@ instance Pretty Module where
     case x of
       Module _ _ _ _ _ _ _ -> undefined
 
-instance Pretty Pat where
-  pretty x =
-    case x of
-      PLit l ->
-        pretty l
-      PNeg l ->
-        depend (write "-")
-               (pretty l)
-      PNPlusK n k -> depend (do pretty n
-                                write "-")
-                            (int k)
-      PInfixApp _ _ _ -> undefined
-      PApp _ _ -> undefined
-      PTuple _ _ -> undefined
-      PList _ -> undefined
-      PParen _ -> undefined
-      PRec _ _ -> undefined
-      PAsPat _ _ -> undefined
-      PWildCard -> undefined
-      PIrrPat _ -> undefined
-      PatTypeSig _ _ _ -> undefined
-      PViewPat _ _ -> undefined
-      PQuasiQuote _ _ -> undefined
-      PBangPat _ -> undefined
-      PRPat{} -> pretty' x
-      PXTag{} -> pretty' x
-      PXETag{} -> pretty' x
-      PXPcdata{} -> pretty' x
-      PXPatTag{} -> pretty' x
-      PXRPats{} -> pretty' x
-      PVar{} -> pretty' x
-
 instance Pretty PatField where
   pretty x =
     case x of
@@ -282,16 +314,6 @@ instance Pretty QualConDecl where
   pretty x =
     case x of
       QualConDecl _ _ _ _ -> undefined
-
-instance Pretty QualStmt where
-  pretty x =
-    case x of
-      QualStmt _ -> undefined
-      ThenTrans _ -> undefined
-      ThenBy _ _ -> undefined
-      GroupBy _ -> undefined
-      GroupUsing _ -> undefined
-      GroupByUsing _ _ -> undefined
 
 instance Pretty Rhs where
   pretty x =
@@ -315,29 +337,6 @@ instance Pretty Splice where
     case undefined of
       IdSplice _ -> undefined
       ParenSplice _ -> undefined
-
-instance Pretty Stmt where
-  pretty x =
-    case x of
-      Generator _ _ _ -> undefined
-      Qualifier _ -> undefined
-      LetStmt _ -> undefined
-      RecStmt _ -> undefined
-
-instance Pretty Type where
-  pretty x =
-    case x of
-      TyForall _ _ _ -> undefined
-      TyFun _ _ -> undefined
-      TyTuple _ _ -> undefined
-      TyList _ -> undefined
-      TyApp _ _ -> undefined
-      TyVar _ -> undefined
-      TyCon _ -> undefined
-      TyParen _ -> undefined
-      TyInfix _ _ _ -> undefined
-      TyKind _ _ -> undefined
-      TyPromoted _ -> undefined
 
 instance Pretty WarningText where
   pretty x =
