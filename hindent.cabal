@@ -24,7 +24,9 @@ library
                    , text
 
 executable hindent
-  hs-source-dirs:    src/
+  hs-source-dirs:    src/main
   ghc-options:       -Wall -O2
   main-is:           Main.hs
   build-depends:     base >= 4 && < 5
+                   , hindent
+                   , text

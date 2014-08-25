@@ -5,22 +5,15 @@
 
 module HIndent.Instances where
 
-import           Data.Int
-import           Language.Haskell.Exts.Extension
-import           Prelude hiding (exp)
-
 import           HIndent.Types
 import           HIndent.Combinators
 
+import           Control.Monad.State
+import           Data.Int
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Builder as T
 import           Language.Haskell.Exts.Syntax
-
-import           Control.Monad.State
-import           Data.Monoid
-import           Data.Text.Lazy.Builder (Builder)
-import qualified Data.Text.Lazy.IO as TIO
-import           Language.Haskell.Exts.Parser
+import           Prelude hiding (exp)
 
 -- | Indent spaces: 2.
 indentSpaces :: Int64
@@ -524,6 +517,7 @@ instance Pretty Match where
                                        depend (write "where ")
                                               (pretty binds)))
 
+nullBinds :: Binds -> Bool
 nullBinds (BDecls x) = null x
 nullBinds (IPBinds x) = null x
 
@@ -668,37 +662,3 @@ instance Pretty XAttr where
 
 instance Pretty XName where
   pretty = pretty'
-
--- | Format the string and print it to stdout. Throws exception on
--- invalid syntax.
-indent :: String -> IO ()
-indent x =
-  case reformat x of
-    Right b -> TIO.putStrLn (T.toLazyText b)
-    Left e -> error e
-
--- | Format the given source.
-reformat :: String -> Either String Builder
-reformat x =
-  case parseDeclWithMode parseMode x of
-    ParseOk v ->
-      Right (prettyPrint v)
-    ParseFailed _ e ->
-      Left e
-
--- | Pretty print the given printable thing.
-prettyPrint :: Pretty a => a -> Builder
-prettyPrint v =
-  psOutput
-    (execState (runPrinter (pretty v))
-               (PrintState 0 mempty False 0))
-
--- | Parse mode, includes all extensions, doesn't assume any fixities.
-parseMode :: ParseMode
-parseMode =
-  defaultParseMode { extensions = allExtensions
-                   , fixities   = Nothing
-                   }
- where allExtensions = filter isDisabledExtention knownExtensions
-       isDisabledExtention (DisableExtension _) = False
-       isDisabledExtention _                    = True
