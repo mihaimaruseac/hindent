@@ -20,10 +20,13 @@ module HIndent.Combinators
   , depend
   , spaced
   , lined
+  , prefixedLined
   , commas
+  , braces
   , inter
-  -- * Fallback printer
+  -- * Fallback
   , pretty'
+  , string
   )
   where
 
@@ -76,6 +79,16 @@ lined ps =
     (intersperse newline
                  ps)
 
+-- | Print all the printers separated by spaces.
+prefixedLined :: Printer () -> [Printer ()] -> Printer ()
+prefixedLined pref ps =
+  sequence_
+    (intersperse
+       newline
+       (take 1 ps ++
+        map (depend pref)
+            (drop 1 ps)) )
+
 -- | Set the (newline-) indent level to the given column for the given
 -- printer.
 column :: Int64 -> Printer a -> Printer a
@@ -106,6 +119,14 @@ parens p =
   depend (write "(")
          (do v <- p
              write ")"
+             return v)
+
+-- | Wrap in braces.
+braces :: Printer a -> Printer a
+braces p =
+  depend (write "{")
+         (do v <- p
+             write "}"
              return v)
 
 -- | Wrap in brackets.
@@ -155,3 +176,7 @@ write x = do
 -- HSE's.
 pretty' :: P.Pretty a => a -> Printer ()
 pretty' = write . T.fromText . T.pack . P.prettyPrint
+
+-- | Write a string.
+string :: String -> Printer ()
+string = write . T.fromText . T.pack

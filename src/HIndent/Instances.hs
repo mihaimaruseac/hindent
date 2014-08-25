@@ -60,23 +60,44 @@ instance Pretty Pat where
                (spaced (map pretty args))
       PTuple boxed pats ->
         depend (write (case boxed of
-                         Boxed -> "(#"
-                         Unboxed -> "("))
+                         Unboxed -> "(#"
+                         Boxed -> "("))
                (do commas (map pretty pats)
                    write (case boxed of
-                            Boxed -> "#)"
-                            Unboxed -> ")"))
+                            Unboxed -> "#)"
+                            Boxed -> ")"))
       PList ps -> brackets (commas (map pretty ps))
       PParen e ->
         parens (pretty e)
-      PRec qname fields -> undefined
-      PAsPat _ _ -> undefined
-      PWildCard -> undefined
-      PIrrPat _ -> undefined
-      PatTypeSig _ _ _ -> undefined
-      PViewPat _ _ -> undefined
-      PQuasiQuote _ _ -> undefined
-      PBangPat _ -> undefined
+      PRec qname fields ->
+        depend (pretty qname)
+               (braces
+                  (commas (map pretty fields)))
+      PAsPat n p ->
+        depend (do pretty n
+                   write "@")
+               (pretty p)
+      PWildCard ->
+        write "_"
+      PIrrPat p ->
+        depend (write "~")
+               (pretty p)
+      PatTypeSig _ p ty ->
+        depend (do pretty p
+                   write " :: ")
+               (pretty ty)
+      PViewPat e p ->
+        depend (do pretty e
+                   write " -> ")
+               (pretty p)
+      PQuasiQuote name str ->
+        brackets (depend (do write "$"
+                             string name
+                             write "|")
+                         (string str))
+      PBangPat p ->
+        depend (write "!")
+               (pretty p)
       PRPat{} -> pretty' x
       PXTag{} -> pretty' x
       PXETag{} -> pretty' x
@@ -323,9 +344,12 @@ instance Pretty Module where
 instance Pretty PatField where
   pretty x =
     case x of
-      PFieldPat _ _ -> undefined
-      PFieldPun _ -> undefined
-      PFieldWildcard -> undefined
+      PFieldPat n p ->
+        depend (do pretty n
+                   write " = ")
+               (pretty p)
+      PFieldPun n -> pretty n
+      PFieldWildcard -> write ".."
 
 instance Pretty QualConDecl where
   pretty x =
