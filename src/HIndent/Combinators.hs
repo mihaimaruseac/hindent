@@ -10,16 +10,24 @@ module HIndent.Combinators
     write
   , newline
   , space
+  , comma
   , int
+  , parens
+  , brackets
   -- * Indentation
   , indented
   , column
   , depend
+  , spaced
+  , lined
+  , commas
+  , inter
   -- * Fallback printer
   , pretty'
   )
   where
 
+import           Data.List
 import           HIndent.Types
 
 import           Control.Monad.State hiding (state)
@@ -40,6 +48,33 @@ indented i p =
      m <- p
      modify (\s -> s { psIndentLevel = level })
      return m
+
+-- | Print all the printers separated by spaces.
+spaced :: [Printer ()] -> Printer ()
+spaced = inter space
+
+-- | Print all the printers separated by commas.
+commas :: [Printer ()] -> Printer ()
+commas = inter comma
+
+-- | Print all the printers separated by sep.
+inter :: Printer () -> [Printer ()] -> Printer ()
+inter sep ps =
+  foldr (\(i,p) next ->
+           depend (do p
+                      if i < length ps
+                         then sep
+                         else return ())
+                  next)
+        (return ())
+        (zip [1..] ps)
+
+-- | Print all the printers separated by spaces.
+lined :: [Printer ()] -> Printer ()
+lined ps =
+  sequence_
+    (intersperse newline
+                 ps)
 
 -- | Set the (newline-) indent level to the given column for the given
 -- printer.
@@ -65,9 +100,29 @@ depend maker dependent =
      col <- gets psColumn
      column col dependent
 
+-- | Wrap in parens.
+parens :: Printer a -> Printer a
+parens p =
+  depend (write "(")
+         (do v <- p
+             write ")"
+             return v)
+
+-- | Wrap in brackets.
+brackets :: Printer a -> Printer a
+brackets p =
+  depend (write "[")
+         (do v <- p
+             write "]"
+             return v)
+
 -- | Write a space.
 space :: Printer ()
 space = write " "
+
+-- | Write a comma.
+comma :: Printer ()
+comma = write ","
 
 -- | Write an integral.
 int :: Integral n => n -> Printer ()

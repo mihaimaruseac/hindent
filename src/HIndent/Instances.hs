@@ -8,10 +8,15 @@ module HIndent.Instances where
 import           HIndent.Types
 import           HIndent.Combinators
 
-import           Data.List (intersperse)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Builder as T
 import           Language.Haskell.Exts.Syntax
+
+import           Control.Monad.State
+import           Data.Monoid
+import           Data.Text.Lazy.Builder (Builder)
+import qualified Data.Text.Lazy.IO as TIO
+import           Language.Haskell.Exts.Parser
 
 instance Pretty Stmt where
   pretty x =
@@ -39,15 +44,32 @@ instance Pretty Pat where
       PNeg l ->
         depend (write "-")
                (pretty l)
-      PNPlusK n k -> depend (do pretty n
-                                write "-")
-                            (int k)
-      PInfixApp _ _ _ -> undefined
-      PApp _ _ -> undefined
-      PTuple _ _ -> undefined
-      PList _ -> undefined
-      PParen _ -> undefined
-      PRec _ _ -> undefined
+      PNPlusK n k ->
+        depend (do pretty n
+                   write "-")
+               (int k)
+      PInfixApp a op b ->
+        depend (do pretty a
+                   space)
+               (depend (do pretty op
+                           space)
+                       (pretty b))
+      PApp f args ->
+        depend (do pretty f
+                   space)
+               (spaced (map pretty args))
+      PTuple boxed pats ->
+        depend (write (case boxed of
+                         Boxed -> "(#"
+                         Unboxed -> "("))
+               (do commas (map pretty pats)
+                   write (case boxed of
+                            Boxed -> "#)"
+                            Unboxed -> ")"))
+      PList ps -> brackets (commas (map pretty ps))
+      PParen e ->
+        parens (pretty e)
+      PRec qname fields -> undefined
       PAsPat _ _ -> undefined
       PWildCard -> undefined
       PIrrPat _ -> undefined
@@ -92,16 +114,13 @@ instance Pretty Exp where
           (f,args) ->
             depend (do pretty f
                        space)
-                   (sequence_
-                      (intersperse newline
-                                   (map pretty args)))
+                   (lined (map pretty args))
       NegApp e ->
         depend (write "-")
                (pretty e)
       Lambda _ ps e ->
         depend (write "\\")
-               (do sequence_ (intersperse (space)
-                                          (map pretty ps))
+               (do spaced (map pretty ps)
                    write " -> "
                    newline
                    indented 1 (pretty e))
@@ -120,9 +139,7 @@ instance Pretty Exp where
                       depend (write "else ")
                              (pretty e))
       Paren e ->
-        depend (write "(")
-               (do pretty e
-                   write ")")
+        parens (pretty e)
       MultiIf _ -> undefined
       Case e alts ->
         do write "case "
@@ -434,3 +451,27 @@ instance Pretty XAttr where
 
 instance Pretty XName where
   pretty = pretty'
+
+-- | Format the string and print it to stdout. Throws exception on
+-- invalid syntax.
+indent :: String -> IO ()
+indent x =
+  case reformat x of
+    Right b -> TIO.putStrLn (T.toLazyText b)
+    Left e -> error e
+
+-- | Format the given source.
+reformat :: String -> Either String Builder
+reformat x =
+  case parseExp x of
+    ParseOk v ->
+      Right (prettyPrint v)
+    ParseFailed _ e ->
+      Left e
+
+-- | Pretty print the given printable thing.
+prettyPrint :: Pretty a => a -> Builder
+prettyPrint v =
+  psOutput
+    (execState (runPrinter (pretty v))
+               (PrintState 0 mempty False 0))
