@@ -349,7 +349,10 @@ decl (PatBind _ pat mty rhs binds) =
          newline
          indented indentSpaces
                   (do pretty rhs
-                      pretty binds)
+                      unless (nullBinds binds)
+                             (do newline
+                                 depend (write "where ")
+                                        (pretty binds)))
 decl (TypeDecl _ _ _ _) =
   error "FIXME: No implementation for TypeDecl."
 decl (TypeFamDecl _ _ _ _) =
@@ -516,7 +519,14 @@ instance Pretty Match where
                newline
                indented indentSpaces
                         (do pretty rhs
-                            pretty binds)
+                            unless (nullBinds binds)
+                                   (do newline
+                                       depend (write "where ")
+                                              (pretty binds)))
+
+nullBinds (BDecls x) = null x
+nullBinds (IPBinds x) = null x
+
 instance Pretty Module where
   pretty x =
     case x of
@@ -670,7 +680,7 @@ indent x =
 -- | Format the given source.
 reformat :: String -> Either String Builder
 reformat x =
-  case parseExpWithMode parseMode x of
+  case parseDeclWithMode parseMode x of
     ParseOk v ->
       Right (prettyPrint v)
     ParseFailed _ e ->
