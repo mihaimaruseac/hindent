@@ -5,6 +5,7 @@
 
 module HIndent.Instances where
 
+import           Data.Int
 import           Language.Haskell.Exts.Extension
 import           Prelude hiding (exp)
 
@@ -20,6 +21,10 @@ import           Data.Monoid
 import           Data.Text.Lazy.Builder (Builder)
 import qualified Data.Text.Lazy.IO as TIO
 import           Language.Haskell.Exts.Parser
+
+-- | Indent spaces: 2.
+indentSpaces :: Int64
+indentSpaces = 2
 
 instance Pretty Pat where
   pretty x =
@@ -171,7 +176,7 @@ exp (Lambda _ ps e) =
              newline
              indented 1 (pretty e))
 exp (Let binds e) =
-  do depend (write "let")
+  do depend (write "let ")
             (pretty binds)
      newline
      depend (write "in ")
@@ -332,36 +337,76 @@ instance Pretty QualStmt where
       GroupByUsing{} -> error "FIXME: No implementation for GroupByUsing."
 
 instance Pretty Decl where
-  pretty x =
-    case x of
-      TypeDecl _ _ _ _ -> error "FIXME: No implementation for TypeDecl."
-      TypeFamDecl _ _ _ _ -> error "FIXME: No implementation for TypeFamDecl."
-      DataDecl _ _ _ _ _ _ _ -> error "FIXME: No implementation for DataDecl."
-      GDataDecl _ _ _ _ _ _ _ _ -> error "FIXME: No implementation for GDataDecl."
-      DataFamDecl _ _ _ _ _ -> error "FIXME: No implementation for DataFamDecl."
-      TypeInsDecl _ _ _ -> error "FIXME: No implementation for TypeInsDecl."
-      DataInsDecl _ _ _ _ _ -> error "FIXME: No implementation for DataInsDecl."
-      GDataInsDecl _ _ _ _ _ _ -> error "FIXME: No implementation for GDataInsDecl."
-      ClassDecl _ _ _ _ _ _ -> error "FIXME: No implementation for ClassDecl."
-      InstDecl _ _ _ _ _ -> error "FIXME: No implementation for InstDecl."
-      DerivDecl _ _ _ _ -> error "FIXME: No implementation for DerivDecl."
-      InfixDecl _ _ _ _ -> error "FIXME: No implementation for InfixDecl."
-      DefaultDecl _ _ -> error "FIXME: No implementation for DefaultDecl."
-      SpliceDecl _ _ -> error "FIXME: No implementation for SpliceDecl."
-      TypeSig _ _ _ -> error "FIXME: No implementation for TypeSig."
-      FunBind _ -> error "FIXME: No implementation for FunBind."
-      PatBind _ _ _ _ _ -> error "FIXME: No implementation for PatBind."
-      ForImp _ _ _ _ _ _ -> error "FIXME: No implementation for ForImp."
-      ForExp _ _ _ _ _ -> error "FIXME: No implementation for ForExp."
-      RulePragmaDecl _ _ -> error "FIXME: No implementation for RulePragmaDecl."
-      DeprPragmaDecl _ _ -> error "FIXME: No implementation for DeprPragmaDecl."
-      WarnPragmaDecl _ _ -> error "FIXME: No implementation for WarnPragmaDecl."
-      InlineSig _ _ _ _ -> error "FIXME: No implementation for InlineSig."
-      InlineConlikeSig _ _ _ -> error "FIXME: No implementation for InlineConlikeSig."
-      SpecSig _ _ _ _ -> error "FIXME: No implementation for SpecSig."
-      SpecInlineSig _ _ _ _ _ -> error "FIXME: No implementation for SpecInlineSig."
-      InstSig _ _ _ _ -> error "FIXME: No implementation for InstSig."
-      AnnPragma _ _ -> error "FIXME: No implementation for AnnPragma."
+  pretty = decl
+
+decl :: Decl -> Printer ()
+decl (PatBind _ pat mty rhs binds) =
+  case mty of
+    Just{} -> error "Unimlpemented (Maybe Type) in PatBind."
+    Nothing ->
+      do pretty pat
+         write " = "
+         newline
+         indented indentSpaces
+                  (do pretty rhs
+                      pretty binds)
+decl (TypeDecl _ _ _ _) =
+  error "FIXME: No implementation for TypeDecl."
+decl (TypeFamDecl _ _ _ _) =
+  error "FIXME: No implementation for TypeFamDecl."
+decl (DataDecl _ _ _ _ _ _ _) =
+  error "FIXME: No implementation for DataDecl."
+decl (GDataDecl _ _ _ _ _ _ _ _) =
+  error "FIXME: No implementation for GDataDecl."
+decl (DataFamDecl _ _ _ _ _) =
+  error "FIXME: No implementation for DataFamDecl."
+decl (TypeInsDecl _ _ _) =
+  error "FIXME: No implementation for TypeInsDecl."
+decl (DataInsDecl _ _ _ _ _) =
+  error "FIXME: No implementation for DataInsDecl."
+decl (GDataInsDecl _ _ _ _ _ _) =
+  error "FIXME: No implementation for GDataInsDecl."
+decl (ClassDecl _ _ _ _ _ _) =
+  error "FIXME: No implementation for ClassDecl."
+decl (InstDecl _ _ _ _ _) =
+  error "FIXME: No implementation for InstDecl."
+decl (DerivDecl _ _ _ _) =
+  error "FIXME: No implementation for DerivDecl."
+decl (InfixDecl _ _ _ _) =
+  error "FIXME: No implementation for InfixDecl."
+decl (DefaultDecl _ _) =
+  error "FIXME: No implementation for DefaultDecl."
+decl (SpliceDecl _ _) =
+  error "FIXME: No implementation for SpliceDecl."
+decl (TypeSig _ names ty) =
+  depend (do inter (write ", ")
+                   (map pretty names)
+             write " :: ")
+         (pretty ty)
+decl (FunBind matches) =
+  lined (map pretty matches)
+decl (ForImp _ _ _ _ _ _) =
+  error "FIXME: No implementation for ForImp."
+decl (ForExp _ _ _ _ _) =
+  error "FIXME: No implementation for ForExp."
+decl (RulePragmaDecl _ _) =
+  error "FIXME: No implementation for RulePragmaDecl."
+decl (DeprPragmaDecl _ _) =
+  error "FIXME: No implementation for DeprPragmaDecl."
+decl (WarnPragmaDecl _ _) =
+  error "FIXME: No implementation for WarnPragmaDecl."
+decl (InlineSig _ _ _ _) =
+  error "FIXME: No implementation for InlineSig."
+decl (InlineConlikeSig _ _ _) =
+  error "FIXME: No implementation for InlineConlikeSig."
+decl (SpecSig _ _ _ _) =
+  error "FIXME: No implementation for SpecSig."
+decl (SpecInlineSig _ _ _ _ _) =
+  error "FIXME: No implementation for SpecInlineSig."
+decl (InstSig _ _ _ _) =
+  error "FIXME: No implementation for InstSig."
+decl (AnnPragma _ _) =
+  error "FIXME: No implementation for AnnPragma."
 
 instance Pretty Alt where
   pretty x =
@@ -459,8 +504,19 @@ instance Pretty InstDecl where
 instance Pretty Match where
   pretty x =
     case x of
-      Match _ _ _ _ _ _ -> error "FIXME: No implementation for Match."
-
+      Match _ name pats mty rhs binds ->
+        case mty of
+          Just{} ->
+            error "Unimlpemented (Maybe Type) in Match."
+          Nothing ->
+            do depend (do pretty name
+                          space)
+                      (do spaced (map pretty pats)
+                          write " = ")
+               newline
+               indented indentSpaces
+                        (do pretty rhs
+                            pretty binds)
 instance Pretty Module where
   pretty x =
     case x of
@@ -486,7 +542,7 @@ instance Pretty QualConDecl where
 instance Pretty Rhs where
   pretty x =
     case x of
-      UnGuardedRhs _ -> error "FIXME: No implementation for UnGuardedRhs."
+      UnGuardedRhs e -> pretty e
       GuardedRhss _ -> error "FIXME: No implementation for GuardedRhss."
 
 instance Pretty Rule where
