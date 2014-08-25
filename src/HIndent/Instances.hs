@@ -20,6 +20,14 @@ indentSpaces :: Int64
 indentSpaces =
   2
 
+dependOrNewline :: Printer () -> Exp -> (Exp -> Printer ()) -> Printer ()
+dependOrNewline left right f =
+  if flat right
+     then depend left (f right)
+     else do left
+             newline
+             (f right)
+
 instance Pretty Pat where
   pretty x =
     case x of
@@ -147,15 +155,27 @@ instance Pretty Exp where
 
 -- | Is an expression flat?
 flat :: Exp -> Bool
-flat (InfixApp a _ b) = flat a && flat b
-flat (NegApp a) = flat a
-flat VarQuote{} = True
-flat TypQuote{} = True
-flat (List []) = True
-flat Var{} = True
-flat Lit{} = True
-flat Con{} = True
-flat _ = False
+flat (Lambda _ _ e) =
+  flat e
+flat (InfixApp a _ b) =
+  flat a &&
+  flat b
+flat (NegApp a) =
+  flat a
+flat VarQuote{} =
+  True
+flat TypQuote{} =
+  True
+flat (List []) =
+  True
+flat Var{} =
+  True
+flat Lit{} =
+  True
+flat Con{} =
+  True
+flat _ =
+  False
 
 -- | Render an expression.
 exp :: Exp -> Printer ()
@@ -172,23 +192,29 @@ exp e@(InfixApp a op b) =
              newline
              pretty b
 exp (App op a) =
-  case flatten op [a] of
+  case flatten op
+               [a] of
     (f,args) ->
       depend (do pretty f
                  space)
-             (lined (map pretty args))
+             (if all flat args
+                 then spaced (map pretty args)
+                 else lined (map pretty args))
   where flatten :: Exp -> [Exp] -> (Exp,[Exp])
-        flatten (App f a') b = flatten f (a' : b)
-        flatten f as = (f,as)
+        flatten (App f a') b =
+          flatten f
+                  (a' : b)
+        flatten f as =
+          (f,as)
 exp (NegApp e) =
   depend (write "-")
          (pretty e)
 exp (Lambda _ ps e) =
   depend (write "\\")
          (do spaced (map pretty ps)
-             write " = "
-             newline
-             indented 1 (pretty e))
+             dependOrNewline (write " -> ")
+                             e
+                             (indented 1 . pretty))
 exp (Let binds e) =
   do depend (write "let ")
             (pretty binds)
@@ -211,7 +237,8 @@ exp (Case e alts) =
             (do pretty e
                 write " of ")
      newline
-     indented indentSpaces (lined (map pretty alts))
+     indented indentSpaces
+              (lined (map pretty alts))
 exp (Do stmts) =
   depend (write "do ")
          (lined (map pretty stmts))
@@ -220,12 +247,16 @@ exp (MDo stmts) =
          (lined (map pretty stmts))
 exp (Tuple boxed exps) =
   depend (write (case boxed of
-                   Unboxed -> "(#"
-                   Boxed -> "("))
+                   Unboxed ->
+                     "(#"
+                   Boxed ->
+                     "("))
          (do commas (map pretty exps)
              write (case boxed of
-                      Unboxed -> "#)"
-                      Boxed -> ")"))
+                      Unboxed ->
+                        "#)"
+                      Boxed ->
+                        ")"))
 exp (TupleSection boxed mexps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
@@ -489,9 +520,11 @@ instance Pretty FieldUpdate where
   pretty x =
     case x of
       FieldUpdate n e ->
-        depend (do pretty n
-                   write " = ")
-               (pretty e)
+        dependOrNewline
+          (do pretty n
+              write " = ")
+          e
+          pretty
       FieldPun n ->
         pretty n
       FieldWildcard ->
@@ -506,16 +539,16 @@ instance Pretty GuardedAlts where
   pretty x =
     case x of
       UnGuardedAlt e ->
-        do write " -> "
-           newline
-           indented 2
-                    (pretty e)
+        dependOrNewline (write " -> ")
+                        e
+                        (indented 2 . pretty)
       GuardedAlts gas ->
         do newline
            indented
              2
              (lined (map (\p -> do write "|"
-                                   pretty p) gas))
+                                   pretty p)
+                         gas))
 
 instance Pretty GuardedAlt where
   pretty x =
@@ -526,9 +559,9 @@ instance Pretty GuardedAlt where
           (do (prefixedLined ','
                              (map (\p -> do space
                                             pretty p) stmts))
-              write " -> "
-              newline
-              indented 1 (pretty e))
+              dependOrNewline (write " -> ")
+                              e
+                              (indented 1 . pretty))
 
 instance Pretty GuardedRhs where
   pretty x =
@@ -539,9 +572,9 @@ instance Pretty GuardedRhs where
           (do (prefixedLined ','
                              (map (\p -> do space
                                             pretty p) stmts))
-              write " = "
-              newline
-              indented 1 (pretty e))
+              dependOrNewline (write " = ")
+                              e
+                              (indented 1 . pretty))
 
 instance Pretty IPBind where
   pretty x =
@@ -605,9 +638,9 @@ instance Pretty Rhs where
     case x of
       UnGuardedRhs e ->
         indented indentSpaces
-                 (do write " = "
-                     newline
-                     pretty e)
+                 (dependOrNewline (write " = ")
+                                  e
+                                  pretty)
       GuardedRhss gas ->
         do newline
            indented
