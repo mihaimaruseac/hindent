@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -17,16 +18,70 @@ import           Prelude hiding (exp)
 
 -- | Indent spaces: 2.
 indentSpaces :: Int64
-indentSpaces =
-  2
+indentSpaces = 2
 
+-- | Column limit: 80
+columnLimit :: Int64
+columnLimit = 80
+
+-- | Make the right hand side dependent if it's flat, otherwise
+-- newline it.
 dependOrNewline :: Printer () -> Exp -> (Exp -> Printer ()) -> Printer ()
 dependOrNewline left right f =
   if flat right
-     then depend left (f right)
+     then depend left
+                 (f right)
      else do left
              newline
              (f right)
+  where depending =
+          depend left
+                 (f right)
+        lineBroken =
+          do left
+             newline
+             (f right)
+
+-- | Wouuld this printer exceed the column limit?
+exceeds :: MonadState PrintState m => m a -> m Bool
+exceeds p =
+  do st <- sandbox p
+     return (psColumn st >
+             columnLimit)
+
+-- | Play with a printer and then restore the state to what it was
+-- before.
+sandbox :: MonadState s m => m a -> m s
+sandbox p =
+  do orig <- get
+     _ <- p
+     new <- get
+     put orig
+     return new
+
+-- | No binds?
+nullBinds :: Binds -> Bool
+nullBinds (BDecls x) =
+  null x
+nullBinds (IPBinds x) =
+  null x
+
+-- | Is an expression flat?
+flat :: Exp -> Bool
+flat (Lambda _ _ e) =
+  flat e
+flat (InfixApp a _ b) =
+  flat a &&
+  flat b
+flat (NegApp a) =
+  flat a
+flat VarQuote{} = True
+flat TypQuote{} = True
+flat (List []) = True
+flat Var{} = True
+flat Lit{} = True
+flat Con{} = True
+flat _ = False
 
 instance Pretty Pat where
   pretty x =
@@ -153,30 +208,6 @@ instance Pretty Type where
 instance Pretty Exp where
   pretty = exp
 
--- | Is an expression flat?
-flat :: Exp -> Bool
-flat (Lambda _ _ e) =
-  flat e
-flat (InfixApp a _ b) =
-  flat a &&
-  flat b
-flat (NegApp a) =
-  flat a
-flat VarQuote{} =
-  True
-flat TypQuote{} =
-  True
-flat (List []) =
-  True
-flat Var{} =
-  True
-flat Lit{} =
-  True
-flat Con{} =
-  True
-flat _ =
-  False
-
 -- | Render an expression.
 exp :: Exp -> Printer ()
 exp e@(InfixApp a op b) =
@@ -214,7 +245,8 @@ exp (Lambda _ ps e) =
          (do spaced (map pretty ps)
              dependOrNewline (write " -> ")
                              e
-                             (indented 1 . pretty))
+                             (indented 1 .
+                              pretty))
 exp (Let binds e) =
   do depend (write "let ")
             (pretty binds)
@@ -247,21 +279,19 @@ exp (MDo stmts) =
          (lined (map pretty stmts))
 exp (Tuple boxed exps) =
   depend (write (case boxed of
-                   Unboxed ->
-                     "(#"
-                   Boxed ->
-                     "("))
+                   Unboxed -> "(#"
+                   Boxed -> "("))
          (do commas (map pretty exps)
              write (case boxed of
-                      Unboxed ->
-                        "#)"
-                      Boxed ->
-                        ")"))
+                      Unboxed -> "#)"
+                      Boxed -> ")"))
 exp (TupleSection boxed mexps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
                    Boxed -> "("))
-         (do commas (map (maybe (return ()) pretty) mexps)
+         (do commas (map (maybe (return ())
+                                pretty)
+                         mexps)
              write (case boxed of
                       Unboxed -> "#)"
                       Boxed -> ")"))
@@ -278,15 +308,13 @@ exp (RightSection e op) =
 exp (RecConstr n fs) =
   depend (do pretty n
              space)
-         (braces
-            (prefixedLined ','
-                           (map pretty fs)))
+         (braces (prefixedLined ','
+                                (map pretty fs)))
 exp (RecUpdate n fs) =
   depend (do pretty n
              space)
-         (braces
-            (prefixedLined ','
-                           (map pretty fs)))
+         (braces (prefixedLined ','
+                                (map pretty fs)))
 exp (EnumFrom e) =
   brackets (do pretty e
                write " ..")
@@ -306,19 +334,18 @@ exp (EnumFromThenTo e t f) =
                                write " .. ")
                            (pretty f)))
 exp (ListComp e qstmt) =
-  brackets
-    (depend
-       (do pretty e
-           unless (null qstmt)
-                  (write " |"))
-       (do space
-           prefixedLined ','
-                         (map (\(i,x) ->
-                                 depend (if i == 0
-                                            then return ()
-                                            else space)
-                                        (pretty x))
-                              (zip [0::Integer ..] qstmt))) )
+  brackets (depend (do pretty e
+                       unless (null qstmt)
+                              (write " |"))
+                   (do space
+                       prefixedLined ','
+                                     (map (\(i,x) ->
+                                             depend (if i == 0
+                                                        then return ()
+                                                        else space)
+                                                    (pretty x))
+                                          (zip [0 :: Integer ..]
+                                               qstmt))))
 exp (ExpTypeSig _ e t) =
   depend (do pretty e
              write " :: ")
@@ -399,7 +426,7 @@ decl (PatBind _ pat mty rhs binds) =
          unless (nullBinds binds)
                 (do newline
                     indented indentSpaces
-                             (depend (write "where1 ")
+                             (depend (write "where ")
                                      (pretty binds)))
 
 decl (TypeDecl _ _ _ _) =
@@ -432,13 +459,11 @@ decl (SpliceDecl _ _) =
   error "FIXME: No implementation for SpliceDecl."
 decl (TypeSig _ names ty) =
   depend (do inter (write ", ")
-                   (map pretty
-                        names)
+                   (map pretty names)
              write " :: ")
          (pretty ty)
 decl (FunBind matches) =
-  lined (map pretty
-             matches)
+  lined (map pretty matches)
 decl (ForImp _ _ _ _ _ _) =
   error "FIXME: No implementation for ForImp."
 decl (ForExp _ _ _ _ _) =
@@ -606,10 +631,6 @@ instance Pretty Match where
                           indented indentSpaces
                                    (depend (write "where ")
                                            (pretty binds)))
-
-nullBinds :: Binds -> Bool
-nullBinds (BDecls x) = null x
-nullBinds (IPBinds x) = null x
 
 instance Pretty Module where
   pretty x =
