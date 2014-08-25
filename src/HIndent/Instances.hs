@@ -17,7 +17,8 @@ import           Prelude hiding (exp)
 
 -- | Indent spaces: 2.
 indentSpaces :: Int64
-indentSpaces = 2
+indentSpaces =
+  2
 
 instance Pretty Pat where
   pretty x =
@@ -144,13 +145,32 @@ instance Pretty Type where
 instance Pretty Exp where
   pretty = exp
 
+-- | Is an expression flat?
+flat :: Exp -> Bool
+flat (InfixApp a _ b) = flat a && flat b
+flat (NegApp a) = flat a
+flat VarQuote{} = True
+flat TypQuote{} = True
+flat (List []) = True
+flat Var{} = True
+flat Lit{} = True
+flat Con{} = True
+flat _ = False
+
+-- | Render an expression.
 exp :: Exp -> Printer ()
-exp (InfixApp a op b) =
-  do pretty a
-     space
-     pretty op
-     newline
-     pretty b
+exp e@(InfixApp a op b) =
+  if flat e
+     then do depend (do pretty a
+                        space
+                        pretty op
+                        space)
+                    (do pretty b)
+     else do pretty a
+             space
+             pretty op
+             newline
+             pretty b
 exp (App op a) =
   case flatten op [a] of
     (f,args) ->
@@ -336,17 +356,19 @@ instance Pretty QualStmt where
 instance Pretty Decl where
   pretty = decl
 
+-- | Render a declaration.
 decl :: Decl -> Printer ()
 decl (PatBind _ pat mty rhs binds) =
   case mty of
-    Just{} -> error "Unimlpemented (Maybe Type) in PatBind."
+    Just{} ->
+      error "Unimlpemented (Maybe Type) in PatBind."
     Nothing ->
       do pretty pat
          pretty rhs
          unless (nullBinds binds)
                 (do newline
                     indented indentSpaces
-                             (depend (write "where ")
+                             (depend (write "where1 ")
                                      (pretty binds)))
 
 decl (TypeDecl _ _ _ _) =
@@ -379,11 +401,13 @@ decl (SpliceDecl _ _) =
   error "FIXME: No implementation for SpliceDecl."
 decl (TypeSig _ names ty) =
   depend (do inter (write ", ")
-                   (map pretty names)
+                   (map pretty
+                        names)
              write " :: ")
          (pretty ty)
 decl (FunBind matches) =
-  lined (map pretty matches)
+  lined (map pretty
+             matches)
 decl (ForImp _ _ _ _ _ _) =
   error "FIXME: No implementation for ForImp."
 decl (ForExp _ _ _ _ _) =
@@ -482,8 +506,10 @@ instance Pretty GuardedAlts where
   pretty x =
     case x of
       UnGuardedAlt e ->
-        depend (write " -> ")
-               (pretty e)
+        do write " -> "
+           newline
+           indented 2
+                    (pretty e)
       GuardedAlts gas ->
         do newline
            indented
@@ -544,8 +570,9 @@ instance Pretty Match where
                pretty rhs
                unless (nullBinds binds)
                       (do newline
-                          depend (write "where ")
-                                 (pretty binds))
+                          indented indentSpaces
+                                   (depend (write "where ")
+                                           (pretty binds)))
 
 nullBinds :: Binds -> Bool
 nullBinds (BDecls x) = null x
