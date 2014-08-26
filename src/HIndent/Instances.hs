@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -403,8 +405,8 @@ exp (RightArrApp _ _) = error "FIXME: No implementation for RightArrApp."
 exp (LeftArrHighApp _ _) = error "FIXME: No implementation for LeftArrHighApp."
 exp (RightArrHighApp _ _) = error "FIXME: No implementation for RightArrHighApp."
 exp (LCase _) = error "FIXME: No implementation for LCase."
-exp ParComp{} = error "FIXME: No implementation for ParComp."
 exp (MultiIf _) = error "FIXME: No implementation for MultiIf."
+exp ParComp{} = error "FIXME: No implementation for ParComp."
 
 instance Pretty Stmt where
   pretty x =
@@ -449,8 +451,21 @@ decl (PatBind _ pat mty rhs binds) =
                              (depend (write "where ")
                                      (pretty binds)))
 
-decl (InstDecl _ _ctx _name _tys _decls) =
-  error "FIXME: No implementation for InstDecl."
+decl (InstDecl _ ctx name tys decls) =
+  do depend (write "instance ")
+            (depend (unless (null ctx)
+                            (do write "("
+                                commas (map pretty ctx)
+                                write ") => "))
+                    (depend (do pretty name
+                                space)
+                            (do spaced (map pretty tys)
+                                unless (null decls)
+                                       (write " where"))))
+     unless (null decls)
+            (do newline
+                indented 2
+                         (mapM_ pretty decls))
 decl (TypeDecl _ _ _ _) =
   error "FIXME: No implementation for TypeDecl."
 decl (TypeFamDecl _ _ _ _) =
@@ -632,7 +647,15 @@ instance Pretty IfAlt where
       IfAlt _ _ -> error "FIXME: No implementation for IfAlt."
 
 instance Pretty InstDecl where
-  pretty _ =  error "FIXME: No implementation for InstDecl."
+  pretty i =
+    case i of
+      InsDecl d -> pretty d
+      InsType _ name ty ->
+        depend (do write "type "
+                   pretty name
+                   write " = ")
+               (pretty ty)
+      _ -> pretty' i
 
 instance Pretty Match where
   pretty x =
@@ -777,7 +800,7 @@ instance Pretty Promoted where
   pretty = pretty'
 
 instance Pretty QName where
-  pretty = error . show
+  pretty = pretty'
 
 instance Pretty QOp where
   pretty = pretty'
