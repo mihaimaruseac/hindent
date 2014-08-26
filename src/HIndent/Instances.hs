@@ -96,11 +96,17 @@ instance Pretty Pat where
                    write "-")
                (int k)
       PInfixApp a op b ->
-        depend (do pretty a
-                   space)
-               (depend (do pretty op
-                           space)
-                       (pretty b))
+        case op of
+          Special{} ->
+            depend (pretty a)
+                   (depend (prettyInfixOp op)
+                           (pretty b))
+          _ ->
+            depend (do pretty a
+                       space)
+                   (depend (do prettyInfixOp op
+                               space)
+                           (pretty b))
       PApp f args ->
         depend (do pretty f
                    unless (null args)
@@ -154,6 +160,26 @@ instance Pretty Pat where
       PXPatTag{} -> pretty' x
       PXRPats{} -> pretty' x
       PVar{} -> pretty' x
+
+-- | Pretty print a name for being an infix operator.
+prettyInfixOp :: QName -> Printer ()
+prettyInfixOp x =
+  case x of
+    Qual mname name ->
+      pretty' x
+    UnQual n ->
+      case n of
+        Ident i -> string ("`" ++ i ++ "`")
+        Symbol s -> string s
+    Special s ->
+      case s of
+        UnitCon -> write "()"
+        ListCon -> write "[]"
+        FunCon -> write "->"
+        TupleCon Boxed i -> string ("(" ++ replicate (i - 1) ',' ++ ")")
+        TupleCon Unboxed i -> string ("(#" ++ replicate (i - 1) ',' ++ "#)")
+        Cons -> write ":"
+        UnboxedSingleCon -> write "(##)"
 
 instance Pretty Type where
   pretty x =
@@ -758,7 +784,7 @@ instance Pretty Promoted where
   pretty = pretty'
 
 instance Pretty QName where
-  pretty = pretty'
+  pretty = error . show
 
 instance Pretty QOp where
   pretty = pretty'
