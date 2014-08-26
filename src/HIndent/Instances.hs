@@ -168,7 +168,8 @@ instance Pretty Type where
                        write ". ")
                (depend (case ctx of
                           [] -> return ()
-                          (_:_) -> parens (mapM_ pretty ctx))
+                          (_:_) -> do parens (mapM_ pretty ctx)
+                                      write " => ")
                        (pretty ty))
       TyFun a b ->
         depend (do pretty a
@@ -429,6 +430,8 @@ decl (PatBind _ pat mty rhs binds) =
                              (depend (write "where ")
                                      (pretty binds)))
 
+decl (InstDecl _ ctx name tys decls) =
+  error "FIXME: No implementation for InstDecl."
 decl (TypeDecl _ _ _ _) =
   error "FIXME: No implementation for TypeDecl."
 decl (TypeFamDecl _ _ _ _) =
@@ -447,8 +450,6 @@ decl (GDataInsDecl _ _ _ _ _ _) =
   error "FIXME: No implementation for GDataInsDecl."
 decl (ClassDecl _ _ _ _ _ _) =
   error "FIXME: No implementation for ClassDecl."
-decl (InstDecl _ _ _ _ _) =
-  error "FIXME: No implementation for InstDecl."
 decl (DerivDecl _ _ _ _) =
   error "FIXME: No implementation for DerivDecl."
 decl (InfixDecl _ _ _ _) =

@@ -202,8 +202,3 @@ pretty' = write . T.fromText . T.pack . P.prettyPrint
 -- | Write a string.
 string :: String -> Printer ()
 string = write . T.fromText . T.pack
-
-main =
-  do x
-     y <- return 1
-     return (x + 1)
