@@ -121,8 +121,7 @@ instance Pretty Pat where
         parens (pretty e)
       PRec qname fields ->
         depend (pretty qname)
-               (braces
-                  (commas (map pretty fields)))
+               (braces (commas (map pretty fields)))
       PAsPat n p ->
         depend (do pretty n
                    write "@")
@@ -148,13 +147,20 @@ instance Pretty Pat where
       PBangPat p ->
         depend (write "!")
                (pretty p)
-      PRPat{} -> pretty' x
-      PXTag{} -> pretty' x
-      PXETag{} -> pretty' x
-      PXPcdata{} -> pretty' x
-      PXPatTag{} -> pretty' x
-      PXRPats{} -> pretty' x
-      PVar{} -> pretty' x
+      PRPat{} ->
+        pretty' x
+      PXTag{} ->
+        pretty' x
+      PXETag{} ->
+        pretty' x
+      PXPcdata{} ->
+        pretty' x
+      PXPatTag{} ->
+        pretty' x
+      PXRPats{} ->
+        pretty' x
+      PVar{} ->
+        pretty' x
 
 -- | Pretty print a name for being an infix operator.
 prettyInfixOp :: QName -> Printer ()
@@ -164,17 +170,32 @@ prettyInfixOp x =
       pretty' x
     UnQual n ->
       case n of
-        Ident i -> string ("`" ++ i ++ "`")
-        Symbol s -> string s
+        Ident i ->
+          string ("`" ++ i ++ "`")
+        Symbol s ->
+          string s
     Special s ->
       case s of
-        UnitCon -> write "()"
-        ListCon -> write "[]"
-        FunCon -> write "->"
-        TupleCon Boxed i -> string ("(" ++ replicate (i - 1) ',' ++ ")")
-        TupleCon Unboxed i -> string ("(#" ++ replicate (i - 1) ',' ++ "#)")
-        Cons -> write ":"
-        UnboxedSingleCon -> write "(##)"
+        UnitCon ->
+          write "()"
+        ListCon ->
+          write "[]"
+        FunCon ->
+          write "->"
+        TupleCon Boxed i ->
+          string ("(" ++
+                  replicate (i - 1)
+                            ',' ++
+                  ")")
+        TupleCon Unboxed i ->
+          string ("(#" ++
+                  replicate (i - 1)
+                            ',' ++
+                  "#)")
+        Cons ->
+          write ":"
+        UnboxedSingleCon ->
+          write "(##)"
 
 instance Pretty Type where
   pretty x =
@@ -188,9 +209,11 @@ instance Pretty Type where
                        spaced (map pretty ts)
                        write ". ")
                (depend (case ctx of
-                          [] -> return ()
-                          (_:_) -> do parens (mapM_ pretty ctx)
-                                      write " => ")
+                          [] ->
+                            return ()
+                          (_:_) ->
+                            do parens (mapM_ pretty ctx)
+                               write " => ")
                        (pretty ty))
       TyFun a b ->
         depend (do pretty a
@@ -387,26 +410,46 @@ exp (QuasiQuote n s) =
                        write "|")
                    (do string s
                        write "|"))
-exp x@XTag{} = pretty' x
-exp x@XETag{} = pretty' x
-exp x@XPcdata{} = pretty' x
-exp x@XExpTag{} = pretty' x
-exp x@XChildTag{} = pretty' x
-exp x@Var{} = pretty' x
-exp x@IPVar{} = pretty' x
-exp x@Con{} = pretty' x
-exp x@Lit{} = pretty' x
-exp (CorePragma _ _) = error "FIXME: No implementation for CorePragma."
-exp (SCCPragma _ _) = error "FIXME: No implementation for SCCPragma."
-exp (GenPragma _ _ _ _) = error "FIXME: No implementation for GenPragma."
-exp (Proc _ _ _) = error "FIXME: No implementation for Proc."
-exp (LeftArrApp _ _) = error "FIXME: No implementation for LeftArrApp."
-exp (RightArrApp _ _) = error "FIXME: No implementation for RightArrApp."
-exp (LeftArrHighApp _ _) = error "FIXME: No implementation for LeftArrHighApp."
-exp (RightArrHighApp _ _) = error "FIXME: No implementation for RightArrHighApp."
-exp (LCase _) = error "FIXME: No implementation for LCase."
-exp (MultiIf _) = error "FIXME: No implementation for MultiIf."
-exp ParComp{} = error "FIXME: No implementation for ParComp."
+exp x@XTag{} =
+  pretty' x
+exp x@XETag{} =
+  pretty' x
+exp x@XPcdata{} =
+  pretty' x
+exp x@XExpTag{} =
+  pretty' x
+exp x@XChildTag{} =
+  pretty' x
+exp x@Var{} =
+  pretty' x
+exp x@IPVar{} =
+  pretty' x
+exp x@Con{} =
+  pretty' x
+exp x@Lit{} =
+  pretty' x
+exp (CorePragma _ _) =
+  error "FIXME: No implementation for CorePragma."
+exp (SCCPragma _ _) =
+  error "FIXME: No implementation for SCCPragma."
+exp (GenPragma _ _ _ _) =
+  error "FIXME: No implementation for GenPragma."
+exp (Proc _ _ _) =
+  error "FIXME: No implementation for Proc."
+exp (LeftArrApp _ _) =
+  error "FIXME: No implementation for LeftArrApp."
+exp (RightArrApp _ _) =
+  error "FIXME: No implementation for RightArrApp."
+exp (LeftArrHighApp _ _) =
+  error "FIXME: No implementation for LeftArrHighApp."
+exp (RightArrHighApp _ _) =
+  error "FIXME: No implementation for RightArrHighApp."
+exp (LCase _) =
+  error "FIXME: No implementation for LCase."
+exp (MultiIf _) =
+  error "FIXME: No implementation for MultiIf."
+exp ParComp{} =
+  error "FIXME: No implementation for ParComp."
 
 instance Pretty Stmt where
   pretty x =
@@ -426,12 +469,18 @@ instance Pretty Stmt where
 instance Pretty QualStmt where
   pretty x =
     case x of
-      QualStmt s -> pretty s
-      ThenTrans{} -> error "FIXME: No implementation for ThenTrans."
-      ThenBy{} -> error "FIXME: No implementation for ThenBy."
-      GroupBy{} -> error "FIXME: No implementation for GroupBy."
-      GroupUsing{} -> error "FIXME: No implementation for GroupUsing."
-      GroupByUsing{} -> error "FIXME: No implementation for GroupByUsing."
+      QualStmt s ->
+        pretty s
+      ThenTrans{} ->
+        error "FIXME: No implementation for ThenTrans."
+      ThenBy{} ->
+        error "FIXME: No implementation for ThenBy."
+      GroupBy{} ->
+        error "FIXME: No implementation for GroupBy."
+      GroupUsing{} ->
+        error "FIXME: No implementation for GroupUsing."
+      GroupByUsing{} ->
+        error "FIXME: No implementation for GroupByUsing."
 
 instance Pretty Decl where
   pretty = decl
@@ -537,17 +586,24 @@ instance Pretty Alt where
 instance Pretty Asst where
   pretty x =
     case x of
-      ClassA _ _ -> error "FIXME: No implementation for ClassA."
-      InfixA _ _ _ -> error "FIXME: No implementation for InfixA."
-      IParam _ _ -> error "FIXME: No implementation for IParam."
-      EqualP _ _ -> error "FIXME: No implementation for EqualP."
+      ClassA _ _ ->
+        error "FIXME: No implementation for ClassA."
+      InfixA _ _ _ ->
+        error "FIXME: No implementation for InfixA."
+      IParam _ _ ->
+        error "FIXME: No implementation for IParam."
+      EqualP _ _ ->
+        error "FIXME: No implementation for EqualP."
 
 instance Pretty BangType where
   pretty x =
     case x of
-      BangedTy _ -> error "FIXME: No implementation for BangedTy."
-      UnBangedTy _ -> error "FIXME: No implementation for UnBangedTy."
-      UnpackedTy _ -> error "FIXME: No implementation for UnpackedTy."
+      BangedTy _ ->
+        error "FIXME: No implementation for BangedTy."
+      UnBangedTy _ ->
+        error "FIXME: No implementation for UnBangedTy."
+      UnpackedTy _ ->
+        error "FIXME: No implementation for UnpackedTy."
 
 instance Pretty Binds where
   pretty x =
@@ -560,10 +616,14 @@ instance Pretty Binds where
 instance Pretty Bracket where
   pretty x =
     case x of
-      ExpBracket _ -> error "FIXME: No implementation for ExpBracket."
-      PatBracket _ -> error "FIXME: No implementation for PatBracket."
-      TypeBracket _ -> error "FIXME: No implementation for TypeBracket."
-      DeclBracket _ -> error "FIXME: No implementation for DeclBracket."
+      ExpBracket _ ->
+        error "FIXME: No implementation for ExpBracket."
+      PatBracket _ ->
+        error "FIXME: No implementation for PatBracket."
+      TypeBracket _ ->
+        error "FIXME: No implementation for TypeBracket."
+      DeclBracket _ ->
+        error "FIXME: No implementation for DeclBracket."
 
 instance Pretty ClassDecl where
   pretty _ =
@@ -572,19 +632,21 @@ instance Pretty ClassDecl where
 instance Pretty ConDecl where
   pretty x =
     case x of
-      ConDecl _ _ -> error "FIXME: No implementation for ConDecl."
-      InfixConDecl _ _ _ -> error "FIXME: No implementation for InfixConDecl."
-      RecDecl _ _ -> error "FIXME: No implementation for RecDecl."
+      ConDecl _ _ ->
+        error "FIXME: No implementation for ConDecl."
+      InfixConDecl _ _ _ ->
+        error "FIXME: No implementation for InfixConDecl."
+      RecDecl _ _ ->
+        error "FIXME: No implementation for RecDecl."
 
 instance Pretty FieldUpdate where
   pretty x =
     case x of
       FieldUpdate n e ->
-        dependOrNewline
-          (do pretty n
-              write " = ")
-          e
-          pretty
+        dependOrNewline (do pretty n
+                            write " = ")
+                        e
+                        pretty
       FieldPun n ->
         pretty n
       FieldWildcard ->
@@ -601,14 +663,15 @@ instance Pretty GuardedAlts where
       UnGuardedAlt e ->
         dependOrNewline (write " -> ")
                         e
-                        (indented 2 . pretty)
+                        (indented 2 .
+                         pretty)
       GuardedAlts gas ->
         do newline
-           indented
-             2
-             (lined (map (\p -> do write "|"
-                                   pretty p)
-                         gas))
+           indented 2
+                    (lined (map (\p ->
+                                   do write "|"
+                                      pretty p)
+                                gas))
 
 instance Pretty GuardedAlt where
   pretty x =
@@ -627,14 +690,16 @@ instance Pretty GuardedRhs where
   pretty x =
     case x of
       GuardedRhs _ stmts e ->
-        indented
-          1
-          (do (prefixedLined ','
-                             (map (\p -> do space
-                                            pretty p) stmts))
-              dependOrNewline (write " = ")
-                              e
-                              (indented 1 . pretty))
+        indented 1
+                 (do prefixedLined ','
+                                   (map (\p ->
+                                           do space
+                                              pretty p)
+                                        stmts)
+                     dependOrNewline (write " = ")
+                                     e
+                                     (indented 1 .
+                                      pretty))
 
 instance Pretty IPBind where
   pretty x =
@@ -644,7 +709,8 @@ instance Pretty IPBind where
 instance Pretty IfAlt where
   pretty x =
     case x of
-      IfAlt _ _ -> error "FIXME: No implementation for IfAlt."
+      IfAlt _ _ ->
+        error "FIXME: No implementation for IfAlt."
 
 instance Pretty InstDecl where
   pretty i =
@@ -707,10 +773,11 @@ instance Pretty Rhs where
                                   pretty)
       GuardedRhss gas ->
         do newline
-           indented
-             2
-             (lined (map (\p -> do write "|"
-                                   pretty p) gas))
+           indented 2
+                    (lined (map (\p ->
+                                   do write "|"
+                                      pretty p)
+                                gas))
 
 instance Pretty Rule where
   pretty x =
@@ -720,8 +787,10 @@ instance Pretty Rule where
 instance Pretty RuleVar where
   pretty x =
     case x of
-      RuleVar _ -> error "FIXME: No implementation for RuleVar."
-      TypedRuleVar _ _ -> error "FIXME: No implementation for TypedRuleVar."
+      RuleVar _ ->
+        error "FIXME: No implementation for RuleVar."
+      TypedRuleVar _ _ ->
+        error "FIXME: No implementation for TypedRuleVar."
 
 instance Pretty Splice where
   pretty x =
@@ -732,8 +801,10 @@ instance Pretty Splice where
 instance Pretty WarningText where
   pretty x =
     case x of
-      DeprText _ -> error "FIXME: No implementation for DeprText."
-      WarnText _ -> error "FIXME: No implementation for WarnText."
+      DeprText _ ->
+        error "FIXME: No implementation for DeprText."
+      WarnText _ ->
+        error "FIXME: No implementation for WarnText."
 
 instance Pretty Tool where
   pretty x =
