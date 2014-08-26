@@ -34,13 +34,6 @@ dependOrNewline left right f =
      else do left
              newline
              (f right)
-  where depending =
-          depend left
-                 (f right)
-        lineBroken =
-          do left
-             newline
-             (f right)
 
 -- | Wouuld this printer exceed the column limit?
 exceeds :: MonadState PrintState m => m a -> m Bool
@@ -165,7 +158,7 @@ instance Pretty Pat where
 prettyInfixOp :: QName -> Printer ()
 prettyInfixOp x =
   case x of
-    Qual mname name ->
+    Qual{} ->
       pretty' x
     UnQual n ->
       case n of
@@ -456,7 +449,7 @@ decl (PatBind _ pat mty rhs binds) =
                              (depend (write "where ")
                                      (pretty binds)))
 
-decl (InstDecl _ ctx name tys decls) =
+decl (InstDecl _ _ctx _name _tys _decls) =
   error "FIXME: No implementation for InstDecl."
 decl (TypeDecl _ _ _ _) =
   error "FIXME: No implementation for TypeDecl."
