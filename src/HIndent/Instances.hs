@@ -357,7 +357,13 @@ exp (TupleSection boxed mexps) =
              write (case boxed of
                       Unboxed -> "#)"
                       Boxed -> ")"))
-exp (List es) = brackets (commas (map pretty es))
+exp (List es) =
+  do single <- isSingleLiner p
+     underflow <- fmap not (isOverflow p)
+     if single && underflow
+        then p
+        else brackets (prefixedLined ',' (map pretty es))
+  where p = brackets (commas (map pretty es))
 exp (LeftSection e op) =
   parens (depend (do pretty e
                      space)
