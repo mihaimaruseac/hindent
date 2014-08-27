@@ -26,24 +26,33 @@ indentSpaces = 2
 columnLimit :: Int64
 columnLimit = 80
 
+-- | Column limit: 80
+smallColumnLimit :: Int64
+smallColumnLimit = 50
+
 -- | Make the right hand side dependent if it's flat, otherwise
 -- newline it.
 dependOrNewline :: Printer () -> Exp -> (Exp -> Printer ()) -> Printer ()
 dependOrNewline left right f =
-  do is <- flat right
-     if is
+  do flat <- isFlat right
+     small <- isSmall (depend left (f right))
+     if flat || small
         then depend left
                     (f right)
         else do left
                 newline
                 (f right)
 
--- | Wouuld this printer exceed the column limit?
-exceeds :: MonadState PrintState m => m a -> m Bool
-exceeds p =
-  do st <- sandbox p
-     return (psColumn st >
-             columnLimit)
+-- | Is the given expression "small"? I.e. does it fit on one line and
+-- under 'smallColumnLimit' columns.
+isSmall :: MonadState PrintState m => m a -> m Bool
+isSmall p =
+  do line <- gets psLine
+     st <- sandbox p
+     return (psLine st ==
+             line &&
+             psColumn st <
+             smallColumnLimit)
 
 -- | Play with a printer and then restore the state to what it was
 -- before.
@@ -63,30 +72,30 @@ nullBinds (IPBinds x) =
   null x
 
 -- | Is an expression flat?
-flat :: Exp -> Printer Bool
-flat (Lambda _ _ e) =
-  flat e
-flat (InfixApp a _ b) =
-  do a' <- flat a
-     b' <- flat b
+isFlat :: Exp -> Printer Bool
+isFlat (Lambda _ _ e) =
+  isFlat e
+isFlat (InfixApp a _ b) =
+  do a' <- isFlat a
+     b' <- isFlat b
      return (a' && b')
-flat (NegApp a) =
-  flat a
-flat (Paren e) =
-  flat e
-flat VarQuote{} =
+isFlat (NegApp a) =
+  isFlat a
+isFlat (Paren e) =
+  isFlat e
+isFlat VarQuote{} =
   return True
-flat TypQuote{} =
+isFlat TypQuote{} =
   return True
-flat (List []) =
+isFlat (List []) =
   return True
-flat Var{} =
+isFlat Var{} =
   return True
-flat Lit{} =
+isFlat Lit{} =
   return True
-flat Con{} =
+isFlat Con{} =
   return True
-flat _ =
+isFlat _ =
   return False
 
 instance Pretty Pat where
@@ -267,7 +276,7 @@ instance Pretty Exp where
 -- | Render an expression.
 exp :: Exp -> Printer ()
 exp e@(InfixApp a op b) =
-  do is <- flat e
+  do is <- isFlat e
      if is
         then do depend (do pretty a
                            space
@@ -286,7 +295,7 @@ exp (App op a) =
       depend (do pretty f
                  space)
              (do allFlat <- fmap ((< 2) . length . filter not)
-                                 (mapM flat args)
+                                 (mapM isFlat args)
                  if allFlat
                     then spaced (map pretty args)
                     else lined (map pretty args))

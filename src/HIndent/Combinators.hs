@@ -169,8 +169,7 @@ write x =
   do state <- get
      let out =
            if psNewline state
-              then T.fromText (T.replicate (fromIntegral (psIndentLevel state))
-                                           " ") <>
+              then T.fromText (T.replicate (fromIntegral (psIndentLevel state)) " ") <>
                    x
               else x
          out' =
@@ -180,10 +179,12 @@ write x =
                   psOutput state <>
                   out
                  ,psNewline = False
+                 ,psLine =
+                  psLine state +
+                  additionalLines
                  ,psColumn =
                   if additionalLines > 0
-                     then LT.length (LT.concat (take 1
-                                                     (reverse srclines)))
+                     then LT.length (LT.concat (take 1 (reverse srclines)))
                      else psColumn state +
                           LT.length out'})
   where x' =
@@ -191,8 +192,7 @@ write x =
         srclines =
           LT.lines x'
         additionalLines =
-          LT.length (LT.filter (== '\n')
-                               x')
+          LT.length (LT.filter (== '\n') x')
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here is
 -- HSE's.

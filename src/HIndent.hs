@@ -29,7 +29,7 @@ reformat x =
 prettyPrint :: Pretty a => a -> Builder
 prettyPrint v =
   psOutput (execState (runPrinter (pretty v))
-                      (PrintState 0 mempty False 0))
+                      (PrintState 0 mempty False 0 1))
 
 -- | Parse mode, includes all extensions, doesn't assume any fixities.
 parseMode :: ParseMode

@@ -24,6 +24,7 @@ newtype Printer a = Printer { runPrinter :: State PrintState a }
 data PrintState = PrintState
   { psIndentLevel :: !Int64   -- ^ Current indentation level.
   , psOutput      :: !Builder -- ^ The current output.
-  , psNewline     :: !Bool    -- ^ Just outputted a newline?)
+  , psNewline     :: !Bool    -- ^ Just outputted a newline?
   , psColumn      :: !Int64   -- ^ Current column.
+  , psLine        :: !Int64   -- ^ Current line number.
   } deriving (Show)
