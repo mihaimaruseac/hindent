@@ -163,17 +163,17 @@ write x =
          out' = T.toLazyText out
      modify (\s ->
                s {psOutput =
-                  psOutput state <>
-                  out
+                    psOutput state <>
+                    out
                  ,psNewline = False
                  ,psLine =
-                  psLine state +
-                  additionalLines
+                    psLine state +
+                    additionalLines
                  ,psColumn =
-                  if additionalLines > 0
-                     then LT.length (LT.concat (take 1 (reverse srclines)))
-                     else psColumn state +
-                          LT.length out'})
+                    if additionalLines > 0
+                       then LT.length (LT.concat (take 1 (reverse srclines)))
+                       else psColumn state +
+                            LT.length out'})
   where x' = T.toLazyText x
         srclines = LT.lines x'
         additionalLines =
