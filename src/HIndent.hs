@@ -18,9 +18,9 @@ import           Language.Haskell.Exts.Parser
 -- | Format the given source.
 reformat :: Text -> Either String Builder
 reformat x =
-  case parseDeclWithMode parseMode
-                         (T.unpack x) of
-    ParseOk v -> Right (prettyPrint v)
+  case parseDeclWithComments parseMode
+                             (T.unpack x) of
+    ParseOk (v,comments) -> Right (prettyPrint v)
     ParseFailed _ e -> Left e
 
 -- | Pretty print the given printable thing.
