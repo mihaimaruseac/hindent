@@ -15,7 +15,8 @@ main =
   do args <- getArgs
      case args of
        [] ->
-         T.interact (either error T.toLazyText . reformat)
+         T.interact
+           (either error T.toLazyText .
+            reformat)
        (_:_) ->
-         error "No arguments accepted at this time. \
-               \Provide a declaration in STDIN."
+         error "No arguments accepted at this time. Provide a declaration in STDIN."

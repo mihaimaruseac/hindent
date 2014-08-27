@@ -8,8 +8,9 @@
 
 module HIndent.Instances where
 
-import           HIndent.Types
+
 import           HIndent.Combinators
+import           HIndent.Types
 
 import           Control.Monad.State
 import           Data.Int
@@ -30,6 +31,10 @@ columnLimit = 80
 smallColumnLimit :: Int64
 smallColumnLimit = 50
 
+-- | A short function name.
+shortName :: Int64
+shortName = 10
+
 -- | Make the right hand side dependent if it's flat, otherwise
 -- newline it.
 dependOrNewline :: Printer () -> Exp -> (Exp -> Printer ()) -> Printer ()
@@ -37,23 +42,22 @@ dependOrNewline left right f =
   do flat <- isFlat right
      small <- isSmall (depend left (f right))
      if flat || small
-        then depend left
-                    (f right)
+        then depend left (f right)
         else do left
                 newline
                 (f right)
 
 -- | Is the expression "short"? Used for app heads.
-isShort :: Pretty a => a -> Printer Bool
+isShort :: (Pretty a,Show a) => a -> Printer Bool
 isShort p =
   do line <- gets psLine
-     orig <- gets psColumn
+     orig <- fmap psColumn (sandbox (write ""))
      st <- sandbox (pretty p)
      return (psLine st ==
              line &&
-             psColumn st <
-             psColumn st +
-             10)
+             (psColumn st <
+              orig +
+              shortName))
 
 -- | Is the given expression "small"? I.e. does it fit on one line and
 -- under 'smallColumnLimit' columns.
@@ -94,8 +98,7 @@ sandbox p =
 -- | No binds?
 nullBinds :: Binds -> Bool
 nullBinds (BDecls x) = null x
-nullBinds (IPBinds x) =
-  null x
+nullBinds (IPBinds x) = null x
 
 -- | Is an expression flat?
 isFlat :: Exp -> Printer Bool
@@ -105,17 +108,13 @@ isFlat (InfixApp a _ b) =
      b' <- isFlat b
      return (a' && b')
 isFlat (NegApp a) = isFlat a
-isFlat (Paren e) =
-  isFlat e
+isFlat (Paren e) = isFlat e
 isFlat VarQuote{} = return True
-isFlat TypQuote{} =
-  return True
+isFlat TypQuote{} = return True
 isFlat (List []) = return True
-isFlat Var{} =
-  return True
+isFlat Var{} = return True
 isFlat Lit{} = return True
-isFlat Con{} =
-  return True
+isFlat Con{} = return True
 isFlat _ = return False
 
 instance Pretty Pat where
@@ -309,10 +308,11 @@ exp (NegApp e) =
 exp (Lambda _ ps e) =
   depend (write "\\")
          (do spaced (map pretty ps)
-             dependOrNewline (write " -> ")
-                             e
-                             (indented 1 .
-                              pretty))
+             dependOrNewline
+               (write " -> ")
+               e
+               (indented 1 .
+                pretty))
 exp (Let binds e) =
   do depend (write "let ")
             (pretty binds)
@@ -375,17 +375,19 @@ exp (RightSection e op) =
 exp (RecConstr n fs) =
   depend (do pretty n
              space)
-         (braces (prefixedLined ','
-                                (map (indented indentSpaces .
-                                      pretty)
-                                     fs)))
+         (braces (prefixedLined
+                    ','
+                    (map (indented indentSpaces .
+                          pretty)
+                         fs)))
 exp (RecUpdate n fs) =
   depend (do pretty n
              space)
-         (braces (prefixedLined ','
-                                (map (indented indentSpaces .
-                                      pretty)
-                                     fs)))
+         (braces (prefixedLined
+                    ','
+                    (map (indented indentSpaces .
+                          pretty)
+                         fs)))
 exp (EnumFrom e) =
   brackets (do pretty e
                write " ..")
@@ -409,13 +411,14 @@ exp (ListComp e qstmt) =
                        unless (null qstmt)
                               (write " |"))
                    (do space
-                       prefixedLined ','
-                                     (map (\(i,x) ->
-                                             depend (if i == 0
-                                                        then return ()
-                                                        else space)
-                                                    (pretty x))
-                                          (zip [0 :: Integer ..] qstmt))))
+                       prefixedLined
+                         ','
+                         (map (\(i,x) ->
+                                 depend (if i == 0
+                                            then return ()
+                                            else space)
+                                        (pretty x))
+                              (zip [0 :: Integer ..] qstmt))))
 exp (ExpTypeSig _ e t) =
   depend (do pretty e
              write " :: ")
@@ -429,12 +432,10 @@ exp (TypQuote x) =
 exp (BracketExp b) = pretty b
 exp (SpliceExp s) = pretty s
 exp (QuasiQuote n s) =
-  brackets
-    (depend
-       (do string n
-           write "|")
-       (do string s
-           write "|"))
+  brackets (depend (do string n
+                       write "|")
+                   (do string s
+                       write "|"))
 exp x@XTag{} = pretty' x
 exp x@XETag{} = pretty' x
 exp x@XPcdata{} = pretty' x
@@ -654,10 +655,11 @@ instance Pretty FieldUpdate where
   pretty x =
     case x of
       FieldUpdate n e ->
-        dependOrNewline (do pretty n
-                            write " = ")
-                        e
-                        pretty
+        dependOrNewline
+          (do pretty n
+              write " = ")
+          e
+          pretty
       FieldPun n -> pretty n
       FieldWildcard -> write ".."
 
@@ -671,10 +673,11 @@ instance Pretty GuardedAlts where
   pretty x =
     case x of
       UnGuardedAlt e ->
-        dependOrNewline (write " -> ")
-                        e
-                        (indented 2 .
-                         pretty)
+        dependOrNewline
+          (write " -> ")
+          e
+          (indented 2 .
+           pretty)
       GuardedAlts gas ->
         do newline
            indented 2
@@ -688,30 +691,34 @@ instance Pretty GuardedAlt where
     case x of
       GuardedAlt _ stmts e ->
         indented 1
-                 (do (prefixedLined ','
-                                    (map (\p ->
-                                            do space
-                                               pretty p)
-                                         stmts))
-                     dependOrNewline (write " -> ")
-                                     e
-                                     (indented 1 .
-                                      pretty))
+                 (do (prefixedLined
+                        ','
+                        (map (\p ->
+                                do space
+                                   pretty p)
+                             stmts))
+                     dependOrNewline
+                       (write " -> ")
+                       e
+                       (indented 1 .
+                        pretty))
 
 instance Pretty GuardedRhs where
   pretty x =
     case x of
       GuardedRhs _ stmts e ->
         indented 1
-                 (do prefixedLined ','
-                                   (map (\p ->
-                                           do space
-                                              pretty p)
-                                        stmts)
-                     dependOrNewline (write " = ")
-                                     e
-                                     (indented 1 .
-                                      pretty))
+                 (do prefixedLined
+                       ','
+                       (map (\p ->
+                               do space
+                                  pretty p)
+                            stmts)
+                     dependOrNewline
+                       (write " = ")
+                       e
+                       (indented 1 .
+                        pretty))
 
 instance Pretty IPBind where
   pretty x =
@@ -808,8 +815,9 @@ instance Pretty Splice where
     case x of
       IdSplice _ ->
         error "FIXME: No implementation for IdSplice."
-      ParenSplice _ ->
-        error "FIXME: No implementation for ParenSplice."
+      ParenSplice e ->
+        depend (write "$")
+               (parens (pretty e))
 
 instance Pretty WarningText where
   pretty x =
