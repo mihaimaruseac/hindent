@@ -181,10 +181,13 @@ exp (App op a) =
      headIsShort <- isShort f
      depend (do pretty f
                 space)
-            (do flatish <- fmap ((< 2) . length . filter not)
-                                (mapM isFlat args)
+            (do flats <- mapM isFlat args
+                flatish <- fmap ((< 2) . length . filter not)
+                                (return flats)
                 singleLiner <- isSingleLiner (spaced (map pretty args))
-                if headIsShort && flatish && singleLiner
+                if singleLiner &&
+                   ((headIsShort && flatish) ||
+                    all id flats)
                    then spaced (map pretty args)
                    else do allSingleLiners <- fmap (all id)
                                                    (mapM (isSingleLiner . pretty) args)
@@ -195,7 +198,8 @@ exp (App op a) =
                                              (lined (map pretty args)))
   where (f,args) = flatten op [a]
         flatten :: Exp -> [Exp] -> (Exp,[Exp])
-        flatten (App f' a') b = flatten f' (a' : b)
+        flatten (App f' a') b =
+          flatten f' (a' : b)
         flatten f' as = (f',as)
 exp (NegApp e) =
   depend (write "-")
