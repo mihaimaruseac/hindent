@@ -347,10 +347,15 @@ exp (Tuple boxed exps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
                    Boxed -> "("))
-         (do commas (map pretty exps)
+         (do single <- isSingleLiner p
+             underflow <- fmap not (isOverflow p)
+             if single && underflow
+                then p
+                else parens (prefixedLined ',' (map pretty exps))
              write (case boxed of
                       Unboxed -> "#)"
                       Boxed -> ")"))
+  where p = commas (map pretty exps)
 exp (TupleSection boxed mexps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
