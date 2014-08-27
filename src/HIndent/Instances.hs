@@ -103,6 +103,9 @@ nullBinds (IPBinds x) = null x
 -- | Is an expression flat?
 isFlat :: Exp -> Printer Bool
 isFlat (Lambda _ _ e) = isFlat e
+isFlat (App a b) = return (isName a && isName b)
+  where isName (Var{}) = True
+        isName _ = False
 isFlat (InfixApp a _ b) =
   do a' <- isFlat a
      b' <- isFlat b
@@ -114,6 +117,8 @@ isFlat (List []) = return True
 isFlat Var{} = return True
 isFlat Lit{} = return True
 isFlat Con{} = return True
+isFlat (LeftSection e _) = isFlat e
+isFlat (RightSection _ e) = isFlat e
 isFlat _ = return False
 
 instance Pretty Pat where
@@ -279,27 +284,24 @@ exp e@(InfixApp a op b) =
                 newline
                 pretty b
 exp (App op a) =
-  case flatten op [a] of
-    (f,args) ->
-      do orig <- gets psIndentLevel
-         headIsShort <- isShort f
-         depend (do pretty f
-                    space)
-                (do flatish <- fmap ((< 2) .
-                                     length .
-                                     filter not)
-                                    (mapM isFlat args)
-                    singleLiner <- isSingleLiner (spaced (map pretty args))
-                    if flatish && singleLiner
-                       then spaced (map pretty args)
-                       else do allSingleLiners <- fmap (all id)
-                                                       (mapM (isSingleLiner . pretty) args)
-                               if headIsShort || allSingleLiners
-                                  then lined (map pretty args)
-                                  else do newline
-                                          column (orig + indentSpaces)
-                                                 (lined (map pretty args)))
-  where flatten :: Exp -> [Exp] -> (Exp,[Exp])
+  do orig <- gets psIndentLevel
+     headIsShort <- isShort f
+     depend (do pretty f
+                space)
+            (do flatish <- fmap ((< 2) . length . filter not)
+                                (mapM isFlat args)
+                singleLiner <- isSingleLiner (spaced (map pretty args))
+                if flatish && singleLiner
+                   then spaced (map pretty args)
+                   else do allSingleLiners <- fmap (all id)
+                                                   (mapM (isSingleLiner . pretty) args)
+                           if headIsShort || allSingleLiners
+                              then lined (map pretty args)
+                              else do newline
+                                      column (orig + indentSpaces)
+                                             (lined (map pretty args)))
+  where (f,args) = flatten op [a]
+        flatten :: Exp -> [Exp] -> (Exp,[Exp])
         flatten (App f a') b = flatten f (a' : b)
         flatten f as = (f,as)
 exp (NegApp e) =
