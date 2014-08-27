@@ -375,11 +375,17 @@ exp (RightSection e op) =
 exp (RecConstr n fs) =
   depend (do pretty n
              space)
-         (braces (prefixedLined ',' (map (indented indentSpaces . pretty) fs)))
+         (braces (prefixedLined ','
+                                (map (indented indentSpaces .
+                                      pretty)
+                                     fs)))
 exp (RecUpdate n fs) =
   depend (do pretty n
              space)
-         (braces (prefixedLined ',' (map (indented indentSpaces . pretty) fs)))
+         (braces (prefixedLined ','
+                                (map (indented indentSpaces .
+                                      pretty)
+                                     fs)))
 exp (EnumFrom e) =
   brackets (do pretty e
                write " ..")
