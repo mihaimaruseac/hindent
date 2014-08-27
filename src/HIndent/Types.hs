@@ -29,15 +29,3 @@ data PrintState = PrintState
   , psColumn      :: !Int64   -- ^ Current column.
   , psLine        :: !Int64   -- ^ Current line number.
   } deriving (Show,Eq)
-
-newtype X =
-  X Int
-data Maybe a
-  = Just a
-  | Nothing
-
-data Foo =
-  Foo
-
-data Bar =
-  forall a. (Show a) => Bar a
