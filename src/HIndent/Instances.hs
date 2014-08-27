@@ -30,12 +30,13 @@ columnLimit = 80
 -- newline it.
 dependOrNewline :: Printer () -> Exp -> (Exp -> Printer ()) -> Printer ()
 dependOrNewline left right f =
-  if flat right
-     then depend left
-                 (f right)
-     else do left
-             newline
-             (f right)
+  do is <- flat right
+     if is
+        then depend left
+                    (f right)
+        else do left
+                newline
+                (f right)
 
 -- | Wouuld this printer exceed the column limit?
 exceeds :: MonadState PrintState m => m a -> m Bool
@@ -62,21 +63,31 @@ nullBinds (IPBinds x) =
   null x
 
 -- | Is an expression flat?
-flat :: Exp -> Bool
+flat :: Exp -> Printer Bool
 flat (Lambda _ _ e) =
   flat e
 flat (InfixApp a _ b) =
-  flat a &&
-  flat b
+  do a' <- flat a
+     b' <- flat b
+     return (a' && b')
 flat (NegApp a) =
   flat a
-flat VarQuote{} = True
-flat TypQuote{} = True
-flat (List []) = True
-flat Var{} = True
-flat Lit{} = True
-flat Con{} = True
-flat _ = False
+flat (Paren e) =
+  flat e
+flat VarQuote{} =
+  return True
+flat TypQuote{} =
+  return True
+flat (List []) =
+  return True
+flat Var{} =
+  return True
+flat Lit{} =
+  return True
+flat Con{} =
+  return True
+flat _ =
+  return False
 
 instance Pretty Pat where
   pretty x =
@@ -256,26 +267,29 @@ instance Pretty Exp where
 -- | Render an expression.
 exp :: Exp -> Printer ()
 exp e@(InfixApp a op b) =
-  if flat e
-     then do depend (do pretty a
-                        space
-                        pretty op
-                        space)
-                    (do pretty b)
-     else do pretty a
-             space
-             pretty op
-             newline
-             pretty b
+  do is <- flat e
+     if is
+        then do depend (do pretty a
+                           space
+                           pretty op
+                           space)
+                       (do pretty b)
+        else do pretty a
+                space
+                pretty op
+                newline
+                pretty b
 exp (App op a) =
   case flatten op
                [a] of
     (f,args) ->
       depend (do pretty f
                  space)
-             (if all flat args
-                 then spaced (map pretty args)
-                 else lined (map pretty args))
+             (do allFlat <- fmap ((< 2) . length . filter not)
+                                 (mapM flat args)
+                 if allFlat
+                    then spaced (map pretty args)
+                    else lined (map pretty args))
   where flatten :: Exp -> [Exp] -> (Exp,[Exp])
         flatten (App f a') b =
           flatten f
