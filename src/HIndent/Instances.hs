@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -183,7 +184,7 @@ exp (App op a) =
             (do flatish <- fmap ((< 2) . length . filter not)
                                 (mapM isFlat args)
                 singleLiner <- isSingleLiner (spaced (map pretty args))
-                if flatish && singleLiner
+                if headIsShort && flatish && singleLiner
                    then spaced (map pretty args)
                    else do allSingleLiners <- fmap (all id)
                                                    (mapM (isSingleLiner . pretty) args)
@@ -442,8 +443,27 @@ decl (TypeDecl _ _ _ _) =
   error "FIXME: No implementation for TypeDecl."
 decl (TypeFamDecl _ _ _ _) =
   error "FIXME: No implementation for TypeFamDecl."
-decl (DataDecl _ _ _ _ _ _ _) =
-  error "FIXME: No implementation for DataDecl."
+decl (DataDecl _ dataornew ctx name tyvars condecls derivs) =
+  depend (do pretty dataornew
+             space)
+         (depend (maybeCtx ctx)
+                 (do spaced (pretty name :
+                             map pretty tyvars)
+                     case condecls of
+                       [] -> return ()
+                       [x] -> singleCons x
+                       xs -> multiCons xs))
+  where singleCons x =
+          do write " ="
+             column indentSpaces
+                    (do newline
+                        pretty x)
+        multiCons xs =
+          do newline
+             column indentSpaces
+                    (depend (write "=")
+                            (prefixedLined '|'
+                                           (map (depend space . pretty) xs)))
 decl (GDataDecl _ _ _ _ _ _ _ _) =
   error "FIXME: No implementation for GDataDecl."
 decl (DataFamDecl _ _ _ _ _) =
@@ -506,12 +526,14 @@ instance Pretty Asst where
 instance Pretty BangType where
   pretty x =
     case x of
-      BangedTy _ ->
-        error "FIXME: No implementation for BangedTy."
-      UnBangedTy _ ->
-        error "FIXME: No implementation for UnBangedTy."
-      UnpackedTy _ ->
-        error "FIXME: No implementation for UnpackedTy."
+      BangedTy ty ->
+        depend (write "!")
+               (pretty ty)
+      UnBangedTy ty ->
+        pretty ty
+      UnpackedTy ty ->
+        depend (write "{-# UNPACK #-} !")
+               (pretty ty)
 
 instance Pretty Binds where
   pretty x =
@@ -563,12 +585,29 @@ instance Pretty ClassDecl where
 instance Pretty ConDecl where
   pretty x =
     case x of
-      ConDecl _ _ ->
-        error "FIXME: No implementation for ConDecl."
-      InfixConDecl _ _ _ ->
-        error "FIXME: No implementation for InfixConDecl."
-      RecDecl _ _ ->
-        error "FIXME: No implementation for RecDecl."
+      ConDecl name bangty ->
+        depend (do pretty name
+                   space)
+               (lined (map pretty bangty))
+      InfixConDecl a f b ->
+        pretty (ConDecl f [a,b])
+      RecDecl name fields ->
+        depend (pretty name)
+               (do space
+                   braces (prefixedLined
+                             ','
+                             (map (indented indentSpaces . pretty)
+                                  (concatMap (\(names,ty) ->
+                                                map (,ty) names)
+                                             fields))))
+    where unpacked UnpackedTy{} = True
+          unpacked _ = False
+
+instance Pretty (Name,BangType) where
+  pretty (name,ty) =
+    depend (do pretty name
+               write " :: ")
+           (pretty ty)
 
 instance Pretty FieldUpdate where
   pretty x =
@@ -699,8 +738,13 @@ instance Pretty PatField where
 instance Pretty QualConDecl where
   pretty x =
     case x of
-      QualConDecl _ _ _ _ ->
-        error "FIXME: No implementation for QualConDecl."
+      QualConDecl _ tyvars ctx decl ->
+        depend (unless (null tyvars)
+                       (do write "forall "
+                           spaced (map pretty tyvars)
+                           write ". "))
+               (depend (maybeCtx ctx)
+                       (pretty decl))
 
 instance Pretty Rhs where
   pretty x =

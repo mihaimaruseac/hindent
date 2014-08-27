@@ -91,9 +91,13 @@ newline =
 -- former.
 depend :: Printer () -> Printer b -> Printer b
 depend maker dependent =
-  do maker
+  do state <- get
+     maker
+     st <- get
      col <- gets psColumn
-     column col dependent
+     if state /= st
+        then column col dependent
+        else dependent
 
 -- | Wrap in parens.
 parens :: Printer a -> Printer a
@@ -219,7 +223,7 @@ isOverflow :: MonadState PrintState m => m a -> m Bool
 isOverflow p =
   do st <- sandbox p
      return (psColumn st >
-             smallColumnLimit)
+             columnLimit)
 
 -- | Is the given expression a single-liner when printed?
 isSingleLiner :: MonadState PrintState m => m a -> m Bool

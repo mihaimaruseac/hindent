@@ -1,3 +1,4 @@
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -- | All types.
@@ -27,4 +28,16 @@ data PrintState = PrintState
   , psNewline     :: !Bool    -- ^ Just outputted a newline?
   , psColumn      :: !Int64   -- ^ Current column.
   , psLine        :: !Int64   -- ^ Current line number.
-  } deriving (Show)
+  } deriving (Show,Eq)
+
+newtype X =
+  X Int
+data Maybe a
+  = Just a
+  | Nothing
+
+data Foo =
+  Foo
+
+data Bar =
+  forall a. (Show a) => Bar a
