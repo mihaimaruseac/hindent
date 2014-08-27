@@ -47,22 +47,18 @@ import qualified Language.Haskell.Exts.Pretty as P
 indented :: Int64 -> Printer a -> Printer a
 indented i p =
   do level <- gets psIndentLevel
-     modify (\s ->
-               s {psIndentLevel = level + i})
+     modify (\s -> s {psIndentLevel = level + i})
      m <- p
-     modify (\s ->
-               s {psIndentLevel = level})
+     modify (\s -> s {psIndentLevel = level})
      return m
 
 -- | Print all the printers separated by spaces.
 spaced :: [Printer ()] -> Printer ()
-spaced =
-  inter space
+spaced = inter space
 
 -- | Print all the printers separated by commas.
 commas :: [Printer ()] -> Printer ()
-commas =
-  inter comma
+commas = inter comma
 
 -- | Print all the printers separated by sep.
 inter :: Printer () -> [Printer ()] -> Printer ()
@@ -75,13 +71,11 @@ inter sep ps =
                          else return ())
                   next)
         (return ())
-        (zip [1 ..]
-             ps)
+        (zip [1 ..] ps)
 
 -- | Print all the printers separated by spaces.
 lined :: [Printer ()] -> Printer ()
-lined ps =
-  sequence_ (intersperse newline ps)
+lined ps = sequence_ (intersperse newline ps)
 
 -- | Print all the printers separated newlines and optionally a line
 -- prefix.
@@ -94,8 +88,7 @@ prefixedLined pref ps' =
          indented (-1)
                   (mapM_ (\p' ->
                             do newline
-                               depend (string [pref])
-                                      p')
+                               depend (string [pref]) p')
                          ps)
 
 -- | Set the (newline-) indent level to the given column for the given
@@ -103,19 +96,16 @@ prefixedLined pref ps' =
 column :: Int64 -> Printer a -> Printer a
 column i p =
   do level <- gets psIndentLevel
-     modify (\s ->
-               s {psIndentLevel = i})
+     modify (\s -> s {psIndentLevel = i})
      m <- p
-     modify (\s ->
-               s {psIndentLevel = level})
+     modify (\s -> s {psIndentLevel = level})
      return m
 
 -- | Output a newline.
 newline :: Printer ()
 newline =
   do write "\n"
-     modify (\s ->
-               s {psNewline = True})
+     modify (\s -> s {psNewline = True})
 
 -- | Make the latter's indentation depend upon the end column of the
 -- former.
@@ -151,13 +141,11 @@ brackets p =
 
 -- | Write a space.
 space :: Printer ()
-space =
-  write " "
+space = write " "
 
 -- | Write a comma.
 comma :: Printer ()
-comma =
-  write ","
+comma = write ","
 
 -- | Write an integral.
 int :: Integral n => n -> Printer ()
@@ -172,8 +160,7 @@ write x =
               then T.fromText (T.replicate (fromIntegral (psIndentLevel state)) " ") <>
                    x
               else x
-         out' =
-           T.toLazyText out
+         out' = T.toLazyText out
      modify (\s ->
                s {psOutput =
                   psOutput state <>
@@ -187,10 +174,8 @@ write x =
                      then LT.length (LT.concat (take 1 (reverse srclines)))
                      else psColumn state +
                           LT.length out'})
-  where x' =
-          T.toLazyText x
-        srclines =
-          LT.lines x'
+  where x' = T.toLazyText x
+        srclines = LT.lines x'
         additionalLines =
           LT.length (LT.filter (== '\n') x')
 

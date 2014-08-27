@@ -521,7 +521,7 @@ decl (InstDecl _ ctx name tys decls) =
                                        (write " where"))))
      unless (null decls)
             (do newline
-                indented 2 (mapM_ pretty decls))
+                indented indentSpaces (lined (map pretty decls)))
 decl (TypeDecl _ _ _ _) =
   error "FIXME: No implementation for TypeDecl."
 decl (TypeFamDecl _ _ _ _) =
