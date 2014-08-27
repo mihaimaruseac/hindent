@@ -108,7 +108,6 @@ isFlat (InfixApp a _ b) =
      b' <- isFlat b
      return (a' && b')
 isFlat (NegApp a) = isFlat a
-isFlat (Paren e) = isFlat e
 isFlat VarQuote{} = return True
 isFlat TypQuote{} = return True
 isFlat (List []) = return True
@@ -298,7 +297,8 @@ exp (App op a) =
                                if headIsShort || allSingleLiners
                                   then lined (map pretty args)
                                   else do newline
-                                          column (orig + indentSpaces) (lined (map pretty args)))
+                                          column (orig + indentSpaces)
+                                                 (lined (map pretty args)))
   where flatten :: Exp -> [Exp] -> (Exp,[Exp])
         flatten (App f a') b = flatten f (a' : b)
         flatten f as = (f,as)
