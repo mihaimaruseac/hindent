@@ -8,118 +8,14 @@
 
 module HIndent.Instances where
 
-
 import           HIndent.Combinators
 import           HIndent.Types
 
 import           Control.Monad.State
-import           Data.Int
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Builder as T
 import           Language.Haskell.Exts.Syntax
 import           Prelude hiding (exp)
-
--- | Indent spaces: 2.
-indentSpaces :: Int64
-indentSpaces = 2
-
--- | Column limit: 80
-columnLimit :: Int64
-columnLimit = 80
-
--- | Column limit: 80
-smallColumnLimit :: Int64
-smallColumnLimit = 50
-
--- | A short function name.
-shortName :: Int64
-shortName = 10
-
--- | Make the right hand side dependent if it's flat, otherwise
--- newline it.
-dependOrNewline :: Printer () -> Exp -> (Exp -> Printer ()) -> Printer ()
-dependOrNewline left right f =
-  do flat <- isFlat right
-     small <- isSmall (depend left (f right))
-     if flat || small
-        then depend left (f right)
-        else do left
-                newline
-                (f right)
-
--- | Is the expression "short"? Used for app heads.
-isShort :: (Pretty a,Show a) => a -> Printer Bool
-isShort p =
-  do line <- gets psLine
-     orig <- fmap psColumn (sandbox (write ""))
-     st <- sandbox (pretty p)
-     return (psLine st ==
-             line &&
-             (psColumn st <
-              orig +
-              shortName))
-
--- | Is the given expression "small"? I.e. does it fit on one line and
--- under 'smallColumnLimit' columns.
-isSmall :: MonadState PrintState m => m a -> m Bool
-isSmall p =
-  do line <- gets psLine
-     st <- sandbox p
-     return (psLine st ==
-             line &&
-             psColumn st <
-             smallColumnLimit)
-
--- | Does printing the given thing overflow column limit? (e.g. 80)
-isOverflow :: MonadState PrintState m => m a -> m Bool
-isOverflow p =
-  do st <- sandbox p
-     return (psColumn st >
-             smallColumnLimit)
-
--- | Is the given expression a single-liner when printed?
-isSingleLiner :: MonadState PrintState m => m a -> m Bool
-isSingleLiner p =
-  do line <- gets psLine
-     st <- sandbox p
-     return (psLine st ==
-             line)
-
--- | Play with a printer and then restore the state to what it was
--- before.
-sandbox :: MonadState s m => m a -> m s
-sandbox p =
-  do orig <- get
-     _ <- p
-     new <- get
-     put orig
-     return new
-
--- | No binds?
-nullBinds :: Binds -> Bool
-nullBinds (BDecls x) = null x
-nullBinds (IPBinds x) = null x
-
--- | Is an expression flat?
-isFlat :: Exp -> Printer Bool
-isFlat (Lambda _ _ e) = isFlat e
-isFlat (App a b) = return (isName a && isName b)
-  where isName (Var{}) = True
-        isName _ = False
-isFlat (InfixApp a _ b) =
-  do a' <- isFlat a
-     b' <- isFlat b
-     return (a' && b')
-isFlat (NegApp a) = isFlat a
-isFlat VarQuote{} = return True
-isFlat TypQuote{} = return True
-isFlat (List []) = return True
-isFlat Var{} = return True
-isFlat Lit{} = return True
-isFlat Con{} = return True
-isFlat (LeftSection e _) = isFlat e
-isFlat (RightSection _ e) = isFlat e
-isFlat _ = return False
 
 instance Pretty Pat where
   pretty x =
@@ -302,8 +198,8 @@ exp (App op a) =
                                              (lined (map pretty args)))
   where (f,args) = flatten op [a]
         flatten :: Exp -> [Exp] -> (Exp,[Exp])
-        flatten (App f a') b = flatten f (a' : b)
-        flatten f as = (f,as)
+        flatten (App f' a') b = flatten f' (a' : b)
+        flatten f' as = (f',as)
 exp (NegApp e) =
   depend (write "-")
          (pretty e)
@@ -452,22 +348,14 @@ exp x@Var{} = pretty' x
 exp x@IPVar{} = pretty' x
 exp x@Con{} = pretty' x
 exp x@Lit{} = pretty' x
-exp (CorePragma _ _) =
-  error "FIXME: No implementation for CorePragma."
-exp (SCCPragma _ _) =
-  error "FIXME: No implementation for SCCPragma."
-exp (GenPragma _ _ _ _) =
-  error "FIXME: No implementation for GenPragma."
-exp (Proc _ _ _) =
-  error "FIXME: No implementation for Proc."
-exp (LeftArrApp _ _) =
-  error "FIXME: No implementation for LeftArrApp."
-exp (RightArrApp _ _) =
-  error "FIXME: No implementation for RightArrApp."
-exp (LeftArrHighApp _ _) =
-  error "FIXME: No implementation for LeftArrHighApp."
-exp (RightArrHighApp _ _) =
-  error "FIXME: No implementation for RightArrHighApp."
+exp x@CorePragma{} = pretty' x
+exp x@SCCPragma{} = pretty' x
+exp x@GenPragma{} = pretty' x
+exp x@Proc{} = pretty' x
+exp x@LeftArrApp{} = pretty' x
+exp x@RightArrApp{} = pretty' x
+exp x@LeftArrHighApp{} = pretty' x
+exp x@RightArrHighApp{} = pretty' x
 exp (LCase _) =
   error "FIXME: No implementation for LCase."
 exp (MultiIf _) =
@@ -521,7 +409,6 @@ decl (PatBind _ pat mty rhs binds) =
                     indented indentSpaces
                              (depend (write "where ")
                                      (pretty binds)))
-
 decl (InstDecl _ ctx name tys decls) =
   do depend (write "instance ")
             (depend (unless (null ctx)

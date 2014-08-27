@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -5,36 +6,13 @@
 -- | Combinators used for printing.
 
 module HIndent.Combinators
-  (
-  -- * Insertion
-    write
-  , newline
-  , space
-  , comma
-  , int
-  , parens
-  , brackets
-  -- * Indentation
-  , indented
-  , column
-  , depend
-  , spaced
-  , lined
-  , prefixedLined
-  , commas
-  , braces
-  , inter
-  -- * Fallback
-  , pretty'
-  , string
-  )
   where
 
-import           Data.List
 import           HIndent.Types
 
 import           Control.Monad.State hiding (state)
 import           Data.Int
+import           Data.List
 import           Data.Monoid
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
@@ -42,6 +20,8 @@ import           Data.Text.Lazy.Builder (Builder)
 import qualified Data.Text.Lazy.Builder as T
 import           Data.Text.Lazy.Builder.Int
 import qualified Language.Haskell.Exts.Pretty as P
+import           Language.Haskell.Exts.Syntax
+import           Prelude hiding (exp)
 
 -- | Increase indentation level by n spaces for the given printer.
 indented :: Int64 -> Printer a -> Printer a
@@ -182,3 +162,105 @@ pretty' = write . T.fromText . T.pack . P.prettyPrint
 -- | Write a string.
 string :: String -> Printer ()
 string = write . T.fromText . T.pack
+
+-- | Indent spaces: 2.
+indentSpaces :: Int64
+indentSpaces = 2
+
+-- | Column limit: 80
+columnLimit :: Int64
+columnLimit = 80
+
+-- | Column limit: 80
+smallColumnLimit :: Int64
+smallColumnLimit = 50
+
+-- | A short function name.
+shortName :: Int64
+shortName = 10
+
+-- | Make the right hand side dependent if it's flat, otherwise
+-- newline it.
+dependOrNewline :: Printer () -> Exp -> (Exp -> Printer ()) -> Printer ()
+dependOrNewline left right f =
+  do flat <- isFlat right
+     small <- isSmall (depend left (f right))
+     if flat || small
+        then depend left (f right)
+        else do left
+                newline
+                (f right)
+
+-- | Is the expression "short"? Used for app heads.
+isShort :: (Pretty a,Show a) => a -> Printer Bool
+isShort p =
+  do line <- gets psLine
+     orig <- fmap psColumn (sandbox (write ""))
+     st <- sandbox (pretty p)
+     return (psLine st ==
+             line &&
+             (psColumn st <
+              orig +
+              shortName))
+
+-- | Is the given expression "small"? I.e. does it fit on one line and
+-- under 'smallColumnLimit' columns.
+isSmall :: MonadState PrintState m => m a -> m Bool
+isSmall p =
+  do line <- gets psLine
+     st <- sandbox p
+     return (psLine st ==
+             line &&
+             psColumn st <
+             smallColumnLimit)
+
+-- | Does printing the given thing overflow column limit? (e.g. 80)
+isOverflow :: MonadState PrintState m => m a -> m Bool
+isOverflow p =
+  do st <- sandbox p
+     return (psColumn st >
+             smallColumnLimit)
+
+-- | Is the given expression a single-liner when printed?
+isSingleLiner :: MonadState PrintState m => m a -> m Bool
+isSingleLiner p =
+  do line <- gets psLine
+     st <- sandbox p
+     return (psLine st ==
+             line)
+
+-- | Play with a printer and then restore the state to what it was
+-- before.
+sandbox :: MonadState s m => m a -> m s
+sandbox p =
+  do orig <- get
+     _ <- p
+     new <- get
+     put orig
+     return new
+
+-- | No binds?
+nullBinds :: Binds -> Bool
+nullBinds (BDecls x) = null x
+nullBinds (IPBinds x) = null x
+
+-- | Is an expression flat?
+isFlat :: Exp -> Printer Bool
+isFlat (Lambda _ _ e) = isFlat e
+isFlat (App a b) = return (isName a && isName b)
+  where isName (Var{}) = True
+        isName _ = False
+isFlat (InfixApp a _ b) =
+  do a' <- isFlat a
+     b' <- isFlat b
+     return (a' && b')
+isFlat (NegApp a) = isFlat a
+isFlat VarQuote{} = return True
+isFlat TypQuote{} = return True
+isFlat (List []) = return True
+isFlat Var{} = return True
+isFlat Lit{} = return True
+isFlat Con{} = return True
+isFlat (LeftSection e _) = isFlat e
+isFlat (RightSection _ e) = isFlat e
+isFlat _ = return False
