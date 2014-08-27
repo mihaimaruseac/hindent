@@ -125,11 +125,7 @@ instance Pretty Type where
                     do write "forall "
                        spaced (map pretty ts)
                        write ". ")
-               (depend (case ctx of
-                          [] -> return ()
-                          (_:_) ->
-                            do parens (mapM_ pretty ctx)
-                               write " => ")
+               (depend (maybeCtx ctx)
                        (pretty ty))
       TyFun a b ->
         depend (do pretty a
@@ -411,15 +407,34 @@ decl (PatBind _ pat mty rhs binds) =
                                      (pretty binds)))
 decl (InstDecl _ ctx name tys decls) =
   do depend (write "instance ")
-            (depend (unless (null ctx)
-                            (do write "("
-                                commas (map pretty ctx)
-                                write ") => "))
+            (depend (maybeCtx ctx)
                     (depend (do pretty name
                                 space)
                             (do spaced (map pretty tys)
                                 unless (null decls)
                                        (write " where"))))
+     unless (null decls)
+            (do newline
+                indented indentSpaces (lined (map pretty decls)))
+decl (SpliceDecl _ e) = pretty e
+decl (TypeSig _ names ty) =
+  depend (do inter (write ", ")
+                   (map pretty names)
+             write " :: ")
+         (pretty ty)
+decl (FunBind matches) =
+  lined (map pretty matches)
+decl (ClassDecl _ ctx name tys fundeps decls) =
+  do depend (write "class ")
+            (depend (maybeCtx ctx)
+                    (depend (do pretty name
+                                space)
+                            (depend (depend (spaced (map pretty tys))
+                                            (unless (null fundeps)
+                                                    (do write " | "
+                                                        commas (map pretty fundeps))))
+                                    (unless (null decls)
+                                            (write " where")))))
      unless (null decls)
             (do newline
                 indented indentSpaces (lined (map pretty decls)))
@@ -439,23 +454,8 @@ decl (DataInsDecl _ _ _ _ _) =
   error "FIXME: No implementation for DataInsDecl."
 decl (GDataInsDecl _ _ _ _ _ _) =
   error "FIXME: No implementation for GDataInsDecl."
-decl (ClassDecl _ _ _ _ _ _) =
-  error "FIXME: No implementation for ClassDecl."
 decl (DerivDecl _ _ _ _) =
   error "FIXME: No implementation for DerivDecl."
-decl (InfixDecl _ _ _ _) =
-  error "FIXME: No implementation for InfixDecl."
-decl (DefaultDecl _ _) =
-  error "FIXME: No implementation for DefaultDecl."
-decl (SpliceDecl _ _) =
-  error "FIXME: No implementation for SpliceDecl."
-decl (TypeSig _ names ty) =
-  depend (do inter (write ", ")
-                   (map pretty names)
-             write " :: ")
-         (pretty ty)
-decl (FunBind matches) =
-  lined (map pretty matches)
 decl (ForImp _ _ _ _ _ _) =
   error "FIXME: No implementation for ForImp."
 decl (ForExp _ _ _ _ _) =
@@ -464,8 +464,6 @@ decl (RulePragmaDecl _ _) =
   error "FIXME: No implementation for RulePragmaDecl."
 decl (DeprPragmaDecl _ _) =
   error "FIXME: No implementation for DeprPragmaDecl."
-decl (WarnPragmaDecl _ _) =
-  error "FIXME: No implementation for WarnPragmaDecl."
 decl (InlineSig _ _ _ _) =
   error "FIXME: No implementation for InlineSig."
 decl (InlineConlikeSig _ _ _) =
@@ -476,8 +474,10 @@ decl (SpecInlineSig _ _ _ _ _) =
   error "FIXME: No implementation for SpecInlineSig."
 decl (InstSig _ _ _ _) =
   error "FIXME: No implementation for InstSig."
-decl (AnnPragma _ _) =
-  error "FIXME: No implementation for AnnPragma."
+decl x@WarnPragmaDecl{} = pretty' x
+decl x@AnnPragma{} = pretty' x
+decl x@InfixDecl{} = pretty' x
+decl x@DefaultDecl{} = pretty' x
 
 instance Pretty Alt where
   pretty x =
@@ -494,8 +494,8 @@ instance Pretty Alt where
 instance Pretty Asst where
   pretty x =
     case x of
-      ClassA _ _ ->
-        error "FIXME: No implementation for ClassA."
+      ClassA name types ->
+        spaced (pretty name : map pretty types)
       InfixA _ _ _ ->
         error "FIXME: No implementation for InfixA."
       IParam _ _ ->
@@ -532,8 +532,33 @@ instance Pretty Bracket where
         error "FIXME: No implementation for DeclBracket."
 
 instance Pretty ClassDecl where
-  pretty _ =
-    error "FIXME: No implementation for ClassDecl."
+  pretty x =
+    case x of
+      ClsDecl d -> pretty d
+      ClsDataFam _ ctx n tyvars mkind ->
+        depend (write "data ")
+               (depend (maybeCtx ctx)
+                       (do spaced (pretty n :
+                                   map pretty tyvars)
+                           case mkind of
+                             Nothing -> return ()
+                             Just kind ->
+                               do write " :: "
+                                  pretty kind))
+      ClsTyFam _ n tyvars mkind ->
+        depend (write "type ")
+               (do spaced (pretty n :
+                           map pretty tyvars)
+                   case mkind of
+                     Nothing -> return ()
+                     Just kind ->
+                       do write " :: "
+                          pretty kind)
+      ClsTyDef _ this that ->
+        do write "type "
+           pretty this
+           write " = "
+           pretty that
 
 instance Pretty ConDecl where
   pretty x =

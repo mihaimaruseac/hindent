@@ -264,3 +264,10 @@ isFlat Con{} = return True
 isFlat (LeftSection e _) = isFlat e
 isFlat (RightSection _ e) = isFlat e
 isFlat _ = return False
+
+maybeCtx :: Pretty a => [a] -> Printer ()
+maybeCtx ctx =
+  unless (null ctx)
+         (do write "("
+             commas (map pretty ctx)
+             write ") => ")
