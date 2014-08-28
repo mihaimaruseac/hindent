@@ -60,7 +60,7 @@ instance Eq PrintState where
 
 -- | A printer extender. Takes as argument the user state that the
 -- printer was run with, and the current node to print. Use
--- 'prettyInternal' to fallback to the built-in parser.
+-- 'prettyInternal' to fallback to the built-in printer.
 data Extender s =
   forall a. (Typeable a) => Extender (s -> a -> Printer ())
 
