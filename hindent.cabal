@@ -2,11 +2,10 @@ name:                hindent
 version:             0.0
 synopsis:            Extensible Haskell pretty printer
 description:         Extensible Haskell pretty printer. Both a library and an executable.
-
-                     hindent --style fundamental
-
-                     Currently supported styles are: fundamental, chris-done
+                     .
+                     See the Github page for usage/explanation: https://github.com/chrisdone/hindent
 license:             BSD3
+stability:           Unstable
 license-file:        LICENSE
 author:              Chris Done
 maintainer:          chrisdone@gmail.com

@@ -7,10 +7,10 @@ module HIndent.Styles.Fundamental
   (fundamental)
   where
 
-import Data.Default
 import HIndent.Instances ()
 import HIndent.Types
 
+import Data.Default
 import Prelude hiding (exp)
 
 -- | Empty state.
