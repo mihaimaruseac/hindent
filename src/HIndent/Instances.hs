@@ -27,7 +27,7 @@ instance Pretty Pat where
                (pretty l)
       PNPlusK n k ->
         depend (do pretty n
-                   write "-")
+                   write "+")
                (int k)
       PInfixApp a op b ->
         case op of
