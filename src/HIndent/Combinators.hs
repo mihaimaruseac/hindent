@@ -6,6 +6,41 @@
 -- | Combinators used for printing.
 
 module HIndent.Combinators
+  (
+  -- * Insertion
+    write
+  , newline
+  , space
+  , comma
+  , int
+  , string
+  -- * Common node types
+  , maybeCtx
+  -- * Interspersing
+  , inter
+  , spaced
+  , lined
+  , prefixedLined
+  , commas
+  -- * Wrapping
+  , parens
+  , brackets
+  , braces
+  -- * Indentation
+  , indented
+  , column
+  , depend
+  , swing
+  , indentSpaces
+  -- * Predicates
+  , isOverflow
+  , isSingleLiner
+  , nullBinds
+  -- * Sandboxing
+  , sandbox
+  -- * Fallback
+  , pretty'
+  )
   where
 
 import           HIndent.Types
@@ -56,6 +91,21 @@ inter sep ps =
 -- | Print all the printers separated by spaces.
 lined :: [Printer ()] -> Printer ()
 lined ps = sequence_ (intersperse newline ps)
+
+-- | Does printing the given thing overflow column limit? (e.g. 80)
+isOverflow :: MonadState PrintState m => m a -> m Bool
+isOverflow p =
+  do st <- sandbox p
+     return (psColumn st >
+             columnLimit)
+
+-- | Is the given expression a single-liner when printed?
+isSingleLiner :: MonadState PrintState m => m a -> m Bool
+isSingleLiner p =
+  do line <- gets psLine
+     st <- sandbox p
+     return (psLine st ==
+             line)
 
 -- | Print all the printers separated newlines and optionally a line
 -- prefix.
@@ -175,29 +225,6 @@ indentSpaces = 2
 columnLimit :: Int64
 columnLimit = 80
 
--- | Column limit: 80
-smallColumnLimit :: Int64
-smallColumnLimit = 50
-
--- | A short function name.
-shortName :: Int64
-shortName = 10
-
--- | Does printing the given thing overflow column limit? (e.g. 80)
-isOverflow :: MonadState PrintState m => m a -> m Bool
-isOverflow p =
-  do st <- sandbox p
-     return (psColumn st >
-             columnLimit)
-
--- | Is the given expression a single-liner when printed?
-isSingleLiner :: MonadState PrintState m => m a -> m Bool
-isSingleLiner p =
-  do line <- gets psLine
-     st <- sandbox p
-     return (psLine st ==
-             line)
-
 -- | Play with a printer and then restore the state to what it was
 -- before.
 sandbox :: MonadState s m => m a -> m s
@@ -212,27 +239,6 @@ sandbox p =
 nullBinds :: Binds -> Bool
 nullBinds (BDecls x) = null x
 nullBinds (IPBinds x) = null x
-
--- | Is an expression flat?
-isFlat :: Exp -> Printer Bool
-isFlat (Lambda _ _ e) = isFlat e
-isFlat (App a b) = return (isName a && isName b)
-  where isName (Var{}) = True
-        isName _ = False
-isFlat (InfixApp a _ b) =
-  do a' <- isFlat a
-     b' <- isFlat b
-     return (a' && b')
-isFlat (NegApp a) = isFlat a
-isFlat VarQuote{} = return True
-isFlat TypQuote{} = return True
-isFlat (List []) = return True
-isFlat Var{} = return True
-isFlat Lit{} = return True
-isFlat Con{} = return True
-isFlat (LeftSection e _) = isFlat e
-isFlat (RightSection _ e) = isFlat e
-isFlat _ = return False
 
 -- | Maybe render a class context.
 maybeCtx :: Pretty a => [a] -> Printer ()

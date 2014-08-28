@@ -10,11 +10,20 @@ module HIndent.Styles.ChrisDone
   where
 
 import Control.Monad.State.Class
+import Data.Int
 import HIndent.Combinators
 import HIndent.Instances ()
 import HIndent.Types
 import Language.Haskell.Exts.Syntax
 import Prelude hiding (exp)
+
+-- | A short function name.
+shortName :: Int64
+shortName = 10
+
+-- | Column limit: 50
+smallColumnLimit :: Int64
+smallColumnLimit = 50
 
 -- | Empty state.
 data State = State
@@ -113,3 +122,24 @@ dependOrNewline left right f =
         else do left
                 newline
                 (f right)
+
+-- | Is an expression flat?
+isFlat :: Exp -> Printer Bool
+isFlat (Lambda _ _ e) = isFlat e
+isFlat (App a b) = return (isName a && isName b)
+  where isName (Var{}) = True
+        isName _ = False
+isFlat (InfixApp a _ b) =
+  do a' <- isFlat a
+     b' <- isFlat b
+     return (a' && b')
+isFlat (NegApp a) = isFlat a
+isFlat VarQuote{} = return True
+isFlat TypQuote{} = return True
+isFlat (List []) = return True
+isFlat Var{} = return True
+isFlat Lit{} = return True
+isFlat Con{} = return True
+isFlat (LeftSection e _) = isFlat e
+isFlat (RightSection _ e) = isFlat e
+isFlat _ = return False
