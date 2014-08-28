@@ -31,7 +31,7 @@ module HIndent.Combinators
   , column
   , depend
   , swing
-  , indentSpaces
+  , getIndentSpaces
   -- * Predicates
   , isOverflow
   , isSingleLiner
@@ -218,8 +218,8 @@ string :: String -> Printer ()
 string = write . T.fromText . T.pack
 
 -- | Indent spaces: 2.
-indentSpaces :: Int64
-indentSpaces = 2
+getIndentSpaces :: Printer Int64
+getIndentSpaces = gets (configIndentSpaces . psConfig)
 
 -- | Column limit: 80
 columnLimit :: Int64
@@ -254,4 +254,5 @@ swing a b =
   do orig <- gets psIndentLevel
      a
      newline
+     indentSpaces <- getIndentSpaces
      column (orig + indentSpaces) b

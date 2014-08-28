@@ -206,6 +206,7 @@ exp (Case e alts) =
             (do pretty e
                 write " of ")
      newline
+     indentSpaces <- getIndentSpaces
      indented indentSpaces (lined (map pretty alts))
 exp (Do stmts) =
   depend (write "do ")
@@ -250,21 +251,23 @@ exp (RightSection e op) =
                      space)
                  (pretty op))
 exp (RecConstr n fs) =
-  depend (do pretty n
-             space)
-         (braces (prefixedLined
-                    ','
-                    (map (indented indentSpaces .
-                          pretty)
-                         fs)))
+  do indentSpaces <- getIndentSpaces
+     depend (do pretty n
+                space)
+            (braces (prefixedLined
+                       ','
+                       (map (indented indentSpaces .
+                             pretty)
+                            fs)))
 exp (RecUpdate n fs) =
-  depend (do pretty n
-             space)
-         (braces (prefixedLined
-                    ','
-                    (map (indented indentSpaces .
-                          pretty)
-                         fs)))
+  do indentSpaces <- getIndentSpaces
+     depend (do pretty n
+                space)
+            (braces (prefixedLined
+                       ','
+                       (map (indented indentSpaces .
+                             pretty)
+                            fs)))
 exp (EnumFrom e) =
   brackets (do pretty e
                write " ..")
@@ -378,13 +381,15 @@ decl (PatBind _ pat mty rhs binds) =
     Nothing ->
       do pretty pat
          pretty rhs
+         indentSpaces <- getIndentSpaces
          unless (nullBinds binds)
                 (do newline
                     indented indentSpaces
                              (depend (write "where ")
                                      (pretty binds)))
 decl (InstDecl _ ctx name tys decls) =
-  do depend (write "instance ")
+  do indentSpaces <- getIndentSpaces
+     depend (write "instance ")
             (depend (maybeCtx ctx)
                     (depend (do pretty name
                                 space)
@@ -415,6 +420,7 @@ decl (ClassDecl _ ctx name tys fundeps decls) =
                                             (write " where")))))
      unless (null decls)
             (do newline
+                indentSpaces <- getIndentSpaces
                 indented indentSpaces (lined (map pretty decls)))
 decl (TypeDecl _ _ _ _) =
   error "FIXME: No implementation for TypeDecl."
@@ -432,11 +438,13 @@ decl (DataDecl _ dataornew ctx name tyvars condecls _derivs) =
                        xs -> multiCons xs))
   where singleCons x =
           do write " ="
+             indentSpaces <- getIndentSpaces
              column indentSpaces
                     (do newline
                         pretty x)
         multiCons xs =
           do newline
+             indentSpaces <- getIndentSpaces
              column indentSpaces
                     (depend (write "=")
                             (prefixedLined '|'
@@ -484,6 +492,7 @@ instance Pretty Alt where
            pretty galts
            unless (nullBinds binds)
                   (do newline
+                      indentSpaces <- getIndentSpaces
                       indented indentSpaces
                                (depend (write "where ")
                                        (pretty binds)))
@@ -571,6 +580,7 @@ instance Pretty ConDecl where
       RecDecl name fields ->
         depend (pretty name)
                (do space
+                   indentSpaces <- getIndentSpaces
                    braces (prefixedLined
                              ','
                              (map (indented indentSpaces . pretty)
@@ -679,6 +689,7 @@ instance Pretty Match where
                pretty rhs
                unless (nullBinds binds)
                       (do newline
+                          indentSpaces <- getIndentSpaces
                           indented indentSpaces
                                    (depend (write "where ")
                                            (pretty binds)))

@@ -61,10 +61,11 @@ fieldupdate _ e =
 
 rhs :: State -> Rhs -> Printer ()
 rhs _ (UnGuardedRhs e) =
-  indented indentSpaces
-           (dependOrNewline (write " = ")
-                            e
-                            pretty)
+  do indentSpaces <- getIndentSpaces
+     indented indentSpaces
+              (dependOrNewline (write " = ")
+                               e
+                               pretty)
 rhs _ e = prettyInternal e
 
 -- | I want guarded RHS be dependent or newline.
@@ -148,6 +149,7 @@ exp _ (App op a) =
                            if headIsShort || allSingleLiners
                               then lined (map pretty args)
                               else do newline
+                                      indentSpaces <- getIndentSpaces
                                       column (orig + indentSpaces)
                                              (lined (map pretty args)))
   where (f,args) = flatten op [a]
