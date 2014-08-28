@@ -1,1 +1,1 @@
-((nil . ((hindent-style . "chrisdone"))))
+((nil . ((hindent-style . "chris-done"))))
