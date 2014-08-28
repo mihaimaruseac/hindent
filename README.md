@@ -16,24 +16,47 @@ executable. Currently a work in progress (see
 
 ## Example
 
+Input code:
+
+``` haskell
+foo = foo (foo bar) (if bar then bob else pif)
+   (case mu zot of Just x -> return (); Nothing -> return 1) bill
+```
+
 Fundamental style:
 
-    $ echo 'x = foo (bar bob) (mu zot) bill' | hindent --style fundamental
-    x =
-      foo
-        (bar
-           bob)
-        (mu
-           zot)
-        bill
+``` haskell
+foo =
+  foo
+    (foo
+       bar)
+    (if bar
+        then bob
+        else pif)
+    (case mu
+            zot of
+       Just x ->
+         return
+           ()
+       Nothing ->
+         return
+           1)
+    bill
+```
 
-[Chris Done style](https://github.com/chrisdone/haskell-style-guide):
+Chris Done style (see [style guide](https://github.com/chrisdone/haskell-style-guide)):
 
-    $ echo 'x = foo (bar bob) (mu zot) bill' | hindent --style chris-done
-    x =
-      foo (bar bob)
-          (mu zot)
-          bill
+``` haskell
+foo =
+  foo (foo bar)
+      (if bar
+          then bob
+          else pif)
+      (case mu zot of
+         Just x -> return ()
+         Nothing -> return 1)
+      bill
+```
 
 ## Emacs
 
@@ -43,7 +66,7 @@ there is the function `hindent/reformat-decl` which you can run with
 `M-x hindent/reformat-decl`. Or alternatively define a keybinding,
 e.g.:
 
-``` haskell
+``` lisp
 (define-key haskell-mode-map (kbd "C-c i") 'hindent/reformat-decl)
 ```
 
@@ -52,7 +75,7 @@ another, like mine, `chris-done`, run `M-x customize-variable
 hindent-style`. If you want to configure per-project, make a file
 called `.dir-locals.el` in the project root directory like this:
 
-``` haskell
+``` lisp
 ((nil . ((hindent-style . "chris-done"))))
 ```
 
