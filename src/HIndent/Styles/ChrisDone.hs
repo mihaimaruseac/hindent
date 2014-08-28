@@ -46,6 +46,7 @@ chrisdone =
            Config {configMaxColumns = 80
                   ,configIndentSpaces = 2}}
 
+-- | I want field updates to be dependent or newline.
 fieldupdate :: t -> FieldUpdate -> Printer ()
 fieldupdate _ e =
   case e of
@@ -57,6 +58,7 @@ fieldupdate _ e =
         pretty
     _ -> prettyInternal e
 
+
 rhs :: State -> Rhs -> Printer ()
 rhs _ (UnGuardedRhs e) =
   indented indentSpaces
@@ -65,6 +67,7 @@ rhs _ (UnGuardedRhs e) =
                             pretty)
 rhs _ e = prettyInternal e
 
+-- | I want guarded RHS be dependent or newline.
 guardedrhs :: State -> GuardedRhs -> Printer ()
 guardedrhs _ (GuardedRhs _ stmts e) =
   indented 1
@@ -80,6 +83,7 @@ guardedrhs _ (GuardedRhs _ stmts e) =
                  (indented 1 .
                   pretty))
 
+-- | I want guarded alts be dependent or newline.
 guardedalt :: State -> GuardedAlt -> Printer ()
 guardedalt _ (GuardedAlt _ stmts e) =
   indented 1
@@ -95,6 +99,7 @@ guardedalt _ (GuardedAlt _ stmts e) =
                  (indented 1 .
                   pretty))
 
+-- | I want unguarded alts be dependent or newline.
 unguardedalt :: State -> GuardedAlts -> Printer ()
 unguardedalt _ (UnGuardedAlt e) =
   dependOrNewline
@@ -104,56 +109,62 @@ unguardedalt _ (UnGuardedAlt e) =
      pretty)
 unguardedalt _ e = prettyInternal e
 
+-- | Expressions
 exp :: State -> Exp -> Printer ()
-exp _ e =
-  case e of
-    (InfixApp a op b) ->
-      do is <- isFlat e
-         if is
-            then do depend (do pretty a
-                               space
-                               pretty op
-                               space)
-                           (do pretty b)
-            else do pretty a
-                    space
-                    pretty op
-                    newline
-                    pretty b
-    (App op a) ->
-      do orig <- gets psIndentLevel
-         headIsShort <- isShort f
-         depend (do pretty f
-                    space)
-                (do flats <- mapM isFlat args
-                    flatish <- fmap ((< 2) . length . filter not)
-                                    (return flats)
-                    singleLiner <- isSingleLiner (spaced (map pretty args))
-                    if singleLiner &&
-                       ((headIsShort && flatish) ||
-                        all id flats)
-                       then spaced (map pretty args)
-                       else do allSingleLiners <- fmap (all id)
-                                                       (mapM (isSingleLiner . pretty) args)
-                               if headIsShort || allSingleLiners
-                                  then lined (map pretty args)
-                                  else do newline
-                                          column (orig + indentSpaces)
-                                                 (lined (map pretty args)))
-      where (f,args) = flatten op [a]
-            flatten :: Exp -> [Exp] -> (Exp,[Exp])
-            flatten (App f' a') b =
-              flatten f' (a' : b)
-            flatten f' as = (f',as)
-    (Lambda _ ps b) ->
-      depend (write "\\")
-             (do spaced (map pretty ps)
-                 dependOrNewline
-                   (write " -> ")
-                   b
-                   (indented 1 .
-                    pretty))
-    _ -> prettyInternal e
+-- Infix applications will render on one line if possible, otherwise
+-- if any of the arguments are not "flat" then that expression is
+-- line-separated.
+exp _ e@(InfixApp a op b) =
+  do is <- isFlat e
+     if is
+        then do depend (do pretty a
+                           space
+                           pretty op
+                           space)
+                       (do pretty b)
+        else do pretty a
+                space
+                pretty op
+                newline
+                pretty b
+-- | We try to render everything on a flat line. More than one of the
+-- arguments are not flat and it wouldn't be a single liner.
+-- If the head is short we depend, otherwise we swing.
+exp _ (App op a) =
+  do orig <- gets psIndentLevel
+     headIsShort <- isShort f
+     depend (do pretty f
+                space)
+            (do flats <- mapM isFlat args
+                flatish <- fmap ((< 2) . length . filter not)
+                                (return flats)
+                singleLiner <- isSingleLiner (spaced (map pretty args))
+                if singleLiner &&
+                   ((headIsShort && flatish) ||
+                    all id flats)
+                   then spaced (map pretty args)
+                   else do allSingleLiners <- fmap (all id)
+                                                   (mapM (isSingleLiner . pretty) args)
+                           if headIsShort || allSingleLiners
+                              then lined (map pretty args)
+                              else do newline
+                                      column (orig + indentSpaces)
+                                             (lined (map pretty args)))
+  where (f,args) = flatten op [a]
+        flatten :: Exp -> [Exp] -> (Exp,[Exp])
+        flatten (App f' a') b =
+          flatten f' (a' : b)
+        flatten f' as = (f',as)
+-- | Lambdas are dependent if they can be.
+exp _ (Lambda _ ps b) =
+  depend (write "\\")
+         (do spaced (map pretty ps)
+             dependOrNewline
+               (write " -> ")
+               b
+               (indented 1 .
+                pretty))
+exp _ e = prettyInternal e
 
 -- | Is the expression "short"? Used for app heads.
 isShort :: (Pretty a,Show a) => a -> Printer Bool
