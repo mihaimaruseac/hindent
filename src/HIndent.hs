@@ -1,7 +1,17 @@
 -- | Haskell indenter.
 
-module HIndent where
+module HIndent
+  (-- * Formatting functions.
+   reformat
+  ,prettyPrint
+  ,parseMode
+  -- * Style
+  ,chrisdone
+  -- * Testing
+  ,test)
+  where
 
+import           HIndent.Styles.ChrisDone
 import           HIndent.Instances ()
 import           HIndent.Types
 
@@ -16,22 +26,26 @@ import           Language.Haskell.Exts.Extension
 import           Language.Haskell.Exts.Parser
 
 -- | Format the given source.
-reformat :: Text -> Either String Builder
-reformat x =
+reformat :: Style -> Text -> Either String Builder
+reformat style x =
   case parseDeclWithComments parseMode
                              (T.unpack x) of
-    ParseOk (v,comments) -> Right (prettyPrint v)
+    ParseOk (v,_comments) -> Right (prettyPrint style v)
     ParseFailed _ e -> Left e
 
 -- | Pretty print the given printable thing.
-prettyPrint :: Pretty a => a -> Builder
-prettyPrint v =
-  psOutput (execState (runPrinter (pretty v))
-                      (PrintState 0
-                                  mempty
-                                  False
-                                  0
-                                  1))
+prettyPrint :: Pretty a => Style -> a -> Builder
+prettyPrint style a =
+  psOutput (execState (runPrinter (pretty a))
+                      (case style of
+                         Style _author st extenders ->
+                           PrintState 0
+                                      mempty
+                                      False
+                                      0
+                                      1
+                                      st
+                                      extenders))
 
 -- | Parse mode, includes all extensions, doesn't assume any fixities.
 parseMode :: ParseMode
@@ -46,4 +60,4 @@ parseMode =
 test :: Text -> IO ()
 test =
   either error (T.putStrLn . T.toLazyText) .
-  reformat
+  reformat chrisdone

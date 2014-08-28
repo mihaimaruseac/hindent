@@ -19,7 +19,7 @@ import           Language.Haskell.Exts.Syntax
 import           Prelude hiding (exp)
 
 instance Pretty Pat where
-  pretty x =
+  prettyInternal x =
     case x of
       PLit l -> pretty l
       PNeg l ->
@@ -117,7 +117,7 @@ prettyInfixOp x =
         UnboxedSingleCon -> write "(##)"
 
 instance Pretty Type where
-  pretty x =
+  prettyInternal x =
     case x of
       TyForall mbinds ctx ty ->
         depend (case mbinds of
@@ -159,7 +159,7 @@ instance Pretty Type where
         error "FIXME: No implementation for TyPromoted."
 
 instance Pretty Exp where
-  pretty = exp
+  prettyInternal = exp
 
 -- | Render an expression.
 exp :: Exp -> Printer ()
@@ -365,7 +365,7 @@ exp ParComp{} =
   error "FIXME: No implementation for ParComp."
 
 instance Pretty Stmt where
-  pretty x =
+  prettyInternal x =
     case x of
       Generator _ p e ->
         depend (do pretty p
@@ -379,7 +379,7 @@ instance Pretty Stmt where
         error "FIXME: No implementation for RecStmt."
 
 instance Pretty QualStmt where
-  pretty x =
+  prettyInternal x =
     case x of
       QualStmt s -> pretty s
       ThenTrans{} ->
@@ -394,7 +394,7 @@ instance Pretty QualStmt where
         error "FIXME: No implementation for GroupByUsing."
 
 instance Pretty Decl where
-  pretty = decl
+  prettyInternal = decl
 
 -- | Render a declaration.
 decl :: Decl -> Printer ()
@@ -447,7 +447,7 @@ decl (TypeDecl _ _ _ _) =
   error "FIXME: No implementation for TypeDecl."
 decl (TypeFamDecl _ _ _ _) =
   error "FIXME: No implementation for TypeFamDecl."
-decl (DataDecl _ dataornew ctx name tyvars condecls derivs) =
+decl (DataDecl _ dataornew ctx name tyvars condecls _derivs) =
   depend (do pretty dataornew
              space)
          (depend (maybeCtx ctx)
@@ -504,7 +504,7 @@ decl x@InfixDecl{} = pretty' x
 decl x@DefaultDecl{} = pretty' x
 
 instance Pretty Alt where
-  pretty x =
+  prettyInternal x =
     case x of
       Alt _ p galts binds ->
         do pretty p
@@ -516,7 +516,7 @@ instance Pretty Alt where
                                        (pretty binds)))
 
 instance Pretty Asst where
-  pretty x =
+  prettyInternal x =
     case x of
       ClassA name types ->
         spaced (pretty name : map pretty types)
@@ -528,7 +528,7 @@ instance Pretty Asst where
         error "FIXME: No implementation for EqualP."
 
 instance Pretty BangType where
-  pretty x =
+  prettyInternal x =
     case x of
       BangedTy ty ->
         depend (write "!")
@@ -540,13 +540,13 @@ instance Pretty BangType where
                (pretty ty)
 
 instance Pretty Binds where
-  pretty x =
+  prettyInternal x =
     case x of
       BDecls ds -> lined (map pretty ds)
       IPBinds i -> lined (map pretty i)
 
 instance Pretty Bracket where
-  pretty x =
+  prettyInternal x =
     case x of
       ExpBracket _ ->
         error "FIXME: No implementation for ExpBracket."
@@ -558,7 +558,7 @@ instance Pretty Bracket where
         error "FIXME: No implementation for DeclBracket."
 
 instance Pretty ClassDecl where
-  pretty x =
+  prettyInternal x =
     case x of
       ClsDecl d -> pretty d
       ClsDataFam _ ctx n tyvars mkind ->
@@ -587,7 +587,7 @@ instance Pretty ClassDecl where
            pretty that
 
 instance Pretty ConDecl where
-  pretty x =
+  prettyInternal x =
     case x of
       ConDecl name bangty ->
         depend (do pretty name
@@ -604,17 +604,15 @@ instance Pretty ConDecl where
                                   (concatMap (\(names,ty) ->
                                                 map (,ty) names)
                                              fields))))
-    where unpacked UnpackedTy{} = True
-          unpacked _ = False
 
 instance Pretty (Name,BangType) where
-  pretty (name,ty) =
+  prettyInternal (name,ty) =
     depend (do pretty name
                write " :: ")
            (pretty ty)
 
 instance Pretty FieldUpdate where
-  pretty x =
+  prettyInternal x =
     case x of
       FieldUpdate n e ->
         dependOrNewline
@@ -626,13 +624,13 @@ instance Pretty FieldUpdate where
       FieldWildcard -> write ".."
 
 instance Pretty GadtDecl where
-  pretty x =
+  prettyInternal x =
     case x of
       GadtDecl _ _ _ ->
         error "FIXME: No implementation for GadtDecl."
 
 instance Pretty GuardedAlts where
-  pretty x =
+  prettyInternal x =
     case x of
       UnGuardedAlt e ->
         dependOrNewline
@@ -649,7 +647,7 @@ instance Pretty GuardedAlts where
                                 gas))
 
 instance Pretty GuardedAlt where
-  pretty x =
+  prettyInternal x =
     case x of
       GuardedAlt _ stmts e ->
         indented 1
@@ -666,7 +664,7 @@ instance Pretty GuardedAlt where
                         pretty))
 
 instance Pretty GuardedRhs where
-  pretty x =
+  prettyInternal x =
     case x of
       GuardedRhs _ stmts e ->
         indented 1
@@ -683,19 +681,19 @@ instance Pretty GuardedRhs where
                         pretty))
 
 instance Pretty IPBind where
-  pretty x =
+  prettyInternal x =
     case x of
       IPBind _ _ _ ->
         error "FIXME: No implementation for IPBind."
 
 instance Pretty IfAlt where
-  pretty x =
+  prettyInternal x =
     case x of
       IfAlt _ _ ->
         error "FIXME: No implementation for IfAlt."
 
 instance Pretty InstDecl where
-  pretty i =
+  prettyInternal i =
     case i of
       InsDecl d -> pretty d
       InsType _ name ty ->
@@ -706,7 +704,7 @@ instance Pretty InstDecl where
       _ -> pretty' i
 
 instance Pretty Match where
-  pretty x =
+  prettyInternal x =
     case x of
       Match _ name pats mty rhs binds ->
         case mty of
@@ -724,13 +722,13 @@ instance Pretty Match where
                                            (pretty binds)))
 
 instance Pretty Module where
-  pretty x =
+  prettyInternal x =
     case x of
       Module _ _ _ _ _ _ _ ->
         error "FIXME: No implementation for Module."
 
 instance Pretty PatField where
-  pretty x =
+  prettyInternal x =
     case x of
       PFieldPat n p ->
         depend (do pretty n
@@ -740,18 +738,18 @@ instance Pretty PatField where
       PFieldWildcard -> write ".."
 
 instance Pretty QualConDecl where
-  pretty x =
+  prettyInternal x =
     case x of
-      QualConDecl _ tyvars ctx decl ->
+      QualConDecl _ tyvars ctx d ->
         depend (unless (null tyvars)
                        (do write "forall "
                            spaced (map pretty tyvars)
                            write ". "))
                (depend (maybeCtx ctx)
-                       (pretty decl))
+                       (pretty d))
 
 instance Pretty Rhs where
-  pretty x =
+  prettyInternal x =
     case x of
       UnGuardedRhs e ->
         indented indentSpaces (dependOrNewline (write " = ") e pretty)
@@ -764,13 +762,13 @@ instance Pretty Rhs where
                                 gas))
 
 instance Pretty Rule where
-  pretty x =
+  prettyInternal x =
     case x of
       Rule _ _ _ _ _ ->
         error "FIXME: No implementation for Rule."
 
 instance Pretty RuleVar where
-  pretty x =
+  prettyInternal x =
     case x of
       RuleVar _ ->
         error "FIXME: No implementation for RuleVar."
@@ -778,7 +776,7 @@ instance Pretty RuleVar where
         error "FIXME: No implementation for TypedRuleVar."
 
 instance Pretty Splice where
-  pretty x =
+  prettyInternal x =
     case x of
       IdSplice _ ->
         error "FIXME: No implementation for IdSplice."
@@ -787,7 +785,7 @@ instance Pretty Splice where
                (parens (pretty e))
 
 instance Pretty WarningText where
-  pretty x =
+  prettyInternal x =
     case x of
       DeprText _ ->
         error "FIXME: No implementation for DeprText."
@@ -795,7 +793,7 @@ instance Pretty WarningText where
         error "FIXME: No implementation for WarnText."
 
 instance Pretty Tool where
-  pretty x =
+  prettyInternal x =
     case x of
       GHC -> write "GHC"
       HUGS -> write "HUGS"
@@ -806,82 +804,82 @@ instance Pretty Tool where
         write (T.fromText (T.pack t))
 
 instance Pretty Activation where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty Annotation where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty Assoc where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty CName where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty CallConv where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty DataOrNew where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty ExportSpec where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty FunDep where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty IPName where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty ImportSpec where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty ImportDecl where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty Kind where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty Literal where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty ModulePragma where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty Name where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty Op where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty PXAttr where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty Promoted where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty QName where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty QOp where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty RPat where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty RPatOp where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty Safety where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty SpecialCon where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty TyVarBind where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty XAttr where
-  pretty = pretty'
+  prettyInternal = pretty'
 
 instance Pretty XName where
-  pretty = pretty'
+  prettyInternal = pretty'

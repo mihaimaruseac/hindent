@@ -17,6 +17,6 @@ main =
        [] ->
          T.interact
            (either error T.toLazyText .
-            reformat)
+            reformat chrisdone)
        (_:_) ->
          error "No arguments accepted at this time. Provide a declaration in STDIN."
