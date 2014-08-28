@@ -32,6 +32,7 @@ module HIndent.Combinators
   , depend
   , swing
   , getIndentSpaces
+  , getColumnLimit
   -- * Predicates
   , isOverflow
   , isSingleLiner
@@ -93,9 +94,10 @@ lined :: [Printer ()] -> Printer ()
 lined ps = sequence_ (intersperse newline ps)
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
-isOverflow :: MonadState PrintState m => m a -> m Bool
+isOverflow :: Printer a -> Printer Bool
 isOverflow p =
   do st <- sandbox p
+     columnLimit <- getColumnLimit
      return (psColumn st >
              columnLimit)
 
@@ -217,13 +219,13 @@ pretty' = write . T.fromText . T.pack . P.prettyPrint
 string :: String -> Printer ()
 string = write . T.fromText . T.pack
 
--- | Indent spaces: 2.
+-- | Indent spaces, e.g. 2.
 getIndentSpaces :: Printer Int64
 getIndentSpaces = gets (configIndentSpaces . psConfig)
 
--- | Column limit: 80
-columnLimit :: Int64
-columnLimit = 80
+-- | Column limit, e.g. 80
+getColumnLimit :: Printer Int64
+getColumnLimit = gets (configMaxColumns . psConfig)
 
 -- | Play with a printer and then restore the state to what it was
 -- before.
