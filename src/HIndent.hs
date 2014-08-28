@@ -7,13 +7,17 @@ module HIndent
   ,parseMode
   -- * Style
   ,styles
-  ,chrisdone
+  ,chrisDone
+  ,michaelSnoyman
+  ,johanTibell
   ,fundamental
   -- * Testing
   ,test)
   where
 
 import           HIndent.Styles.ChrisDone
+import           HIndent.Styles.MichaelSnoyman
+import           HIndent.Styles.JohanTibell
 import           HIndent.Styles.Fundamental
 import           HIndent.Instances ()
 import           HIndent.Types
@@ -58,8 +62,10 @@ parseMode =
 -- | Test with the given style, prints to stdout.
 test :: Config -> Style -> Text -> IO ()
 test config style =
-  either error (T.putStrLn . T.toLazyText) . reformat config style
+  either error (T.putStrLn . T.toLazyText) .
+  reformat config style
 
 -- | Styles list, useful for programmatically choosing.
 styles :: [Style]
-styles = [fundamental,chrisdone]
+styles =
+  [fundamental,chrisDone,michaelSnoyman,johanTibell]

@@ -6,7 +6,7 @@
 -- Documented here: <https://github.com/chrisdone/haskell-style-guide>
 
 module HIndent.Styles.ChrisDone
-  (chrisdone)
+  (chrisDone)
   where
 
 import Control.Monad.State.Class
@@ -29,9 +29,9 @@ smallColumnLimit = 50
 data State = State
 
 -- | The printer style.
-chrisdone :: Style
-chrisdone =
-  Style {styleName = "chrisdone"
+chrisDone :: Style
+chrisDone =
+  Style {styleName = "chris-done"
         ,styleAuthor = "Chris Done"
         ,styleDescription = "Chris Done's personal style. Documented here: <https://github.com/chrisdone/haskell-style-guide>"
         ,styleInitialState = State
