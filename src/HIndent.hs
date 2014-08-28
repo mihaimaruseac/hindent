@@ -6,12 +6,15 @@ module HIndent
   ,prettyPrint
   ,parseMode
   -- * Style
+  ,styles
   ,chrisdone
+  ,fundamental
   -- * Testing
   ,test)
   where
 
 import           HIndent.Styles.ChrisDone
+import           HIndent.Styles.Fundamental
 import           HIndent.Instances ()
 import           HIndent.Types
 
@@ -38,7 +41,7 @@ prettyPrint :: Pretty a => Style -> a -> Builder
 prettyPrint style a =
   psOutput (execState (runPrinter (pretty a))
                       (case style of
-                         Style _author st extenders ->
+                         Style _name _author _desc st extenders ->
                            PrintState 0
                                       mempty
                                       False
@@ -57,7 +60,12 @@ parseMode =
         isDisabledExtention (DisableExtension _) = False
         isDisabledExtention _ = True
 
-test :: Text -> IO ()
-test =
+-- | Test with the given style, prints to stdout.
+test :: Style -> Text -> IO ()
+test style =
   either error (T.putStrLn . T.toLazyText) .
-  reformat chrisdone
+  reformat style
+
+-- | Styles list, useful for programmatically choosing.
+styles :: [Style]
+styles = [fundamental,chrisdone]

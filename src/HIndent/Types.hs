@@ -55,12 +55,15 @@ instance Eq PrintState where
     (ilevel,out,newline,col,line) == (ilevel',out',newline',col',line')
 
 -- | A printer extender. Takes as argument the user state that the
--- printer was run with, and the current node to print.
+-- printer was run with, and the current node to print. Use
+-- 'prettyInternal' to fallback to the built-in parser.
 data Extender s =
   forall a. (Typeable a) => Extender (s -> a -> Printer ())
 
 -- | A printer style.
 data Style =
-  forall s. Style {styleAuthor :: Text
-                  ,styleInitialState :: s
-                  ,styleExtenders :: [Extender s]}
+  forall s. Style {styleName :: !Text
+                  ,styleAuthor :: !Text
+                  ,styleDescription :: !Text
+                  ,styleInitialState :: !s
+                  ,styleExtenders :: ![Extender s]}

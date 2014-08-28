@@ -7,7 +7,7 @@
 
 -- | Instances for pretty printing.
 
-module HIndent.Instances where
+module HIndent.Instances () where
 
 import           HIndent.Combinators
 import           HIndent.Types
@@ -163,39 +163,15 @@ instance Pretty Exp where
 
 -- | Render an expression.
 exp :: Exp -> Printer ()
-exp e@(InfixApp a op b) =
-  do is <- isFlat e
-     if is
-        then do depend (do pretty a
-                           space
-                           pretty op
-                           space)
-                       (do pretty b)
-        else do pretty a
-                space
-                pretty op
-                newline
-                pretty b
+exp (InfixApp a op b) =
+  depend (do pretty a
+             space
+             pretty op
+             space)
+         (do pretty b)
 exp (App op a) =
-  do orig <- gets psIndentLevel
-     headIsShort <- isShort f
-     depend (do pretty f
-                space)
-            (do flats <- mapM isFlat args
-                flatish <- fmap ((< 2) . length . filter not)
-                                (return flats)
-                singleLiner <- isSingleLiner (spaced (map pretty args))
-                if singleLiner &&
-                   ((headIsShort && flatish) ||
-                    all id flats)
-                   then spaced (map pretty args)
-                   else do allSingleLiners <- fmap (all id)
-                                                   (mapM (isSingleLiner . pretty) args)
-                           if headIsShort || allSingleLiners
-                              then lined (map pretty args)
-                              else do newline
-                                      column (orig + indentSpaces)
-                                             (lined (map pretty args)))
+  swing (do pretty f)
+        (lined (map pretty args))
   where (f,args) = flatten op [a]
         flatten :: Exp -> [Exp] -> (Exp,[Exp])
         flatten (App f' a') b =
@@ -207,11 +183,8 @@ exp (NegApp e) =
 exp (Lambda _ ps e) =
   depend (write "\\")
          (do spaced (map pretty ps)
-             dependOrNewline
-               (write " -> ")
-               e
-               (indented 1 .
-                pretty))
+             swing (write " -> ")
+                   (pretty e))
 exp (Let binds e) =
   do depend (write "let ")
             (pretty binds)
@@ -615,11 +588,9 @@ instance Pretty FieldUpdate where
   prettyInternal x =
     case x of
       FieldUpdate n e ->
-        dependOrNewline
-          (do pretty n
-              write " = ")
-          e
-          pretty
+        swing (do pretty n
+                  write " = ")
+              (pretty e)
       FieldPun n -> pretty n
       FieldWildcard -> write ".."
 
@@ -633,11 +604,8 @@ instance Pretty GuardedAlts where
   prettyInternal x =
     case x of
       UnGuardedAlt e ->
-        dependOrNewline
-          (write " -> ")
-          e
-          (indented 2 .
-           pretty)
+        swing (write " -> ")
+              (pretty e)
       GuardedAlts gas ->
         do newline
            indented 2
@@ -650,35 +618,29 @@ instance Pretty GuardedAlt where
   prettyInternal x =
     case x of
       GuardedAlt _ stmts e ->
-        indented 1
-                 (do (prefixedLined
-                        ','
-                        (map (\p ->
-                                do space
-                                   pretty p)
-                             stmts))
-                     dependOrNewline
-                       (write " -> ")
-                       e
-                       (indented 1 .
-                        pretty))
+        do indented 1
+                    (do (prefixedLined
+                           ','
+                           (map (\p ->
+                                   do space
+                                      pretty p)
+                                stmts)))
+           swing (write " -> ")
+                 (pretty e)
 
 instance Pretty GuardedRhs where
   prettyInternal x =
     case x of
       GuardedRhs _ stmts e ->
-        indented 1
-                 (do prefixedLined
-                       ','
-                       (map (\p ->
-                               do space
-                                  pretty p)
-                            stmts)
-                     dependOrNewline
-                       (write " = ")
-                       e
-                       (indented 1 .
-                        pretty))
+        do indented 1
+                    (do prefixedLined
+                          ','
+                          (map (\p ->
+                                  do space
+                                     pretty p)
+                               stmts))
+           swing (write " = ")
+                 (pretty e)
 
 instance Pretty IPBind where
   prettyInternal x =
@@ -697,10 +659,10 @@ instance Pretty InstDecl where
     case i of
       InsDecl d -> pretty d
       InsType _ name ty ->
-        depend (do write "type "
-                   pretty name
-                   write " = ")
-               (pretty ty)
+        swing (do write "type "
+                  pretty name
+                  write " = ")
+              (pretty ty)
       _ -> pretty' i
 
 instance Pretty Match where
@@ -752,7 +714,8 @@ instance Pretty Rhs where
   prettyInternal x =
     case x of
       UnGuardedRhs e ->
-        indented indentSpaces (dependOrNewline (write " = ") e pretty)
+        (swing (write " =? ")
+               (pretty e))
       GuardedRhss gas ->
         do newline
            indented 2

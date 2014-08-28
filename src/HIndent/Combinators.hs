@@ -183,41 +183,6 @@ smallColumnLimit = 50
 shortName :: Int64
 shortName = 10
 
--- | Make the right hand side dependent if it's flat, otherwise
--- newline it.
-dependOrNewline :: Printer () -> Exp -> (Exp -> Printer ()) -> Printer ()
-dependOrNewline left right f =
-  do flat <- isFlat right
-     small <- isSmall (depend left (f right))
-     if flat || small
-        then depend left (f right)
-        else do left
-                newline
-                (f right)
-
--- | Is the expression "short"? Used for app heads.
-isShort :: (Pretty a,Show a) => a -> Printer Bool
-isShort p =
-  do line <- gets psLine
-     orig <- fmap psColumn (sandbox (write ""))
-     st <- sandbox (pretty p)
-     return (psLine st ==
-             line &&
-             (psColumn st <
-              orig +
-              shortName))
-
--- | Is the given expression "small"? I.e. does it fit on one line and
--- under 'smallColumnLimit' columns.
-isSmall :: MonadState PrintState m => m a -> m Bool
-isSmall p =
-  do line <- gets psLine
-     st <- sandbox p
-     return (psLine st ==
-             line &&
-             psColumn st <
-             smallColumnLimit)
-
 -- | Does printing the given thing overflow column limit? (e.g. 80)
 isOverflow :: MonadState PrintState m => m a -> m Bool
 isOverflow p =
@@ -269,9 +234,18 @@ isFlat (LeftSection e _) = isFlat e
 isFlat (RightSection _ e) = isFlat e
 isFlat _ = return False
 
+-- | Maybe render a class context.
 maybeCtx :: Pretty a => [a] -> Printer ()
 maybeCtx ctx =
   unless (null ctx)
          (do write "("
              commas (map pretty ctx)
              write ") => ")
+
+-- | Swing the second printer below and indented with respect to the first.
+swing :: Printer () -> Printer b -> Printer b
+swing a b =
+  do orig <- gets psIndentLevel
+     a
+     newline
+     column (orig + indentSpaces) b

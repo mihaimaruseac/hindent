@@ -17,6 +17,7 @@ library
   exposed-modules:   HIndent
                      HIndent.Combinators
                      HIndent.Types
+                     HIndent.Styles.Fundamental
                      HIndent.Styles.ChrisDone
   other-modules:     HIndent.Instances
   build-depends:     base >= 4 && <5
