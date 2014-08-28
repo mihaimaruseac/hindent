@@ -110,3 +110,11 @@ If you want to contribute it to the package, add it to the list of
 styles in
 [HIndent](https://github.com/chrisdone/hindent/blob/master/src/HIndent.hs)
 and export it, and open a pull request.
+
+## Remaining issues
+
+* Support formatting whole modules.
+* Re-inserting comments in appropriate places.
+* Add test suite.
+* Add some printers for other common styles: Johan Tibell's and
+  Michael Snoyman's.
