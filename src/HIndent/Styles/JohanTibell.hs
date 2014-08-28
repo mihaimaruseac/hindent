@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Johan Tibell's style.
+-- | Stub module for Johan Tibell's style.
 --
 -- Documented here: <https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md>
 

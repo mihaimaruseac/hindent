@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Michael Snoyman's style.
+-- | Stub module for Michael Snoyman's style.
 --
 -- Modelled from existing codebases.
 
