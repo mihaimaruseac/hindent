@@ -166,6 +166,27 @@ exp _ (Lambda _ ps b) =
                b
                (indented 1 .
                 pretty))
+exp _ (Tuple boxed exps) =
+  depend (write (case boxed of
+                   Unboxed -> "(#"
+                   Boxed -> "("))
+         (do single <- isSingleLiner p
+             underflow <- fmap not (isOverflow p)
+             if single && underflow
+                then p
+                else parens (prefixedLined ',' (map pretty exps))
+             write (case boxed of
+                      Unboxed -> "#)"
+                      Boxed -> ")"))
+  where p = commas (map pretty exps)
+exp _ (List es) =
+  do single <- isSingleLiner p
+     underflow <- fmap not (isOverflow p)
+     if single && underflow
+        then p
+        else brackets (prefixedLined ','
+                                     (map pretty es))
+  where p = brackets (commas (map pretty es))
 exp _ e = prettyInternal e
 
 -- | Is the expression "short"? Used for app heads.
@@ -223,3 +244,19 @@ isFlat Con{} = return True
 isFlat (LeftSection e _) = isFlat e
 isFlat (RightSection _ e) = isFlat e
 isFlat _ = return False
+
+-- | Does printing the given thing overflow column limit? (e.g. 80)
+isOverflow :: Printer a -> Printer Bool
+isOverflow p =
+  do st <- sandbox p
+     columnLimit <- getColumnLimit
+     return (psColumn st >
+             columnLimit)
+
+-- | Is the given expression a single-liner when printed?
+isSingleLiner :: MonadState PrintState m => m a -> m Bool
+isSingleLiner p =
+  do line <- gets psLine
+     st <- sandbox p
+     return (psLine st ==
+             line)

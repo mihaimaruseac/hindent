@@ -34,8 +34,6 @@ module HIndent.Combinators
   , getIndentSpaces
   , getColumnLimit
   -- * Predicates
-  , isOverflow
-  , isSingleLiner
   , nullBinds
   -- * Sandboxing
   , sandbox
@@ -92,22 +90,6 @@ inter sep ps =
 -- | Print all the printers separated by spaces.
 lined :: [Printer ()] -> Printer ()
 lined ps = sequence_ (intersperse newline ps)
-
--- | Does printing the given thing overflow column limit? (e.g. 80)
-isOverflow :: Printer a -> Printer Bool
-isOverflow p =
-  do st <- sandbox p
-     columnLimit <- getColumnLimit
-     return (psColumn st >
-             columnLimit)
-
--- | Is the given expression a single-liner when printed?
-isSingleLiner :: MonadState PrintState m => m a -> m Bool
-isSingleLiner p =
-  do line <- gets psLine
-     st <- sandbox p
-     return (psLine st ==
-             line)
 
 -- | Print all the printers separated newlines and optionally a line
 -- prefix.

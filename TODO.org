@@ -1,2 +1,3 @@
 * TODO Make skeleton test suite
-* TODO Finish Pretty instance for Exp
+* DONE Finish Pretty instance for Exp
+  CLOSED: [2014-08-28 Thu 14:31]
