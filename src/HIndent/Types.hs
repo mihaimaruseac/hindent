@@ -7,10 +7,10 @@
 module HIndent.Types
   (Printer(..)
   ,PrintState(..)
-  ,Pretty(..)
   ,Extender(..)
   ,Style(..)
-  ,Config(..))
+  ,Config(..)
+  ,Pretty(..))
   where
 
 import Control.Monad.State (MonadState(..),State)
