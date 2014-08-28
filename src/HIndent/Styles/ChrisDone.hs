@@ -35,7 +35,74 @@ chrisdone =
         ,styleAuthor = "Chris Done"
         ,styleDescription = "Chris Done's personal style. Documented here: <https://github.com/chrisdone/haskell-style-guide>"
         ,styleInitialState = State
-        ,styleExtenders = [Extender exp]}
+        ,styleExtenders =
+           [Extender exp
+           ,Extender fieldupdate
+           ,Extender rhs
+           ,Extender guardedrhs
+           ,Extender guardedalt
+           ,Extender unguardedalt]
+        ,styleDefConfig =
+           Config {configMaxColumns = 80
+                  ,configIndentSpaces = 2}}
+
+fieldupdate :: t -> FieldUpdate -> Printer ()
+fieldupdate _ e =
+  case e of
+    FieldUpdate n e' ->
+      dependOrNewline
+        (do pretty n
+            write " = ")
+        e'
+        pretty
+    _ -> prettyInternal e
+
+rhs :: State -> Rhs -> Printer ()
+rhs _ (UnGuardedRhs e) =
+  indented indentSpaces
+           (dependOrNewline (write " = ")
+                            e
+                            pretty)
+rhs _ e = prettyInternal e
+
+guardedrhs :: State -> GuardedRhs -> Printer ()
+guardedrhs _ (GuardedRhs _ stmts e) =
+  indented 1
+           (do prefixedLined
+                 ','
+                 (map (\p ->
+                         do space
+                            pretty p)
+                      stmts)
+               dependOrNewline
+                 (write " = ")
+                 e
+                 (indented 1 .
+                  pretty))
+
+guardedalt :: State -> GuardedAlt -> Printer ()
+guardedalt _ (GuardedAlt _ stmts e) =
+  indented 1
+           (do (prefixedLined
+                  ','
+                  (map (\p ->
+                          do space
+                             pretty p)
+                       stmts))
+               dependOrNewline
+                 (write " -> ")
+                 e
+                 (indented 1 .
+                  pretty))
+
+unguardedalt :: State -> GuardedAlts -> Printer ()
+unguardedalt _ (UnGuardedAlt e) =
+  dependOrNewline
+    (write " -> ")
+    e
+    (indented 2 .
+     pretty)
+unguardedalt _ e = prettyInternal e
 
 exp :: State -> Exp -> Printer ()
 exp _ e =

@@ -21,6 +21,7 @@ library
                      HIndent.Styles.ChrisDone
   other-modules:     HIndent.Instances
   build-depends:     base >= 4 && <5
+                   , data-default
                    , haskell-src-exts
                    , mtl
                    , text

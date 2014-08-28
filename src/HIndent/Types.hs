@@ -9,10 +9,12 @@ module HIndent.Types
   ,PrintState(..)
   ,Pretty(..)
   ,Extender(..)
-  ,Style(..))
+  ,Style(..)
+  ,Config(..))
   where
 
 import Control.Monad.State (MonadState(..),State)
+import Data.Default
 import Data.Int (Int64)
 import Data.Maybe (listToMaybe,mapMaybe)
 import Data.Text (Text)
@@ -48,10 +50,12 @@ data PrintState = forall s. PrintState
   , psLine        :: !Int64        -- ^ Current line number.)
   , psUserState   :: !s            -- ^ User state.
   , psExtenders   :: ![Extender s] -- ^ Extenders.
+  , psConfig      :: !Config       -- ^ Config which styles may or may
+                                   -- not pay attention to.
   }
 
 instance Eq PrintState where
-  PrintState ilevel out newline col line _ _ == PrintState ilevel' out' newline' col' line' _ _ =
+  PrintState ilevel out newline col line _ _ _ == PrintState ilevel' out' newline' col' line' _ _ _ =
     (ilevel,out,newline,col,line) == (ilevel',out',newline',col',line')
 
 -- | A printer extender. Takes as argument the user state that the
@@ -66,4 +70,16 @@ data Style =
                   ,styleAuthor :: !Text
                   ,styleDescription :: !Text
                   ,styleInitialState :: !s
-                  ,styleExtenders :: ![Extender s]}
+                  ,styleExtenders :: ![Extender s]
+                  ,styleDefConfig :: !Config}
+
+-- | Configurations shared among the different styles. Styles may pay
+-- attention to or completely disregard this configuration.
+data Config =
+  Config {configMaxColumns :: !Int64
+         ,configIndentSpaces :: !Int64}
+
+instance Default Config where
+  def =
+    Config {configMaxColumns = 80
+           ,configIndentSpaces = 2}

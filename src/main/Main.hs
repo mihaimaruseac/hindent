@@ -21,7 +21,7 @@ main =
        ["--style",findStyle -> Just style] ->
          T.interact
            (either error T.toLazyText .
-            reformat style)
+            reformat (styleDefConfig style) style)
        _ ->
          error ("arguments: --style [" ++
                 intercalate "|" (map (T.unpack . styleName) styles) ++

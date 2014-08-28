@@ -659,10 +659,10 @@ instance Pretty InstDecl where
     case i of
       InsDecl d -> pretty d
       InsType _ name ty ->
-        swing (do write "type "
-                  pretty name
-                  write " = ")
-              (pretty ty)
+        depend (do write "type "
+                   pretty name
+                   write " = ")
+               (pretty ty)
       _ -> pretty' i
 
 instance Pretty Match where
@@ -714,7 +714,7 @@ instance Pretty Rhs where
   prettyInternal x =
     case x of
       UnGuardedRhs e ->
-        (swing (write " =? ")
+        (swing (write " = ")
                (pretty e))
       GuardedRhss gas ->
         do newline

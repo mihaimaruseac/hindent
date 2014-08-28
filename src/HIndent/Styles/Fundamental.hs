@@ -6,6 +6,7 @@ module HIndent.Styles.Fundamental
   (fundamental)
   where
 
+import Data.Default
 import HIndent.Instances ()
 import HIndent.Types
 
@@ -21,4 +22,5 @@ fundamental =
         ,styleAuthor = "Chris Done"
         ,styleDescription = "This style adds no extensions to the built-in printer."
         ,styleInitialState = State
-        ,styleExtenders = []}
+        ,styleExtenders = []
+        ,styleDefConfig = def}

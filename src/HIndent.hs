@@ -29,26 +29,21 @@ import           Language.Haskell.Exts.Extension
 import           Language.Haskell.Exts.Parser
 
 -- | Format the given source.
-reformat :: Style -> Text -> Either String Builder
-reformat style x =
+reformat :: Config -> Style -> Text -> Either String Builder
+reformat config style x =
   case parseDeclWithComments parseMode
                              (T.unpack x) of
-    ParseOk (v,_comments) -> Right (prettyPrint style v)
+    ParseOk (v,_comments) ->
+      Right (prettyPrint config style v)
     ParseFailed _ e -> Left e
 
 -- | Pretty print the given printable thing.
-prettyPrint :: Pretty a => Style -> a -> Builder
-prettyPrint style a =
+prettyPrint :: Pretty a => Config -> Style -> a -> Builder
+prettyPrint config style a =
   psOutput (execState (runPrinter (pretty a))
                       (case style of
-                         Style _name _author _desc st extenders ->
-                           PrintState 0
-                                      mempty
-                                      False
-                                      0
-                                      1
-                                      st
-                                      extenders))
+                         Style _name _author _desc st extenders _defconfig ->
+                           PrintState 0 mempty False 0 1 st extenders config))
 
 -- | Parse mode, includes all extensions, doesn't assume any fixities.
 parseMode :: ParseMode
@@ -61,10 +56,9 @@ parseMode =
         isDisabledExtention _ = True
 
 -- | Test with the given style, prints to stdout.
-test :: Style -> Text -> IO ()
-test style =
-  either error (T.putStrLn . T.toLazyText) .
-  reformat style
+test :: Config -> Style -> Text -> IO ()
+test config style =
+  either error (T.putStrLn . T.toLazyText) . reformat config style
 
 -- | Styles list, useful for programmatically choosing.
 styles :: [Style]
