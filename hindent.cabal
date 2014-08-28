@@ -3,7 +3,7 @@ version:             0.0
 synopsis:            Extensible Haskell pretty printer
 description:         Extensible Haskell pretty printer. Both a library and an executable.
                      .
-                     See the Github page for usage/explanation: https://github.com/chrisdone/hindent
+                     See the Github page for usage\/explanation: <https://github.com/chrisdone/hindent>
 license:             BSD3
 stability:           Unstable
 license-file:        LICENSE
@@ -13,7 +13,7 @@ copyright:           2014 Chris Done
 category:            Development
 build-type:          Simple
 cabal-version:       >=1.8
-extra-data-files:    elisp/hindent.el
+data-files:          elisp/hindent.el
 
 library
   hs-source-dirs:    src/
