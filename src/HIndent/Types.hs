@@ -9,36 +9,16 @@ module HIndent.Types
   ,PrintState(..)
   ,Extender(..)
   ,Style(..)
-  ,Config(..)
-  ,Pretty(..)
-  ,pretty)
+  ,Config(..))
   where
 
 import Control.Monad.State (MonadState(..),State)
 import Data.Default
 import Data.Int (Int64)
-import Data.Maybe (listToMaybe,mapMaybe)
+
 import Data.Text (Text)
 import Data.Text.Lazy.Builder (Builder)
 import Data.Typeable (Typeable,cast)
-
--- | Pretty printing class.
-class (Typeable a) => Pretty a where
-  prettyInternal :: a -> Printer ()
-
--- | Pretty print using extenders.
-pretty :: Pretty a => a -> Printer ()
-pretty a =
-  do st <- get
-     case st of
-       PrintState{psExtenders = es,psUserState = s} ->
-         case listToMaybe (mapMaybe (makePrinter s) es) of
-           Just m -> m
-           Nothing -> prettyInternal a
-  where makePrinter s (Extender f) =
-          case cast a of
-            Just v -> Just (f s v)
-            Nothing -> Nothing
 
 -- | A pretty printing monad.
 newtype Printer a = Printer { runPrinter :: State PrintState a }

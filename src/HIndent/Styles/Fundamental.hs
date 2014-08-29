@@ -7,7 +7,6 @@ module HIndent.Styles.Fundamental
   (fundamental)
   where
 
-import HIndent.Instances ()
 import HIndent.Types
 
 import Data.Default

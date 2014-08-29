@@ -19,13 +19,12 @@ library
   hs-source-dirs:    src/
   ghc-options:       -Wall -O2
   exposed-modules:   HIndent
-                     HIndent.Combinators
                      HIndent.Types
+                     HIndent.Pretty
                      HIndent.Styles.Fundamental
                      HIndent.Styles.ChrisDone
                      HIndent.Styles.MichaelSnoyman
                      HIndent.Styles.JohanTibell
-  other-modules:     HIndent.Instances
   build-depends:     base >= 4 && <5
                    , data-default
                    , haskell-src-exts

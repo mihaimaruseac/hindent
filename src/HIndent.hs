@@ -15,11 +15,11 @@ module HIndent
   ,test)
   where
 
+import           HIndent.Pretty
 import           HIndent.Styles.ChrisDone
-import           HIndent.Styles.MichaelSnoyman
-import           HIndent.Styles.JohanTibell
 import           HIndent.Styles.Fundamental
-import           HIndent.Instances ()
+import           HIndent.Styles.JohanTibell
+import           HIndent.Styles.MichaelSnoyman
 import           HIndent.Types
 
 import           Control.Monad.State

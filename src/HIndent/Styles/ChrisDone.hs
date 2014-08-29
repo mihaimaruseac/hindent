@@ -9,11 +9,11 @@ module HIndent.Styles.ChrisDone
   (chrisDone)
   where
 
+import HIndent.Pretty
+import HIndent.Types
+
 import Control.Monad.State.Class
 import Data.Int
-import HIndent.Combinators
-import HIndent.Instances ()
-import HIndent.Types
 import Language.Haskell.Exts.Syntax
 import Prelude hiding (exp)
 

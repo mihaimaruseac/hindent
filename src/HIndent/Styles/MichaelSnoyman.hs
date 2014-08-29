@@ -8,7 +8,6 @@ module HIndent.Styles.MichaelSnoyman
   (michaelSnoyman)
   where
 
-import HIndent.Instances ()
 import HIndent.Types
 
 import Prelude hiding (exp)

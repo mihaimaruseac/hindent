@@ -8,7 +8,6 @@ module HIndent.Styles.JohanTibell
   (johanTibell)
   where
 
-import HIndent.Instances ()
 import HIndent.Types
 
 import Prelude hiding (exp)
