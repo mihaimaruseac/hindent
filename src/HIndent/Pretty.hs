@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
@@ -49,6 +50,8 @@ module HIndent.Pretty
 
 import           HIndent.Types
 
+import           Language.Haskell.Exts.SrcLoc
+
 import           Control.Monad.State hiding (state)
 import           Data.Int
 import           Data.List
@@ -60,8 +63,8 @@ import           Data.Text.Lazy.Builder (Builder)
 import qualified Data.Text.Lazy.Builder as T
 import           Data.Text.Lazy.Builder.Int
 import           Data.Typeable
-import qualified Language.Haskell.Exts.Pretty as P
-import           Language.Haskell.Exts.Syntax
+import qualified Language.Haskell.Exts.Annotated as P
+import           Language.Haskell.Exts.Annotated.Syntax
 import           Prelude hiding (exp)
 
 --------------------------------------------------------------------------------
@@ -87,14 +90,14 @@ pretty a =
 
 -- | Run the basic printer for the given node without calling an
 -- extension hook for this node, but do allow extender hooks in
--- child nodes.
+-- child nodes. Also auto-inserts comments.
 prettyNoExt :: (Pretty a) => a -> Printer ()
 prettyNoExt a = prettyInternal a
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here is
 -- HSE's.
-pretty' :: P.Pretty a => a -> Printer ()
-pretty' = write . T.fromText . T.pack . P.prettyPrint
+pretty' :: (P.Pretty (ast SrcSpanInfo),Functor ast) => ast NodeInfo -> Printer ()
+pretty' = write . T.fromText . T.pack . P.prettyPrint . fmap nodeInfoSpan
 
 --------------------------------------------------------------------------------
 -- * Combinators
@@ -217,7 +220,9 @@ write x =
   do state <- get
      let out =
            if psNewline state
-              then T.fromText (T.replicate (fromIntegral (psIndentLevel state)) " ") <>
+              then T.fromText
+                     (T.replicate (fromIntegral (psIndentLevel state))
+                                  " ") <>
                    x
               else x
          out' = T.toLazyText out
@@ -257,17 +262,17 @@ sandbox p =
      return new
 
 -- | No binds?
-nullBinds :: Binds -> Bool
-nullBinds (BDecls x) = null x
-nullBinds (IPBinds x) = null x
+nullBinds :: Binds NodeInfo -> Bool
+nullBinds (BDecls _ x) = null x
+nullBinds (IPBinds _ x) = null x
 
 -- | Maybe render a class context.
-maybeCtx :: Pretty a => [a] -> Printer ()
-maybeCtx ctx =
-  unless (null ctx)
-         (do write "("
-             commas (map pretty ctx)
-             write ") => ")
+maybeCtx :: Maybe (Context NodeInfo) -> Printer ()
+maybeCtx =
+  maybe (return ())
+        (\p ->
+           pretty p >>
+           write " => ")
 
 -- | Swing the second printer below and indented with respect to the first.
 swing :: Printer () -> Printer b -> Printer b
@@ -281,18 +286,27 @@ swing a b =
 --------------------------------------------------------------------------------
 -- * Instances
 
-instance Pretty Pat where
+instance Pretty (Context NodeInfo) where
+  prettyInternal ctx =
+    case ctx of
+      CxSingle _ a -> pretty a
+      CxTuple _ as ->
+        parens (commas (map pretty as))
+      CxParen _ c -> parens (pretty c)
+      CxEmpty _ -> parens (return ())
+
+instance Pretty (Pat NodeInfo) where
   prettyInternal x =
     case x of
-      PLit l -> pretty l
-      PNeg l ->
+      PLit _ l -> pretty l
+      PNeg _ l ->
         depend (write "-")
                (pretty l)
-      PNPlusK n k ->
+      PNPlusK _ n k ->
         depend (do pretty n
                    write "+")
                (int k)
-      PInfixApp a op b ->
+      PInfixApp _ a op b ->
         case op of
           Special{} ->
             depend (pretty a)
@@ -304,11 +318,11 @@ instance Pretty Pat where
                    (depend (do prettyInfixOp op
                                space)
                            (pretty b))
-      PApp f args ->
+      PApp _ f args ->
         depend (do pretty f
                    unless (null args) space)
                (spaced (map pretty args))
-      PTuple boxed pats ->
+      PTuple _ boxed pats ->
         depend (write (case boxed of
                          Unboxed -> "(#"
                          Boxed -> "("))
@@ -316,34 +330,34 @@ instance Pretty Pat where
                    write (case boxed of
                             Unboxed -> "#)"
                             Boxed -> ")"))
-      PList ps ->
+      PList _ ps ->
         brackets (commas (map pretty ps))
-      PParen e -> parens (pretty e)
-      PRec qname fields ->
+      PParen _ e -> parens (pretty e)
+      PRec _ qname fields ->
         depend (pretty qname)
                (braces (commas (map pretty fields)))
-      PAsPat n p ->
+      PAsPat _ n p ->
         depend (do pretty n
                    write "@")
                (pretty p)
-      PWildCard -> write "_"
-      PIrrPat p ->
+      PWildCard _ -> write "_"
+      PIrrPat _ p ->
         depend (write "~")
                (pretty p)
       PatTypeSig _ p ty ->
         depend (do pretty p
                    write " :: ")
                (pretty ty)
-      PViewPat e p ->
+      PViewPat _ e p ->
         depend (do pretty e
                    write " -> ")
                (pretty p)
-      PQuasiQuote name str ->
+      PQuasiQuote _ name str ->
         brackets (depend (do write "$"
                              string name
                              write "|")
                          (string str))
-      PBangPat p ->
+      PBangPat _ p ->
         depend (write "!")
                (pretty p)
       PRPat{} -> pretty' x
@@ -355,34 +369,20 @@ instance Pretty Pat where
       PVar{} -> pretty' x
 
 -- | Pretty print a name for being an infix operator.
-prettyInfixOp :: QName -> Printer ()
+prettyInfixOp :: QName NodeInfo -> Printer ()
 prettyInfixOp x =
   case x of
     Qual{} -> pretty' x
-    UnQual n ->
+    UnQual _ n ->
       case n of
-        Ident i -> string ("`" ++ i ++ "`")
-        Symbol s -> string s
-    Special s ->
-      case s of
-        UnitCon -> write "()"
-        ListCon -> write "[]"
-        FunCon -> write "->"
-        TupleCon Boxed i ->
-          string ("(" ++
-                  replicate (i - 1) ',' ++
-                  ")")
-        TupleCon Unboxed i ->
-          string ("(#" ++
-                  replicate (i - 1) ',' ++
-                  "#)")
-        Cons -> write ":"
-        UnboxedSingleCon -> write "(##)"
+        Ident _ i -> string ("`" ++ i ++ "`")
+        Symbol _ s -> string s
+    Special _ s -> pretty s
 
-instance Pretty Type where
+instance Pretty (Type NodeInfo) where
   prettyInternal x =
     case x of
-      TyForall mbinds ctx ty ->
+      TyForall _ mbinds ctx ty ->
         depend (case mbinds of
                   Nothing -> return ()
                   Just ts ->
@@ -391,11 +391,11 @@ instance Pretty Type where
                        write ". ")
                (depend (maybeCtx ctx)
                        (pretty ty))
-      TyFun a b ->
+      TyFun _ a b ->
         depend (do pretty a
                    write " -> ")
                (pretty b)
-      TyTuple boxed tys ->
+      TyTuple _ boxed tys ->
         depend (write (case boxed of
                          Unboxed -> "(#"
                          Boxed -> "("))
@@ -403,44 +403,44 @@ instance Pretty Type where
                    write (case boxed of
                             Unboxed -> "#)"
                             Boxed -> ")"))
-      TyList t -> brackets (pretty t)
-      TyApp f a -> spaced [pretty f,pretty a]
-      TyVar n -> pretty n
-      TyCon p -> pretty p
-      TyParen e -> parens (pretty e)
-      TyInfix a op b ->
+      TyList _ t -> brackets (pretty t)
+      TyApp _ f a -> spaced [pretty f,pretty a]
+      TyVar _ n -> pretty n
+      TyCon _ p -> pretty p
+      TyParen _ e -> parens (pretty e)
+      TyInfix _ a op b ->
         depend (do pretty a
                    space)
                (depend (do pretty op
                            space)
                        (pretty b))
-      TyKind ty k ->
+      TyKind _ ty k ->
         parens (do pretty ty
                    write " :: "
                    pretty k)
       TyPromoted{} ->
         error "FIXME: No implementation for TyPromoted."
 
-instance Pretty Exp where
+instance Pretty (Exp NodeInfo) where
   prettyInternal = exp
 
 -- | Render an expression.
-exp :: Exp -> Printer ()
-exp (InfixApp a op b) =
+exp :: Exp NodeInfo -> Printer ()
+exp (InfixApp _ a op b) =
   depend (do pretty a
              space
              pretty op
              space)
          (do pretty b)
-exp (App op a) =
+exp (App _ op a) =
   swing (do pretty f)
         (lined (map pretty args))
   where (f,args) = flatten op [a]
-        flatten :: Exp -> [Exp] -> (Exp,[Exp])
-        flatten (App f' a') b =
+        flatten :: Exp NodeInfo -> [Exp NodeInfo] -> (Exp NodeInfo,[Exp NodeInfo])
+        flatten (App _ f' a') b =
           flatten f' (a' : b)
         flatten f' as = (f',as)
-exp (NegApp e) =
+exp (NegApp _ e) =
   depend (write "-")
          (pretty e)
 exp (Lambda _ ps e) =
@@ -448,13 +448,13 @@ exp (Lambda _ ps e) =
          (do spaced (map pretty ps)
              swing (write " -> ")
                    (pretty e))
-exp (Let binds e) =
+exp (Let _ binds e) =
   do depend (write "let ")
             (pretty binds)
      newline
      depend (write "in ")
             (pretty e)
-exp (If p t e) =
+exp (If _ p t e) =
   do depend (write "if ")
             (do pretty p
                 newline
@@ -463,21 +463,21 @@ exp (If p t e) =
                 newline
                 depend (write "else ")
                        (pretty e))
-exp (Paren e) = parens (pretty e)
-exp (Case e alts) =
+exp (Paren _ e) = parens (pretty e)
+exp (Case _ e alts) =
   do depend (write "case ")
             (do pretty e
                 write " of ")
      newline
      indentSpaces <- getIndentSpaces
      indented indentSpaces (lined (map pretty alts))
-exp (Do stmts) =
+exp (Do _ stmts) =
   depend (write "do ")
          (lined (map pretty stmts))
-exp (MDo stmts) =
+exp (MDo _ stmts) =
   depend (write "mdo ")
          (lined (map pretty stmts))
-exp (Tuple boxed exps) =
+exp (Tuple _ boxed exps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
                    Boxed -> "("))
@@ -486,7 +486,7 @@ exp (Tuple boxed exps) =
              write (case boxed of
                       Unboxed -> "#)"
                       Boxed -> ")"))
-exp (TupleSection boxed mexps) =
+exp (TupleSection _ boxed mexps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
                    Boxed -> "("))
@@ -494,47 +494,47 @@ exp (TupleSection boxed mexps) =
              write (case boxed of
                       Unboxed -> "#)"
                       Boxed -> ")"))
-exp (List es) =
+exp (List _ es) =
   brackets (prefixedLined ',' (map pretty es))
-exp (LeftSection e op) =
+exp (LeftSection _ e op) =
   parens (depend (do pretty e
                      space)
                  (pretty op))
-exp (RightSection e op) =
+exp (RightSection _ e op) =
   parens (depend (do pretty e
                      space)
                  (pretty op))
-exp (RecConstr n fs) =
+exp (RecConstr _ n fs) =
   do indentSpaces <- getIndentSpaces
      depend (do pretty n
                 space)
             (braces (prefixedLined ','
                                    (map (indented indentSpaces . pretty) fs)))
-exp (RecUpdate n fs) =
+exp (RecUpdate _ n fs) =
   do indentSpaces <- getIndentSpaces
      depend (do pretty n
                 space)
             (braces (prefixedLined ','
                                    (map (indented indentSpaces . pretty) fs)))
-exp (EnumFrom e) =
+exp (EnumFrom _ e) =
   brackets (do pretty e
                write " ..")
-exp (EnumFromTo e f) =
+exp (EnumFromTo _ e f) =
   brackets (depend (do pretty e
                        write " .. ")
                    (pretty f))
-exp (EnumFromThen e t) =
+exp (EnumFromThen _ e t) =
   brackets (depend (do pretty e
                        write ",")
                    (do pretty t
                        write " .."))
-exp (EnumFromThenTo e t f) =
+exp (EnumFromThenTo _ e t f) =
   brackets (depend (do pretty e
                        write ",")
                    (depend (do pretty t
                                write " .. ")
                            (pretty f)))
-exp (ListComp e qstmt) =
+exp (ListComp _ e qstmt) =
   brackets (depend (do pretty e
                        unless (null qstmt)
                               (write " |"))
@@ -551,15 +551,15 @@ exp (ExpTypeSig _ e t) =
   depend (do pretty e
              write " :: ")
          (pretty t)
-exp (VarQuote x) =
+exp (VarQuote _ x) =
   depend (write "'")
          (pretty x)
-exp (TypQuote x) =
+exp (TypQuote _ x) =
   depend (write "''")
          (pretty x)
-exp (BracketExp b) = pretty b
-exp (SpliceExp s) = pretty s
-exp (QuasiQuote n s) =
+exp (BracketExp _ b) = pretty b
+exp (SpliceExp _ s) = pretty s
+exp (QuasiQuote _ n s) =
   brackets (depend (do string n
                        write "|")
                    (do string s
@@ -581,31 +581,31 @@ exp x@LeftArrApp{} = pretty' x
 exp x@RightArrApp{} = pretty' x
 exp x@LeftArrHighApp{} = pretty' x
 exp x@RightArrHighApp{} = pretty' x
-exp (LCase _) =
+exp (LCase _ _) =
   error "FIXME: No implementation for LCase."
-exp (MultiIf _) =
+exp (MultiIf _ _) =
   error "FIXME: No implementation for MultiIf."
 exp ParComp{} =
   error "FIXME: No implementation for ParComp."
 
-instance Pretty Stmt where
+instance Pretty (Stmt NodeInfo) where
   prettyInternal x =
     case x of
       Generator _ p e ->
         depend (do pretty p
                    write " <- ")
                (pretty e)
-      Qualifier e -> pretty e
-      LetStmt binds ->
+      Qualifier _ e -> pretty e
+      LetStmt _ binds ->
         depend (write "let ")
                (pretty binds)
       RecStmt{} ->
         error "FIXME: No implementation for RecStmt."
 
-instance Pretty QualStmt where
+instance Pretty (QualStmt NodeInfo) where
   prettyInternal x =
     case x of
-      QualStmt s -> pretty s
+      QualStmt _ s -> pretty s
       ThenTrans{} ->
         error "FIXME: No implementation for ThenTrans."
       ThenBy{} ->
@@ -617,69 +617,67 @@ instance Pretty QualStmt where
       GroupByUsing{} ->
         error "FIXME: No implementation for GroupByUsing."
 
-instance Pretty Decl where
+instance Pretty (Decl NodeInfo) where
   prettyInternal = decl
 
 -- | Render a declaration.
-decl :: Decl -> Printer ()
-decl (PatBind _ pat mty rhs binds) =
+decl :: Decl NodeInfo -> Printer ()
+decl (PatBind _ pat mty rhs mbinds) =
   case mty of
     Just{} ->
-      error "Unimlpemented (Maybe Type) in PatBind."
+      error "Unimplemented (Maybe Type) in PatBind."
     Nothing ->
       do pretty pat
          pretty rhs
          indentSpaces <- getIndentSpaces
-         unless (nullBinds binds)
-                (do newline
-                    indented indentSpaces
-                             (depend (write "where ")
-                                     (pretty binds)))
-decl (InstDecl _ ctx name tys decls) =
+         case mbinds of
+           Nothing -> return ()
+           Just binds ->
+             do newline
+                indented indentSpaces
+                         (depend (write "where ")
+                                 (pretty binds))
+decl (InstDecl _ ctx dhead decls) =
   do indentSpaces <- getIndentSpaces
      depend (write "instance ")
             (depend (maybeCtx ctx)
-                    (depend (do pretty name
-                                space)
-                            (do spaced (map pretty tys)
-                                unless (null decls)
-                                       (write " where"))))
-     unless (null decls)
+                    (depend (pretty dhead)
+                            (unless (null (fromMaybe [] decls))
+                                    (write " where"))))
+     unless (null (fromMaybe [] decls))
             (do newline
-                indented indentSpaces (lined (map pretty decls)))
+                indented indentSpaces (lined (map pretty (fromMaybe [] decls))))
 decl (SpliceDecl _ e) = pretty e
 decl (TypeSig _ names ty) =
   depend (do inter (write ", ")
                    (map pretty names)
              write " :: ")
          (pretty ty)
-decl (FunBind matches) =
+decl (FunBind _ matches) =
   lined (map pretty matches)
-decl (ClassDecl _ ctx name tys fundeps decls) =
+decl (ClassDecl _ ctx dhead fundeps decls) =
   do depend (write "class ")
             (depend (maybeCtx ctx)
-                    (depend (do pretty name
+                    (depend (do pretty dhead
                                 space)
-                            (depend (depend (spaced (map pretty tys))
-                                            (unless (null fundeps)
-                                                    (do write " | "
-                                                        commas (map pretty fundeps))))
-                                    (unless (null decls)
+                            (depend (unless (null fundeps)
+                                            (do write " | "
+                                                commas (map pretty fundeps)))
+                                    (unless (null (fromMaybe [] decls))
                                             (write " where")))))
-     unless (null decls)
+     unless (null (fromMaybe [] decls))
             (do newline
                 indentSpaces <- getIndentSpaces
-                indented indentSpaces (lined (map pretty decls)))
-decl (TypeDecl _ _ _ _) =
+                indented indentSpaces (lined (map pretty (fromMaybe [] decls))))
+decl TypeDecl{} =
   error "FIXME: No implementation for TypeDecl."
-decl (TypeFamDecl _ _ _ _) =
+decl TypeFamDecl{} =
   error "FIXME: No implementation for TypeFamDecl."
-decl (DataDecl _ dataornew ctx name tyvars condecls _derivs) =
+decl (DataDecl _ dataornew ctx dhead condecls _derivs) =
   depend (do pretty dataornew
              space)
          (depend (maybeCtx ctx)
-                 (do spaced (pretty name :
-                             map pretty tyvars)
+                 (do pretty dhead
                      case condecls of
                        [] -> return ()
                        [x] -> singleCons x
@@ -697,174 +695,174 @@ decl (DataDecl _ dataornew ctx name tyvars condecls _derivs) =
                     (depend (write "=")
                             (prefixedLined '|'
                                            (map (depend space . pretty) xs)))
-decl (GDataDecl _ _ _ _ _ _ _ _) =
+decl GDataDecl{} =
   error "FIXME: No implementation for GDataDecl."
-decl (DataFamDecl _ _ _ _ _) =
+decl DataFamDecl{} =
   error "FIXME: No implementation for DataFamDecl."
-decl (TypeInsDecl _ _ _) =
+decl TypeInsDecl{} =
   error "FIXME: No implementation for TypeInsDecl."
-decl (DataInsDecl _ _ _ _ _) =
+decl DataInsDecl{} =
   error "FIXME: No implementation for DataInsDecl."
-decl (GDataInsDecl _ _ _ _ _ _) =
+decl GDataInsDecl{} =
   error "FIXME: No implementation for GDataInsDecl."
-decl (DerivDecl _ _ _ _) =
+decl DerivDecl{} =
   error "FIXME: No implementation for DerivDecl."
-decl (ForImp _ _ _ _ _ _) =
+decl ForImp{} =
   error "FIXME: No implementation for ForImp."
-decl (ForExp _ _ _ _ _) =
+decl ForExp{} =
   error "FIXME: No implementation for ForExp."
-decl (RulePragmaDecl _ _) =
+decl RulePragmaDecl{} =
   error "FIXME: No implementation for RulePragmaDecl."
-decl (DeprPragmaDecl _ _) =
+decl DeprPragmaDecl{} =
   error "FIXME: No implementation for DeprPragmaDecl."
-decl (InlineSig _ _ _ _) =
+decl InlineSig{} =
   error "FIXME: No implementation for InlineSig."
-decl (InlineConlikeSig _ _ _) =
+decl InlineConlikeSig{} =
   error "FIXME: No implementation for InlineConlikeSig."
-decl (SpecSig _ _ _ _) =
+decl SpecSig{} =
   error "FIXME: No implementation for SpecSig."
-decl (SpecInlineSig _ _ _ _ _) =
+decl SpecInlineSig{} =
   error "FIXME: No implementation for SpecInlineSig."
-decl (InstSig _ _ _ _) =
+decl InstSig{} =
   error "FIXME: No implementation for InstSig."
 decl x@WarnPragmaDecl{} = pretty' x
 decl x@AnnPragma{} = pretty' x
 decl x@InfixDecl{} = pretty' x
 decl x@DefaultDecl{} = pretty' x
 
-instance Pretty Alt where
+instance Pretty (Alt NodeInfo) where
   prettyInternal x =
     case x of
-      Alt _ p galts binds ->
+      Alt _ p galts mbinds ->
         do pretty p
            pretty galts
-           unless (nullBinds binds)
-                  (do newline
-                      indentSpaces <- getIndentSpaces
-                      indented indentSpaces
-                               (depend (write "where ")
-                                       (pretty binds)))
+           case mbinds of
+             Nothing -> return ()
+             Just binds ->
+               do newline
+                  indentSpaces <- getIndentSpaces
+                  indented indentSpaces
+                           (depend (write "where ")
+                                   (pretty binds))
 
-instance Pretty Asst where
+instance Pretty (Asst NodeInfo) where
   prettyInternal x =
     case x of
-      ClassA name types ->
+      ClassA _ name types ->
         spaced (pretty name : map pretty types)
-      InfixA _ _ _ ->
+      InfixA{} ->
         error "FIXME: No implementation for InfixA."
-      IParam _ _ ->
+      IParam{} ->
         error "FIXME: No implementation for IParam."
-      EqualP _ _ ->
+      EqualP{} ->
         error "FIXME: No implementation for EqualP."
 
-instance Pretty BangType where
+instance Pretty (BangType NodeInfo) where
   prettyInternal x =
     case x of
-      BangedTy ty ->
+      BangedTy _ ty ->
         depend (write "!")
                (pretty ty)
-      UnBangedTy ty ->
+      UnBangedTy _ ty ->
         pretty ty
-      UnpackedTy ty ->
+      UnpackedTy _ ty ->
         depend (write "{-# UNPACK #-} !")
                (pretty ty)
 
-instance Pretty Binds where
+instance Pretty (Binds NodeInfo) where
   prettyInternal x =
     case x of
-      BDecls ds -> lined (map pretty ds)
-      IPBinds i -> lined (map pretty i)
+      BDecls _ ds -> lined (map pretty ds)
+      IPBinds _  i -> lined (map pretty i)
 
-instance Pretty Bracket where
+instance Pretty (Bracket NodeInfo) where
   prettyInternal x =
     case x of
-      ExpBracket _ ->
+      ExpBracket _ _ ->
         error "FIXME: No implementation for ExpBracket."
-      PatBracket _ ->
+      PatBracket _ _ ->
         error "FIXME: No implementation for PatBracket."
-      TypeBracket _ ->
+      TypeBracket _ _ ->
         error "FIXME: No implementation for TypeBracket."
-      DeclBracket _ ->
+      DeclBracket _ _ ->
         error "FIXME: No implementation for DeclBracket."
 
-instance Pretty ClassDecl where
+instance Pretty (ClassDecl NodeInfo) where
   prettyInternal x =
     case x of
-      ClsDecl d -> pretty d
-      ClsDataFam _ ctx n tyvars mkind ->
+      ClsDecl _ d -> pretty d
+      ClsDataFam _ ctx h mkind ->
         depend (write "data ")
                (depend (maybeCtx ctx)
-                       (do spaced (pretty n :
-                                   map pretty tyvars)
-                           case mkind of
-                             Nothing -> return ()
-                             Just kind ->
-                               do write " :: "
-                                  pretty kind))
-      ClsTyFam _ n tyvars mkind ->
+                       (do pretty h
+                           (case mkind of
+                              Nothing -> return ()
+                              Just kind ->
+                                do write " :: "
+                                   pretty kind)))
+      ClsTyFam _ h mkind ->
         depend (write "type ")
-               (do spaced (pretty n :
-                           map pretty tyvars)
-                   case mkind of
-                     Nothing -> return ()
-                     Just kind ->
-                       do write " :: "
-                          pretty kind)
+               (depend (pretty h)
+                       (case mkind of
+                          Nothing -> return ()
+                          Just kind ->
+                            do write " :: "
+                               pretty kind))
       ClsTyDef _ this that ->
         do write "type "
            pretty this
            write " = "
            pretty that
 
-instance Pretty ConDecl where
+instance Pretty (ConDecl NodeInfo) where
   prettyInternal x =
     case x of
-      ConDecl name bangty ->
+      ConDecl _ name bangty ->
         depend (do pretty name
                    space)
                (lined (map pretty bangty))
-      InfixConDecl a f b ->
-        pretty (ConDecl f [a,b])
-      RecDecl name fields ->
+      InfixConDecl l a f b ->
+        pretty (ConDecl l f [a,b])
+      RecDecl _ name fields ->
         depend (pretty name)
                (do space
                    indentSpaces <- getIndentSpaces
                    braces (prefixedLined
                              ','
                              (map (indented indentSpaces . pretty)
-                                  (concatMap (\(names,ty) ->
+                                  (concatMap (\(FieldDecl _ names ty) ->
                                                 map (,ty) names)
                                              fields))))
 
-instance Pretty (Name,BangType) where
+instance Pretty ((Name NodeInfo),BangType NodeInfo) where
   prettyInternal (name,ty) =
     depend (do pretty name
                write " :: ")
            (pretty ty)
 
-instance Pretty FieldUpdate where
+instance Pretty (FieldUpdate NodeInfo) where
   prettyInternal x =
     case x of
-      FieldUpdate n e ->
+      FieldUpdate _ n e ->
         swing (do pretty n
                   write " = ")
               (pretty e)
-      FieldPun n -> pretty n
-      FieldWildcard -> write ".."
+      FieldPun _ n -> pretty n
+      FieldWildcard _ -> write ".."
 
-instance Pretty GadtDecl where
+instance Pretty (GadtDecl NodeInfo) where
   prettyInternal x =
     case x of
       GadtDecl _ _ _ ->
         error "FIXME: No implementation for GadtDecl."
 
-instance Pretty GuardedAlts where
+instance Pretty (GuardedAlts NodeInfo) where
   prettyInternal x =
     case x of
-      UnGuardedAlt e ->
+      UnGuardedAlt _ e ->
         swing (write " -> ")
               (pretty e)
-      GuardedAlts gas ->
+      GuardedAlts _ gas ->
         do newline
            indented 2
                     (lined (map (\p ->
@@ -872,7 +870,7 @@ instance Pretty GuardedAlts where
                                       pretty p)
                                 gas))
 
-instance Pretty GuardedAlt where
+instance Pretty (GuardedAlt NodeInfo) where
   prettyInternal x =
     case x of
       GuardedAlt _ stmts e ->
@@ -886,7 +884,7 @@ instance Pretty GuardedAlt where
            swing (write " -> ")
                  (pretty e)
 
-instance Pretty GuardedRhs where
+instance Pretty (GuardedRhs NodeInfo) where
   prettyInternal x =
     case x of
       GuardedRhs _ stmts e ->
@@ -900,82 +898,86 @@ instance Pretty GuardedRhs where
            swing (write " = ")
                  (pretty e)
 
-instance Pretty IPBind where
+instance Pretty (IPBind NodeInfo) where
   prettyInternal x =
     case x of
       IPBind _ _ _ ->
         error "FIXME: No implementation for IPBind."
 
-instance Pretty IfAlt where
+instance Pretty (IfAlt NodeInfo) where
   prettyInternal x =
     case x of
-      IfAlt _ _ ->
+      IfAlt _ _ _ ->
         error "FIXME: No implementation for IfAlt."
 
-instance Pretty InstDecl where
+instance Pretty (InstDecl NodeInfo) where
   prettyInternal i =
     case i of
-      InsDecl d -> pretty d
+      InsDecl _ d -> pretty d
       InsType _ name ty ->
-        depend (do write "type "
-                   pretty name
-                   write " = ")
-               (pretty ty)
+       depend (do write "type "
+                  pretty name
+                  write " = ")
+              (pretty ty)
       _ -> pretty' i
 
-instance Pretty Match where
+instance Pretty (Match NodeInfo) where
   prettyInternal x =
     case x of
-      Match _ name pats mty rhs binds ->
-        case mty of
-          Just{} ->
-            error "Unimlpemented (Maybe Type) in Match."
-          Nothing ->
-            do depend (do pretty name
-                          space)
-                      (spaced (map pretty pats))
-               pretty rhs
-               unless (nullBinds binds)
-                      (do newline
-                          indentSpaces <- getIndentSpaces
-                          indented indentSpaces
-                                   (depend (write "where ")
-                                           (pretty binds)))
+      Match _ name pats rhs mbinds ->
+        do depend (do pretty name
+                      space)
+                  (spaced (map pretty pats))
+           pretty rhs
+           case mbinds of
+             Nothing -> return ()
+             Just binds ->
+               do newline
+                  indentSpaces <- getIndentSpaces
+                  indented indentSpaces
+                           (depend (write "where ")
+                                   (pretty binds))
+      InfixMatch{} ->
+        error "FIXME: No implementation for InfixMatch."
 
-instance Pretty Module where
+instance Pretty (Module NodeInfo) where
   prettyInternal x =
     case x of
-      Module _ _ _ _ _ _ _ ->
+      Module _ _ _ _ _ ->
         error "FIXME: No implementation for Module."
+      XmlPage{} ->
+        error "FIXME: No implementation for XmlPage."
+      XmlHybrid{} ->
+        error "FIXME: No implementation for XmlHybrid."
 
-instance Pretty PatField where
+instance Pretty (PatField NodeInfo) where
   prettyInternal x =
     case x of
-      PFieldPat n p ->
+      PFieldPat _ n p ->
         depend (do pretty n
                    write " = ")
                (pretty p)
-      PFieldPun n -> pretty n
-      PFieldWildcard -> write ".."
+      PFieldPun _ n -> pretty n
+      PFieldWildcard _ -> write ".."
 
-instance Pretty QualConDecl where
+instance Pretty (QualConDecl NodeInfo) where
   prettyInternal x =
     case x of
       QualConDecl _ tyvars ctx d ->
-        depend (unless (null tyvars)
+        depend (unless (null (fromMaybe [] tyvars))
                        (do write "forall "
-                           spaced (map pretty tyvars)
+                           spaced (map pretty (fromMaybe [] tyvars))
                            write ". "))
                (depend (maybeCtx ctx)
                        (pretty d))
 
-instance Pretty Rhs where
+instance Pretty (Rhs NodeInfo) where
   prettyInternal x =
     case x of
-      UnGuardedRhs e ->
+      UnGuardedRhs _ e ->
         (swing (write " = ")
                (pretty e))
-      GuardedRhss gas ->
+      GuardedRhss _ gas ->
         do newline
            indented 2
                     (lined (map (\p ->
@@ -983,35 +985,35 @@ instance Pretty Rhs where
                                       pretty p)
                                 gas))
 
-instance Pretty Rule where
+instance Pretty (Rule NodeInfo) where
   prettyInternal x =
     case x of
-      Rule _ _ _ _ _ ->
+      Rule _ _ _ _ _ _ ->
         error "FIXME: No implementation for Rule."
 
-instance Pretty RuleVar where
+instance Pretty (RuleVar NodeInfo) where
   prettyInternal x =
     case x of
-      RuleVar _ ->
+      RuleVar _ _ ->
         error "FIXME: No implementation for RuleVar."
-      TypedRuleVar _ _ ->
+      TypedRuleVar _ _ _ ->
         error "FIXME: No implementation for TypedRuleVar."
 
-instance Pretty Splice where
+instance Pretty (Splice NodeInfo) where
   prettyInternal x =
     case x of
-      IdSplice _ ->
+      IdSplice _ _ ->
         error "FIXME: No implementation for IdSplice."
-      ParenSplice e ->
+      ParenSplice _ e ->
         depend (write "$")
                (parens (pretty e))
 
-instance Pretty WarningText where
+instance Pretty (WarningText NodeInfo) where
   prettyInternal x =
     case x of
-      DeprText _ ->
+      DeprText _ _ ->
         error "FIXME: No implementation for DeprText."
-      WarnText _ ->
+      WarnText _ _ ->
         error "FIXME: No implementation for WarnText."
 
 instance Pretty Tool where
@@ -1025,83 +1027,112 @@ instance Pretty Tool where
       UnknownTool t ->
         write (T.fromText (T.pack t))
 
-instance Pretty Activation where
+instance Pretty (InstHead NodeInfo) where
+  prettyInternal x =
+    case x of
+      IHead _ name tys ->
+        spaced (pretty name :
+                map pretty tys)
+      IHInfix l a o b -> pretty (IHead l o [a,b])
+      IHParen _ h -> parens (pretty h)
+
+instance Pretty (DeclHead NodeInfo) where
+  prettyInternal x =
+    case x of
+      DHead _ name tys ->
+        spaced (pretty name :
+                map pretty tys)
+      DHInfix l a o b -> pretty (DHead l o [a,b])
+      DHParen _ h -> parens (pretty h)
+
+instance Pretty (SpecialCon NodeInfo) where
+  prettyInternal s =
+    case s of
+      UnitCon _ -> write "()"
+      ListCon _ -> write "[]"
+      FunCon _ -> write "->"
+      TupleCon _ Boxed i ->
+        string ("(" ++
+                replicate (i - 1) ',' ++
+                ")")
+      TupleCon _ Unboxed i ->
+        string ("(#" ++
+                replicate (i - 1) ',' ++
+                "#)")
+      Cons _ -> write ":"
+      UnboxedSingleCon _ -> write "(##)"
+
+instance Pretty (Activation NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty Annotation where
+instance Pretty (Annotation NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty Assoc where
+instance Pretty (Assoc NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty CName where
+instance Pretty (CName NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty CallConv where
+instance Pretty (CallConv NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty DataOrNew where
+instance Pretty (DataOrNew NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty ExportSpec where
+instance Pretty (ExportSpec NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty FunDep where
+instance Pretty (FunDep NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty IPName where
+instance Pretty (IPName NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty ImportSpec where
+instance Pretty (ImportSpec NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty ImportDecl where
+instance Pretty (ImportDecl NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty Kind where
+instance Pretty (Kind NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty Literal where
+instance Pretty (Literal NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty ModulePragma where
+instance Pretty (ModulePragma NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty Name where
+instance Pretty (Name NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty Op where
+instance Pretty (Op NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty PXAttr where
+instance Pretty (PXAttr NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty Promoted where
+instance Pretty (QName NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty QName where
+instance Pretty (QOp NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty QOp where
+instance Pretty (RPat NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty RPat where
+instance Pretty (RPatOp NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty RPatOp where
+instance Pretty (Safety NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty Safety where
+instance Pretty (TyVarBind NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty SpecialCon where
+instance Pretty (XAttr NodeInfo) where
   prettyInternal = pretty'
 
-instance Pretty TyVarBind where
-  prettyInternal = pretty'
-
-instance Pretty XAttr where
-  prettyInternal = pretty'
-
-instance Pretty XName where
+instance Pretty (XName NodeInfo) where
   prettyInternal = pretty'

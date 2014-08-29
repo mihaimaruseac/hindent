@@ -14,7 +14,7 @@ import HIndent.Types
 
 import Control.Monad.State.Class
 import Data.Int
-import Language.Haskell.Exts.Syntax
+import Language.Haskell.Exts.Annotated.Syntax
 import Prelude hiding (exp)
 
 -- | A short function name.
@@ -47,10 +47,10 @@ chrisDone =
                   ,configIndentSpaces = 2}}
 
 -- | I want field updates to be dependent or newline.
-fieldupdate :: t -> FieldUpdate -> Printer ()
+fieldupdate :: t -> FieldUpdate NodeInfo -> Printer ()
 fieldupdate _ e =
   case e of
-    FieldUpdate n e' ->
+    FieldUpdate _ n e' ->
       dependOrNewline
         (do pretty n
             write " = ")
@@ -59,8 +59,8 @@ fieldupdate _ e =
     _ -> prettyNoExt e
 
 
-rhs :: State -> Rhs -> Printer ()
-rhs _ (UnGuardedRhs e) =
+rhs :: State -> Rhs NodeInfo -> Printer ()
+rhs _ (UnGuardedRhs _ e) =
   do indentSpaces <- getIndentSpaces
      indented indentSpaces
               (dependOrNewline (write " = ")
@@ -69,7 +69,7 @@ rhs _ (UnGuardedRhs e) =
 rhs _ e = prettyNoExt e
 
 -- | I want guarded RHS be dependent or newline.
-guardedrhs :: State -> GuardedRhs -> Printer ()
+guardedrhs :: State -> GuardedRhs NodeInfo -> Printer ()
 guardedrhs _ (GuardedRhs _ stmts e) =
   indented 1
            (do prefixedLined
@@ -85,7 +85,7 @@ guardedrhs _ (GuardedRhs _ stmts e) =
                   pretty))
 
 -- | I want guarded alts be dependent or newline.
-guardedalt :: State -> GuardedAlt -> Printer ()
+guardedalt :: State -> GuardedAlt NodeInfo -> Printer ()
 guardedalt _ (GuardedAlt _ stmts e) =
   indented 1
            (do (prefixedLined
@@ -101,8 +101,8 @@ guardedalt _ (GuardedAlt _ stmts e) =
                   pretty))
 
 -- | I want unguarded alts be dependent or newline.
-unguardedalt :: State -> GuardedAlts -> Printer ()
-unguardedalt _ (UnGuardedAlt e) =
+unguardedalt :: State -> GuardedAlts NodeInfo -> Printer ()
+unguardedalt _ (UnGuardedAlt _ e) =
   dependOrNewline
     (write " -> ")
     e
@@ -111,11 +111,11 @@ unguardedalt _ (UnGuardedAlt e) =
 unguardedalt _ e = prettyNoExt e
 
 -- | Expressions
-exp :: State -> Exp -> Printer ()
+exp :: State -> Exp NodeInfo -> Printer ()
 -- Infix applications will render on one line if possible, otherwise
 -- if any of the arguments are not "flat" then that expression is
 -- line-separated.
-exp _ e@(InfixApp a op b) =
+exp _ e@(InfixApp _ a op b) =
   do is <- isFlat e
      overflow <- isOverflow
                    (depend (do pretty a
@@ -137,7 +137,7 @@ exp _ e@(InfixApp a op b) =
 -- | We try to render everything on a flat line. More than one of the
 -- arguments are not flat and it wouldn't be a single liner.
 -- If the head is short we depend, otherwise we swing.
-exp _ (App op a) =
+exp _ (App _ op a) =
   do orig <- gets psIndentLevel
      headIsShort <- isShort f
      depend (do pretty f
@@ -160,8 +160,8 @@ exp _ (App op a) =
                                       column (orig + indentSpaces)
                                              (lined (map pretty args)))
   where (f,args) = flatten op [a]
-        flatten :: Exp -> [Exp] -> (Exp,[Exp])
-        flatten (App f' a') b =
+        flatten :: Exp NodeInfo -> [Exp NodeInfo] -> (Exp NodeInfo,[Exp NodeInfo])
+        flatten (App _ f' a') b =
           flatten f' (a' : b)
         flatten f' as = (f',as)
 -- | Lambdas are dependent if they can be.
@@ -173,7 +173,7 @@ exp _ (Lambda _ ps b) =
                b
                (indented 1 .
                 pretty))
-exp _ (Tuple boxed exps) =
+exp _ (Tuple _ boxed exps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
                    Boxed -> "("))
@@ -186,7 +186,7 @@ exp _ (Tuple boxed exps) =
                       Unboxed -> "#)"
                       Boxed -> ")"))
   where p = commas (map pretty exps)
-exp _ (List es) =
+exp _ (List _ es) =
   do single <- isSingleLiner p
      underflow <- fmap not (isOverflow p)
      if single && underflow
@@ -197,7 +197,7 @@ exp _ (List es) =
 exp _ e = prettyNoExt e
 
 -- | Is the expression "short"? Used for app heads.
-isShort :: (Pretty a,Show a) => a -> Printer Bool
+isShort :: (Pretty a) => a -> Printer Bool
 isShort p =
   do line <- gets psLine
      orig <- fmap psColumn (sandbox (write ""))
@@ -221,7 +221,7 @@ isSmall p =
 
 -- | Make the right hand side dependent if it's flat, otherwise
 -- newline it.
-dependOrNewline :: Printer () -> Exp -> (Exp -> Printer ()) -> Printer ()
+dependOrNewline :: Printer () -> Exp NodeInfo -> (Exp NodeInfo -> Printer ()) -> Printer ()
 dependOrNewline left right f =
   do flat <- isFlat right
      small <- isSmall (depend left (f right))
@@ -232,24 +232,24 @@ dependOrNewline left right f =
                 (f right)
 
 -- | Is an expression flat?
-isFlat :: Exp -> Printer Bool
+isFlat :: Exp NodeInfo -> Printer Bool
 isFlat (Lambda _ _ e) = isFlat e
-isFlat (App a b) = return (isName a && isName b)
+isFlat (App _ a b) = return (isName a && isName b)
   where isName (Var{}) = True
         isName _ = False
-isFlat (InfixApp a _ b) =
+isFlat (InfixApp _ a _ b) =
   do a' <- isFlat a
      b' <- isFlat b
      return (a' && b')
-isFlat (NegApp a) = isFlat a
+isFlat (NegApp _ a) = isFlat a
 isFlat VarQuote{} = return True
 isFlat TypQuote{} = return True
-isFlat (List []) = return True
+isFlat (List _ []) = return True
 isFlat Var{} = return True
 isFlat Lit{} = return True
 isFlat Con{} = return True
-isFlat (LeftSection e _) = isFlat e
-isFlat (RightSection _ e) = isFlat e
+isFlat (LeftSection _ e _) = isFlat e
+isFlat (RightSection _ _ e) = isFlat e
 isFlat _ = return False
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)

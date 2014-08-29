@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -9,16 +10,19 @@ module HIndent.Types
   ,PrintState(..)
   ,Extender(..)
   ,Style(..)
-  ,Config(..))
+  ,Config(..)
+  ,NodeInfo(..))
   where
 
 import Control.Monad.State (MonadState(..),State)
 import Data.Default
 import Data.Int (Int64)
+import Language.Haskell.Exts.Comments
+import Language.Haskell.Exts.SrcLoc
 
 import Data.Text (Text)
 import Data.Text.Lazy.Builder (Builder)
-import Data.Typeable (Typeable,cast)
+import Data.Typeable (Typeable)
 
 -- | A pretty printing monad.
 newtype Printer a = Printer { runPrinter :: State PrintState a }
@@ -66,3 +70,9 @@ instance Default Config where
   def =
     Config {configMaxColumns = 80
            ,configIndentSpaces = 2}
+
+-- | Information for each node in the AST.
+data NodeInfo =
+  NodeInfo {nodeInfoSpan :: SrcSpanInfo
+           ,nodeInfoComments :: [Comment]}
+  deriving (Typeable)

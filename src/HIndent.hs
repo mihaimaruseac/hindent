@@ -30,7 +30,7 @@ import qualified Data.Text.Lazy.IO as T
 import           Data.Text.Lazy.Builder (Builder)
 import qualified Data.Text.Lazy.Builder as T
 import           Language.Haskell.Exts.Extension
-import           Language.Haskell.Exts.Parser
+import           Language.Haskell.Exts.Annotated hiding (Style,prettyPrint,Pretty,style)
 
 -- | Format the given source.
 reformat :: Config -> Style -> Text -> Either String Builder
@@ -38,8 +38,11 @@ reformat config style x =
   case parseDeclWithComments parseMode
                              (T.unpack x) of
     ParseOk (v,_comments) ->
-      Right (prettyPrint config style v)
+      Right (prettyPrint config
+                         style
+                         (fmap mapComments v))
     ParseFailed _ e -> Left e
+  where mapComments sp = NodeInfo sp []
 
 -- | Pretty print the given printable thing.
 prettyPrint :: Pretty a => Config -> Style -> a -> Builder
