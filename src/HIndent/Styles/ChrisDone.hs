@@ -56,7 +56,7 @@ fieldupdate _ e =
             write " = ")
         e'
         pretty
-    _ -> prettyInternal e
+    _ -> prettyNoExt e
 
 
 rhs :: State -> Rhs -> Printer ()
@@ -66,7 +66,7 @@ rhs _ (UnGuardedRhs e) =
               (dependOrNewline (write " = ")
                                e
                                pretty)
-rhs _ e = prettyInternal e
+rhs _ e = prettyNoExt e
 
 -- | I want guarded RHS be dependent or newline.
 guardedrhs :: State -> GuardedRhs -> Printer ()
@@ -108,7 +108,7 @@ unguardedalt _ (UnGuardedAlt e) =
     e
     (indented 2 .
      pretty)
-unguardedalt _ e = prettyInternal e
+unguardedalt _ e = prettyNoExt e
 
 -- | Expressions
 exp :: State -> Exp -> Printer ()
@@ -117,7 +117,13 @@ exp :: State -> Exp -> Printer ()
 -- line-separated.
 exp _ e@(InfixApp a op b) =
   do is <- isFlat e
-     if is
+     overflow <- isOverflow
+                   (depend (do pretty a
+                               space
+                               pretty op
+                               space)
+                           (do pretty b))
+     if is && not overflow
         then do depend (do pretty a
                            space
                            pretty op
@@ -140,9 +146,10 @@ exp _ (App op a) =
                 flatish <- fmap ((< 2) . length . filter not)
                                 (return flats)
                 singleLiner <- isSingleLiner (spaced (map pretty args))
+                overflow <- isOverflowMax (spaced (map pretty args))
                 if singleLiner &&
                    ((headIsShort && flatish) ||
-                    all id flats)
+                    all id flats) && not overflow
                    then spaced (map pretty args)
                    else do allSingleLiners <- fmap (all id)
                                                    (mapM (isSingleLiner . pretty) args)
@@ -187,7 +194,7 @@ exp _ (List es) =
         else brackets (prefixedLined ','
                                      (map pretty es))
   where p = brackets (commas (map pretty es))
-exp _ e = prettyInternal e
+exp _ e = prettyNoExt e
 
 -- | Is the expression "short"? Used for app heads.
 isShort :: (Pretty a,Show a) => a -> Printer Bool
@@ -252,6 +259,14 @@ isOverflow p =
      columnLimit <- getColumnLimit
      return (psColumn st >
              columnLimit)
+
+-- | Does printing the given thing overflow column limit? (e.g. 80)
+isOverflowMax :: Printer a -> Printer Bool
+isOverflowMax p =
+  do st <- sandbox p
+     columnLimit <- getColumnLimit
+     return (psColumn st >
+             columnLimit + 20)
 
 -- | Is the given expression a single-liner when printed?
 isSingleLiner :: MonadState PrintState m => m a -> m Bool

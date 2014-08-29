@@ -11,7 +11,7 @@ module HIndent.Pretty
   -- * Printing
     Pretty
   , pretty
-  , prettyInternal
+  , prettyNoExt
   -- * Insertion
   , write
   , newline
@@ -64,9 +64,40 @@ import qualified Language.Haskell.Exts.Pretty as P
 import           Language.Haskell.Exts.Syntax
 import           Prelude hiding (exp)
 
+--------------------------------------------------------------------------------
+-- * Pretty printing class
+
 -- | Pretty printing class.
 class (Typeable a) => Pretty a where
   prettyInternal :: a -> Printer ()
+
+-- | Pretty print using extenders.
+pretty :: (Pretty a) => a -> Printer ()
+pretty a =
+  do st <- get
+     case st of
+       PrintState{psExtenders = es,psUserState = s} ->
+         case listToMaybe (mapMaybe (makePrinter s) es) of
+           Just m -> m
+           Nothing -> prettyNoExt a
+  where makePrinter s (Extender f) =
+          case cast a of
+            Just v -> Just (f s v)
+            Nothing -> Nothing
+
+-- | Run the basic printer for the given node without calling an
+-- extension hook for this node, but do allow extender hooks in
+-- child nodes.
+prettyNoExt :: (Pretty a) => a -> Printer ()
+prettyNoExt a = prettyInternal a
+
+-- | Pretty print using HSE's own printer. The 'P.Pretty' class here is
+-- HSE's.
+pretty' :: P.Pretty a => a -> Printer ()
+pretty' = write . T.fromText . T.pack . P.prettyPrint
+
+--------------------------------------------------------------------------------
+-- * Combinators
 
 -- | Increase indentation level by n spaces for the given printer.
 indented :: Int64 -> Printer a -> Printer a
@@ -203,11 +234,6 @@ write x =
         additionalLines =
           LT.length (LT.filter (== '\n') x')
 
--- | Pretty print using HSE's own printer. The 'P.Pretty' class here is
--- HSE's.
-pretty' :: P.Pretty a => a -> Printer ()
-pretty' = write . T.fromText . T.pack . P.prettyPrint
-
 -- | Write a string.
 string :: String -> Printer ()
 string = write . T.fromText . T.pack
@@ -252,19 +278,8 @@ swing a b =
      indentSpaces <- getIndentSpaces
      column (orig + indentSpaces) b
 
--- | Pretty print using extenders.
-pretty :: Pretty a => a -> Printer ()
-pretty a =
-  do st <- get
-     case st of
-       PrintState{psExtenders = es,psUserState = s} ->
-         case listToMaybe (mapMaybe (makePrinter s) es) of
-           Just m -> m
-           Nothing -> prettyInternal a
-  where makePrinter s (Extender f) =
-          case cast a of
-            Just v -> Just (f s v)
-            Nothing -> Nothing
+--------------------------------------------------------------------------------
+-- * Instances
 
 instance Pretty Pat where
   prettyInternal x =
