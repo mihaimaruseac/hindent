@@ -245,20 +245,14 @@ exp (RecConstr n fs) =
   do indentSpaces <- getIndentSpaces
      depend (do pretty n
                 space)
-            (braces (prefixedLined
-                       ','
-                       (map (indented indentSpaces .
-                             pretty)
-                            fs)))
+            (braces (prefixedLined ','
+                                   (map (indented indentSpaces . pretty) fs)))
 exp (RecUpdate n fs) =
   do indentSpaces <- getIndentSpaces
      depend (do pretty n
                 space)
-            (braces (prefixedLined
-                       ','
-                       (map (indented indentSpaces .
-                             pretty)
-                            fs)))
+            (braces (prefixedLined ','
+                                   (map (indented indentSpaces . pretty) fs)))
 exp (EnumFrom e) =
   brackets (do pretty e
                write " ..")
