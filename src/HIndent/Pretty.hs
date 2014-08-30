@@ -50,8 +50,6 @@ module HIndent.Pretty
 
 import           HIndent.Types
 
-import           Language.Haskell.Exts.SrcLoc
-
 import           Control.Monad.State hiding (state)
 import           Data.Int
 import           Data.List
@@ -65,6 +63,7 @@ import           Data.Text.Lazy.Builder.Int
 import           Data.Typeable
 import qualified Language.Haskell.Exts.Annotated as P
 import           Language.Haskell.Exts.Annotated.Syntax
+import           Language.Haskell.Exts.SrcLoc
 import           Prelude hiding (exp)
 
 --------------------------------------------------------------------------------

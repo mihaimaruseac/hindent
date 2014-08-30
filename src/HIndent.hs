@@ -23,26 +23,26 @@ import           HIndent.Styles.MichaelSnoyman
 import           HIndent.Types
 
 import           Control.Monad.State
+import           Data.Data
 import           Data.Monoid
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
-import qualified Data.Text.Lazy.IO as T
 import           Data.Text.Lazy.Builder (Builder)
 import qualified Data.Text.Lazy.Builder as T
-import           Language.Haskell.Exts.Extension
-import           Language.Haskell.Exts.Annotated hiding (Style,prettyPrint,Pretty,style)
+import qualified Data.Text.Lazy.IO as T
+import           Data.Traversable
+import           Language.Haskell.Exts.Annotated hiding (Style,prettyPrint,Pretty,style,parse)
 
 -- | Format the given source.
 reformat :: Config -> Style -> Text -> Either String Builder
 reformat config style x =
   case parseDeclWithComments parseMode
                              (T.unpack x) of
-    ParseOk (v,_comments) ->
+    ParseOk (v,comments) ->
       Right (prettyPrint config
                          style
-                         (fmap mapComments v))
+                         (annotateComments v comments))
     ParseFailed _ e -> Left e
-  where mapComments sp = NodeInfo sp []
 
 -- | Pretty print the given printable thing.
 prettyPrint :: Pretty a => Config -> Style -> a -> Builder
@@ -72,3 +72,29 @@ test config style =
 styles :: [Style]
 styles =
   [fundamental,chrisDone,michaelSnoyman,johanTibell]
+
+-- | Annotate the AST with comments.
+annotateComments :: (Data (ast NodeInfo),Traversable ast,Annotated ast) => ast SrcSpanInfo -> [Comment] -> ast NodeInfo
+annotateComments =
+  foldr (\c ast ->
+           evalState (traverse (insert c) ast) False) .
+  fmap (\n -> NodeInfo n [])
+  where insert c ni@(NodeInfo _ cs) =
+          do found <- get
+             if not found &&
+                commentAfter c ni
+                then do put True
+                        return ni {nodeInfoComments = c : cs}
+                else return ni
+
+-- | Is the comment after the node?
+commentAfter :: Comment -> NodeInfo -> Bool
+commentAfter (Comment _ cspan _) (NodeInfo (SrcSpanInfo nspan _) _) =
+  spanBefore nspan cspan
+
+-- | Span: a < b
+spanBefore :: SrcSpan -> SrcSpan -> Bool
+spanBefore a b =
+  (srcSpanEndLine a < srcSpanEndLine b) ||
+  ((srcSpanEndLine a == srcSpanEndLine b) &&
+   (srcSpanEndColumn a < srcSpanEndColumn b))

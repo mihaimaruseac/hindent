@@ -15,14 +15,13 @@ module HIndent.Types
   where
 
 import Control.Monad.State (MonadState(..),State)
+import Data.Data
 import Data.Default
 import Data.Int (Int64)
-import Language.Haskell.Exts.Comments
-import Language.Haskell.Exts.SrcLoc
-
 import Data.Text (Text)
 import Data.Text.Lazy.Builder (Builder)
-import Data.Typeable (Typeable)
+import Language.Haskell.Exts.Comments
+import Language.Haskell.Exts.SrcLoc
 
 -- | A pretty printing monad.
 newtype Printer a = Printer { runPrinter :: State PrintState a }
@@ -75,4 +74,4 @@ instance Default Config where
 data NodeInfo =
   NodeInfo {nodeInfoSpan :: SrcSpanInfo
            ,nodeInfoComments :: [Comment]}
-  deriving (Typeable)
+  deriving (Typeable,Show,Data)
