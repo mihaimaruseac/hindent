@@ -197,7 +197,7 @@ exp _ (List _ es) =
 exp _ e = prettyNoExt e
 
 -- | Is the expression "short"? Used for app heads.
-isShort :: (Pretty a) => a -> Printer Bool
+isShort :: (Pretty ast) => ast NodeInfo -> Printer Bool
 isShort p =
   do line <- gets psLine
      orig <- fmap psColumn (sandbox (write ""))

@@ -70,11 +70,11 @@ import           Prelude hiding (exp)
 -- * Pretty printing class
 
 -- | Pretty printing class.
-class (Typeable a) => Pretty a where
-  prettyInternal :: a -> Printer ()
+class (Typeable1 ast) => Pretty ast where
+  prettyInternal :: ast NodeInfo -> Printer ()
 
 -- | Pretty print using extenders.
-pretty :: (Pretty a) => a -> Printer ()
+pretty :: (Pretty ast) => ast NodeInfo -> Printer ()
 pretty a =
   do st <- get
      case st of
@@ -88,13 +88,13 @@ pretty a =
             Nothing -> Nothing
 
 -- | Run the basic printer for the given node without calling an
--- extension hook for this node, but do allow extender hooks in
--- child nodes. Also auto-inserts comments.
-prettyNoExt :: (Pretty a) => a -> Printer ()
+-- extension hook for this node, but do allow extender hooks in child
+-- nodes. Also auto-inserts comments.
+prettyNoExt :: (Pretty ast) => ast NodeInfo -> Printer ()
 prettyNoExt a = prettyInternal a
 
--- | Pretty print using HSE's own printer. The 'P.Pretty' class here is
--- HSE's.
+-- | Pretty print using HSE's own printer. The 'P.Pretty' class here
+-- is HSE's.
 pretty' :: (P.Pretty (ast SrcSpanInfo),Functor ast) => ast NodeInfo -> Printer ()
 pretty' = write . T.fromText . T.pack . P.prettyPrint . fmap nodeInfoSpan
 
@@ -285,7 +285,7 @@ swing a b =
 --------------------------------------------------------------------------------
 -- * Instances
 
-instance Pretty (Context NodeInfo) where
+instance Pretty Context where
   prettyInternal ctx =
     case ctx of
       CxSingle _ a -> pretty a
@@ -294,7 +294,7 @@ instance Pretty (Context NodeInfo) where
       CxParen _ c -> parens (pretty c)
       CxEmpty _ -> parens (return ())
 
-instance Pretty (Pat NodeInfo) where
+instance Pretty Pat where
   prettyInternal x =
     case x of
       PLit _ l -> pretty l
@@ -378,7 +378,7 @@ prettyInfixOp x =
         Symbol _ s -> string s
     Special _ s -> pretty s
 
-instance Pretty (Type NodeInfo) where
+instance Pretty Type where
   prettyInternal x =
     case x of
       TyForall _ mbinds ctx ty ->
@@ -420,7 +420,7 @@ instance Pretty (Type NodeInfo) where
       TyPromoted{} ->
         error "FIXME: No implementation for TyPromoted."
 
-instance Pretty (Exp NodeInfo) where
+instance Pretty Exp where
   prettyInternal = exp
 
 -- | Render an expression.
@@ -587,7 +587,7 @@ exp (MultiIf _ _) =
 exp ParComp{} =
   error "FIXME: No implementation for ParComp."
 
-instance Pretty (Stmt NodeInfo) where
+instance Pretty Stmt where
   prettyInternal x =
     case x of
       Generator _ p e ->
@@ -601,7 +601,7 @@ instance Pretty (Stmt NodeInfo) where
       RecStmt{} ->
         error "FIXME: No implementation for RecStmt."
 
-instance Pretty (QualStmt NodeInfo) where
+instance Pretty QualStmt where
   prettyInternal x =
     case x of
       QualStmt _ s -> pretty s
@@ -616,7 +616,7 @@ instance Pretty (QualStmt NodeInfo) where
       GroupByUsing{} ->
         error "FIXME: No implementation for GroupByUsing."
 
-instance Pretty (Decl NodeInfo) where
+instance Pretty Decl where
   prettyInternal = decl
 
 -- | Render a declaration.
@@ -729,7 +729,7 @@ decl x@AnnPragma{} = pretty' x
 decl x@InfixDecl{} = pretty' x
 decl x@DefaultDecl{} = pretty' x
 
-instance Pretty (Alt NodeInfo) where
+instance Pretty Alt where
   prettyInternal x =
     case x of
       Alt _ p galts mbinds ->
@@ -744,7 +744,7 @@ instance Pretty (Alt NodeInfo) where
                            (depend (write "where ")
                                    (pretty binds))
 
-instance Pretty (Asst NodeInfo) where
+instance Pretty Asst where
   prettyInternal x =
     case x of
       ClassA _ name types ->
@@ -756,7 +756,7 @@ instance Pretty (Asst NodeInfo) where
       EqualP{} ->
         error "FIXME: No implementation for EqualP."
 
-instance Pretty (BangType NodeInfo) where
+instance Pretty BangType where
   prettyInternal x =
     case x of
       BangedTy _ ty ->
@@ -768,13 +768,13 @@ instance Pretty (BangType NodeInfo) where
         depend (write "{-# UNPACK #-} !")
                (pretty ty)
 
-instance Pretty (Binds NodeInfo) where
+instance Pretty Binds where
   prettyInternal x =
     case x of
       BDecls _ ds -> lined (map pretty ds)
       IPBinds _  i -> lined (map pretty i)
 
-instance Pretty (Bracket NodeInfo) where
+instance Pretty Bracket where
   prettyInternal x =
     case x of
       ExpBracket _ _ ->
@@ -786,7 +786,7 @@ instance Pretty (Bracket NodeInfo) where
       DeclBracket _ _ ->
         error "FIXME: No implementation for DeclBracket."
 
-instance Pretty (ClassDecl NodeInfo) where
+instance Pretty ClassDecl where
   prettyInternal x =
     case x of
       ClsDecl _ d -> pretty d
@@ -813,7 +813,7 @@ instance Pretty (ClassDecl NodeInfo) where
            write " = "
            pretty that
 
-instance Pretty (ConDecl NodeInfo) where
+instance Pretty ConDecl where
   prettyInternal x =
     case x of
       ConDecl _ name bangty ->
@@ -828,18 +828,16 @@ instance Pretty (ConDecl NodeInfo) where
                    indentSpaces <- getIndentSpaces
                    braces (prefixedLined
                              ','
-                             (map (indented indentSpaces . pretty)
+                             (map (indented indentSpaces . prettyPair)
                                   (concatMap (\(FieldDecl _ names ty) ->
                                                 map (,ty) names)
                                              fields))))
+    where prettyPair (name,ty) =
+            depend (do pretty name
+                       write " :: ")
+                   (pretty ty)
 
-instance Pretty ((Name NodeInfo),BangType NodeInfo) where
-  prettyInternal (name,ty) =
-    depend (do pretty name
-               write " :: ")
-           (pretty ty)
-
-instance Pretty (FieldUpdate NodeInfo) where
+instance Pretty FieldUpdate where
   prettyInternal x =
     case x of
       FieldUpdate _ n e ->
@@ -849,13 +847,13 @@ instance Pretty (FieldUpdate NodeInfo) where
       FieldPun _ n -> pretty n
       FieldWildcard _ -> write ".."
 
-instance Pretty (GadtDecl NodeInfo) where
+instance Pretty GadtDecl where
   prettyInternal x =
     case x of
       GadtDecl _ _ _ ->
         error "FIXME: No implementation for GadtDecl."
 
-instance Pretty (GuardedAlts NodeInfo) where
+instance Pretty GuardedAlts where
   prettyInternal x =
     case x of
       UnGuardedAlt _ e ->
@@ -869,7 +867,7 @@ instance Pretty (GuardedAlts NodeInfo) where
                                       pretty p)
                                 gas))
 
-instance Pretty (GuardedAlt NodeInfo) where
+instance Pretty GuardedAlt where
   prettyInternal x =
     case x of
       GuardedAlt _ stmts e ->
@@ -883,7 +881,7 @@ instance Pretty (GuardedAlt NodeInfo) where
            swing (write " -> ")
                  (pretty e)
 
-instance Pretty (GuardedRhs NodeInfo) where
+instance Pretty GuardedRhs where
   prettyInternal x =
     case x of
       GuardedRhs _ stmts e ->
@@ -897,19 +895,19 @@ instance Pretty (GuardedRhs NodeInfo) where
            swing (write " = ")
                  (pretty e)
 
-instance Pretty (IPBind NodeInfo) where
+instance Pretty IPBind where
   prettyInternal x =
     case x of
       IPBind _ _ _ ->
         error "FIXME: No implementation for IPBind."
 
-instance Pretty (IfAlt NodeInfo) where
+instance Pretty IfAlt where
   prettyInternal x =
     case x of
       IfAlt _ _ _ ->
         error "FIXME: No implementation for IfAlt."
 
-instance Pretty (InstDecl NodeInfo) where
+instance Pretty InstDecl where
   prettyInternal i =
     case i of
       InsDecl _ d -> pretty d
@@ -920,7 +918,7 @@ instance Pretty (InstDecl NodeInfo) where
               (pretty ty)
       _ -> pretty' i
 
-instance Pretty (Match NodeInfo) where
+instance Pretty Match where
   prettyInternal x =
     case x of
       Match _ name pats rhs mbinds ->
@@ -939,7 +937,7 @@ instance Pretty (Match NodeInfo) where
       InfixMatch{} ->
         error "FIXME: No implementation for InfixMatch."
 
-instance Pretty (Module NodeInfo) where
+instance Pretty Module where
   prettyInternal x =
     case x of
       Module _ _ _ _ _ ->
@@ -949,7 +947,7 @@ instance Pretty (Module NodeInfo) where
       XmlHybrid{} ->
         error "FIXME: No implementation for XmlHybrid."
 
-instance Pretty (PatField NodeInfo) where
+instance Pretty PatField where
   prettyInternal x =
     case x of
       PFieldPat _ n p ->
@@ -959,7 +957,7 @@ instance Pretty (PatField NodeInfo) where
       PFieldPun _ n -> pretty n
       PFieldWildcard _ -> write ".."
 
-instance Pretty (QualConDecl NodeInfo) where
+instance Pretty QualConDecl where
   prettyInternal x =
     case x of
       QualConDecl _ tyvars ctx d ->
@@ -970,7 +968,7 @@ instance Pretty (QualConDecl NodeInfo) where
                (depend (maybeCtx ctx)
                        (pretty d))
 
-instance Pretty (Rhs NodeInfo) where
+instance Pretty Rhs where
   prettyInternal x =
     case x of
       UnGuardedRhs _ e ->
@@ -984,13 +982,13 @@ instance Pretty (Rhs NodeInfo) where
                                       pretty p)
                                 gas))
 
-instance Pretty (Rule NodeInfo) where
+instance Pretty Rule where
   prettyInternal x =
     case x of
       Rule _ _ _ _ _ _ ->
         error "FIXME: No implementation for Rule."
 
-instance Pretty (RuleVar NodeInfo) where
+instance Pretty RuleVar where
   prettyInternal x =
     case x of
       RuleVar _ _ ->
@@ -998,7 +996,7 @@ instance Pretty (RuleVar NodeInfo) where
       TypedRuleVar _ _ _ ->
         error "FIXME: No implementation for TypedRuleVar."
 
-instance Pretty (Splice NodeInfo) where
+instance Pretty Splice where
   prettyInternal x =
     case x of
       IdSplice _ _ ->
@@ -1007,7 +1005,7 @@ instance Pretty (Splice NodeInfo) where
         depend (write "$")
                (parens (pretty e))
 
-instance Pretty (WarningText NodeInfo) where
+instance Pretty WarningText where
   prettyInternal x =
     case x of
       DeprText _ _ ->
@@ -1015,18 +1013,7 @@ instance Pretty (WarningText NodeInfo) where
       WarnText _ _ ->
         error "FIXME: No implementation for WarnText."
 
-instance Pretty Tool where
-  prettyInternal x =
-    case x of
-      GHC -> write "GHC"
-      HUGS -> write "HUGS"
-      NHC98 -> write "NHC98"
-      YHC -> write "YHC"
-      HADDOCK -> write "HADDOCK"
-      UnknownTool t ->
-        write (T.fromText (T.pack t))
-
-instance Pretty (InstHead NodeInfo) where
+instance Pretty InstHead where
   prettyInternal x =
     case x of
       IHead _ name tys ->
@@ -1035,7 +1022,7 @@ instance Pretty (InstHead NodeInfo) where
       IHInfix l a o b -> pretty (IHead l o [a,b])
       IHParen _ h -> parens (pretty h)
 
-instance Pretty (DeclHead NodeInfo) where
+instance Pretty DeclHead where
   prettyInternal x =
     case x of
       DHead _ name tys ->
@@ -1044,7 +1031,7 @@ instance Pretty (DeclHead NodeInfo) where
       DHInfix l a o b -> pretty (DHead l o [a,b])
       DHParen _ h -> parens (pretty h)
 
-instance Pretty (SpecialCon NodeInfo) where
+instance Pretty SpecialCon where
   prettyInternal s =
     case s of
       UnitCon _ -> write "()"
@@ -1061,77 +1048,77 @@ instance Pretty (SpecialCon NodeInfo) where
       Cons _ -> write ":"
       UnboxedSingleCon _ -> write "(##)"
 
-instance Pretty (Activation NodeInfo) where
+instance Pretty Activation where
   prettyInternal = pretty'
 
-instance Pretty (Annotation NodeInfo) where
+instance Pretty Annotation where
   prettyInternal = pretty'
 
-instance Pretty (Assoc NodeInfo) where
+instance Pretty Assoc where
   prettyInternal = pretty'
 
-instance Pretty (CName NodeInfo) where
+instance Pretty CName where
   prettyInternal = pretty'
 
-instance Pretty (CallConv NodeInfo) where
+instance Pretty CallConv where
   prettyInternal = pretty'
 
-instance Pretty (DataOrNew NodeInfo) where
+instance Pretty DataOrNew where
   prettyInternal = pretty'
 
-instance Pretty (ExportSpec NodeInfo) where
+instance Pretty ExportSpec where
   prettyInternal = pretty'
 
-instance Pretty (FunDep NodeInfo) where
+instance Pretty FunDep where
   prettyInternal = pretty'
 
-instance Pretty (IPName NodeInfo) where
+instance Pretty IPName where
   prettyInternal = pretty'
 
-instance Pretty (ImportSpec NodeInfo) where
+instance Pretty ImportSpec where
   prettyInternal = pretty'
 
-instance Pretty (ImportDecl NodeInfo) where
+instance Pretty ImportDecl where
   prettyInternal = pretty'
 
-instance Pretty (Kind NodeInfo) where
+instance Pretty Kind where
   prettyInternal = pretty'
 
-instance Pretty (Literal NodeInfo) where
+instance Pretty Literal where
   prettyInternal = pretty'
 
-instance Pretty (ModulePragma NodeInfo) where
+instance Pretty ModulePragma where
   prettyInternal = pretty'
 
-instance Pretty (Name NodeInfo) where
+instance Pretty Name where
   prettyInternal = pretty'
 
-instance Pretty (Op NodeInfo) where
+instance Pretty Op where
   prettyInternal = pretty'
 
-instance Pretty (PXAttr NodeInfo) where
+instance Pretty PXAttr where
   prettyInternal = pretty'
 
-instance Pretty (QName NodeInfo) where
+instance Pretty QName where
   prettyInternal = pretty'
 
-instance Pretty (QOp NodeInfo) where
+instance Pretty QOp where
   prettyInternal = pretty'
 
-instance Pretty (RPat NodeInfo) where
+instance Pretty RPat where
   prettyInternal = pretty'
 
-instance Pretty (RPatOp NodeInfo) where
+instance Pretty RPatOp where
   prettyInternal = pretty'
 
-instance Pretty (Safety NodeInfo) where
+instance Pretty Safety where
   prettyInternal = pretty'
 
-instance Pretty (TyVarBind NodeInfo) where
+instance Pretty TyVarBind where
   prettyInternal = pretty'
 
-instance Pretty (XAttr NodeInfo) where
+instance Pretty XAttr where
   prettyInternal = pretty'
 
-instance Pretty (XName NodeInfo) where
+instance Pretty XName where
   prettyInternal = pretty'

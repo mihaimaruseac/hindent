@@ -45,7 +45,7 @@ reformat config style x =
     ParseFailed _ e -> Left e
 
 -- | Pretty print the given printable thing.
-prettyPrint :: Pretty a => Config -> Style -> a -> Builder
+prettyPrint :: Pretty ast => Config -> Style -> ast NodeInfo -> Builder
 prettyPrint config style a =
   psOutput (execState (runPrinter (pretty a))
                       (case style of
