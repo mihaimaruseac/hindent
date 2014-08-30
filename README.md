@@ -1,5 +1,4 @@
-hindent
-=====
+# hindent [![Hackage](https://img.shields.io/hackage/v/hindent.svg?style=flat)](https://hackage.haskell.org/package/hindent)
 
 Extensible Haskell pretty printer. Both a library and an
 executable. Currently a work in progress (see
