@@ -19,21 +19,24 @@ executable. Currently a work in progress (see
 Input code:
 
 ``` haskell
-foo = foo (foo bar) (if bar then bob else pif)
-   (case mu zot of Just x -> return (); Nothing -> return 1) bill
+foo = foo (foo bar) -- Yep.
+  (if bar then bob else pif) (case mu {- cool -} zot of
+  Just x -> return (); Nothing -> return 1) bill
 ```
 
-Fundamental style:
+### Fundamental style
+
+This is an intentionally very dumb style that demands extension.
 
 ``` haskell
 foo =
   foo
     (foo
-       bar)
+       bar) -- Yep.
     (if bar
         then bob
         else pif)
-    (case mu
+    (case mu {- cool -}
             zot of
        Just x ->
          return
@@ -44,15 +47,20 @@ foo =
     bill
 ```
 
-Chris Done style (see [style guide](https://github.com/chrisdone/haskell-style-guide)):
+### Chris Done style
+
+My style is documented in
+[the style guide](https://github.com/chrisdone/haskell-style-guide),
+this printer style attempts to be more clever in deciding when to go
+to a new line or not.
 
 ``` haskell
 foo =
-  foo (foo bar)
+  foo (foo bar) -- Yep.
       (if bar
           then bob
           else pif)
-      (case mu zot of
+      (case mu {- cool -} zot of
          Just x -> return ()
          Nothing -> return 1)
       bill
@@ -102,9 +110,10 @@ additional extensions. Customizations are specified via the
 for an example of a non-trivial style.
 
 Useful combinators can be found in
-[HIndent.Combinators](https://github.com/chrisdone/hindent/blob/master/src/HIndent/Combinators.hs)
+[HIndent.Pretty](https://github.com/chrisdone/hindent/blob/master/src/HIndent/Pretty.hs)
 for defining printers. When you want to use a fundamental printer, use
-`prettyInternal` instead of `pretty`.
+`prettyNoExt` instead of `pretty`. Comments will still be inserted by
+`prettyNoExt`.
 
 If you want to contribute it to the package, add it to the list of
 styles in
@@ -114,7 +123,6 @@ and export it, and open a pull request.
 ## Remaining issues
 
 * Support formatting whole modules.
-* Re-inserting comments in appropriate places.
 * Add test suite.
 * Add some printers for other common styles: Johan Tibell's and
   Michael Snoyman's.

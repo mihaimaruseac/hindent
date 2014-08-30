@@ -22,6 +22,7 @@ module HIndent.Pretty
   , string
   -- * Common node types
   , maybeCtx
+  , printComment
   -- * Interspersing
   , inter
   , spaced
@@ -48,7 +49,10 @@ module HIndent.Pretty
   )
   where
 
+import           Data.Char
+
 import           HIndent.Types
+import           Language.Haskell.Exts.Comments
 
 import           Control.Monad.State hiding (state)
 import           Data.Int
@@ -70,7 +74,7 @@ import           Prelude hiding (exp)
 -- * Pretty printing class
 
 -- | Pretty printing class.
-class (Typeable1 ast) => Pretty ast where
+class (Annotated ast,Typeable1 ast) => Pretty ast where
   prettyInternal :: ast NodeInfo -> Printer ()
 
 -- | Pretty print using extenders.
@@ -91,7 +95,23 @@ pretty a =
 -- extension hook for this node, but do allow extender hooks in child
 -- nodes. Also auto-inserts comments.
 prettyNoExt :: (Pretty ast) => ast NodeInfo -> Printer ()
-prettyNoExt a = prettyInternal a
+prettyNoExt a =
+  do prettyInternal a
+     mapM_ printComment (nodeInfoComments (ann a))
+
+-- | Pretty print a comment.
+printComment :: Comment -> Printer ()
+printComment (Comment inline _ str) =
+  do st <- sandbox (write "")
+     unless (psColumn st == 0) space
+     if inline
+        then do write "{-"
+                string str
+                write "-}"
+        else do write "--"
+                string str
+                modify (\s ->
+                          s {psEolComment = True})
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
@@ -216,7 +236,9 @@ int = write . decimal
 -- | Write out a string, updating the current position information.
 write :: Builder -> Printer ()
 write x =
-  do state <- get
+  do eol <- gets psEolComment
+     when (eol && x /= "\n") newline
+     state <- get
      let out =
            if psNewline state
               then T.fromText
@@ -228,6 +250,7 @@ write x =
      modify (\s ->
                s {psOutput = psOutput state <> out
                  ,psNewline = False
+                 ,psEolComment = False
                  ,psLine = psLine state + additionalLines
                  ,psColumn =
                     if additionalLines > 0

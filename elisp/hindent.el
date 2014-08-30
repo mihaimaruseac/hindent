@@ -25,8 +25,8 @@
 
 (defun hindent/reformat-decl ()
   "Re-format the current declaration by parsing and pretty
-  printing it.
-COMMENTS ARE CURRENTLY LOST."
+  printing it. Comments are preserved, although placement may be
+  funky."
   (interactive)
   (let ((start-end (hindent-decl-points)))
     (when start-end

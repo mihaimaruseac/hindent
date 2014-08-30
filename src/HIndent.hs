@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 -- | Haskell indenter.
 
 module HIndent
@@ -15,6 +16,7 @@ module HIndent
   ,test)
   where
 
+import           Data.Function
 import           HIndent.Pretty
 import           HIndent.Styles.ChrisDone
 import           HIndent.Styles.Fundamental
@@ -39,18 +41,19 @@ reformat config style x =
   case parseDeclWithComments parseMode
                              (T.unpack x) of
     ParseOk (v,comments) ->
-      Right (prettyPrint config
-                         style
-                         (annotateComments v comments))
+      case annotateComments v comments of
+        (cs,ast) ->
+          Right (prettyPrint config style (do mapM_ printComment cs
+                                              pretty ast))
     ParseFailed _ e -> Left e
 
 -- | Pretty print the given printable thing.
-prettyPrint :: Pretty ast => Config -> Style -> ast NodeInfo -> Builder
-prettyPrint config style a =
-  psOutput (execState (runPrinter (pretty a))
+prettyPrint :: Config -> Style -> Printer () -> Builder
+prettyPrint config style m =
+  psOutput (execState (runPrinter m)
                       (case style of
                          Style _name _author _desc st extenders _defconfig ->
-                           PrintState 0 mempty False 0 1 st extenders config))
+                           PrintState 0 mempty False 0 1 st extenders config False))
 
 -- | Parse mode, includes all extensions, doesn't assume any fixities.
 parseMode :: ParseMode
@@ -74,17 +77,30 @@ styles =
   [fundamental,chrisDone,michaelSnoyman,johanTibell]
 
 -- | Annotate the AST with comments.
-annotateComments :: (Data (ast NodeInfo),Traversable ast,Annotated ast) => ast SrcSpanInfo -> [Comment] -> ast NodeInfo
+annotateComments :: (Data (ast NodeInfo),Traversable ast,Annotated ast) => ast SrcSpanInfo -> [Comment] -> ([Comment],ast NodeInfo)
 annotateComments =
-  foldr (\c ast ->
-           evalState (traverse (insert c) ast) False) .
+  foldr (\c (cs,ast) ->
+           case execState (traverse (collect c) ast) Nothing of
+             Nothing -> (c : cs,ast)
+             Just l ->
+               (cs,evalState (traverse (insert l c) ast) False)) .
+  ([],) .
   fmap (\n -> NodeInfo n [])
-  where insert c ni@(NodeInfo _ cs) =
-          do found <- get
-             if not found &&
-                commentAfter c ni
+  where collect c ni@(NodeInfo l _) =
+          do when (commentAfter c ni)
+                  (modify (\ml ->
+                             maybe (Just l)
+                                   (\l' ->
+                                      Just (if on spanBefore srcInfoSpan l l'
+                                               then l'
+                                               else l))
+                                   ml))
+             return ni
+        insert al c ni@(NodeInfo bl cs) =
+          do done <- get
+             if not done && al == bl
                 then do put True
-                        return ni {nodeInfoComments = c : cs}
+                        return (ni {nodeInfoComments = c : cs})
                 else return ni
 
 -- | Is the comment after the node?
