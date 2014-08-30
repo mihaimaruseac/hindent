@@ -50,8 +50,8 @@ foo =
 ### Chris Done style
 
 My style is documented in
-[the style guide](https://github.com/chrisdone/haskell-style-guide),
-this printer style attempts to be more clever in deciding when to go
+[the style guide](https://github.com/chrisdone/haskell-style-guide).
+This printer style uses some simple heuristics in deciding when to go
 to a new line or not.
 
 ``` haskell
