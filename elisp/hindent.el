@@ -61,8 +61,10 @@ COMMENTS ARE CURRENTLY LOST."
                                          (cdr start-end))
                           (insert new-str)
                           (goto-char (point-min))
-                          (forward-line line)
+                          (forward-line (1- line))
                           (goto-char (+ (line-beginning-position) col))
+                          (when (looking-back "^[ ]+")
+                            (back-to-indentation))
                           (message "Formatted."))
                       (message "Already formatted.")))))))))))))
 
