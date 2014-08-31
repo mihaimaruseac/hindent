@@ -77,13 +77,20 @@ styles =
   [fundamental,chrisDone,michaelSnoyman,johanTibell]
 
 -- | Annotate the AST with comments.
-annotateComments :: (Data (ast NodeInfo),Traversable ast,Annotated ast) => ast SrcSpanInfo -> [Comment] -> ([Comment],ast NodeInfo)
+annotateComments :: (Data (ast NodeInfo),Traversable ast,Annotated ast) => ast SrcSpanInfo -> [Comment] -> ([ComInfo],ast NodeInfo)
 annotateComments =
-  foldr (\c (cs,ast) ->
+  foldr (\c@(Comment _ cspan _) (cs,ast) ->
            case execState (traverse (collect c) ast) Nothing of
-             Nothing -> (c : cs,ast)
+             Nothing ->
+               (ComInfo c True :
+                cs
+               ,ast)
              Just l ->
-               (cs,evalState (traverse (insert l c) ast) False)) .
+               let ownLine =
+                     srcSpanStartLine cspan /=
+                     srcSpanEndLine (srcInfoSpan l)
+               in (cs
+                  ,evalState (traverse (insert l (ComInfo c ownLine)) ast) False)) .
   ([],) .
   fmap (\n -> NodeInfo n [])
   where collect c ni@(NodeInfo l _) =

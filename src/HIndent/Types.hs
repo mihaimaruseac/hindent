@@ -11,7 +11,8 @@ module HIndent.Types
   ,Extender(..)
   ,Style(..)
   ,Config(..)
-  ,NodeInfo(..))
+  ,NodeInfo(..)
+  ,ComInfo(..))
   where
 
 import Control.Monad.State (MonadState(..),State)
@@ -74,7 +75,13 @@ instance Default Config where
 
 -- | Information for each node in the AST.
 data NodeInfo =
-  NodeInfo {nodeInfoSpan :: SrcSpanInfo -- ^ Location info from the parser.
-           ,nodeInfoComments :: [Comment] -- ^ Comments which follow this node.
+  NodeInfo {nodeInfoSpan :: !SrcSpanInfo -- ^ Location info from the parser.
+           ,nodeInfoComments :: ![ComInfo] -- ^ Comments which follow this node.
             }
   deriving (Typeable,Show,Data)
+
+-- | Comment with some more info.
+data ComInfo =
+  ComInfo {comInfoComment :: !Comment
+          ,comInfoOwnLine :: !Bool}
+  deriving (Show,Typeable,Data)

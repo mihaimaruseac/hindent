@@ -100,10 +100,12 @@ prettyNoExt a =
      mapM_ printComment (nodeInfoComments (ann a))
 
 -- | Pretty print a comment.
-printComment :: Comment -> Printer ()
-printComment (Comment inline _ str) =
+printComment :: ComInfo -> Printer ()
+printComment (ComInfo (Comment inline sp str) own) =
   do st <- sandbox (write "")
-     unless (psColumn st == 0) space
+     if own
+        then newline
+        else unless (psColumn st == 0) space
      if inline
         then do write "{-"
                 string str
