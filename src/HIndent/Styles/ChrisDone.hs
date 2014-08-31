@@ -57,13 +57,13 @@ chrisDone =
 --     -> IO ()
 --
 decl :: t -> Decl NodeInfo -> Printer ()
-decl _ (TypeSig _ names ty) =
+decl _ (TypeSig _ names ty') =
   depend (do inter (write ", ")
                    (map pretty names)
              write " :: ")
-         (declTy ty)
-  where declTy ty =
-          case ty of
+         (declTy ty')
+  where declTy dty =
+          case dty of
             TyForall _ mbinds mctx ty ->
               do case mbinds of
                    Nothing -> return ()
@@ -80,11 +80,11 @@ decl _ (TypeSig _ names ty) =
                         indented (-3)
                                  (depend (write "=> ")
                                          (prettyTy ty))
-            _ -> prettyTy ty
+            _ -> prettyTy dty
         collapseFaps (TyFun _ arg result) = arg : collapseFaps result
         collapseFaps e = [e]
         prettyTy ty =
-          do small <- isSmall ty
+          do small <- isSmall' ty
              if small
                 then pretty ty
                 else case collapseFaps ty of
@@ -92,7 +92,7 @@ decl _ (TypeSig _ names ty) =
                        tys ->
                          prefixedLined "-> "
                                        (map pretty tys)
-        isSmall p =
+        isSmall' p =
           do overflows <- isOverflow (pretty p)
              oneLine <- isSingleLiner (pretty p)
              return (not overflows && oneLine)

@@ -102,7 +102,7 @@ prettyNoExt a =
 
 -- | Pretty print a comment.
 printComment :: ComInfo -> Printer ()
-printComment (ComInfo (Comment inline sp str) own) =
+printComment (ComInfo (Comment inline _ str) own) =
   do st <- sandbox (write "")
      if own
         then newline
