@@ -41,7 +41,8 @@ chrisDone =
            ,Extender rhs
            ,Extender guardedrhs
            ,Extender guardedalt
-           ,Extender unguardedalt]
+           ,Extender unguardedalt
+           ,Extender stmt]
         ,styleDefConfig =
            Config {configMaxColumns = 80
                   ,configIndentSpaces = 2}}
@@ -110,30 +111,23 @@ unguardedalt _ (UnGuardedAlt _ e) =
      pretty)
 unguardedalt _ e = prettyNoExt e
 
+-- Do statements need to handle infix expression indentation specially because
+-- do x *
+--    y
+-- is two invalid statements, not one valid infix op.
+stmt :: State -> Stmt NodeInfo -> Printer ()
+stmt _ (Qualifier _ e@(InfixApp _ a op b)) =
+  do col <- fmap psColumn (sandbox (write ""))
+     infixApp e a op b (Just col)
+stmt _ e = prettyNoExt e
+
 -- | Expressions
 exp :: State -> Exp NodeInfo -> Printer ()
 -- Infix applications will render on one line if possible, otherwise
 -- if any of the arguments are not "flat" then that expression is
 -- line-separated.
 exp _ e@(InfixApp _ a op b) =
-  do is <- isFlat e
-     overflow <- isOverflow
-                   (depend (do pretty a
-                               space
-                               pretty op
-                               space)
-                           (do pretty b))
-     if is && not overflow
-        then do depend (do pretty a
-                           space
-                           pretty op
-                           space)
-                       (do pretty b)
-        else do pretty a
-                space
-                pretty op
-                newline
-                pretty b
+  infixApp e a op b Nothing
 -- | We try to render everything on a flat line. More than one of the
 -- arguments are not flat and it wouldn't be a single liner.
 -- If the head is short we depend, otherwise we swing.
@@ -149,7 +143,8 @@ exp _ (App _ op a) =
                 overflow <- isOverflowMax (spaced (map pretty args))
                 if singleLiner &&
                    ((headIsShort && flatish) ||
-                    all id flats) && not overflow
+                    all id flats) &&
+                   not overflow
                    then spaced (map pretty args)
                    else do allSingleLiners <- fmap (all id)
                                                    (mapM (isSingleLiner . pretty) args)
@@ -181,7 +176,8 @@ exp _ (Tuple _ boxed exps) =
              underflow <- fmap not (isOverflow p)
              if single && underflow
                 then p
-                else parens (prefixedLined ',' (map pretty exps))
+                else parens (prefixedLined ','
+                                           (map pretty exps))
              write (case boxed of
                       Unboxed -> "#)"
                       Boxed -> ")"))
@@ -195,6 +191,32 @@ exp _ (List _ es) =
                                      (map pretty es))
   where p = brackets (commas (map pretty es))
 exp _ e = prettyNoExt e
+
+infixApp :: (Pretty ast,Pretty ast1,Pretty ast2) => Exp NodeInfo -> ast NodeInfo -> ast1 NodeInfo -> ast2 NodeInfo -> Maybe Int64 -> Printer ()
+infixApp e a op b indent =
+  do is <- isFlat e
+     overflow <- isOverflow
+                   (depend (do pretty a
+                               space
+                               pretty op
+                               space)
+                           (do pretty b))
+     if is && not overflow
+        then do depend (do pretty a
+                           space
+                           pretty op
+                           space)
+                       (do pretty b)
+        else do pretty a
+                space
+                pretty op
+                newline
+                case indent of
+                  Nothing -> pretty b
+                  Just col ->
+                    do indentSpaces <- getIndentSpaces
+                       column (col + indentSpaces)
+                              (pretty b)
 
 -- | Is the expression "short"? Used for app heads.
 isShort :: (Pretty ast) => ast NodeInfo -> Printer Bool
