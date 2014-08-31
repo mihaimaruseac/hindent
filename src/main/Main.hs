@@ -24,7 +24,8 @@ main =
             reformat (styleDefConfig style) style)
        _ ->
          error ("arguments: --style [" ++
-                intercalate "|" (map (T.unpack . styleName) styles) ++
+                intercalate "|"
+                            (map (T.unpack . styleName) styles) ++
                 "]")
   where findStyle name =
           find ((== T.pack name) . styleName) styles

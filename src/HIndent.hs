@@ -80,7 +80,8 @@ styles =
   [fundamental,chrisDone,michaelSnoyman,johanTibell]
 
 -- | Annotate the AST with comments.
-annotateComments :: (Data (ast NodeInfo),Traversable ast,Annotated ast) => ast SrcSpanInfo -> [Comment] -> ([ComInfo],ast NodeInfo)
+annotateComments :: (Data (ast NodeInfo),Traversable ast,Annotated ast)
+                 => ast SrcSpanInfo -> [Comment] -> ([ComInfo],ast NodeInfo)
 annotateComments =
   foldr (\c@(Comment _ cspan _) (cs,ast) ->
            case execState (traverse (collect c) ast) Nothing of

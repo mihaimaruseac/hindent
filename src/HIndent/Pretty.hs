@@ -77,7 +77,8 @@ class (Annotated ast,Typeable1 ast) => Pretty ast where
   prettyInternal :: ast NodeInfo -> Printer ()
 
 -- | Pretty print using extenders.
-pretty :: (Pretty ast) => ast NodeInfo -> Printer ()
+pretty :: (Pretty ast)
+       => ast NodeInfo -> Printer ()
 pretty a =
   do st <- get
      case st of
@@ -93,7 +94,8 @@ pretty a =
 -- | Run the basic printer for the given node without calling an
 -- extension hook for this node, but do allow extender hooks in child
 -- nodes. Also auto-inserts comments.
-prettyNoExt :: (Pretty ast) => ast NodeInfo -> Printer ()
+prettyNoExt :: (Pretty ast)
+            => ast NodeInfo -> Printer ()
 prettyNoExt a =
   do prettyInternal a
      mapM_ printComment (nodeInfoComments (ann a))
@@ -116,7 +118,8 @@ printComment (ComInfo (Comment inline sp str) own) =
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
-pretty' :: (P.Pretty (ast SrcSpanInfo),Functor ast) => ast NodeInfo -> Printer ()
+pretty' :: (P.Pretty (ast SrcSpanInfo),Functor ast)
+        => ast NodeInfo -> Printer ()
 pretty' = write . T.fromText . T.pack . P.prettyPrint . fmap nodeInfoSpan
 
 --------------------------------------------------------------------------------
