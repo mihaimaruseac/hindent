@@ -75,7 +75,7 @@ guardedrhs :: State -> GuardedRhs NodeInfo -> Printer ()
 guardedrhs _ (GuardedRhs _ stmts e) =
   indented 1
            (do prefixedLined
-                 ','
+                 ","
                  (map (\p ->
                          do space
                             pretty p)
@@ -91,7 +91,7 @@ guardedalt :: State -> GuardedAlt NodeInfo -> Printer ()
 guardedalt _ (GuardedAlt _ stmts e) =
   indented 1
            (do (prefixedLined
-                  ','
+                  ","
                   (map (\p ->
                           do space
                              pretty p)
@@ -177,7 +177,7 @@ exp _ (Tuple _ boxed exps) =
              underflow <- fmap not (isOverflow p)
              if single && underflow
                 then p
-                else prefixedLined ','
+                else prefixedLined ","
                                    (map pretty exps)
              write (case boxed of
                       Unboxed -> "#)"
@@ -188,12 +188,18 @@ exp _ (List _ es) =
      underflow <- fmap not (isOverflow p)
      if single && underflow
         then p
-        else brackets (prefixedLined ','
+        else brackets (prefixedLined ","
                                      (map pretty es))
   where p = brackets (commas (map pretty es))
 exp _ e = prettyNoExt e
 
-infixApp :: (Pretty ast,Pretty ast1,Pretty ast2) => Exp NodeInfo -> ast NodeInfo -> ast1 NodeInfo -> ast2 NodeInfo -> Maybe Int64 -> Printer ()
+infixApp :: (Pretty ast,Pretty ast1,Pretty ast2)
+         => Exp NodeInfo
+         -> ast NodeInfo
+         -> ast1 NodeInfo
+         -> ast2 NodeInfo
+         -> Maybe Int64
+         -> Printer ()
 infixApp e a op b indent =
   do is <- isFlat e
      overflow <- isOverflow

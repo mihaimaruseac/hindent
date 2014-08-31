@@ -59,6 +59,7 @@ import           Data.Int
 import           Data.List
 import           Data.Maybe
 import           Data.Monoid
+import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
 import           Data.Text.Lazy.Builder (Builder)
@@ -159,16 +160,16 @@ lined ps = sequence_ (intersperse newline ps)
 
 -- | Print all the printers separated newlines and optionally a line
 -- prefix.
-prefixedLined :: Char -> [Printer ()] -> Printer ()
+prefixedLined :: Text -> [Printer ()] -> Printer ()
 prefixedLined pref ps' =
   case ps' of
     [] -> return ()
     (p:ps) ->
       do p
-         indented (-1)
+         indented (fromIntegral (T.length pref * (-1)))
                   (mapM_ (\p' ->
                             do newline
-                               depend (string [pref]) p')
+                               depend (write (T.fromText pref)) p')
                          ps)
 
 -- | Set the (newline-) indent level to the given column for the given
@@ -505,7 +506,7 @@ exp (Tuple _ boxed exps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
                    Boxed -> "("))
-         (do parens (prefixedLined ','
+         (do parens (prefixedLined ","
                                    (map pretty exps))
              write (case boxed of
                       Unboxed -> "#)"
@@ -519,7 +520,7 @@ exp (TupleSection _ boxed mexps) =
                       Unboxed -> "#)"
                       Boxed -> ")"))
 exp (List _ es) =
-  brackets (prefixedLined ',' (map pretty es))
+  brackets (prefixedLined "," (map pretty es))
 exp (LeftSection _ e op) =
   parens (depend (do pretty e
                      space)
@@ -532,13 +533,13 @@ exp (RecConstr _ n fs) =
   do indentSpaces <- getIndentSpaces
      depend (do pretty n
                 space)
-            (braces (prefixedLined ','
+            (braces (prefixedLined ","
                                    (map (indented indentSpaces . pretty) fs)))
 exp (RecUpdate _ n fs) =
   do indentSpaces <- getIndentSpaces
      depend (do pretty n
                 space)
-            (braces (prefixedLined ','
+            (braces (prefixedLined ","
                                    (map (indented indentSpaces . pretty) fs)))
 exp (EnumFrom _ e) =
   brackets (do pretty e
@@ -564,7 +565,7 @@ exp (ListComp _ e qstmt) =
                               (write " |"))
                    (do space
                        prefixedLined
-                         ','
+                         ","
                          (map (\(i,x) ->
                                  depend (if i == 0
                                             then return ()
@@ -717,7 +718,7 @@ decl (DataDecl _ dataornew ctx dhead condecls _derivs) =
              indentSpaces <- getIndentSpaces
              column indentSpaces
                     (depend (write "=")
-                            (prefixedLined '|'
+                            (prefixedLined "|"
                                            (map (depend space . pretty) xs)))
 decl GDataDecl{} =
   error "FIXME: No implementation for GDataDecl."
@@ -852,7 +853,7 @@ instance Pretty ConDecl where
                (do space
                    indentSpaces <- getIndentSpaces
                    braces (prefixedLined
-                             ','
+                             ","
                              (map (indented indentSpaces . prettyPair)
                                   (concatMap (\(FieldDecl _ names ty) ->
                                                 map (,ty) names)
@@ -898,7 +899,7 @@ instance Pretty GuardedAlt where
       GuardedAlt _ stmts e ->
         do indented 1
                     (do (prefixedLined
-                           ','
+                           ","
                            (map (\p ->
                                    do space
                                       pretty p)
@@ -912,7 +913,7 @@ instance Pretty GuardedRhs where
       GuardedRhs _ stmts e ->
         do indented 1
                     (do prefixedLined
-                          ','
+                          ","
                           (map (\p ->
                                   do space
                                      pretty p)
