@@ -43,8 +43,11 @@ reformat config style x =
     ParseOk (v,comments) ->
       case annotateComments v comments of
         (cs,ast) ->
-          Right (prettyPrint config style (do mapM_ printComment cs
-                                              pretty ast))
+          Right (prettyPrint
+                   config
+                   style
+                   (do mapM_ printComment cs
+                       pretty ast))
     ParseFailed _ e -> Left e
 
 -- | Pretty print the given printable thing.

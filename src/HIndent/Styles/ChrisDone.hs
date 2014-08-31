@@ -176,8 +176,8 @@ exp _ (Tuple _ boxed exps) =
              underflow <- fmap not (isOverflow p)
              if single && underflow
                 then p
-                else parens (prefixedLined ','
-                                           (map pretty exps))
+                else prefixedLined ','
+                                   (map pretty exps)
              write (case boxed of
                       Unboxed -> "#)"
                       Boxed -> ")"))
