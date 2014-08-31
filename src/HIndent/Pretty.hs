@@ -49,11 +49,9 @@ module HIndent.Pretty
   )
   where
 
-import           Data.Char
-
 import           HIndent.Types
-import           Language.Haskell.Exts.Comments
 
+import           Language.Haskell.Exts.Comments
 import           Control.Monad.State hiding (state)
 import           Data.Int
 import           Data.List

@@ -42,10 +42,61 @@ chrisDone =
            ,Extender guardedrhs
            ,Extender guardedalt
            ,Extender unguardedalt
-           ,Extender stmt]
+           ,Extender stmt
+           ,Extender decl]
         ,styleDefConfig =
            Config {configMaxColumns = 80
                   ,configIndentSpaces = 2}}
+
+-- | Pretty print type signatures like
+--
+-- foo :: (Show x,Read x)
+--     => (Foo -> Bar)
+--     -> Maybe Int
+--     -> (Char -> X -> Y)
+--     -> IO ()
+--
+decl :: t -> Decl NodeInfo -> Printer ()
+decl _ (TypeSig _ names ty) =
+  depend (do inter (write ", ")
+                   (map pretty names)
+             write " :: ")
+         (declTy ty)
+  where declTy ty =
+          case ty of
+            TyForall _ mbinds mctx ty ->
+              do case mbinds of
+                   Nothing -> return ()
+                   Just ts ->
+                     do write "forall "
+                        spaced (map pretty ts)
+                        write ". "
+                        newline
+                 case mctx of
+                   Nothing -> prettyTy ty
+                   Just ctx ->
+                     do pretty ctx
+                        newline
+                        indented (-3)
+                                 (depend (write "=> ")
+                                         (prettyTy ty))
+            _ -> prettyTy ty
+        collapseFaps (TyFun _ arg result) = arg : collapseFaps result
+        collapseFaps e = [e]
+        prettyTy ty =
+          do small <- isSmall ty
+             if small
+                then pretty ty
+                else case collapseFaps ty of
+                       [] -> pretty ty
+                       tys ->
+                         prefixedLined "-> "
+                                       (map pretty tys)
+        isSmall p =
+          do overflows <- isOverflow (pretty p)
+             oneLine <- isSingleLiner (pretty p)
+             return (not overflows && oneLine)
+decl _ e = prettyNoExt e
 
 -- | I want field updates to be dependent or newline.
 fieldupdate :: t -> FieldUpdate NodeInfo -> Printer ()
@@ -250,7 +301,10 @@ isSmall p =
 
 -- | Make the right hand side dependent if it's flat, otherwise
 -- newline it.
-dependOrNewline :: Printer () -> Exp NodeInfo -> (Exp NodeInfo -> Printer ()) -> Printer ()
+dependOrNewline :: Printer ()
+                -> Exp NodeInfo
+                -> (Exp NodeInfo -> Printer ())
+                -> Printer ()
 dependOrNewline left right f =
   do flat <- isFlat right
      small <- isSmall (depend left (f right))
