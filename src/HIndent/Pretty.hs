@@ -147,8 +147,7 @@ inter :: Printer () -> [Printer ()] -> Printer ()
 inter sep ps =
   foldr (\(i,p) next ->
            depend (do p
-                      if i <
-                         length ps
+                      if i < length ps
                          then sep
                          else return ())
                   next)
@@ -167,7 +166,9 @@ prefixedLined pref ps' =
     [] -> return ()
     (p:ps) ->
       do p
-         indented (fromIntegral (T.length pref * (-1)))
+         indented (fromIntegral
+                     (T.length pref *
+                      (-1)))
                   (mapM_ (\p' ->
                             do newline
                                depend (write (T.fromText pref)) p')
@@ -801,18 +802,6 @@ instance Pretty Binds where
       BDecls _ ds -> lined (map pretty ds)
       IPBinds _  i -> lined (map pretty i)
 
-instance Pretty Bracket where
-  prettyInternal x =
-    case x of
-      ExpBracket _ _ ->
-        error "FIXME: No implementation for ExpBracket."
-      PatBracket _ _ ->
-        error "FIXME: No implementation for PatBracket."
-      TypeBracket _ _ ->
-        error "FIXME: No implementation for TypeBracket."
-      DeclBracket _ _ ->
-        error "FIXME: No implementation for DeclBracket."
-
 instance Pretty ClassDecl where
   prettyInternal x =
     case x of
@@ -874,12 +863,6 @@ instance Pretty FieldUpdate where
       FieldPun _ n -> pretty n
       FieldWildcard _ -> write ".."
 
-instance Pretty GadtDecl where
-  prettyInternal x =
-    case x of
-      GadtDecl _ _ _ ->
-        error "FIXME: No implementation for GadtDecl."
-
 instance Pretty GuardedAlts where
   prettyInternal x =
     case x of
@@ -922,18 +905,6 @@ instance Pretty GuardedRhs where
            swing (write " = ")
                  (pretty e)
 
-instance Pretty IPBind where
-  prettyInternal x =
-    case x of
-      IPBind _ _ _ ->
-        error "FIXME: No implementation for IPBind."
-
-instance Pretty IfAlt where
-  prettyInternal x =
-    case x of
-      IfAlt _ _ _ ->
-        error "FIXME: No implementation for IfAlt."
-
 instance Pretty InstDecl where
   prettyInternal i =
     case i of
@@ -963,16 +934,6 @@ instance Pretty Match where
                                    (pretty binds))
       InfixMatch{} ->
         error "FIXME: No implementation for InfixMatch."
-
-instance Pretty Module where
-  prettyInternal x =
-    case x of
-      Module _ _ _ _ _ ->
-        error "FIXME: No implementation for Module."
-      XmlPage{} ->
-        error "FIXME: No implementation for XmlPage."
-      XmlHybrid{} ->
-        error "FIXME: No implementation for XmlHybrid."
 
 instance Pretty PatField where
   prettyInternal x =
@@ -1008,20 +969,6 @@ instance Pretty Rhs where
                                    do write "|"
                                       pretty p)
                                 gas))
-
-instance Pretty Rule where
-  prettyInternal x =
-    case x of
-      Rule _ _ _ _ _ _ ->
-        error "FIXME: No implementation for Rule."
-
-instance Pretty RuleVar where
-  prettyInternal x =
-    case x of
-      RuleVar _ _ ->
-        error "FIXME: No implementation for RuleVar."
-      TypedRuleVar _ _ _ ->
-        error "FIXME: No implementation for TypedRuleVar."
 
 instance Pretty Splice where
   prettyInternal x =
@@ -1067,6 +1014,40 @@ instance Pretty SpecialCon where
                 "#)")
       Cons _ -> write ":"
       UnboxedSingleCon _ -> write "(##)"
+
+--------------------------------------------------------------------------------
+-- * Unimplemented printers
+
+instance Pretty Module where
+  prettyInternal x =
+    case x of
+      Module _ _ _ _ _ ->
+        error "FIXME: No implementation for Module."
+      XmlPage{} ->
+        error "FIXME: No implementation for XmlPage."
+      XmlHybrid{} ->
+        error "FIXME: No implementation for XmlHybrid."
+
+instance Pretty Bracket where
+  prettyInternal x =
+    case x of
+      ExpBracket _ _ ->
+        error "FIXME: No implementation for ExpBracket."
+      PatBracket _ _ ->
+        error "FIXME: No implementation for PatBracket."
+      TypeBracket _ _ ->
+        error "FIXME: No implementation for TypeBracket."
+      DeclBracket _ _ ->
+        error "FIXME: No implementation for DeclBracket."
+
+instance Pretty IPBind where
+  prettyInternal x =
+    case x of
+      IPBind _ _ _ ->
+        error "FIXME: No implementation for IPBind."
+
+--------------------------------------------------------------------------------
+-- * Fallback printers
 
 instance Pretty DataOrNew where
   prettyInternal = pretty'
