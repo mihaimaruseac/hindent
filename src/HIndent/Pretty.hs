@@ -1033,14 +1033,6 @@ instance Pretty Splice where
         depend (write "$")
                (parens (pretty e))
 
-instance Pretty WarningText where
-  prettyInternal x =
-    case x of
-      DeprText _ _ ->
-        error "FIXME: No implementation for DeprText."
-      WarnText _ _ ->
-        error "FIXME: No implementation for WarnText."
-
 instance Pretty InstHead where
   prettyInternal x =
     case x of
@@ -1076,37 +1068,10 @@ instance Pretty SpecialCon where
       Cons _ -> write ":"
       UnboxedSingleCon _ -> write "(##)"
 
-instance Pretty Activation where
-  prettyInternal = pretty'
-
-instance Pretty Annotation where
-  prettyInternal = pretty'
-
-instance Pretty Assoc where
-  prettyInternal = pretty'
-
-instance Pretty CName where
-  prettyInternal = pretty'
-
-instance Pretty CallConv where
-  prettyInternal = pretty'
-
 instance Pretty DataOrNew where
   prettyInternal = pretty'
 
-instance Pretty ExportSpec where
-  prettyInternal = pretty'
-
 instance Pretty FunDep where
-  prettyInternal = pretty'
-
-instance Pretty IPName where
-  prettyInternal = pretty'
-
-instance Pretty ImportSpec where
-  prettyInternal = pretty'
-
-instance Pretty ImportDecl where
   prettyInternal = pretty'
 
 instance Pretty Kind where
@@ -1115,16 +1080,7 @@ instance Pretty Kind where
 instance Pretty Literal where
   prettyInternal = pretty'
 
-instance Pretty ModulePragma where
-  prettyInternal = pretty'
-
 instance Pretty Name where
-  prettyInternal = pretty'
-
-instance Pretty Op where
-  prettyInternal = pretty'
-
-instance Pretty PXAttr where
   prettyInternal = pretty'
 
 instance Pretty QName where
@@ -1133,20 +1089,5 @@ instance Pretty QName where
 instance Pretty QOp where
   prettyInternal = pretty'
 
-instance Pretty RPat where
-  prettyInternal = pretty'
-
-instance Pretty RPatOp where
-  prettyInternal = pretty'
-
-instance Pretty Safety where
-  prettyInternal = pretty'
-
 instance Pretty TyVarBind where
-  prettyInternal = pretty'
-
-instance Pretty XAttr where
-  prettyInternal = pretty'
-
-instance Pretty XName where
   prettyInternal = pretty'
