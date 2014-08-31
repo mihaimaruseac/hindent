@@ -60,6 +60,7 @@ fieldupdate _ e =
     _ -> prettyNoExt e
 
 
+-- | Right-hand sides are dependent.
 rhs :: State -> Rhs NodeInfo -> Printer ()
 rhs _ (UnGuardedRhs _ e) =
   do indentSpaces <- getIndentSpaces
