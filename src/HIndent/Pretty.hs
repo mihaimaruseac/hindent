@@ -1026,8 +1026,9 @@ instance Pretty RuleVar where
 instance Pretty Splice where
   prettyInternal x =
     case x of
-      IdSplice _ _ ->
-        error "FIXME: No implementation for IdSplice."
+      IdSplice _ str ->
+        do write "$"
+           string str
       ParenSplice _ e ->
         depend (write "$")
                (parens (pretty e))
