@@ -707,15 +707,22 @@ decl TypeDecl{} =
   error "FIXME: No implementation for TypeDecl."
 decl TypeFamDecl{} =
   error "FIXME: No implementation for TypeFamDecl."
-decl (DataDecl _ dataornew ctx dhead condecls _derivs) =
-  depend (do pretty dataornew
-             space)
-         (depend (maybeCtx ctx)
-                 (do pretty dhead
-                     case condecls of
-                       [] -> return ()
-                       [x] -> singleCons x
-                       xs -> multiCons xs))
+decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
+  do depend (do pretty dataornew
+                space)
+            (depend (maybeCtx ctx)
+                    (do pretty dhead
+                        case condecls of
+                          [] -> return ()
+                          [x] -> singleCons x
+                          xs -> multiCons xs))
+     indentSpaces <- getIndentSpaces
+     case mderivs of
+       Nothing -> return ()
+       Just derivs ->
+         do newline
+            column indentSpaces
+                   (pretty derivs)
   where singleCons x =
           do write " ="
              indentSpaces <- getIndentSpaces
@@ -763,6 +770,12 @@ decl x@WarnPragmaDecl{} = pretty' x
 decl x@AnnPragma{} = pretty' x
 decl x@InfixDecl{} = pretty' x
 decl x@DefaultDecl{} = pretty' x
+
+instance Pretty Deriving where
+  prettyInternal (Deriving _ heads) =
+    do write "deriving"
+       space
+       parens (commas (map pretty heads))
 
 instance Pretty Alt where
   prettyInternal x =
@@ -851,14 +864,14 @@ instance Pretty ConDecl where
                    indentSpaces <- getIndentSpaces
                    braces (prefixedLined
                              ","
-                             (map (indented indentSpaces . prettyPair)
-                                  (concatMap (\(FieldDecl _ names ty) ->
-                                                map (,ty) names)
-                                             fields))))
-    where prettyPair (name,ty) =
-            depend (do pretty name
-                       write " :: ")
-                   (pretty ty)
+                             (map (indented indentSpaces . pretty)
+                                  fields)))
+
+instance Pretty FieldDecl where
+  prettyInternal (FieldDecl _ names ty) =
+    depend (do commas (map pretty names)
+               write " :: ")
+           (pretty ty)
 
 instance Pretty FieldUpdate where
   prettyInternal x =
