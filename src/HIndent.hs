@@ -97,14 +97,14 @@ annotateComments =
                   ,evalState (traverse (insert l (ComInfo c ownLine)) ast) False)) .
   ([],) .
   fmap (\n -> NodeInfo n [])
-  where collect c ni@(NodeInfo l _) =
-          do when (commentAfter c ni)
+  where collect c ni@(NodeInfo newL _) =
+          do when (commentAfter ni c)
                   (modify (\ml ->
-                             maybe (Just l)
-                                   (\l' ->
-                                      Just (if on spanBefore srcInfoSpan l l'
-                                               then l'
-                                               else l))
+                             maybe (Just newL)
+                                   (\oldL ->
+                                      Just (if on spanBefore srcInfoSpan oldL newL
+                                               then newL
+                                               else oldL))
                                    ml))
              return ni
         insert al c ni@(NodeInfo bl cs) =
@@ -115,13 +115,13 @@ annotateComments =
                 else return ni
 
 -- | Is the comment after the node?
-commentAfter :: Comment -> NodeInfo -> Bool
-commentAfter (Comment _ cspan _) (NodeInfo (SrcSpanInfo nspan _) _) =
-  spanBefore nspan cspan
+commentAfter :: NodeInfo -> Comment -> Bool
+commentAfter (NodeInfo (SrcSpanInfo n _) _) (Comment _ c _) =
+  spanBefore n c
 
--- | Span: a < b
+-- | Does the first span end before the second starts?
 spanBefore :: SrcSpan -> SrcSpan -> Bool
-spanBefore a b =
-  (srcSpanEndLine a < srcSpanEndLine b) ||
-  ((srcSpanEndLine a == srcSpanEndLine b) &&
-   (srcSpanEndColumn a < srcSpanEndColumn b))
+spanBefore before after =
+  (srcSpanStartLine after > srcSpanEndLine before) ||
+  ((srcSpanStartLine after == srcSpanEndLine before) &&
+   (srcSpanStartColumn after > srcSpanEndColumn before))
