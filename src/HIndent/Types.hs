@@ -25,7 +25,8 @@ import Language.Haskell.Exts.Comments
 import Language.Haskell.Exts.SrcLoc
 
 -- | A pretty printing monad.
-newtype Printer a = Printer { runPrinter :: State PrintState a }
+newtype Printer a =
+  Printer {runPrinter :: State PrintState a}
   deriving (Monad,Functor,MonadState PrintState)
 
 -- | The state of the pretty printer.
@@ -82,6 +83,7 @@ data NodeInfo =
 
 -- | Comment with some more info.
 data ComInfo =
-  ComInfo {comInfoComment :: !Comment
-          ,comInfoOwnLine :: !Bool}
+  ComInfo {comInfoComment :: !Comment --  ^ The normal comment type.
+          ,comInfoOwnLine :: !Bool -- ^ Does the comment rest on its own line?
+           }
   deriving (Show,Typeable,Data)
