@@ -92,6 +92,7 @@ pretty a =
           case cast a of
             Just v -> Just (f s v)
             Nothing -> Nothing
+        makePrinter s (CatchAll f) = Just (f s a)
 
 -- | Run the basic printer for the given node without calling an
 -- extension hook for this node, but do allow extender hooks in child
