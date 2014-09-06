@@ -598,6 +598,17 @@ exp (QuasiQuote _ n s) =
                        write "|")
                    (do string s
                        write "|"))
+exp (LCase _ alts) =
+  do write "\\case"
+     indentSpaces <- getIndentSpaces
+     newline
+     indented indentSpaces (lined (map pretty alts))
+exp (MultiIf _ alts) =
+  depend (write "if ")
+         (lined (map (\p ->
+                        do write "| "
+                           pretty p)
+                     alts))
 exp x@XTag{} = pretty' x
 exp x@XETag{} = pretty' x
 exp x@XPcdata{} = pretty' x
@@ -615,12 +626,14 @@ exp x@LeftArrApp{} = pretty' x
 exp x@RightArrApp{} = pretty' x
 exp x@LeftArrHighApp{} = pretty' x
 exp x@RightArrHighApp{} = pretty' x
-exp (LCase _ _) =
-  error "FIXME: No implementation for LCase."
-exp (MultiIf _ _) =
-  error "FIXME: No implementation for MultiIf."
 exp ParComp{} =
   error "FIXME: No implementation for ParComp."
+
+instance Pretty IfAlt where
+  prettyInternal (IfAlt _ cond body) =
+    do pretty cond
+       swing (write " -> ")
+             (pretty body)
 
 instance Pretty Stmt where
   prettyInternal x =
