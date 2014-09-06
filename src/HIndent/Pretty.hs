@@ -125,7 +125,7 @@ printComment (ComInfo (Comment inline _ str) own) =
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
-pretty' :: (P.Pretty (ast SrcSpanInfo),Functor ast)
+pretty' :: (Pretty ast,P.Pretty (ast SrcSpanInfo),Functor ast)
         => ast NodeInfo -> Printer ()
 pretty' = write . T.fromText . T.pack . P.prettyPrint . fmap nodeInfoSpan
 
