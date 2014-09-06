@@ -83,11 +83,10 @@ pretty a =
   do st <- get
      case st of
        PrintState{psExtenders = es,psUserState = s} ->
-         case listToMaybe (mapMaybe (makePrinter s) es) of
-           Just m ->
-             do m
-                printComments a
-           Nothing -> prettyNoExt a
+         do case listToMaybe (mapMaybe (makePrinter s) es) of
+              Just m -> m
+              Nothing -> prettyNoExt a
+            printComments a
   where makePrinter s (Extender f) =
           case cast a of
             Just v -> Just (f s v)
@@ -99,9 +98,7 @@ pretty a =
 -- nodes. Also auto-inserts comments.
 prettyNoExt :: (Pretty ast)
             => ast NodeInfo -> Printer ()
-prettyNoExt a =
-  do prettyInternal a
-     printComments a
+prettyNoExt a = prettyInternal a
 
 -- | Print comments of a node.
 printComments :: (Pretty ast)
