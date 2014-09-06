@@ -240,7 +240,8 @@ comma :: Printer ()
 comma = write ","
 
 -- | Write an integral.
-int :: Integral n => n -> Printer ()
+int :: Integral n
+    => n -> Printer ()
 int = write . decimal
 
 -- | Write out a string, updating the current position information.
@@ -277,15 +278,18 @@ string = write . T.fromText . T.pack
 
 -- | Indent spaces, e.g. 2.
 getIndentSpaces :: Printer Int64
-getIndentSpaces = gets (configIndentSpaces . psConfig)
+getIndentSpaces =
+  gets (configIndentSpaces . psConfig)
 
 -- | Column limit, e.g. 80
 getColumnLimit :: Printer Int64
-getColumnLimit = gets (configMaxColumns . psConfig)
+getColumnLimit =
+  gets (configMaxColumns . psConfig)
 
 -- | Play with a printer and then restore the state to what it was
 -- before.
-sandbox :: MonadState s m => m a -> m s
+sandbox :: MonadState s m
+        => m a -> m s
 sandbox p =
   do orig <- get
      _ <- p
@@ -468,7 +472,9 @@ exp (App _ op a) =
   swing (do pretty f)
         (lined (map pretty args))
   where (f,args) = flatten op [a]
-        flatten :: Exp NodeInfo -> [Exp NodeInfo] -> (Exp NodeInfo,[Exp NodeInfo])
+        flatten :: Exp NodeInfo
+                -> [Exp NodeInfo]
+                -> (Exp NodeInfo,[Exp NodeInfo])
         flatten (App _ f' a') b =
           flatten f' (a' : b)
         flatten f' as = (f',as)
@@ -527,7 +533,8 @@ exp (TupleSection _ boxed mexps) =
                       Unboxed -> "#)"
                       Boxed -> ")"))
 exp (List _ es) =
-  brackets (prefixedLined "," (map pretty es))
+  brackets (prefixedLined ","
+                          (map pretty es))
 exp (LeftSection _ e op) =
   parens (depend (do pretty e
                      space)
@@ -732,8 +739,7 @@ decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
        Nothing -> return ()
        Just derivs ->
          do newline
-            column indentSpaces
-                   (pretty derivs)
+            column indentSpaces (pretty derivs)
   where singleCons x =
           do write " ="
              indentSpaces <- getIndentSpaces
@@ -807,7 +813,8 @@ instance Pretty Asst where
   prettyInternal x =
     case x of
       ClassA _ name types ->
-        spaced (pretty name : map pretty types)
+        spaced (pretty name :
+                map pretty types)
       InfixA{} ->
         error "FIXME: No implementation for InfixA."
       IParam{} ->
@@ -821,8 +828,7 @@ instance Pretty BangType where
       BangedTy _ ty ->
         depend (write "!")
                (pretty ty)
-      UnBangedTy _ ty ->
-        pretty ty
+      UnBangedTy _ ty -> pretty ty
       UnpackedTy _ ty ->
         depend (write "{-# UNPACK #-} !")
                (pretty ty)
@@ -831,7 +837,7 @@ instance Pretty Binds where
   prettyInternal x =
     case x of
       BDecls _ ds -> lined (map pretty ds)
-      IPBinds _  i -> lined (map pretty i)
+      IPBinds _ i -> lined (map pretty i)
 
 instance Pretty ClassDecl where
   prettyInternal x =
@@ -842,7 +848,8 @@ instance Pretty ClassDecl where
                (depend (maybeCtx ctx)
                        (do pretty h
                            (case mkind of
-                              Nothing -> return ()
+                              Nothing ->
+                                return ()
                               Just kind ->
                                 do write " :: "
                                    pretty kind)))
@@ -873,10 +880,8 @@ instance Pretty ConDecl where
         depend (pretty name)
                (do space
                    indentSpaces <- getIndentSpaces
-                   braces (prefixedLined
-                             ","
-                             (map (indented indentSpaces . pretty)
-                                  fields)))
+                   braces (prefixedLined ","
+                                         (map (indented indentSpaces . pretty) fields)))
 
 instance Pretty FieldDecl where
   prettyInternal (FieldDecl _ names ty) =
@@ -941,10 +946,10 @@ instance Pretty InstDecl where
     case i of
       InsDecl _ d -> pretty d
       InsType _ name ty ->
-       depend (do write "type "
-                  pretty name
-                  write " = ")
-              (pretty ty)
+        depend (do write "type "
+                   pretty name
+                   write " = ")
+               (pretty ty)
       _ -> pretty' i
 
 instance Pretty Match where

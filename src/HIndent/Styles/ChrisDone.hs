@@ -207,7 +207,9 @@ exp _ (App _ op a) =
                                       column (orig + indentSpaces)
                                              (lined (map pretty args)))
   where (f,args) = flatten op [a]
-        flatten :: Exp NodeInfo -> [Exp NodeInfo] -> (Exp NodeInfo,[Exp NodeInfo])
+        flatten :: Exp NodeInfo
+                -> [Exp NodeInfo]
+                -> (Exp NodeInfo,[Exp NodeInfo])
         flatten (App _ f' a') b =
           flatten f' (a' : b)
         flatten f' as = (f',as)
@@ -277,27 +279,23 @@ infixApp e a op b indent =
                               (pretty b)
 
 -- | Is the expression "short"? Used for app heads.
-isShort :: (Pretty ast) => ast NodeInfo -> Printer Bool
+isShort :: (Pretty ast)
+        => ast NodeInfo -> Printer Bool
 isShort p =
   do line <- gets psLine
      orig <- fmap psColumn (sandbox (write ""))
      st <- sandbox (pretty p)
-     return (psLine st ==
-             line &&
-             (psColumn st <
-              orig +
-              shortName))
+     return (psLine st == line &&
+             (psColumn st < orig + shortName))
 
 -- | Is the given expression "small"? I.e. does it fit on one line and
 -- under 'smallColumnLimit' columns.
-isSmall :: MonadState PrintState m => m a -> m Bool
+isSmall :: MonadState PrintState m
+        => m a -> m Bool
 isSmall p =
   do line <- gets psLine
      st <- sandbox p
-     return (psLine st ==
-             line &&
-             psColumn st <
-             smallColumnLimit)
+     return (psLine st == line && psColumn st < smallColumnLimit)
 
 -- | Make the right hand side dependent if it's flat, otherwise
 -- newline it.
@@ -317,7 +315,8 @@ dependOrNewline left right f =
 -- | Is an expression flat?
 isFlat :: Exp NodeInfo -> Printer Bool
 isFlat (Lambda _ _ e) = isFlat e
-isFlat (App _ a b) = return (isName a && isName b)
+isFlat (App _ a b) =
+  return (isName a && isName b)
   where isName (Var{}) = True
         isName _ = False
 isFlat (InfixApp _ a _ b) =
@@ -340,21 +339,19 @@ isOverflow :: Printer a -> Printer Bool
 isOverflow p =
   do st <- sandbox p
      columnLimit <- getColumnLimit
-     return (psColumn st >
-             columnLimit)
+     return (psColumn st > columnLimit)
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
 isOverflowMax :: Printer a -> Printer Bool
 isOverflowMax p =
   do st <- sandbox p
      columnLimit <- getColumnLimit
-     return (psColumn st >
-             columnLimit + 20)
+     return (psColumn st > columnLimit + 20)
 
 -- | Is the given expression a single-liner when printed?
-isSingleLiner :: MonadState PrintState m => m a -> m Bool
+isSingleLiner :: MonadState PrintState m
+              => m a -> m Bool
 isSingleLiner p =
   do line <- gets psLine
      st <- sandbox p
-     return (psLine st ==
-             line)
+     return (psLine st == line)
