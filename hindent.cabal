@@ -27,7 +27,7 @@ library
                      HIndent.Styles.JohanTibell
   build-depends:     base >= 4 && <5
                    , data-default
-                   , haskell-src-exts
+                   , haskell-src-exts >= 1.15.0
                    , mtl
                    , text
 
