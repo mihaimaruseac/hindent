@@ -38,26 +38,25 @@ import           Data.Traversable
 import           Language.Haskell.Exts.Annotated hiding (Style,prettyPrint,Pretty,style,parse)
 
 -- | Format the given source.
-reformat :: Config -> Style -> Text -> Either String Builder
-reformat config style x =
+reformat :: Style -> Text -> Either String Builder
+reformat style x =
   case parseDeclWithComments parseMode
                              (T.unpack x) of
     ParseOk (v,comments) ->
       case annotateComments v comments of
         (cs,ast) ->
           Right (prettyPrint
-                   config
                    style
                    (do mapM_ printComment cs
                        pretty ast))
     ParseFailed _ e -> Left e
 
 -- | Pretty print the given printable thing.
-prettyPrint :: Config -> Style -> Printer () -> Builder
-prettyPrint config style m =
+prettyPrint :: Style -> Printer () -> Builder
+prettyPrint style m =
   psOutput (execState (runPrinter m)
                       (case style of
-                         Style _name _author _desc st extenders _defconfig ->
+                         Style _name _author _desc st extenders config ->
                            PrintState 0 mempty False 0 1 st extenders config False))
 
 -- | Parse mode, includes all extensions, doesn't assume any fixities.
@@ -71,18 +70,18 @@ parseMode =
         isDisabledExtention _ = True
 
 -- | Test with the given style, prints to stdout.
-test :: Config -> Style -> Text -> IO ()
-test config style =
+test :: Style -> Text -> IO ()
+test style =
   either error (T.putStrLn . T.toLazyText) .
-  reformat config style
+  reformat style
 
 -- | Test with the given style, prints to stdout.
-testAll :: Config -> Text -> IO ()
-testAll config i =
+testAll :: Text -> IO ()
+testAll i =
   forM_ styles
         (\style ->
            do ST.putStrLn ("-- " <> styleName style <> ":")
-              test config style i
+              test style i
               ST.putStrLn "")
 
 -- | Styles list, useful for programmatically choosing.

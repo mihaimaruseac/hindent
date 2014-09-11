@@ -17,6 +17,9 @@ import Data.Int
 import Language.Haskell.Exts.Annotated.Syntax
 import Prelude hiding (exp)
 
+--------------------------------------------------------------------------------
+-- Style configuration
+
 -- | A short function name.
 shortName :: Int64
 shortName = 10
@@ -47,6 +50,9 @@ chrisDone =
         ,styleDefConfig =
            Config {configMaxColumns = 80
                   ,configIndentSpaces = 2}}
+
+--------------------------------------------------------------------------------
+-- Extenders
 
 -- | Pretty print type signatures like
 --
@@ -109,7 +115,6 @@ fieldupdate _ e =
         e'
         pretty
     _ -> prettyNoExt e
-
 
 -- | Right-hand sides are dependent.
 rhs :: State -> Rhs NodeInfo -> Printer ()
@@ -246,37 +251,8 @@ exp _ (List _ es) =
   where p = brackets (commas (map pretty es))
 exp _ e = prettyNoExt e
 
-infixApp :: (Pretty ast,Pretty ast1,Pretty ast2)
-         => Exp NodeInfo
-         -> ast NodeInfo
-         -> ast1 NodeInfo
-         -> ast2 NodeInfo
-         -> Maybe Int64
-         -> Printer ()
-infixApp e a op b indent =
-  do is <- isFlat e
-     overflow <- isOverflow
-                   (depend (do pretty a
-                               space
-                               pretty op
-                               space)
-                           (do pretty b))
-     if is && not overflow
-        then do depend (do pretty a
-                           space
-                           pretty op
-                           space)
-                       (do pretty b)
-        else do pretty a
-                space
-                pretty op
-                newline
-                case indent of
-                  Nothing -> pretty b
-                  Just col ->
-                    do indentSpaces <- getIndentSpaces
-                       column (col + indentSpaces)
-                              (pretty b)
+--------------------------------------------------------------------------------
+-- Predicates
 
 -- | Is the expression "short"? Used for app heads.
 isShort :: (Pretty ast)
@@ -296,21 +272,6 @@ isSmall p =
   do line <- gets psLine
      st <- sandbox p
      return (psLine st == line && psColumn st < smallColumnLimit)
-
--- | Make the right hand side dependent if it's flat, otherwise
--- newline it.
-dependOrNewline :: Printer ()
-                -> Exp NodeInfo
-                -> (Exp NodeInfo -> Printer ())
-                -> Printer ()
-dependOrNewline left right f =
-  do flat <- isFlat right
-     small <- isSmall (depend left (f right))
-     if flat || small
-        then depend left (f right)
-        else do left
-                newline
-                (f right)
 
 -- | Is an expression flat?
 isFlat :: Exp NodeInfo -> Printer Bool
@@ -355,3 +316,53 @@ isSingleLiner p =
   do line <- gets psLine
      st <- sandbox p
      return (psLine st == line)
+
+--------------------------------------------------------------------------------
+-- Helpers
+
+infixApp :: (Pretty ast,Pretty ast1,Pretty ast2)
+         => Exp NodeInfo
+         -> ast NodeInfo
+         -> ast1 NodeInfo
+         -> ast2 NodeInfo
+         -> Maybe Int64
+         -> Printer ()
+infixApp e a op b indent =
+  do is <- isFlat e
+     overflow <- isOverflow
+                   (depend (do pretty a
+                               space
+                               pretty op
+                               space)
+                           (do pretty b))
+     if is && not overflow
+        then do depend (do pretty a
+                           space
+                           pretty op
+                           space)
+                       (do pretty b)
+        else do pretty a
+                space
+                pretty op
+                newline
+                case indent of
+                  Nothing -> pretty b
+                  Just col ->
+                    do indentSpaces <- getIndentSpaces
+                       column (col + indentSpaces)
+                              (pretty b)
+
+-- | Make the right hand side dependent if it's flat, otherwise
+-- newline it.
+dependOrNewline :: Printer ()
+                -> Exp NodeInfo
+                -> (Exp NodeInfo -> Printer ())
+                -> Printer ()
+dependOrNewline left right f =
+  do flat <- isFlat right
+     small <- isSmall (depend left (f right))
+     if flat || small
+        then depend left (f right)
+        else do left
+                newline
+                (f right)

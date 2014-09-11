@@ -519,8 +519,8 @@ exp (Tuple _ boxed exps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
                    Boxed -> "("))
-         (do parens (prefixedLined ","
-                                   (map pretty exps))
+         (do prefixedLined ","
+                           (map pretty exps)
              write (case boxed of
                       Unboxed -> "#)"
                       Boxed -> ")"))
@@ -676,8 +676,8 @@ instance Pretty Decl where
 decl :: Decl NodeInfo -> Printer ()
 decl (PatBind _ pat mty rhs mbinds) =
   case mty of
-    Just{} ->
-      error "Unimplemented (Maybe Type) in PatBind."
+    Just e ->
+      error ("Unimplemented (Maybe Type) in PatBind." ++ show e)
     Nothing ->
       do pretty pat
          pretty rhs
