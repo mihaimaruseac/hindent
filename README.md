@@ -11,42 +11,78 @@ executable. Currently a work in progress (see
 ## Usage
 
     $ hindent
-    hindent: arguments: --style [fundamental|chris-done|michael-snoyman|johan-tibell]
+    hindent: arguments: --style [fundamental|chris-done|johan-tibell]
 
 ## Example
 
 Input code:
 
 ``` haskell
-foo = foo (foo bar) -- Yep.
-  (if bar then bob else pif) (case mu {- cool -} zot of
-  Just x -> return (); Nothing -> return 1) bill
+foo = do print "OK, go"; foo (foo bar) -- Yep.
+          (if bar then bob else pif) (case mu {- cool -} zot of
+            Just x -> return (); Nothing -> do putStrLn "yay"; return 1) bill -- Etc
+  where potato Cakes {} = 2 * x foo * bar / 5
 ```
 
-### Fundamental style
+### Fundamental
 
 This is an intentionally very dumb style that demands extension.
 
 ``` haskell
 foo =
-  foo
-    (foo
-       bar) -- Yep.
-    (if bar
-        then bob
-        else pif)
-    (case mu {- cool -}
-            zot of
-       Just x ->
-         return
-           ()
-       Nothing ->
-         return
-           1)
-    bill
+  do print
+       "OK, go"
+     foo
+       (foo
+          bar)
+       (if bar
+           then bob
+           else pif)
+       (case mu {- cool -}
+               zot of
+          Just x ->
+            return
+              ()
+          Nothing ->
+            do putStrLn
+                 "yay"
+               return
+                 1)
+       bill -- Etc
+  where potato Cakes{} =
+          2 * x
+                foo * bar / 5
 ```
 
-### Chris Done style
+### Johan Tibell
+
+Documented in
+[the style guide](https://github.com/tibbe/haskell-style-guide).
+This printer style uses some simple heuristics in deciding when to go
+to a new line or not, and custom handling of do, if, case alts, rhs,
+etc.
+
+``` haskell
+foo = do
+    print "OK, go"
+    foo
+        (foo bar)
+        (if bar
+             then bob
+             else pif)
+        (case mu {- cool -} zot of
+             Just x ->
+                 return ()
+             Nothing -> do
+                 putStrLn "yay"
+                 return 1)
+        bill -- Etc
+  where
+    potato Cakes{} =
+        2 * x foo * bar / 5
+```
+
+### Chris Done
 
 My style is documented in
 [the style guide](https://github.com/chrisdone/haskell-style-guide).
@@ -55,14 +91,18 @@ to a new line or not.
 
 ``` haskell
 foo =
-  foo (foo bar) -- Yep.
-      (if bar
-          then bob
-          else pif)
-      (case mu {- cool -} zot of
-         Just x -> return ()
-         Nothing -> return 1)
-      bill
+  do print "OK, go"
+     foo (foo bar)
+         (if bar
+             then bob
+             else pif)
+         (case mu {- cool -} zot of
+            Just x -> return ()
+            Nothing ->
+              do putStrLn "yay"
+                 return 1)
+         bill -- Etc
+  where potato Cakes{} = 2 * x foo * bar / 5
 ```
 
 ## Emacs
@@ -78,12 +118,12 @@ e.g.:
 ```
 
 By default it uses the style called `fundamental`, if you want to use
-another, like mine, `chris-done`, run `M-x customize-variable
+another, `john-tibell`, run `M-x customize-variable
 hindent-style`. If you want to configure per-project, make a file
 called `.dir-locals.el` in the project root directory like this:
 
 ``` lisp
-((nil . ((hindent-style . "chris-done"))))
+((nil . ((hindent-style . "john-tibell"))))
 ```
 
 ## Vim
@@ -121,7 +161,12 @@ and export it, and open a pull request.
 
 ## Remaining issues
 
-* Support formatting whole modules.
 * Add test suite.
-* Add some printers for other common styles: Johan Tibell's and
-  Michael Snoyman's.
+* Flesh out more obscure parts of the AST.
+* Improve comment re-insertion.
+* Possibly: Support formatting whole modules.
+* Implement some operator-specific layouts: e.g.
+
+        Foo <$> foo
+            <*> bar
+            <*> mu
