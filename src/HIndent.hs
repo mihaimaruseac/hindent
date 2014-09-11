@@ -1,4 +1,6 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TupleSections #-}
+
 -- | Haskell indenter.
 
 module HIndent
@@ -9,7 +11,6 @@ module HIndent
   -- * Style
   ,styles
   ,chrisDone
-  ,michaelSnoyman
   ,johanTibell
   ,fundamental
   -- * Testing
@@ -22,7 +23,6 @@ import           HIndent.Pretty
 import           HIndent.Styles.ChrisDone
 import           HIndent.Styles.Fundamental
 import           HIndent.Styles.JohanTibell
-import           HIndent.Styles.MichaelSnoyman
 import           HIndent.Types
 
 import           Control.Monad.State

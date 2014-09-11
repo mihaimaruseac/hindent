@@ -877,11 +877,12 @@ instance Pretty ConDecl where
       InfixConDecl l a f b ->
         pretty (ConDecl l f [a,b])
       RecDecl _ name fields ->
-        depend (pretty name)
-               (do space
-                   indentSpaces <- getIndentSpaces
-                   braces (prefixedLined ","
-                                         (map (indented indentSpaces . pretty) fields)))
+        depend (do pretty name
+                   write " ")
+               (do depend (write "{")
+                          (prefixedLined ","
+                                         (map pretty fields))
+                   write "}")
 
 instance Pretty FieldDecl where
   prettyInternal (FieldDecl _ names ty) =

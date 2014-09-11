@@ -42,7 +42,7 @@ data PrintState =
                        ,psExtenders :: ![Extender s] -- ^ Extenders.
                        ,psConfig :: !Config -- ^ Config which styles may or may not pay attention to.
                        ,psEolComment :: !Bool -- ^ An end of line comment has just been outputted.
-                        }
+                       }
 
 instance Eq PrintState where
   PrintState ilevel out newline col line _ _ _ eolc == PrintState ilevel' out' newline' col' line' _ _ _ eolc' =
@@ -63,14 +63,14 @@ data Style =
                   ,styleInitialState :: !s -- ^ User state, if needed.
                   ,styleExtenders :: ![Extender s] -- ^ Extenders to the printer.
                   ,styleDefConfig :: !Config -- ^ Default config to use for this style.
-                   }
+                  }
 
 -- | Configurations shared among the different styles. Styles may pay
 -- attention to or completely disregard this configuration.
 data Config =
   Config {configMaxColumns :: !Int64 -- ^ Maximum columns to fit code into ideally.
          ,configIndentSpaces :: !Int64 -- ^ How many spaces to indent?
-          }
+         }
 
 instance Default Config where
   def =
@@ -81,12 +81,12 @@ instance Default Config where
 data NodeInfo =
   NodeInfo {nodeInfoSpan :: !SrcSpanInfo -- ^ Location info from the parser.
            ,nodeInfoComments :: ![ComInfo] -- ^ Comments which follow this node.
-            }
+           }
   deriving (Typeable,Show,Data)
 
 -- | Comment with some more info.
 data ComInfo =
   ComInfo {comInfoComment :: !Comment --  ^ The normal comment type.
           ,comInfoOwnLine :: !Bool -- ^ Does the comment rest on its own line?
-           }
+          }
   deriving (Show,Typeable,Data)
