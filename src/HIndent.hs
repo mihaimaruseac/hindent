@@ -77,7 +77,7 @@ test config style =
 -- | Styles list, useful for programmatically choosing.
 styles :: [Style]
 styles =
-  [fundamental,chrisDone,michaelSnoyman,johanTibell]
+  [fundamental,chrisDone,johanTibell]
 
 -- | Annotate the AST with comments.
 annotateComments :: (Data (ast NodeInfo),Traversable ast,Annotated ast)
