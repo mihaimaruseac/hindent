@@ -13,7 +13,8 @@ module HIndent
   ,johanTibell
   ,fundamental
   -- * Testing
-  ,test)
+  ,test
+  ,testAll)
   where
 
 import           Data.Function
@@ -27,6 +28,7 @@ import           HIndent.Types
 import           Control.Monad.State
 import           Data.Data
 import           Data.Monoid
+import qualified Data.Text.IO as ST
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import           Data.Text.Lazy.Builder (Builder)
@@ -73,6 +75,15 @@ test :: Config -> Style -> Text -> IO ()
 test config style =
   either error (T.putStrLn . T.toLazyText) .
   reformat config style
+
+-- | Test with the given style, prints to stdout.
+testAll :: Config -> Text -> IO ()
+testAll config i =
+  forM_ styles
+        (\style ->
+           do ST.putStrLn ("-- " <> styleName style <> ":")
+              test config style i
+              ST.putStrLn "")
 
 -- | Styles list, useful for programmatically choosing.
 styles :: [Style]
