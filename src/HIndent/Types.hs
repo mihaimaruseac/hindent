@@ -2,7 +2,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -- | All types.
@@ -53,7 +52,7 @@ instance Eq PrintState where
 -- 'prettyNoExt' to fallback to the built-in printer.
 data Extender s where
   Extender :: forall s a. (Typeable a) => (s -> a -> Printer ()) -> Extender s
-  CatchAll :: forall s. (forall a. Typeable a => s -> a -> Printer ()) -> Extender s
+  CatchAll :: forall s. (forall a. Typeable a => s -> a -> Maybe (Printer ())) -> Extender s
 
 -- | A printer style.
 data Style =
