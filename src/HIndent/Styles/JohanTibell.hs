@@ -4,6 +4,12 @@
 -- | Stub module for Johan Tibell's style.
 --
 -- Documented here: <https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md>
+--
+-- Questions:
+--
+-- How to indent after a guarded alt/rhs?
+-- How to indent let?
+-- How to indent large ADT constructors types?
 
 module HIndent.Styles.JohanTibell
   (johanTibell)
