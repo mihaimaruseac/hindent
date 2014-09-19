@@ -16,6 +16,7 @@ module HIndent.Types
   ,ComInfo(..))
   where
 
+import Control.Applicative
 import Control.Monad.State (MonadState(..),State)
 import Data.Data
 import Data.Default
@@ -28,7 +29,7 @@ import Language.Haskell.Exts.SrcLoc
 -- | A pretty printing monad.
 newtype Printer a =
   Printer {runPrinter :: State PrintState a}
-  deriving (Monad,Functor,MonadState PrintState)
+  deriving (Applicative,Monad,Functor,MonadState PrintState)
 
 -- | The state of the pretty printer.
 data PrintState =
