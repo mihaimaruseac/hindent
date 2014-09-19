@@ -12,7 +12,8 @@ module HIndent.Styles.ChrisDone
 import HIndent.Pretty
 import HIndent.Types
 
-
+import Control.Monad
+import Control.Monad.Loops
 import Control.Monad.State.Class
 import Data.Int
 import Language.Haskell.Exts.Annotated.Syntax
@@ -191,27 +192,23 @@ exp _ e@(InfixApp _ a op b) =
 -- If the head is short we depend, otherwise we swing.
 exp _ (App _ op a) =
   do orig <- gets psIndentLevel
-     headIsShort <- isShort f
-     depend (do pretty f
-                space)
-            (do let flats = map isFlat args
-                flatish <- fmap ((< 2) . length . filter not)
-                                (return flats)
-                singleLiner <- isSingleLiner (spaced (map pretty args))
-                overflow <- isOverflowMax (spaced (map pretty args))
-                if singleLiner &&
-                   ((headIsShort && flatish) ||
-                    all id flats) &&
-                   not overflow
-                   then spaced (map pretty args)
-                   else do allSingleLiners <- fmap (all id)
-                                                   (mapM (isSingleLiner . pretty) args)
-                           if headIsShort || allSingleLiners
-                              then lined (map pretty args)
-                              else do newline
-                                      indentSpaces <- getIndentSpaces
-                                      column (orig + indentSpaces)
-                                             (lined (map pretty args)))
+     dependBind
+       (do (short,st) <- isShort f
+           put st
+           space
+           return short)
+       (\headIsShort ->
+          do let flats = map isFlat args
+                 flatish =
+                   length (filter not flats) <
+                   2
+             if (headIsShort && flatish) ||
+                all id flats
+                then do ((singleLiner,overflow),st) <- sandboxNonOverflowing args
+                        if singleLiner && not overflow
+                           then put st
+                           else multi orig args headIsShort
+                else multi orig args headIsShort)
   where (f,args) = flatten op [a]
         flatten :: Exp NodeInfo
                 -> [Exp NodeInfo]
@@ -259,26 +256,69 @@ exp _ (List _ es) =
 exp _ e = prettyNoExt e
 
 --------------------------------------------------------------------------------
+-- Indentation helpers
+
+-- | Sandbox and render the nodes on multiple lines, returning whether
+-- each is a single line.
+sandboxSingles :: Pretty ast
+               => [ast NodeInfo] -> Printer (Bool,PrintState)
+sandboxSingles args =
+  sandbox (allM (\(i,arg) ->
+                   do when (i /= (0::Int)) newline
+                      line <- gets psLine
+                      pretty arg
+                      st <- get
+                      return (psLine st == line))
+                (zip [0 ..] args))
+
+-- | Render multi-line nodes.
+multi :: Pretty ast
+      => Int64 -> [ast NodeInfo] -> Bool -> Printer ()
+multi orig args headIsShort =
+  if headIsShort
+     then lined (map pretty args)
+     else do (allAreSingle,st) <- sandboxSingles args
+             if allAreSingle
+                then put st
+                else do newline
+                        indentSpaces <- getIndentSpaces
+                        column (orig + indentSpaces)
+                               (lined (map pretty args))
+
+-- | Sandbox and render the node on a single line, return whether it's
+-- on a single line and whether it's overflowing.
+sandboxNonOverflowing :: Pretty ast
+                      => [ast NodeInfo] -> Printer ((Bool,Bool),PrintState)
+sandboxNonOverflowing args =
+  sandbox (do line <- gets psLine
+              columnLimit <- getColumnLimit
+              singleLineRender
+              st <- get
+              return (psLine st == line,psColumn st > columnLimit + 20))
+  where singleLineRender =
+          spaced (map pretty args)
+
+--------------------------------------------------------------------------------
 -- Predicates
 
 -- | Is the expression "short"? Used for app heads.
 isShort :: (Pretty ast)
-        => ast NodeInfo -> Printer Bool
+        => ast NodeInfo -> Printer (Bool,PrintState)
 isShort p =
   do line <- gets psLine
      orig <- fmap (psColumn . snd) (sandbox (write ""))
      (_,st) <- sandbox (pretty p)
      return (psLine st == line &&
-             (psColumn st < orig + shortName))
+             (psColumn st < orig + shortName),st)
 
 -- | Is the given expression "small"? I.e. does it fit on one line and
 -- under 'smallColumnLimit' columns.
 isSmall :: MonadState PrintState m
-        => m a -> m Bool
+        => m a -> m (Bool,PrintState)
 isSmall p =
   do line <- gets psLine
      (_,st) <- sandbox p
-     return (psLine st == line && psColumn st < smallColumnLimit)
+     return (psLine st == line && psColumn st < smallColumnLimit,st)
 
 -- | Is an expression flat?
 isFlat :: Exp NodeInfo -> Bool
@@ -364,10 +404,12 @@ dependOrNewline :: Printer ()
                 -> (Exp NodeInfo -> Printer ())
                 -> Printer ()
 dependOrNewline left right f =
-  do let flat = isFlat right
-     small <- isSmall (depend left (f right))
-     if flat || small
-        then depend left (f right)
-        else do left
-                newline
-                (f right)
+  do if isFlat right
+        then renderDependent
+        else do (small,st) <- isSmall renderDependent
+                if small
+                   then put st
+                   else do left
+                           newline
+                           (f right)
+  where renderDependent = depend left (f right)

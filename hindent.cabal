@@ -27,6 +27,7 @@ library
   build-depends:     base >= 4 && <5
                    , data-default
                    , haskell-src-exts >= 1.15.0
+                   , monad-loops
                    , mtl
                    , text
 

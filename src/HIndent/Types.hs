@@ -17,7 +17,7 @@ module HIndent.Types
   where
 
 import Control.Applicative
-import Control.Monad.State (MonadState(..),State)
+import Control.Monad.State.Strict (MonadState(..),State)
 import Data.Data
 import Data.Default
 import Data.Int (Int64)

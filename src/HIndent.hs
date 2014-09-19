@@ -25,7 +25,7 @@ import           HIndent.Styles.Fundamental
 import           HIndent.Styles.JohanTibell
 import           HIndent.Types
 
-import           Control.Monad.State
+import           Control.Monad.State.Strict
 import           Data.Data
 import           Data.Monoid
 import qualified Data.Text.IO as ST

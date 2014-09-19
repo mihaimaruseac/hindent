@@ -37,6 +37,7 @@ module HIndent.Pretty
   , indented
   , column
   , depend
+  , dependBind
   , swing
   , getIndentSpaces
   , getColumnLimit
@@ -73,7 +74,7 @@ import           Prelude hiding (exp)
 -- * Pretty printing class
 
 -- | Pretty printing class.
-class (Annotated ast,Typeable1 ast) => Pretty ast where
+class (Annotated ast,Typeable ast) => Pretty ast where
   prettyInternal :: ast NodeInfo -> Printer ()
 
 -- | Pretty print using extenders.
@@ -206,6 +207,18 @@ depend maker dependent =
      if state' /= st
         then column col dependent
         else dependent
+
+-- | Make the latter's indentation depend upon the end column of the
+-- former.
+dependBind :: Printer a -> (a -> Printer b) -> Printer b
+dependBind maker dependent =
+  do state' <- get
+     v <- maker
+     st <- get
+     col <- gets psColumn
+     if state' /= st
+        then column col (dependent v)
+        else (dependent v)
 
 -- | Wrap in parens.
 parens :: Printer a -> Printer a

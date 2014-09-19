@@ -309,7 +309,7 @@ isSingleLiner p =
 
 -- | Is the expression "short"? Used for app heads.
 isShort :: (Pretty ast)
-        => ast NodeInfo -> Printer Bool
+        => ast NodeInfo -> Printer (Bool)
 isShort p =
   do line <- gets psLine
      orig <- fmap (psColumn . snd) (sandbox (write ""))
