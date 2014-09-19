@@ -193,7 +193,7 @@ exp _ (App _ op a) =
      headIsShort <- isShort f
      depend (do pretty f
                 space)
-            (do flats <- mapM isFlat args
+            (do let flats = map isFlat args
                 flatish <- fmap ((< 2) . length . filter not)
                                 (return flats)
                 singleLiner <- isSingleLiner (spaced (map pretty args))
@@ -274,26 +274,24 @@ isSmall p =
      return (psLine st == line && psColumn st < smallColumnLimit)
 
 -- | Is an expression flat?
-isFlat :: Exp NodeInfo -> Printer Bool
+isFlat :: Exp NodeInfo -> Bool
 isFlat (Lambda _ _ e) = isFlat e
 isFlat (App _ a b) =
-  return (isName a && isName b)
+  isName a && isName b
   where isName (Var{}) = True
         isName _ = False
 isFlat (InfixApp _ a _ b) =
-  do a' <- isFlat a
-     b' <- isFlat b
-     return (a' && b')
+  isFlat a && isFlat b
 isFlat (NegApp _ a) = isFlat a
-isFlat VarQuote{} = return True
-isFlat TypQuote{} = return True
-isFlat (List _ []) = return True
-isFlat Var{} = return True
-isFlat Lit{} = return True
-isFlat Con{} = return True
+isFlat VarQuote{} = True
+isFlat TypQuote{} = True
+isFlat (List _ []) = True
+isFlat Var{} = True
+isFlat Lit{} = True
+isFlat Con{} = True
 isFlat (LeftSection _ e _) = isFlat e
 isFlat (RightSection _ _ e) = isFlat e
-isFlat _ = return False
+isFlat _ = False
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
 isOverflow :: Printer a -> Printer Bool
@@ -328,7 +326,7 @@ infixApp :: (Pretty ast,Pretty ast1,Pretty ast2)
          -> Maybe Int64
          -> Printer ()
 infixApp e a op b indent =
-  do is <- isFlat e
+  do let is = isFlat e
      overflow <- isOverflow
                    (depend (do pretty a
                                space
@@ -359,7 +357,7 @@ dependOrNewline :: Printer ()
                 -> (Exp NodeInfo -> Printer ())
                 -> Printer ()
 dependOrNewline left right f =
-  do flat <- isFlat right
+  do let flat = isFlat right
      small <- isSmall (depend left (f right))
      if flat || small
         then depend left (f right)
