@@ -12,6 +12,7 @@ module HIndent.Styles.ChrisDone
 import HIndent.Pretty
 import HIndent.Types
 
+
 import Control.Monad.State.Class
 import Data.Int
 import Language.Haskell.Exts.Annotated.Syntax
@@ -242,13 +243,19 @@ exp _ (Tuple _ boxed exps) =
                       Boxed -> ")"))
   where p = commas (map pretty exps)
 exp _ (List _ es) =
-  do single <- isSingleLiner p
-     underflow <- fmap not (isOverflow p)
-     if single && underflow
-        then p
+  do (ok,st) <- sandbox renderFlat
+     if ok
+        then put st
         else brackets (prefixedLined ","
                                      (map pretty es))
-  where p = brackets (commas (map pretty es))
+  where renderFlat =
+          do line <- gets psLine
+             brackets (commas (map pretty es))
+             st <- get
+             columnLimit <- getColumnLimit
+             let overflow = psColumn st > columnLimit
+                 single = psLine st == line
+             return (not overflow && single)
 exp _ e = prettyNoExt e
 
 --------------------------------------------------------------------------------
