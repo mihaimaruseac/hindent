@@ -295,7 +295,7 @@ isRecord _ = False
 -- | Does printing the given thing overflow column limit? (e.g. 80)
 isOverflow :: Printer a -> Printer Bool
 isOverflow p =
-  do st <- sandbox p
+  do (_,st) <- sandbox p
      columnLimit <- getColumnLimit
      return (psColumn st > columnLimit)
 
@@ -304,7 +304,7 @@ isSingleLiner :: MonadState PrintState m
               => m a -> m Bool
 isSingleLiner p =
   do line <- gets psLine
-     st <- sandbox p
+     (_,st) <- sandbox p
      return (psLine st == line)
 
 -- | Is the expression "short"? Used for app heads.
@@ -312,8 +312,8 @@ isShort :: (Pretty ast)
         => ast NodeInfo -> Printer Bool
 isShort p =
   do line <- gets psLine
-     orig <- fmap psColumn (sandbox (write ""))
-     st <- sandbox (pretty p)
+     orig <- fmap (psColumn . snd) (sandbox (write ""))
+     (_,st) <- sandbox (pretty p)
      return (psLine st == line &&
              (psColumn st < orig + shortName))
 

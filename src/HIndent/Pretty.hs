@@ -108,7 +108,7 @@ printComments = mapM_ printComment . nodeInfoComments . ann
 -- | Pretty print a comment.
 printComment :: ComInfo -> Printer ()
 printComment (ComInfo (Comment inline _ str) own) =
-  do st <- sandbox (write "")
+  do (_,st) <- sandbox (write "")
      if own
         then newline
         else unless (psColumn st == 0) space
@@ -289,13 +289,13 @@ getColumnLimit =
 -- | Play with a printer and then restore the state to what it was
 -- before.
 sandbox :: MonadState s m
-        => m a -> m s
+        => m a -> m (a,s)
 sandbox p =
   do orig <- get
-     _ <- p
+     a <- p
      new <- get
      put orig
-     return new
+     return (a,new)
 
 -- | No binds?
 nullBinds :: Binds NodeInfo -> Bool

@@ -10,7 +10,7 @@ module HIndent.Styles.Fundamental
 import HIndent.Types
 
 import Data.Default
-import Prelude hiding (exp)
+
 
 -- | Empty state.
 data State = State

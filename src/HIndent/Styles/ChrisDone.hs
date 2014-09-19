@@ -174,7 +174,7 @@ unguardedalt _ e = prettyNoExt e
 -- is two invalid statements, not one valid infix op.
 stmt :: State -> Stmt NodeInfo -> Printer ()
 stmt _ (Qualifier _ e@(InfixApp _ a op b)) =
-  do col <- fmap psColumn (sandbox (write ""))
+  do col <- fmap (psColumn . snd) (sandbox (write ""))
      infixApp e a op b (Just col)
 stmt _ e = prettyNoExt e
 
@@ -259,8 +259,8 @@ isShort :: (Pretty ast)
         => ast NodeInfo -> Printer Bool
 isShort p =
   do line <- gets psLine
-     orig <- fmap psColumn (sandbox (write ""))
-     st <- sandbox (pretty p)
+     orig <- fmap (psColumn . snd) (sandbox (write ""))
+     (_,st) <- sandbox (pretty p)
      return (psLine st == line &&
              (psColumn st < orig + shortName))
 
@@ -270,7 +270,7 @@ isSmall :: MonadState PrintState m
         => m a -> m Bool
 isSmall p =
   do line <- gets psLine
-     st <- sandbox p
+     (_,st) <- sandbox p
      return (psLine st == line && psColumn st < smallColumnLimit)
 
 -- | Is an expression flat?
@@ -296,14 +296,14 @@ isFlat _ = False
 -- | Does printing the given thing overflow column limit? (e.g. 80)
 isOverflow :: Printer a -> Printer Bool
 isOverflow p =
-  do st <- sandbox p
+  do (_,st) <- sandbox p
      columnLimit <- getColumnLimit
      return (psColumn st > columnLimit)
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
 isOverflowMax :: Printer a -> Printer Bool
 isOverflowMax p =
-  do st <- sandbox p
+  do (_,st) <- sandbox p
      columnLimit <- getColumnLimit
      return (psColumn st > columnLimit + 20)
 
@@ -312,7 +312,7 @@ isSingleLiner :: MonadState PrintState m
               => m a -> m Bool
 isSingleLiner p =
   do line <- gets psLine
-     st <- sandbox p
+     (_,st) <- sandbox p
      return (psLine st == line)
 
 --------------------------------------------------------------------------------
