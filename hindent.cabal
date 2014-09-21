@@ -1,5 +1,5 @@
 name:                hindent
-version:             3.1
+version:             3.2
 synopsis:            Extensible Haskell pretty printer
 description:         Extensible Haskell pretty printer. Both a library and an executable.
                      .
@@ -26,7 +26,7 @@ library
                      HIndent.Styles.JohanTibell
   build-depends:     base >= 4 && <5
                    , data-default
-                   , haskell-src-exts >= 1.15.0
+                   , haskell-src-exts == 1.15.*
                    , monad-loops
                    , mtl
                    , text
