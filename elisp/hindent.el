@@ -2,6 +2,10 @@
 
 ;; Copyright (c) 2014 Chris Done. All rights reserved.
 
+;; Author: Chris Done <chrisdone@gmail.com>
+;; URL: https://github.com/chrisdone/hindent
+;; Package-Requires: ((cl-lib "0.5"))
+
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 3, or (at your option)
@@ -17,12 +21,15 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
 (defcustom hindent-style
   "fundamental"
   "The style to use for formatting."
   :group 'haskell
   :type 'string)
 
+;;;###autoload
 (defun hindent/reformat-decl ()
   "Re-format the current declaration by parsing and pretty
   printing it. Comments are preserved, although placement may be
@@ -90,7 +97,7 @@ expected to work."
           (looking-at "^{-$")))
     nil)
    ((bound-and-true-p structured-haskell-repl-mode)
-    (case major-mode
+    (cl-case major-mode
       (haskell-interactive-mode
        ;; If the prompt start is available.
        (when (boundp 'haskell-interactive-mode-prompt-start)
@@ -149,3 +156,5 @@ expected to work."
                               (looking-at "{-# "))))))
 
 (provide 'hindent)
+
+;;; hindent.el ends here
