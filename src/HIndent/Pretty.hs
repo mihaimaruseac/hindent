@@ -982,8 +982,23 @@ instance Pretty Match where
                   indented indentSpaces
                            (depend (write "where ")
                                    (pretty binds))
-      InfixMatch{} ->
-        error "FIXME: No implementation for InfixMatch."
+      InfixMatch _ pat1 name pats rhs mbinds ->
+        do depend (do pretty pat1
+                      space
+                      case name of
+                        Ident _ i -> string ("`" ++ i ++ "`")
+                        Symbol _ s -> string s)
+                  (do space
+                      spaced (map pretty pats))
+           pretty rhs
+           case mbinds of
+             Nothing -> return ()
+             Just binds ->
+               do newline
+                  indentSpaces <- getIndentSpaces
+                  indented indentSpaces
+                           (depend (write "where ")
+                                   (pretty binds))
 
 instance Pretty PatField where
   prettyInternal x =
