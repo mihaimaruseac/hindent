@@ -832,8 +832,10 @@ instance Pretty Asst where
         error "FIXME: No implementation for InfixA."
       IParam{} ->
         error "FIXME: No implementation for IParam."
-      EqualP{} ->
-        error "FIXME: No implementation for EqualP."
+      EqualP _ a b ->
+        do pretty a
+           write " ~ "
+           pretty b
 
 instance Pretty BangType where
   prettyInternal x =
