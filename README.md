@@ -130,7 +130,12 @@ called `.dir-locals.el` in the project root directory like this:
 
 ## Vim
 
-No support yet. Patches welcome.
+Basic support is provided through [vim/hindent.vim](https://github.com/chrisdone/hindent/blob/master/vim/hindent.vim),
+which sets hindent as the formatter used by `gq` for haskell files. The formatting style
+defaults to `fundamental` but can be configured by setting `g:hindent_style` to the desired style.
+
+Note that unlike in emacs you have to take care of selecting a sensible buffer region as input to
+hindent yourself.
 
 ## Contributing your own printer style
 
