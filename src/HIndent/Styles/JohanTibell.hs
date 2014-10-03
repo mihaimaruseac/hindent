@@ -232,7 +232,6 @@ decl _ (PatBind _ pat mty rhs mbinds) =
     Nothing ->
       do pretty pat
          pretty rhs
-         indentSpaces <- getIndentSpaces
          case mbinds of
            Nothing -> return ()
            Just binds ->
@@ -386,5 +385,6 @@ recDecl (RecDecl _ name fields) =
             (do depend (write "{")
                        (prefixedLined ","
                                       (map (depend space . pretty) fields))
+                newline
                 write "} ")
 recDecl r = prettyNoExt r
