@@ -1098,8 +1098,10 @@ instance Pretty Module where
 instance Pretty Bracket where
   prettyInternal x =
     case x of
-      ExpBracket _ _ ->
-        error "FIXME: No implementation for ExpBracket."
+      ExpBracket _ p ->
+        brackets (depend (write "|")
+                         (do pretty p
+                             write "|"))
       PatBracket _ _ ->
         error "FIXME: No implementation for PatBracket."
       TypeBracket _ _ ->
