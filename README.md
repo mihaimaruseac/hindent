@@ -135,7 +135,7 @@ which sets hindent as the formatter used by `gq` for haskell files. The formatti
 defaults to `fundamental` but can be configured by setting `g:hindent_style` to the desired style.
 
 Note that unlike in emacs you have to take care of selecting a sensible buffer region as input to
-hindent yourself.
+hindent yourself. If that is too much trouble you can try [vim-textobj-haskell](https://github.com/gilligan/vim-textobj-haskell) which provides a text object for top level bindings.
 
 ## Contributing your own printer style
 
