@@ -9,10 +9,12 @@ module HIndent
   ,prettyPrint
   ,parseMode
   -- * Style
+  ,Style(..)
   ,styles
   ,chrisDone
   ,johanTibell
   ,fundamental
+  ,gibiansky
   -- * Testing
   ,test
   ,testAll)
@@ -22,6 +24,7 @@ import           Data.Function
 import           HIndent.Pretty
 import           HIndent.Styles.ChrisDone
 import           HIndent.Styles.Fundamental
+import           HIndent.Styles.Gibiansky
 import           HIndent.Styles.JohanTibell
 import           HIndent.Types
 
@@ -40,11 +43,10 @@ import           Language.Haskell.Exts.Annotated hiding (Style,prettyPrint,Prett
 -- | Format the given source.
 reformat :: Style -> Text -> Either String Builder
 reformat style x =
-  case parseDeclWithComments parseMode
-                             (T.unpack x) of
-    ParseOk (v,comments) ->
-      case annotateComments v comments of
-        (cs,ast) ->
+  case parseModuleWithComments parseMode (T.unpack x) of
+    ParseOk (mod, comments) ->
+      case annotateComments mod comments of
+        (cs, ast) ->
           Right (prettyPrint
                    style
                    (do mapM_ printComment cs
@@ -87,7 +89,7 @@ testAll i =
 -- | Styles list, useful for programmatically choosing.
 styles :: [Style]
 styles =
-  [fundamental,chrisDone,johanTibell]
+  [fundamental,chrisDone,johanTibell,gibiansky]
 
 -- | Annotate the AST with comments.
 annotateComments :: (Data (ast NodeInfo),Traversable ast,Annotated ast)

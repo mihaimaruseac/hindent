@@ -1,0 +1,29 @@
+let x = y
+    z = w in x
+
+let x = y
+    z = w
+    in x
+
+let x = y
+    z = w
+in x
+
+let
+  x = y
+  z = w
+in x
+
+let
+  x = y
+  z = w in x
+
+let
+  z = w in x
+
+let
+  z = w
+in x
+
+let z = w
+in x
