@@ -36,6 +36,7 @@ module HIndent.Pretty
   -- * Indentation
   , indented
   , column
+  , getColumn
   , depend
   , dependBind
   , swing
@@ -124,7 +125,7 @@ printComment (ComInfo (Comment inline _ str) own) =
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
-pretty' :: (Pretty ast,P.Pretty (ast SrcSpanInfo),Functor ast)
+pretty' :: (Pretty ast, P.Pretty (ast SrcSpanInfo), Functor ast)
         => ast NodeInfo -> Printer ()
 pretty' = write . T.fromText . T.pack . P.prettyPrint . fmap nodeInfoSpan
 
@@ -160,7 +161,7 @@ inter sep ps =
         (return ())
         (zip [1 ..] ps)
 
--- | Print all the printers separated by spaces.
+-- | Print all the printers separated by newlines.
 lined :: [Printer ()] -> Printer ()
 lined ps = sequence_ (intersperse newline ps)
 
@@ -189,6 +190,10 @@ column i p =
      m <- p
      modify (\s -> s {psIndentLevel = level})
      return m
+
+-- | Get the current indent level.
+getColumn :: Printer Int64
+getColumn = gets psIndentLevel
 
 -- | Output a newline.
 newline :: Printer ()
@@ -1088,8 +1093,15 @@ instance Pretty SpecialCon where
 instance Pretty Module where
   prettyInternal x =
     case x of
-      Module _ _ _ _ _ ->
-        error "FIXME: No implementation for Module."
+      Module _ mayModHead pragmas imps decls  -> do
+        case mayModHead of
+          Nothing      -> return ()
+          Just modHead -> pretty' modHead
+
+        forM_ pragmas pretty
+        forM_ imps pretty
+        forM_ decls pretty
+
       XmlPage{} ->
         error "FIXME: No implementation for XmlPage."
       XmlHybrid{} ->
@@ -1140,4 +1152,22 @@ instance Pretty QOp where
   prettyInternal = pretty'
 
 instance Pretty TyVarBind where
+  prettyInternal = pretty'
+
+instance Pretty ModuleHead where
+  prettyInternal = pretty'
+
+instance Pretty ModulePragma where
+  prettyInternal = pretty'
+
+instance Pretty ImportDecl where
+  prettyInternal = pretty'
+
+instance Pretty ModuleName where
+  prettyInternal (ModuleName _ name) = write $ T.fromString name
+
+instance Pretty ImportSpecList where
+  prettyInternal = pretty'
+
+instance Pretty ImportSpec where
   prettyInternal = pretty'
