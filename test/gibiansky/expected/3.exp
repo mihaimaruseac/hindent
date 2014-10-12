@@ -6,13 +6,13 @@ let x = y
     z = w
 in x
 
-let x = y
-    z = w
-in x
+a = let x = y
+        z = w
+    in x
 
-let x = y
-    z = w
-in x
+a = let x = y
+        z = w
+    in x
 
 let x = y
     z = w
@@ -21,8 +21,8 @@ in x
 let z = w
 in x
 
-let z = w
-in x
+a = let z = w
+    in x
 
-let z = w
-in x
+a = let z = w
+    in x

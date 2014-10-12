@@ -59,6 +59,9 @@ parsePieces str = map (intercalate "\n") pieces
     unfolder :: [String] -> Maybe ([String], [String])
     unfolder [] = Nothing
     unfolder remaining = Just $
-     case break null remaining of
-       (nonNull, [])     -> (nonNull, [])
-       (nonNull, _:rest) -> (nonNull, rest)
+     case break pieceBreak (zip remaining (tail remaining ++ [""]))  of
+       (nonNull, [])     -> (map fst nonNull, [])
+       (nonNull, _:rest) -> (map fst nonNull, map fst rest)
+
+    pieceBreak :: (String, String) -> Bool
+    pieceBreak (line, next) = null line && head next /= ' '
