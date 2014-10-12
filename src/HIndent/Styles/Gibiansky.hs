@@ -117,11 +117,14 @@ exprs _ exp = prettyNoExt exp
 
 letStmt :: Exp NodeInfo -> Printer ()
 letStmt (Let _ binds result) = do
-  depend (write "let ") $ do
+  cols <- depend (write "let ") $ do
+    col <- getColumn
     pretty binds
+    return $ col - 4
+  column cols $ do
     newline
-  write "in "
-  pretty result
+    write "in "
+    pretty result
 letStmt _ = error "Not a let"
 
 rhss :: Extend Rhs
