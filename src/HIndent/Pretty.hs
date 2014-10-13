@@ -93,35 +93,45 @@ pretty a =
           case cast a of
             Just v -> Just (f s v)
             Nothing -> Nothing
-        makePrinter s (CatchAll f) = (f s a)
+        makePrinter s (CatchAll f) = f s a
 
 -- | Run the basic printer for the given node without calling an
 -- extension hook for this node, but do allow extender hooks in child
 -- nodes. Also auto-inserts comments.
 prettyNoExt :: (Pretty ast)
             => ast NodeInfo -> Printer ()
-prettyNoExt a = prettyInternal a
+prettyNoExt = prettyInternal
 
 -- | Print comments of a node.
 printComments :: (Pretty ast)
               => ast NodeInfo -> Printer ()
-printComments = mapM_ printComment . nodeInfoComments . ann
+printComments ast = mapM_ (printComment $ Just $ srcInfoSpan $ nodeInfoSpan info) comments
+  where
+    info = ann ast
+    comments = nodeInfoComments info
 
 -- | Pretty print a comment.
-printComment :: ComInfo -> Printer ()
-printComment (ComInfo (Comment inline _ str) own) =
-  do (_,st) <- sandbox (write "")
-     if own
-        then newline
-        else unless (psColumn st == 0) space
-     if inline
-        then do write "{-"
-                string str
-                write "-}"
-        else do write "--"
-                string str
-                modify (\s ->
-                          s {psEolComment = True})
+printComment :: Maybe SrcSpan -> ComInfo -> Printer ()
+printComment mayNodespan (ComInfo (Comment inline cspan str) own) = do
+  col <- getColumn
+  when own newline
+
+  -- Insert proper amount of space before comment.
+  -- This maintains alignment. This cannot force comments
+  -- to go before the left-most possible indent (specified by depends).
+  case mayNodespan of
+    Just nodespan -> do
+      let neededSpaces = srcSpanStartColumn cspan - srcSpanEndColumn nodespan
+      replicateM_ neededSpaces space
+    Nothing -> return ()
+
+  if inline
+     then do write "{-"
+             string str
+             write "-}"
+     else do write "--"
+             string str
+             modify $ \s -> s { psEolComment = True }
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
@@ -1088,7 +1098,7 @@ instance Pretty SpecialCon where
       UnboxedSingleCon _ -> write "(##)"
 
 --------------------------------------------------------------------------------
--- * Unimplemented printers
+-- * Unimplemented or incomplete printers
 
 instance Pretty Module where
   prettyInternal x =
