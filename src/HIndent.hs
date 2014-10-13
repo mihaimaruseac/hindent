@@ -1,5 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE OverloadedStrings, TupleSections, ScopedTypeVariables #-}
 
 -- | Haskell indenter.
 
@@ -17,7 +16,9 @@ module HIndent
   ,gibiansky
   -- * Testing
   ,test
-  ,testAll)
+  ,testAll
+  ,testAst
+  )
   where
 
 import           Data.Function
@@ -45,12 +46,14 @@ reformat :: Style -> Text -> Either String Builder
 reformat style x =
   case parseModuleWithComments parseMode (T.unpack x) of
     ParseOk (mod, comments) ->
-      case annotateComments mod comments of
-        (cs, ast) ->
-          Right (prettyPrint
-                   style
-                   (do mapM_ printComment cs
-                       pretty ast))
+      let (cs, ast) = annotateComments mod comments in
+        Right $ prettyPrint style $ do
+          -- For the time being, assume that all "free-floating" comments come at the beginning.
+          -- If they were not at the beginning, they would be after some ast node.
+          -- Thus, print them before going for the ast.
+          mapM_ (printComment Nothing) cs
+
+          pretty ast
     ParseFailed _ e -> Left e
 
 -- | Pretty print the given printable thing.
@@ -77,7 +80,7 @@ test style =
   either error (T.putStrLn . T.toLazyText) .
   reformat style
 
--- | Test with the given style, prints to stdout.
+-- | Test with all styles, prints to stdout.
 testAll :: Text -> IO ()
 testAll i =
   forM_ styles
@@ -86,45 +89,67 @@ testAll i =
               test style i
               ST.putStrLn "")
 
+-- | Parse the source and annotate it with comments, yielding the resulting AST.
+testAst :: Text -> Either String ([ComInfo], Module NodeInfo)
+testAst x =
+  case parseModuleWithComments parseMode (T.unpack x) of
+    ParseOk (mod, comments) -> Right $ annotateComments mod comments
+    ParseFailed _ e         -> Left e
+
 -- | Styles list, useful for programmatically choosing.
 styles :: [Style]
-styles =
-  [fundamental,chrisDone,johanTibell,gibiansky]
+styles = [fundamental, chrisDone, johanTibell, gibiansky]
 
 -- | Annotate the AST with comments.
-annotateComments :: (Data (ast NodeInfo),Traversable ast,Annotated ast)
+annotateComments :: forall ast. (Data (ast NodeInfo),Traversable ast,Annotated ast)
                  => ast SrcSpanInfo -> [Comment] -> ([ComInfo],ast NodeInfo)
 annotateComments =
-  foldr (\c@(Comment _ cspan _) (cs,ast) ->
-           case execState (traverse (collect c) ast) Nothing of
-             Nothing ->
-               (ComInfo c True :
-                cs
-               ,ast)
-             Just l ->
-               let ownLine =
-                     srcSpanStartLine cspan /=
-                     srcSpanEndLine (srcInfoSpan l)
-               in (cs
-                  ,evalState (traverse (insert l (ComInfo c ownLine)) ast) False)) .
+  -- Add all comments to the ast.
+  foldr processComment .
+
+  -- Turn result into a tuple, with ast as second element.
   ([],) .
-  fmap (\n -> NodeInfo n [])
-  where collect c ni@(NodeInfo newL _) =
-          do when (commentAfter ni c)
-                  (modify (\ml ->
-                             maybe (Just newL)
-                                   (\oldL ->
-                                      Just (if on spanBefore srcInfoSpan oldL newL
-                                               then newL
-                                               else oldL))
-                                   ml))
-             return ni
-        insert al c ni@(NodeInfo bl cs) =
-          do done <- get
-             if not done && al == bl
-                then do put True
-                        return (ni {nodeInfoComments = c : cs})
-                else return ni
+
+  -- Replace source spans with node infos in the AST.
+  -- The node infos have empty comment lists.
+  fmap (\n             -> NodeInfo n [])
+  where 
+    -- Add in a single comment to the ast.
+    processComment :: Comment -> ([ComInfo], ast NodeInfo) -> ([ComInfo], ast NodeInfo)
+    processComment c@(Comment _ cspan _) (cs, ast) =
+      -- Try to find the node after which this comment lies.
+      case execState (traverse (collect c) ast) Nothing of
+        -- When no node is found, the comment is on its own line.
+        Nothing -> (ComInfo c True : cs, ast)
+
+        -- We found the node that this comment follows.
+        -- Insert this comment into the ast.
+        Just l ->
+          let ownLine = srcSpanStartLine cspan /= srcSpanEndLine (srcInfoSpan l)
+          in (cs, evalState (traverse (insert l (ComInfo c ownLine)) ast) False)
+
+    -- For a comment, check whether the comment is after the node.
+    -- If it is, store it in the state; otherwise do nothing.
+    collect :: Comment -> NodeInfo -> State (Maybe SrcSpanInfo) NodeInfo
+    collect c ni@(NodeInfo newL _) = do
+      when (commentAfter ni c) $
+        modify $
+          maybe (Just newL) $ \oldL ->
+            Just (if (spanBefore `on` srcInfoSpan) oldL newL
+                  then newL
+                  else oldL)
+      return ni
+
+
+    -- Insert the comment into the ast. Find the right node and add it to the 
+    -- comments of that node. Do nothing afterwards.
+    insert :: SrcSpanInfo -> ComInfo -> NodeInfo -> State Bool NodeInfo 
+    insert al c ni@(NodeInfo bl cs) = do
+      done <- get
+      if not done && al == bl
+         then do put True
+                 return $ ni { nodeInfoComments = c : cs }
+         else return ni
 
 -- | Is the comment after the node?
 commentAfter :: NodeInfo -> Comment -> Bool

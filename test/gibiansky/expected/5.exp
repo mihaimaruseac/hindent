@@ -36,8 +36,8 @@ data A = B { field :: Int
 data A = B { field :: Int -- ^ Field 1
            }
 
-data A = B { field :: Int -- ^ Field 1
-           , field2 :: Char  -- ^ field 2
+data A = B { field :: Int  -- ^ Field 1
+           , field2 :: Char   -- ^ field 2
            , field3 :: String
            }
   deriving Show

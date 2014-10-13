@@ -3,6 +3,8 @@
 module HIndent.Styles.Gibiansky (gibiansky) where
 
 import Data.Foldable
+import Control.Monad (unless)
+import Control.Monad.State (gets)
 
 import HIndent.Pretty
 import HIndent.Types
@@ -181,7 +183,11 @@ condecls _ (RecDecl _ name fields) =
     write "{ "
     case fields of
       []         -> return ()
-      [x]        -> pretty x >> space
+      [x]        -> do
+        pretty x
+        eol <- gets psEolComment
+        unless eol space
+
       first:rest -> do
         pretty first
         newline
