@@ -23,6 +23,7 @@ gibiansky =
         , styleInitialState = State
         , styleExtenders = [ Extender imp
                            , Extender context
+                           , Extender derivings
                            , Extender typ
                            , Extender exprs
                            , Extender rhss
@@ -63,6 +64,18 @@ context :: Extend Context
 context _ (CxTuple _ asserts) =
   parens $ inter (comma >> space) $ map pretty asserts
 context _ ctx = prettyNoExt ctx
+
+-- | Format deriving clauses with spaces and commas between class constraints.
+derivings :: Extend Deriving
+derivings _ (Deriving _ instHeads) = do
+  write "deriving "
+  go instHeads
+
+  where
+    go insts | length insts == 1
+             = pretty $ head insts
+             | otherwise
+             = parens $ inter (comma >> space) $ map pretty insts
 
 -- | Format function type declarations.
 typ :: Extend Type
@@ -162,5 +175,20 @@ decls _ decl = prettyNoExt decl
 condecls :: Extend ConDecl
 condecls _ (ConDecl _ name bangty) =
   depend (pretty name) $
-    lined (map pretty bangty)
+    forM_ bangty $ \ty -> space >> pretty ty
+condecls _ (RecDecl _ name fields) =
+  depend (pretty name >> space) $ do
+    write "{ "
+    case fields of
+      []         -> return ()
+      [x]        -> pretty x >> space
+      first:rest -> do
+        pretty first
+        newline
+        forM_ rest $ \field -> do
+          comma
+          space
+          pretty field
+          newline
+    write "}"
 condecls _ other = prettyNoExt other
