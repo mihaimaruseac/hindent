@@ -26,6 +26,8 @@ gibiansky =
                            , Extender typ
                            , Extender exprs
                            , Extender rhss
+                           , Extender decls
+                           , Extender condecls
                            ]
         , styleDefConfig =
            Config { configMaxColumns = 100
@@ -132,3 +134,33 @@ rhss _ (UnGuardedRhs _ exp) = do
   write " = "
   pretty exp
 rhss _ rhs = prettyNoExt rhs
+
+decls :: Extend Decl
+decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
+  pretty dataOrNew
+  write " "
+  pretty declHead
+  case constructors of
+    []  -> return ()
+    [x] -> do
+      write " = "
+      pretty x
+    (x:xs) ->
+      depend (write " ") $ do
+        write "= "
+        pretty x
+        forM_ xs $ \constructor -> do
+          newline
+          write "| "
+          pretty constructor
+
+  forM_ mayDeriving $ \deriv -> do
+    newline
+    indented 2 $ pretty deriv
+decls _ decl = prettyNoExt decl
+
+condecls :: Extend ConDecl
+condecls _ (ConDecl _ name bangty) =
+  depend (pretty name) $
+    lined (map pretty bangty)
+condecls _ other = prettyNoExt other
