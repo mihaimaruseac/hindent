@@ -11,7 +11,8 @@ data A = B { field :: Int
 
 data A = B { field :: Int
            , field2 :: Char
-           , field3 :: String }
+           , field3 :: String
+           }
   deriving Show
 
 data A = B { field :: Int
