@@ -203,7 +203,7 @@ column i p =
 
 -- | Get the current indent level.
 getColumn :: Printer Int64
-getColumn = gets psIndentLevel
+getColumn = gets psColumn
 
 -- | Output a newline.
 newline :: Printer ()
