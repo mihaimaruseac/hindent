@@ -12,6 +12,8 @@ import qualified Data.Text.Lazy.IO as T
 import           HIndent
 import           HIndent.Types
 import           System.Environment
+import           Paths_hindent (version)
+import           Data.Version (showVersion)
 
 -- | Main entry point.
 main :: IO ()
@@ -22,6 +24,7 @@ main =
          T.interact
            (either error T.toLazyText .
             reformat style)
+       ["--version"] -> putStrLn $ "hindent " ++ showVersion version
        _ ->
          error ("arguments: --style [" ++
                 intercalate "|"
