@@ -533,7 +533,7 @@ exp (Paren _ e) = parens (pretty e)
 exp (Case _ e alts) =
   do depend (write "case ")
             (do pretty e
-                write " of ")
+                write " of")
      newline
      indentSpaces <- getIndentSpaces
      indented indentSpaces (lined (map pretty alts))
