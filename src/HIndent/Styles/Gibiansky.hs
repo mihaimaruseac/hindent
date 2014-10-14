@@ -4,7 +4,7 @@ module HIndent.Styles.Gibiansky (gibiansky) where
 
 import Data.Foldable
 import Control.Monad (unless, when)
-import Control.Monad.State (gets, get)
+import Control.Monad.State (gets, get, put)
 
 import HIndent.Pretty
 import HIndent.Types
@@ -133,6 +133,7 @@ exprs :: Extend Exp
 exprs _ exp@Let{} = letExpr exp
 exprs _ exp@App{} = appExpr exp
 exprs _ exp@Do{} = doExpr exp
+exprs _ exp@List{} = listExpr exp
 exprs _ exp = prettyNoExt exp
 
 letExpr :: Exp NodeInfo -> Printer ()
@@ -157,6 +158,39 @@ doExpr (Do _ stmts) = do
   newline
   indented 2 $ lined (map pretty stmts)
 doExpr _ = error "Not a do"
+
+listExpr :: Exp NodeInfo -> Printer ()
+listExpr (List _ els) = do
+  -- Try printing list on one line.
+  prevState <- get
+  singleLineList els
+
+  --  If it doesn't fit, reprint on multiple lines.
+  col <- getColumn
+  when (col > configMaxColumns (psConfig prevState)) $ do
+    put prevState
+    multiLineList els
+listExpr _ = error "Not a list"
+
+singleLineList :: [Exp NodeInfo] -> Printer ()
+singleLineList exprs = do
+  write "["
+  inter (write ", ") $ map pretty exprs
+  write "]"
+
+multiLineList :: [Exp NodeInfo] -> Printer ()
+multiLineList [] = write "[]"
+multiLineList (first:exprs) = do
+  col <- getColumn
+  column col $ do
+    write "[ "
+    pretty first
+    forM_ exprs $ \el -> do
+      newline
+      write ", "
+      pretty el
+    newline
+    write "]"
 
 rhss :: Extend Rhs
 rhss _ (UnGuardedRhs _ exp) = do
