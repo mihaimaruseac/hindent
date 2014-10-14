@@ -3,8 +3,8 @@
 module HIndent.Styles.Gibiansky (gibiansky) where
 
 import Data.Foldable
-import Control.Monad (unless)
-import Control.Monad.State (gets)
+import Control.Monad (unless, when)
+import Control.Monad.State (gets, get)
 
 import HIndent.Pretty
 import HIndent.Types
@@ -31,6 +31,7 @@ gibiansky =
                            , Extender rhss
                            , Extender decls
                            , Extender condecls
+                           , Extender guardedAlts
                            ]
         , styleDefConfig =
            Config { configMaxColumns = 100
@@ -129,11 +130,13 @@ collectTypes (TyFun _ from to) = from : collectTypes to
 collectTypes ty = [ty]
 
 exprs :: Extend Exp
-exprs _ exp@Let{} = letStmt exp
+exprs _ exp@Let{} = letExpr exp
+exprs _ exp@App{} = appExpr exp
+exprs _ exp@Do{} = doExpr exp
 exprs _ exp = prettyNoExt exp
 
-letStmt :: Exp NodeInfo -> Printer ()
-letStmt (Let _ binds result) = do
+letExpr :: Exp NodeInfo -> Printer ()
+letExpr (Let _ binds result) = do
   cols <- depend (write "let ") $ do
     col <- getColumn
     pretty binds
@@ -142,7 +145,18 @@ letStmt (Let _ binds result) = do
     newline
     write "in "
     pretty result
-letStmt _ = error "Not a let"
+letExpr _ = error "Not a let"
+
+appExpr :: Exp NodeInfo -> Printer ()
+appExpr (App _ f x) = spaced [pretty f, pretty x]
+appExpr _ = error "Not an app"
+
+doExpr :: Exp NodeInfo -> Printer ()
+doExpr (Do _ stmts) = do
+  write "do"
+  newline
+  indented 2 $ lined (map pretty stmts)
+doExpr _ = error "Not a do"
 
 rhss :: Extend Rhs
 rhss _ (UnGuardedRhs _ exp) = do
@@ -172,7 +186,22 @@ decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
   forM_ mayDeriving $ \deriv -> do
     newline
     indented 2 $ pretty deriv
+decls _ (PatBind _ pat Nothing rhs mbinds) = do
+  pretty pat
+  pretty rhs
+  indentSpaces <- getIndentSpaces
+  forM_ mbinds $ \binds -> do
+    newline
+    when (isDoBlock rhs) newline
+    indented indentSpaces $ do
+      write "where"
+      newline
+      indented indentSpaces $ pretty binds
 decls _ decl = prettyNoExt decl
+
+isDoBlock :: Rhs l -> Bool
+isDoBlock (UnGuardedRhs _ Do{}) = True
+isDoBlock _ = False
 
 condecls :: Extend ConDecl
 condecls _ (ConDecl _ name bangty) =
@@ -198,3 +227,9 @@ condecls _ (RecDecl _ name fields) =
           newline
     write "}"
 condecls _ other = prettyNoExt other
+
+guardedAlts :: Extend GuardedAlts
+guardedAlts _ (UnGuardedAlt _ exp) = do
+  write " -> "
+  pretty exp
+guardedAlts _ alt = prettyNoExt alt
