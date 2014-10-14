@@ -1108,9 +1108,9 @@ instance Pretty Module where
         do case mayModHead of
              Nothing -> return ()
              Just modHead -> pretty' modHead
-           forM_ pragmas pretty
-           forM_ imps pretty
-           forM_ decls pretty
+           inter newline (map pretty pragmas)
+           inter newline (map pretty imps)
+           inter newline (map pretty decls)
       XmlPage{} ->
         error "FIXME: No implementation for XmlPage."
       XmlHybrid{} ->
