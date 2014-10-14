@@ -24,6 +24,7 @@ library
                      HIndent.Styles.Fundamental
                      HIndent.Styles.ChrisDone
                      HIndent.Styles.JohanTibell
+                     HIndent.Styles.Gibiansky
   build-depends:     base >= 4 && <5
                    , data-default
                    , haskell-src-exts == 1.15.*
@@ -38,3 +39,16 @@ executable hindent
   build-depends:     base >= 4 && < 5
                    , hindent
                    , text
+
+test-suite hspec
+  type: exitcode-stdio-1.0
+  hs-source-dirs: src, test
+  main-is: Spec.hs
+  build-depends:     base >= 4 && <5
+                   , data-default
+                   , haskell-src-exts == 1.15.*
+                   , monad-loops
+                   , mtl
+                   , text
+                   , hspec
+                   , directory

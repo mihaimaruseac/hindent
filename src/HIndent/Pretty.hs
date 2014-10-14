@@ -36,6 +36,7 @@ module HIndent.Pretty
   -- * Indentation
   , indented
   , column
+  , getColumn
   , depend
   , dependBind
   , swing
@@ -92,39 +93,49 @@ pretty a =
           case cast a of
             Just v -> Just (f s v)
             Nothing -> Nothing
-        makePrinter s (CatchAll f) = (f s a)
+        makePrinter s (CatchAll f) = f s a
 
 -- | Run the basic printer for the given node without calling an
 -- extension hook for this node, but do allow extender hooks in child
 -- nodes. Also auto-inserts comments.
 prettyNoExt :: (Pretty ast)
             => ast NodeInfo -> Printer ()
-prettyNoExt a = prettyInternal a
+prettyNoExt = prettyInternal
 
 -- | Print comments of a node.
 printComments :: (Pretty ast)
               => ast NodeInfo -> Printer ()
-printComments = mapM_ printComment . nodeInfoComments . ann
+printComments ast = mapM_ (printComment $ Just $ srcInfoSpan $ nodeInfoSpan info) comments
+  where
+    info = ann ast
+    comments = nodeInfoComments info
 
 -- | Pretty print a comment.
-printComment :: ComInfo -> Printer ()
-printComment (ComInfo (Comment inline _ str) own) =
-  do (_,st) <- sandbox (write "")
-     if own
-        then newline
-        else unless (psColumn st == 0) space
-     if inline
-        then do write "{-"
-                string str
-                write "-}"
-        else do write "--"
-                string str
-                modify (\s ->
-                          s {psEolComment = True})
+printComment :: Maybe SrcSpan -> ComInfo -> Printer ()
+printComment mayNodespan (ComInfo (Comment inline cspan str) own) = do
+  col <- getColumn
+  when own newline
+
+  -- Insert proper amount of space before comment.
+  -- This maintains alignment. This cannot force comments
+  -- to go before the left-most possible indent (specified by depends).
+  case mayNodespan of
+    Just nodespan -> do
+      let neededSpaces = srcSpanStartColumn cspan - srcSpanEndColumn nodespan
+      replicateM_ neededSpaces space
+    Nothing -> return ()
+
+  if inline
+     then do write "{-"
+             string str
+             write "-}"
+     else do write "--"
+             string str
+             modify $ \s -> s { psEolComment = True }
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
-pretty' :: (Pretty ast,P.Pretty (ast SrcSpanInfo),Functor ast)
+pretty' :: (Pretty ast, P.Pretty (ast SrcSpanInfo), Functor ast)
         => ast NodeInfo -> Printer ()
 pretty' = write . T.fromText . T.pack . P.prettyPrint . fmap nodeInfoSpan
 
@@ -160,7 +171,7 @@ inter sep ps =
         (return ())
         (zip [1 ..] ps)
 
--- | Print all the printers separated by spaces.
+-- | Print all the printers separated by newlines.
 lined :: [Printer ()] -> Printer ()
 lined ps = sequence_ (intersperse newline ps)
 
@@ -189,6 +200,10 @@ column i p =
      m <- p
      modify (\s -> s {psIndentLevel = level})
      return m
+
+-- | Get the current indent level.
+getColumn :: Printer Int64
+getColumn = gets psColumn
 
 -- | Output a newline.
 newline :: Printer ()
@@ -518,7 +533,7 @@ exp (Paren _ e) = parens (pretty e)
 exp (Case _ e alts) =
   do depend (write "case ")
             (do pretty e
-                write " of ")
+                write " of")
      newline
      indentSpaces <- getIndentSpaces
      indented indentSpaces (lined (map pretty alts))
@@ -1083,13 +1098,20 @@ instance Pretty SpecialCon where
       UnboxedSingleCon _ -> write "(##)"
 
 --------------------------------------------------------------------------------
--- * Unimplemented printers
+-- * Unimplemented or incomplete printers
 
 instance Pretty Module where
   prettyInternal x =
     case x of
-      Module _ _ _ _ _ ->
-        error "FIXME: No implementation for Module."
+      Module _ mayModHead pragmas imps decls  -> do
+        case mayModHead of
+          Nothing      -> return ()
+          Just modHead -> pretty' modHead
+
+        forM_ pragmas pretty
+        forM_ imps pretty
+        forM_ decls pretty
+
       XmlPage{} ->
         error "FIXME: No implementation for XmlPage."
       XmlHybrid{} ->
@@ -1140,4 +1162,22 @@ instance Pretty QOp where
   prettyInternal = pretty'
 
 instance Pretty TyVarBind where
+  prettyInternal = pretty'
+
+instance Pretty ModuleHead where
+  prettyInternal = pretty'
+
+instance Pretty ModulePragma where
+  prettyInternal = pretty'
+
+instance Pretty ImportDecl where
+  prettyInternal = pretty'
+
+instance Pretty ModuleName where
+  prettyInternal (ModuleName _ name) = write $ T.fromString name
+
+instance Pretty ImportSpecList where
+  prettyInternal = pretty'
+
+instance Pretty ImportSpec where
   prettyInternal = pretty'
