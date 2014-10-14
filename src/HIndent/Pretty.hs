@@ -105,33 +105,33 @@ prettyNoExt = prettyInternal
 -- | Print comments of a node.
 printComments :: (Pretty ast)
               => ast NodeInfo -> Printer ()
-printComments ast = mapM_ (printComment $ Just $ srcInfoSpan $ nodeInfoSpan info) comments
-  where
-    info = ann ast
-    comments = nodeInfoComments info
+printComments ast =
+  mapM_ (printComment (Just (srcInfoSpan (nodeInfoSpan info)))) comments
+  where info = ann ast
+        comments = nodeInfoComments info
 
 -- | Pretty print a comment.
 printComment :: Maybe SrcSpan -> ComInfo -> Printer ()
-printComment mayNodespan (ComInfo (Comment inline cspan str) own) = do
-  col <- getColumn
-  when own newline
-
-  -- Insert proper amount of space before comment.
-  -- This maintains alignment. This cannot force comments
-  -- to go before the left-most possible indent (specified by depends).
-  case mayNodespan of
-    Just nodespan -> do
-      let neededSpaces = srcSpanStartColumn cspan - srcSpanEndColumn nodespan
-      replicateM_ neededSpaces space
-    Nothing -> return ()
-
-  if inline
-     then do write "{-"
-             string str
-             write "-}"
-     else do write "--"
-             string str
-             modify $ \s -> s { psEolComment = True }
+printComment mayNodespan (ComInfo (Comment inline cspan str) own) =
+  do col <- getColumn
+     when own newline
+     -- Insert proper amount of space before comment.
+     -- This maintains alignment. This cannot force comments
+     -- to go before the left-most possible indent (specified by depends).
+     case mayNodespan of
+       Just nodespan ->
+         do let neededSpaces = srcSpanStartColumn cspan -
+                               srcSpanEndColumn nodespan
+            replicateM_ neededSpaces space
+       Nothing -> return ()
+     if inline
+        then do write "{-"
+                string str
+                write "-}"
+        else do write "--"
+                string str
+                modify (\s ->
+                          s {psEolComment = True})
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
@@ -1003,7 +1003,8 @@ instance Pretty Match where
         do depend (do pretty pat1
                       space
                       case name of
-                        Ident _ i -> string ("`" ++ i ++ "`")
+                        Ident _ i ->
+                          string ("`" ++ i ++ "`")
                         Symbol _ s -> string s)
                   (do space
                       spaced (map pretty pats))
@@ -1103,15 +1104,13 @@ instance Pretty SpecialCon where
 instance Pretty Module where
   prettyInternal x =
     case x of
-      Module _ mayModHead pragmas imps decls  -> do
-        case mayModHead of
-          Nothing      -> return ()
-          Just modHead -> pretty' modHead
-
-        forM_ pragmas pretty
-        forM_ imps pretty
-        forM_ decls pretty
-
+      Module _ mayModHead pragmas imps decls ->
+        do case mayModHead of
+             Nothing -> return ()
+             Just modHead -> pretty' modHead
+           forM_ pragmas pretty
+           forM_ imps pretty
+           forM_ decls pretty
       XmlPage{} ->
         error "FIXME: No implementation for XmlPage."
       XmlHybrid{} ->
@@ -1174,7 +1173,8 @@ instance Pretty ImportDecl where
   prettyInternal = pretty'
 
 instance Pretty ModuleName where
-  prettyInternal (ModuleName _ name) = write $ T.fromString name
+  prettyInternal (ModuleName _ name) =
+    write (T.fromString name)
 
 instance Pretty ImportSpecList where
   prettyInternal = pretty'
