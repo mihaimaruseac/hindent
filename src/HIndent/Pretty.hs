@@ -113,8 +113,7 @@ printComments ast =
 -- | Pretty print a comment.
 printComment :: Maybe SrcSpan -> ComInfo -> Printer ()
 printComment mayNodespan (ComInfo (Comment inline cspan str) own) =
-  do col <- getColumn
-     when own newline
+  do when own newline
      -- Insert proper amount of space before comment.
      -- This maintains alignment. This cannot force comments
      -- to go before the left-most possible indent (specified by depends).
@@ -130,8 +129,7 @@ printComment mayNodespan (ComInfo (Comment inline cspan str) own) =
                 write "-}"
         else do write "--"
                 string str
-                modify (\s ->
-                          s {psEolComment = True})
+                modify (\s -> s {psEolComment = True})
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
