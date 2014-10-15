@@ -1,0 +1,46 @@
+data A = B             -- ^ hi
+       | C Int         -- ^ hi
+       | D Float       -- ^ hi
+       | E Float Float -- ^ hi
+
+data A = B             -- ^ hi
+                       -- continuing the comment
+       | C Int         -- ^ hi
+       | D Float       -- ^ hi
+       | E Float Float -- ^ hi
+                       -- continuing the comment
+
+a = case x of
+  Nothing        -> 2
+  Just something -> 3
+
+a = case x of
+  Nothing -> do
+    putStrLn "hi"
+  Just something -> 3
+
+a = case x of
+  Nothing -> case y of
+    1 -> 2
+    3 -> 4
+  Just something -> 3
+
+a = case x of
+  Nothing        -> 2
+  Just x         -> 10
+  Just something -> 3
+
+a = case x of
+  Nothing -> 2
+  Just x -> 10
+  Just something -> do
+    putStrLn "hello"
+
+data X = X { a :: Int    -- ^ hi
+           , b :: String -- ^ hi
+           }
+
+data X = X { a :: Int    -- ^ hi
+           , b :: String -- ^ hi
+                         -- continued
+           }
