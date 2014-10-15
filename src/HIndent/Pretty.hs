@@ -276,8 +276,10 @@ write x =
   do eol <- gets psEolComment
      when (eol && x /= "\n") newline
      state <- get
-     let out =
-           if psNewline state
+     let clearEmpty = configClearEmptyLines $ psConfig state
+         writingNewline = x == "\n"
+         out =
+           if psNewline state && not (clearEmpty && writingNewline)
               then T.fromText
                      (T.replicate (fromIntegral (psIndentLevel state))
                                   " ") <>

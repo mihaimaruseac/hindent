@@ -40,6 +40,7 @@ import qualified Data.Text.Lazy.Builder as T
 import qualified Data.Text.Lazy.IO as T
 import           Data.Traversable
 import           Language.Haskell.Exts.Annotated hiding (Style,prettyPrint,Pretty,style,parse)
+import           Data.Maybe (fromMaybe)
 
 -- | Format the given source.
 reformat :: Style -> Text -> Either String Builder
@@ -48,7 +49,7 @@ reformat style x =
                                (T.unpack x) of
     ParseOk (mod,comments) ->
       let (cs,ast) =
-            annotateComments mod comments
+            annotateComments (fromMaybe mod $ applyFixities baseFixities mod) comments
       in Right (prettyPrint
                   style
                   -- For the time being, assume that all "free-floating" comments come at the beginning.

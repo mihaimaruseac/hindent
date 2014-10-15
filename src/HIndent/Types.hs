@@ -12,6 +12,7 @@ module HIndent.Types
   ,Extender(..)
   ,Style(..)
   ,Config(..)
+  ,defaultConfig
   ,NodeInfo(..)
   ,ComInfo(..))
   where
@@ -33,15 +34,15 @@ newtype Printer a =
 
 -- | The state of the pretty printer.
 data PrintState =
-  forall s. PrintState {psIndentLevel :: !Int64 -- ^ Current indentation level.
-                       ,psOutput :: !Builder -- ^ The current output.
-                       ,psNewline :: !Bool -- ^ Just outputted a newline?
-                       ,psColumn :: !Int64 -- ^ Current column.
-                       ,psLine :: !Int64 -- ^ Current line number.
-                       ,psUserState :: !s -- ^ User state.
+  forall s. PrintState {psIndentLevel :: !Int64      -- ^ Current indentation level.
+                       ,psOutput :: !Builder         -- ^ The current output.
+                       ,psNewline :: !Bool           -- ^ Just outputted a newline?
+                       ,psColumn :: !Int64           -- ^ Current column.
+                       ,psLine :: !Int64             -- ^ Current line number.
+                       ,psUserState :: !s            -- ^ User state.
                        ,psExtenders :: ![Extender s] -- ^ Extenders.
-                       ,psConfig :: !Config -- ^ Config which styles may or may not pay attention to.
-                       ,psEolComment :: !Bool -- ^ An end of line comment has just been outputted.
+                       ,psConfig :: !Config          -- ^ Config which styles may or may not pay attention to.
+                       ,psEolComment :: !Bool        -- ^ An end of line comment has just been outputted.
                        }
 
 instance Eq PrintState where
@@ -70,12 +71,18 @@ data Style =
 data Config =
   Config {configMaxColumns :: !Int64 -- ^ Maximum columns to fit code into ideally.
          ,configIndentSpaces :: !Int64 -- ^ How many spaces to indent?
+         ,configClearEmptyLines :: !Bool   -- ^ Remove spaces on lines that are otherwise empty?
          }
 
 instance Default Config where
   def =
     Config {configMaxColumns = 80
-           ,configIndentSpaces = 2}
+           ,configIndentSpaces = 2
+           ,configClearEmptyLines = False}
+
+defaultConfig :: Config
+defaultConfig = def
+
 
 -- | Information for each node in the AST.
 data NodeInfo =

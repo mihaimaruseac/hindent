@@ -3,8 +3,9 @@
 module HIndent.Styles.Gibiansky (gibiansky) where
 
 import Data.Foldable
-import Control.Monad (unless, when)
+import Control.Monad (unless, when, replicateM_, void)
 import Control.Monad.State (gets, get, put)
+import Debug.Trace
 
 import HIndent.Pretty
 import HIndent.Types
@@ -34,10 +35,35 @@ gibiansky =
                            , Extender guardedAlts
                            ]
         , styleDefConfig =
-           Config { configMaxColumns = 100
-                  , configIndentSpaces = 2
-                  }
+           defaultConfig { configMaxColumns = maxColumns
+                         , configIndentSpaces = indentSpaces
+                         , configClearEmptyLines =  True
+                         }
         }
+
+-- | Number of spaces to indent by.
+indentSpaces :: Integral a => a
+indentSpaces = 2
+
+-- | Printer to indent one level.
+indentOnce :: Printer ()
+indentOnce = replicateM_ indentSpaces $ write " "
+
+-- | Max number of columns per line.
+maxColumns :: Integral a => a
+maxColumns = 100
+
+attemptSingleLine :: Printer a -> Printer a -> Printer ()
+attemptSingleLine single multiple = do
+  -- Try printing on one line.
+  prevState <- get
+  void single
+
+  --  If it doesn't fit, reprint on multiple lines.
+  col <- getColumn
+  when (col > maxColumns) $ do
+    put prevState
+    void multiple
 
 --------------------------------------------------------------------------------
 -- Extenders
@@ -134,6 +160,9 @@ exprs _ exp@Let{} = letExpr exp
 exprs _ exp@App{} = appExpr exp
 exprs _ exp@Do{} = doExpr exp
 exprs _ exp@List{} = listExpr exp
+exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "$"))) _) = dollarExpr exp
+exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "<*>"))) _) = applicativeExpr exp
+exprs _ exp@Lambda{} = lambdaExpr exp
 exprs _ exp = prettyNoExt exp
 
 letExpr :: Exp NodeInfo -> Printer ()
@@ -160,16 +189,7 @@ doExpr (Do _ stmts) = do
 doExpr _ = error "Not a do"
 
 listExpr :: Exp NodeInfo -> Printer ()
-listExpr (List _ els) = do
-  -- Try printing list on one line.
-  prevState <- get
-  singleLineList els
-
-  --  If it doesn't fit, reprint on multiple lines.
-  col <- getColumn
-  when (col > configMaxColumns (psConfig prevState)) $ do
-    put prevState
-    multiLineList els
+listExpr (List _ els) = attemptSingleLine (singleLineList els) (multiLineList els)
 listExpr _ = error "Not a list"
 
 singleLineList :: [Exp NodeInfo] -> Printer ()
@@ -191,6 +211,82 @@ multiLineList (first:exprs) = do
       pretty el
     newline
     write "]"
+
+dollarExpr :: Exp NodeInfo -> Printer ()
+dollarExpr (InfixApp _ left op right) = do
+  pretty left
+  write " "
+  pretty op
+  if needsNewline right
+    then do
+      newline
+      depend indentOnce $ pretty right
+    else do
+      write " "
+      pretty right
+  where
+    needsNewline Case{} = True
+    needsNewline _ = False
+dollarExpr _ = error "Not an application"
+
+applicativeExpr :: Exp NodeInfo -> Printer ()
+applicativeExpr exp@InfixApp{} =
+  case applicativeArgs of
+    Just (first:second:rest) ->
+      attemptSingleLine (singleLine first second rest) (multiLine first second rest)
+    _ -> prettyNoExt exp
+  where
+    singleLine :: Exp NodeInfo -> Exp NodeInfo -> [Exp NodeInfo] -> Printer ()
+    singleLine first second rest = spaced
+      [ pretty first
+      , write "<$>"
+      , pretty second
+      , write "<*>"
+      , inter (write " <*> ") $ map pretty rest
+      ]
+
+    multiLine :: Exp NodeInfo -> Exp NodeInfo -> [Exp NodeInfo] -> Printer ()
+    multiLine first second rest = do
+      pretty first
+      depend (write " ") $ do
+        write "<$> "
+        pretty second
+        forM_ rest $ \val -> do
+          newline
+          write "<*> "
+          pretty val
+
+    applicativeArgs :: Maybe [Exp NodeInfo]
+    applicativeArgs = collectApplicativeExps exp
+
+    collectApplicativeExps :: Exp NodeInfo -> Maybe [Exp NodeInfo]
+    collectApplicativeExps (InfixApp _ left op right)
+      | isFmap op = return [left, right]
+      | isAp op = do
+          start <- collectApplicativeExps left
+          return $ start ++ [right]
+      | otherwise = Nothing
+    collectApplicativeExps x = return [x]
+
+    isFmap :: QOp NodeInfo -> Bool
+    isFmap (QVarOp _ (UnQual _ (Symbol _ "<$>"))) = True
+    isFmap _ = False
+
+    isAp :: QOp NodeInfo -> Bool
+    isAp (QVarOp _ (UnQual _ (Symbol _ "<*>"))) = True
+    isAp _ = False
+applicativeExpr _ = error "Not an application"
+
+lambdaExpr :: Exp NodeInfo -> Printer ()
+lambdaExpr (Lambda _ pats exp) = do
+  write "\\"
+  spaced $ map pretty pats
+  write " ->"
+  attemptSingleLine (write " " >> pretty exp) $ do
+    newline
+    indentOnce
+    pretty exp
+lambdaExpr _ = error "Not a lambda"
 
 rhss :: Extend Rhs
 rhss _ (UnGuardedRhs _ exp) = do
@@ -219,19 +315,50 @@ decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
 
   forM_ mayDeriving $ \deriv -> do
     newline
-    indented 2 $ pretty deriv
-decls _ (PatBind _ pat Nothing rhs mbinds) = do
-  pretty pat
+    indented indentSpaces $ pretty deriv
+
+decls _ (PatBind _ pat Nothing rhs mbinds) = funBody [pat] rhs mbinds
+decls _ (FunBind _ matches) = 
+  forM_ matches $ \match -> do
+
+    (name, pat, rhs, mbinds) <- 
+      case match of
+        Match _ name pat rhs mbinds -> return (name, pat, rhs, mbinds)
+        InfixMatch _ left name pat rhs mbinds -> do
+          pretty left
+          write " "
+          return (name, pat, rhs, mbinds)
+
+    pretty name
+    write " "
+    funBody pat rhs mbinds
+decls _ decl = prettyNoExt decl
+
+funBody :: [Pat NodeInfo] -> Rhs NodeInfo -> Maybe (Binds NodeInfo) -> Printer ()
+funBody pat rhs mbinds = do
+  spaced $ map pretty pat
   pretty rhs
-  indentSpaces <- getIndentSpaces
+
+  -- Process the binding group, if it exists.
   forM_ mbinds $ \binds -> do
     newline
+    -- Add an extra newline after do blocks.
     when (isDoBlock rhs) newline
     indented indentSpaces $ do
       write "where"
       newline
-      indented indentSpaces $ pretty binds
-decls _ decl = prettyNoExt decl
+      indented indentSpaces $ writeWhereBinds binds
+
+writeWhereBinds :: Binds NodeInfo -> Printer ()
+writeWhereBinds (BDecls _ binds@(first:rest)) = do
+  pretty first
+  forM_ (zip binds rest) $ \(prev, cur) -> do
+    let prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
+        curLine = startLine . nodeInfoSpan . ann $ cur
+        emptyLines = curLine - prevLine
+    replicateM_ (traceShowId emptyLines) newline
+    pretty cur
+writeWhereBinds binds = prettyNoExt binds
 
 isDoBlock :: Rhs l -> Bool
 isDoBlock (UnGuardedRhs _ Do{}) = True

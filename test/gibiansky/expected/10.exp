@@ -8,18 +8,16 @@ when hello $
     Left a -> 3
     Right b -> 5
 
-a = \line ->
-  case a of
-    Left a -> a
-    Right b -> b
+a = \line -> case a of
+  Left a -> a
+  Right b -> b
 
 map (\x -> x) [1, 2, 3]
 
 forM_ lst $ \x -> do
   putStrLn x
 
-forM_ lst $ \x ->
-  putStrLn x
+forM_ lst $ \x -> putStrLn x
 
 Value <$> thing <*> secondThing
 

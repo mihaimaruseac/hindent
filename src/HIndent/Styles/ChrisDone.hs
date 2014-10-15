@@ -50,8 +50,8 @@ chrisDone =
            ,Extender stmt
            ,Extender decl]
         ,styleDefConfig =
-           Config {configMaxColumns = 80
-                  ,configIndentSpaces = 2}}
+           defaultConfig {configMaxColumns = 80
+                         ,configIndentSpaces = 2}}
 
 --------------------------------------------------------------------------------
 -- Extenders
