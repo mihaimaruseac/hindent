@@ -7,7 +7,7 @@ description:         Extensible Haskell pretty printer. Both a library and an ex
 license:             BSD3
 stability:           Unstable
 license-file:        LICENSE
-author:              Chris Done
+author:              Chris Done, Andrew Gibiansky, Tobias Pflug, Pierre Radermecker
 maintainer:          chrisdone@gmail.com
 copyright:           2014 Chris Done
 category:            Development
