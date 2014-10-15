@@ -164,7 +164,9 @@ for defining printers. When you want to use a fundamental printer, use
 If you want to contribute it to the package, add it to the list of
 styles in
 [HIndent](https://github.com/chrisdone/hindent/blob/master/src/HIndent.hs)
-and export it, and open a pull request.
+and export it, and open a pull request. Use
+[the Erlang git commit guide](https://github.com/erlang/otp/wiki/Writing-good-commit-messages)
+for your commits.
 
 ## Remaining issues
 
