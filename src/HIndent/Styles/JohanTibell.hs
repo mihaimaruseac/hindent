@@ -53,8 +53,8 @@ johanTibell =
            ,Extender alts
            ,Extender guardedAlt]
         ,styleDefConfig =
-           Config {configMaxColumns = 80
-                  ,configIndentSpaces = 4}}
+           defaultConfig {configMaxColumns = 80
+                         ,configIndentSpaces = 4}}
 
 --------------------------------------------------------------------------------
 -- Extenders

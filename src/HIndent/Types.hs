@@ -12,6 +12,7 @@ module HIndent.Types
   ,Extender(..)
   ,Style(..)
   ,Config(..)
+  ,defaultConfig
   ,NodeInfo(..)
   ,ComInfo(..))
   where
@@ -70,12 +71,18 @@ data Style =
 data Config =
   Config {configMaxColumns :: !Int64 -- ^ Maximum columns to fit code into ideally.
          ,configIndentSpaces :: !Int64 -- ^ How many spaces to indent?
+         ,configClearEmptyLines :: !Bool  -- ^ Remove spaces on lines that are otherwise empty?
          }
 
 instance Default Config where
   def =
     Config {configMaxColumns = 80
-           ,configIndentSpaces = 2}
+           ,configIndentSpaces = 2
+           ,configClearEmptyLines = False}
+
+-- | Default style configuration.
+defaultConfig :: Config
+defaultConfig = def
 
 -- | Information for each node in the AST.
 data NodeInfo =

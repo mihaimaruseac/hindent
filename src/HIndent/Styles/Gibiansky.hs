@@ -34,9 +34,10 @@ gibiansky =
                            , Extender guardedAlts
                            ]
         , styleDefConfig =
-           Config { configMaxColumns = 100
-                  , configIndentSpaces = 2
-                  }
+           defaultConfig { configMaxColumns = maxColumns
+                         , configIndentSpaces = indentSpaces
+                         , configClearEmptyLines =  True
+                         }
         }
 
 --------------------------------------------------------------------------------
