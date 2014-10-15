@@ -113,8 +113,7 @@ printComments ast =
 -- | Pretty print a comment.
 printComment :: Maybe SrcSpan -> ComInfo -> Printer ()
 printComment mayNodespan (ComInfo (Comment inline cspan str) own) =
-  do col <- getColumn
-     when own newline
+  do when own newline
      -- Insert proper amount of space before comment.
      -- This maintains alignment. This cannot force comments
      -- to go before the left-most possible indent (specified by depends).
@@ -130,8 +129,7 @@ printComment mayNodespan (ComInfo (Comment inline cspan str) own) =
                 write "-}"
         else do write "--"
                 string str
-                modify (\s ->
-                          s {psEolComment = True})
+                modify (\s -> s {psEolComment = True})
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
@@ -278,8 +276,10 @@ write x =
   do eol <- gets psEolComment
      when (eol && x /= "\n") newline
      state <- get
-     let out =
-           if psNewline state
+     let clearEmpty = configClearEmptyLines $ psConfig state
+         writingNewline = x == "\n"
+         out =
+           if psNewline state && not (clearEmpty && writingNewline)
               then T.fromText
                      (T.replicate (fromIntegral (psIndentLevel state))
                                   " ") <>
@@ -1108,9 +1108,9 @@ instance Pretty Module where
         do case mayModHead of
              Nothing -> return ()
              Just modHead -> pretty' modHead
-           forM_ pragmas pretty
-           forM_ imps pretty
-           forM_ decls pretty
+           inter newline $ map pretty pragmas
+           inter newline $ map pretty imps
+           inter newline $ map pretty decls
       XmlPage{} ->
         error "FIXME: No implementation for XmlPage."
       XmlHybrid{} ->

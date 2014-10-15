@@ -43,6 +43,8 @@ useTestFiles style test exp = do
   expContents <- readFile exp
   let testDecls = parsePieces testContents
       expDecls = parsePieces expContents
+  when (length testDecls /= length expDecls) $
+    error $ "Mismatched number of pieces in files " ++ test ++ " and " ++ exp
   return $ describe ("hindent applied to chunks in " ++ test) $ foldl1 (>>) $ zipWith (mkSpec style) testDecls expDecls
 
 mkSpec :: HIndent.Style -> String -> String -> Spec
@@ -64,4 +66,5 @@ parsePieces str = map (intercalate "\n") pieces
        (nonNull, _:rest) -> (map fst nonNull, map fst rest)
 
     pieceBreak :: (String, String) -> Bool
+    pieceBreak ("", "") = error "Two consecutive line breaks!"
     pieceBreak (line, next) = null line && head next /= ' '
