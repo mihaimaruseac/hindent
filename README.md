@@ -13,7 +13,7 @@ executable. Currently a work in progress (see
 ## Usage
 
     $ hindent
-    hindent: arguments: --style [fundamental|chris-done|johan-tibell]
+    hindent: arguments: --style [fundamental|chris-done|johan-tibell|gibiansky]
 
 ## Emacs
 
