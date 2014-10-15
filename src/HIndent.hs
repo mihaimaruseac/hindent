@@ -22,10 +22,10 @@ module HIndent
   where
 
 import           HIndent.Pretty
-import           HIndent.Styles.ChrisDone
-import           HIndent.Styles.Fundamental
-import           HIndent.Styles.Gibiansky
-import           HIndent.Styles.JohanTibell
+import           HIndent.Styles.ChrisDone (chrisDone)
+import           HIndent.Styles.Fundamental (fundamental)
+import           HIndent.Styles.Gibiansky (gibiansky)
+import           HIndent.Styles.JohanTibell (johanTibell)
 import           HIndent.Types
 
 import           Control.Monad.State.Strict
