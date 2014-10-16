@@ -11,9 +11,7 @@
 -- How to indent let?
 -- How to indent large ADT constructors types?
 
-module HIndent.Styles.JohanTibell
-  (johanTibell)
-  where
+module HIndent.Styles.JohanTibell where
 
 import Control.Monad
 import Control.Monad.State.Class

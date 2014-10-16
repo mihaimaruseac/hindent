@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings, RecordWildCards, RankNTypes #-}
 
-module HIndent.Styles.Gibiansky (gibiansky) where
+module HIndent.Styles.Gibiansky where
 
 import Data.Foldable
 import Control.Monad (unless, when, replicateM_, void)

@@ -3,9 +3,7 @@
 -- | Fundamental built-in style. Defines no additional extensions or
 -- configurations beyond the default printer.
 
-module HIndent.Styles.Fundamental
-  (fundamental)
-  where
+module HIndent.Styles.Fundamental where
 
 import HIndent.Types
 

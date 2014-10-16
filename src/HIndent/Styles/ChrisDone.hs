@@ -5,9 +5,7 @@
 --
 -- Documented here: <https://github.com/chrisdone/haskell-style-guide>
 
-module HIndent.Styles.ChrisDone
-  (chrisDone)
-  where
+module HIndent.Styles.ChrisDone where
 
 import HIndent.Pretty
 import HIndent.Types
@@ -119,7 +117,7 @@ fieldupdate _ e =
     _ -> prettyNoExt e
 
 -- | Right-hand sides are dependent.
-rhs :: State -> Rhs NodeInfo -> Printer ()
+rhs :: s -> Rhs NodeInfo -> Printer ()
 rhs _ (UnGuardedRhs _ e) =
   do indentSpaces <- getIndentSpaces
      indented indentSpaces
@@ -129,7 +127,7 @@ rhs _ (UnGuardedRhs _ e) =
 rhs _ e = prettyNoExt e
 
 -- | I want guarded RHS be dependent or newline.
-guardedrhs :: State -> GuardedRhs NodeInfo -> Printer ()
+guardedrhs :: s -> GuardedRhs NodeInfo -> Printer ()
 guardedrhs _ (GuardedRhs _ stmts e) =
   indented 1
            (do prefixedLined
@@ -145,7 +143,7 @@ guardedrhs _ (GuardedRhs _ stmts e) =
                   pretty))
 
 -- | I want guarded alts be dependent or newline.
-guardedalt :: State -> GuardedAlt NodeInfo -> Printer ()
+guardedalt :: s -> GuardedAlt NodeInfo -> Printer ()
 guardedalt _ (GuardedAlt _ stmts e) =
   indented 1
            (do (prefixedLined
@@ -161,7 +159,7 @@ guardedalt _ (GuardedAlt _ stmts e) =
                   pretty))
 
 -- | I want unguarded alts be dependent or newline.
-unguardedalt :: State -> GuardedAlts NodeInfo -> Printer ()
+unguardedalt :: s -> GuardedAlts NodeInfo -> Printer ()
 unguardedalt _ (UnGuardedAlt _ e) =
   dependOrNewline
     (write " -> ")
@@ -174,14 +172,14 @@ unguardedalt _ e = prettyNoExt e
 -- do x *
 --    y
 -- is two invalid statements, not one valid infix op.
-stmt :: State -> Stmt NodeInfo -> Printer ()
+stmt :: s -> Stmt NodeInfo -> Printer ()
 stmt _ (Qualifier _ e@(InfixApp _ a op b)) =
   do col <- fmap (psColumn . snd) (sandbox (write ""))
      infixApp e a op b (Just col)
 stmt _ e = prettyNoExt e
 
 -- | Expressions
-exp :: State -> Exp NodeInfo -> Printer ()
+exp :: s -> Exp NodeInfo -> Printer ()
 -- Infix applications will render on one line if possible, otherwise
 -- if any of the arguments are not "flat" then that expression is
 -- line-separated.
