@@ -18,15 +18,15 @@ a = case f x of
 
 a = case f x of
   Nothing -> 1
-  Just x -> 3
+  Just x  -> 3
 
 a = case f x of
   Nothing -> 1
-  Just x -> 3
+  Just x  -> 3
 
 a = case f x of
   Nothing -> 1
-  Just x -> 3
+  Just x  -> 3
 
 a = case f x of
   Nothing -> do

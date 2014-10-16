@@ -3,7 +3,8 @@
 module HIndent.Styles.Gibiansky where
 
 import Data.Foldable
-import Control.Monad (unless, when, replicateM_, void)
+import Control.Applicative((<$>))
+import Control.Monad (unless, when, replicateM_)
 import Control.Monad.State (gets, get, put)
 import Debug.Trace
 
@@ -13,7 +14,7 @@ import HIndent.Types
 import Language.Haskell.Exts.Annotated.Syntax
 import Language.Haskell.Exts.SrcLoc
 import Language.Haskell.Exts.Comments
-import Prelude hiding (exp, all, mapM_, minimum)
+import Prelude hiding (exp, all, mapM_, minimum, and, maximum)
 
 -- | Empty state.
 data State = State
@@ -55,17 +56,20 @@ indentOnce = replicateM_ indentSpaces $ write " "
 maxColumns :: Integral a => a
 maxColumns = 100
 
-attemptSingleLine :: Printer a -> Printer a -> Printer ()
+attemptSingleLine :: Printer a -> Printer a -> Printer a
 attemptSingleLine single multiple = do
   -- Try printing on one line.
   prevState <- get
-  void single
+  result <- single
 
   --  If it doesn't fit, reprint on multiple lines.
   col <- getColumn
-  when (col > maxColumns) $ do
-    put prevState
-    void multiple
+  if col > maxColumns
+    then do
+      put prevState
+      multiple
+    else 
+      return result
 
 --------------------------------------------------------------------------------
 -- Extenders
@@ -165,6 +169,7 @@ exprs _ exp@List{} = listExpr exp
 exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "$"))) _) = dollarExpr exp
 exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "<*>"))) _) = applicativeExpr exp
 exprs _ exp@Lambda{} = lambdaExpr exp
+exprs _ exp@Case{} = caseExpr exp
 exprs _ exp = prettyNoExt exp
 
 letExpr :: Exp NodeInfo -> Printer ()
@@ -289,6 +294,57 @@ lambdaExpr (Lambda _ pats exp) = do
     indentOnce
     pretty exp
 lambdaExpr _ = error "Not a lambda"
+
+caseExpr :: Exp NodeInfo -> Printer ()
+caseExpr (Case _ exp alts) = do
+  allSingle <- and <$> mapM isSingle alts
+
+  depend (write "case ") $ do
+    pretty exp
+    write " of"
+  newline
+  
+  indented indentSpaces $
+    if allSingle
+    then do
+      maxPatLen <- maximum <$> mapM (patternLen . altPattern) alts
+      lined $ map (prettyCase maxPatLen) alts
+    else lined $ map pretty alts
+  where
+    isSingle :: Alt NodeInfo -> Printer Bool
+    isSingle alt = fst <$> sandbox (do
+      line <- gets psLine
+      pretty alt
+      line' <- gets psLine
+      return $ line == line')
+
+    altPattern :: Alt l -> Pat l
+    altPattern (Alt _ p _ _) = p
+
+    patternLen :: Pat NodeInfo -> Printer Int
+    patternLen pat = fromIntegral <$> fst <$> sandbox (do
+      col <- getColumn
+      pretty pat
+      col' <- getColumn
+      return $ col' - col)
+
+    prettyCase :: Int -> Alt NodeInfo -> Printer ()
+    prettyCase patlen (Alt _ p galts mbinds) = do
+      -- Padded pattern
+      col <- getColumn
+      pretty p
+      col' <- getColumn
+      replicateM_ (patlen - fromIntegral (col' - col)) space
+
+      pretty galts
+
+      --  Optional where clause!
+      forM_ mbinds $ \binds -> do
+        newline
+        indented indentSpaces $ depend (write "where ") (pretty binds)
+
+
+caseExpr _ = error "Not a case"
 
 rhss :: Extend Rhs
 rhss _ (UnGuardedRhs _ exp) = do
