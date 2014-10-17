@@ -152,7 +152,7 @@ annotateComments =
           do when (commentLocated loc ni c)
                   (modify (maybe (Just newL)
                                  (\oldL ->
-                                    Just (if (spanBefore `on` srcInfoSpan) oldL newL
+                                    Just (if (spanTest loc `on` srcInfoSpan) oldL newL
                                              then newL
                                              else oldL))))
              return ni
@@ -170,18 +170,15 @@ annotateComments =
 -- | Is the comment after the node?
 commentLocated :: ComInfoLocation -> NodeInfo -> Comment -> Bool
 commentLocated loc (NodeInfo (SrcSpanInfo n _) _) (Comment _ c _) = spanTest n c
-  where
-    spanTest = case loc of
-      After  -> spanBefore
-      Before -> spanAfter
 
--- | Does the first span end before the second starts?
-spanBefore :: SrcSpan -> SrcSpan -> Bool
-spanBefore before after =
+-- | For @After@, does the first span end before the second starts?
+-- For @Before@, does the first span start after the second ends?
+spanTest :: ComInfoLocation -> SrcSpan -> SrcSpan -> Bool
+spanTest loc first second = 
   (srcSpanStartLine after > srcSpanEndLine before) ||
   ((srcSpanStartLine after == srcSpanEndLine before) &&
    (srcSpanStartColumn after > srcSpanEndColumn before))
-
--- | Does the first span start after the second ends?
-spanAfter :: SrcSpan -> SrcSpan -> Bool
-spanAfter = flip spanBefore
+  where
+    (before, after) = case loc of
+      After  -> (first, second)
+      Before -> (second, first)
