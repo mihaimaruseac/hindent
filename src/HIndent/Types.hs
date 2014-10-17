@@ -14,8 +14,9 @@ module HIndent.Types
   ,Config(..)
   ,defaultConfig
   ,NodeInfo(..)
-  ,ComInfo(..))
-  where
+  ,ComInfo(..)
+  ,ComInfoLocation(..)
+  ) where
 
 import Control.Applicative
 import Control.Monad.State.Strict (MonadState(..),State)
@@ -87,13 +88,17 @@ defaultConfig = def
 -- | Information for each node in the AST.
 data NodeInfo =
   NodeInfo {nodeInfoSpan :: !SrcSpanInfo -- ^ Location info from the parser.
-           ,nodeInfoComments :: ![ComInfo] -- ^ Comments which follow this node.
+           ,nodeInfoComments :: ![ComInfo] -- ^ Comments which are attached to this node.
            }
   deriving (Typeable,Show,Data)
 
+-- | Comment relative locations.
+data ComInfoLocation = Before | After
+  deriving (Show,Typeable,Data,Eq)
+
 -- | Comment with some more info.
 data ComInfo =
-  ComInfo {comInfoComment :: !Comment --  ^ The normal comment type.
-          ,comInfoOwnLine :: !Bool -- ^ Does the comment rest on its own line?
+  ComInfo {comInfoComment :: !Comment                -- ^ The normal comment type.
+          ,comInfoLocation :: !(Maybe ComInfoLocation) -- ^ Where the comment lies relative to the node.
           }
   deriving (Show,Typeable,Data)

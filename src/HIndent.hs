@@ -123,31 +123,40 @@ annotateComments =
         -- Add in a single comment to the ast.
         processComment c@(Comment _ cspan _) (cs,ast) =
           -- Try to find the node after which this comment lies.
-          case execState (traverse (collect c) ast) Nothing of
+          case execState (traverse (collect After c) ast) Nothing of
             -- When no node is found, the comment is on its own line.
-            Nothing ->
-              (ComInfo c True :
-               cs
-              ,ast)
+            Nothing -> (ComInfo c Nothing : cs, ast)
+
             -- We found the node that this comment follows.
-            -- Insert this comment into the ast.
-            Just l ->
-              let ownLine =
-                    srcSpanStartLine cspan /=
-                    srcSpanEndLine (srcInfoSpan l)
-              in (cs
-                 ,evalState (traverse (insert l (ComInfo c ownLine)) ast) False)
+            -- Check whether the node is on the same line.
+            Just l
+              -- If it's on a different line than the node, look for the following node to attach it to.
+              | ownLine ->
+                  case execState (traverse (collect Before c) ast) Nothing of
+                    -- If we don't find a node after the comment, leave it with the previous node.
+                    Nothing   -> insertedBefore
+                    Just node ->
+                      (cs, evalState (traverse (insert node (ComInfo c $ Just Before)) ast) False)
+
+              -- If it's on the same line, insert this comment into that node.
+              | otherwise -> insertedBefore
+              where
+                ownLine = srcSpanStartLine cspan /= srcSpanEndLine (srcInfoSpan l)
+                insertedBefore = (cs, evalState (traverse (insert l (ComInfo c $ Just After)) ast) False)
+
         -- For a comment, check whether the comment is after the node.
         -- If it is, store it in the state; otherwise do nothing.
-        collect :: Comment -> NodeInfo -> State (Maybe SrcSpanInfo) NodeInfo
-        collect c ni@(NodeInfo newL _) =
-          do when (commentAfter ni c)
+        -- The location specifies where the comment should lie relative to the node.
+        collect :: ComInfoLocation -> Comment -> NodeInfo -> State (Maybe SrcSpanInfo) NodeInfo
+        collect loc c ni@(NodeInfo newL _) =
+          do when (commentLocated loc ni c)
                   (modify (maybe (Just newL)
                                  (\oldL ->
                                     Just (if (spanBefore `on` srcInfoSpan) oldL newL
                                              then newL
                                              else oldL))))
              return ni
+
         -- Insert the comment into the ast. Find the right node and add it to the
         -- comments of that node. Do nothing afterwards.
         insert :: SrcSpanInfo -> ComInfo -> NodeInfo -> State Bool NodeInfo
@@ -159,9 +168,12 @@ annotateComments =
                 else return ni
 
 -- | Is the comment after the node?
-commentAfter :: NodeInfo -> Comment -> Bool
-commentAfter (NodeInfo (SrcSpanInfo n _) _) (Comment _ c _) =
-  spanBefore n c
+commentLocated :: ComInfoLocation -> NodeInfo -> Comment -> Bool
+commentLocated loc (NodeInfo (SrcSpanInfo n _) _) (Comment _ c _) = spanTest n c
+  where
+    spanTest = case loc of
+      After  -> spanBefore
+      Before -> spanAfter
 
 -- | Does the first span end before the second starts?
 spanBefore :: SrcSpan -> SrcSpan -> Bool
@@ -169,3 +181,7 @@ spanBefore before after =
   (srcSpanStartLine after > srcSpanEndLine before) ||
   ((srcSpanStartLine after == srcSpanEndLine before) &&
    (srcSpanStartColumn after > srcSpanEndColumn before))
+
+-- | Does the first span start after the second ends?
+spanAfter :: SrcSpan -> SrcSpan -> Bool
+spanAfter = flip spanBefore

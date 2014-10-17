@@ -12,7 +12,8 @@ import HIndent.Types
 
 import Language.Haskell.Exts.Annotated.Syntax
 import Language.Haskell.Exts.SrcLoc
-import Prelude hiding (exp, all, mapM_)
+import Language.Haskell.Exts.Comments
+import Prelude hiding (exp, all, mapM_, minimum)
 
 -- | Empty state.
 data State = State
@@ -148,7 +149,7 @@ typ _ t = prettyNoExt t
 sameLine :: (Annotated ast, Annotated ast') => ast NodeInfo -> ast' NodeInfo -> Bool
 sameLine x y = line x == line y
   where
-    line :: Annotated ast => ast NodeInfo -> Int 
+    line :: Annotated ast => ast NodeInfo -> Int
     line = startLine . nodeInfoSpan . ann
 
 collectTypes :: Type l -> [Type l]
@@ -318,10 +319,10 @@ decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
     indented indentSpaces $ pretty deriv
 
 decls _ (PatBind _ pat Nothing rhs mbinds) = funBody [pat] rhs mbinds
-decls _ (FunBind _ matches) = 
+decls _ (FunBind _ matches) =
   forM_ matches $ \match -> do
 
-    (name, pat, rhs, mbinds) <- 
+    (name, pat, rhs, mbinds) <-
       case match of
         Match _ name pat rhs mbinds -> return (name, pat, rhs, mbinds)
         InfixMatch _ left name pat rhs mbinds -> do
@@ -350,14 +351,26 @@ funBody pat rhs mbinds = do
       indented indentSpaces $ writeWhereBinds binds
 
 writeWhereBinds :: Binds NodeInfo -> Printer ()
-writeWhereBinds (BDecls _ binds@(first:rest)) = do
+writeWhereBinds decls@(BDecls _ binds@(first:rest)) = do
+  printComments Before decls
   pretty first
   forM_ (zip binds rest) $ \(prev, cur) -> do
     let prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
-        curLine = startLine . nodeInfoSpan . ann $ cur
+        curLine = bindStartLine cur
         emptyLines = curLine - prevLine
     replicateM_ (traceShowId emptyLines) newline
     pretty cur
+
+  where
+    bindStartLine :: Decl NodeInfo -> Int
+    bindStartLine decl =
+      let info = ann decl
+          comments = nodeInfoComments info
+          befores = filter ((== Just Before) . comInfoLocation) comments
+          commentStartLine (Comment _ span _) = srcSpanStartLine span
+      in if null befores
+         then startLine $ nodeInfoSpan info
+         else minimum $ map (commentStartLine . comInfoComment) befores
 writeWhereBinds binds = prettyNoExt binds
 
 isDoBlock :: Rhs l -> Bool
