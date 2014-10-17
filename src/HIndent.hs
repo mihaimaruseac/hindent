@@ -169,7 +169,7 @@ annotateComments =
 
 -- | Is the comment after the node?
 commentLocated :: ComInfoLocation -> NodeInfo -> Comment -> Bool
-commentLocated loc (NodeInfo (SrcSpanInfo n _) _) (Comment _ c _) = spanTest n c
+commentLocated loc (NodeInfo (SrcSpanInfo n _) _) (Comment _ c _) = spanTest loc n c
 
 -- | For @After@, does the first span end before the second starts?
 -- For @Before@, does the first span start after the second ends?
