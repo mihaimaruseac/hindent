@@ -110,7 +110,11 @@ printComments :: (Pretty ast,MonadState PrintState m)
               => ComInfoLocation -> ast NodeInfo -> m ()
 printComments loc ast =
   forM_ comments $ \comment ->
-    when (comInfoLocation comment == Just loc) $
+    when (comInfoLocation comment == Just loc) $ do
+      -- Preceeding comments must have a newline before them.
+      hasNewline <- gets psNewline
+      when (not hasNewline && loc == Before) newline
+
       printComment (Just $ srcInfoSpan $ nodeInfoSpan info) comment
   where info = ann ast
         comments = nodeInfoComments info
