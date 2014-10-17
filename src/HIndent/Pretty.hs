@@ -23,6 +23,7 @@ module HIndent.Pretty
   -- * Common node types
   , maybeCtx
   , printComment
+  , printComments
   -- * Interspersing
   , inter
   , spaced
@@ -85,10 +86,12 @@ pretty a =
   do st <- get
      case st of
        PrintState{psExtenders = es,psUserState = s} ->
-         do case listToMaybe (mapMaybe (makePrinter s) es) of
+         do
+           printComments Before a
+           case listToMaybe (mapMaybe (makePrinter s) es) of
               Just (Printer m) -> modify (execState m)
               Nothing -> prettyNoExt a
-            printComments a
+           printComments After a
   where makePrinter s (Extender f) =
           case cast a of
             Just v -> Just (f s v)
@@ -104,17 +107,18 @@ prettyNoExt = prettyInternal
 
 -- | Print comments of a node.
 printComments :: (Pretty ast,MonadState PrintState m)
-              => ast NodeInfo -> m ()
-printComments ast =
-  mapM_ (printComment (Just (srcInfoSpan (nodeInfoSpan info)))) comments
+              => ComInfoLocation -> ast NodeInfo -> m ()
+printComments loc ast =
+  forM_ comments $ \comment ->
+    when (comInfoLocation comment == Just loc) $
+      printComment (Just $ srcInfoSpan $ nodeInfoSpan info) comment
   where info = ann ast
         comments = nodeInfoComments info
 
 -- | Pretty print a comment.
 printComment :: MonadState PrintState m => Maybe SrcSpan -> ComInfo -> m ()
 printComment mayNodespan (ComInfo (Comment inline cspan str) own) =
-  do when own newline
-     -- Insert proper amount of space before comment.
+  do -- Insert proper amount of space before comment.
      -- This maintains alignment. This cannot force comments
      -- to go before the left-most possible indent (specified by depends).
      case mayNodespan of
