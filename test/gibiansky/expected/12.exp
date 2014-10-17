@@ -79,7 +79,7 @@ module Main (
     ) where
 
 module Main (main) where
-import Text.Hello
+import           Text.Hello
 
 module Main (
     main,
@@ -88,4 +88,4 @@ module Main (
     main4,
     main5,
     ) where
-import Text.Hello
+import           Text.Hello
