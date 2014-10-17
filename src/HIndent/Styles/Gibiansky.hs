@@ -36,6 +36,7 @@ gibiansky =
                            , Extender condecls
                            , Extender guardedAlts
                            , Extender alt
+                           , Extender moduleHead
                            ]
         , styleDefConfig =
            defaultConfig { configMaxColumns = maxColumns
@@ -480,5 +481,14 @@ alt _ (Alt _ p galts mbinds) = do
   forM_ mbinds $ \binds -> do
     newline
     indented indentSpaces $
-             (depend (write "where ")
-                     (pretty binds))
+      depend (write "where ") (pretty binds)
+
+moduleHead :: Extend ModuleHead
+moduleHead _ (ModuleHead _ name mwarn mexports) = do
+  forM_ mwarn pretty
+  write "module "
+  pretty name
+  forM_ mexports $ \exports -> do
+    space
+    pretty exports
+  write " where"
