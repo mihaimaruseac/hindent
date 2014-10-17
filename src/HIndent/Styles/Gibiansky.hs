@@ -6,7 +6,6 @@ import Data.Foldable
 import Control.Applicative((<$>))
 import Control.Monad (unless, when, replicateM_)
 import Control.Monad.State (gets, get, put)
-import Debug.Trace
 
 import HIndent.Pretty
 import HIndent.Types
@@ -422,7 +421,7 @@ writeWhereBinds decls@(BDecls _ binds@(first:rest)) = do
     let prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
         curLine = bindStartLine cur
         emptyLines = curLine - prevLine
-    replicateM_ (traceShowId emptyLines) newline
+    replicateM_ emptyLines newline
     pretty cur
 
   where
