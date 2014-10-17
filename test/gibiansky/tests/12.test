@@ -70,3 +70,17 @@ module Main (
 
     -- ** Another thing
     main5,) where
+
+module Main (main) where
+>
+import Text.Hello
+
+module Main (
+    main,
+    main2,
+    main3,
+    main4,
+    main5,
+    ) where
+>
+import Text.Hello
