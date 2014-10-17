@@ -1118,7 +1118,7 @@ instance Pretty Module where
       Module _ mayModHead pragmas imps decls ->
         do case mayModHead of
              Nothing -> return ()
-             Just modHead -> pretty' modHead
+             Just modHead -> pretty modHead
            inter newline (map pretty pragmas)
            inter newline (map pretty imps)
            inter newline (map pretty decls)
@@ -1191,4 +1191,10 @@ instance Pretty ImportSpecList where
   prettyInternal = pretty'
 
 instance Pretty ImportSpec where
+  prettyInternal = pretty'
+
+instance Pretty WarningText where
+  prettyInternal = pretty'
+
+instance Pretty ExportSpecList where
   prettyInternal = pretty'
