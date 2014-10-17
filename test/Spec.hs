@@ -44,7 +44,11 @@ useTestFiles style test exp = do
   let testDecls = parsePieces testContents
       expDecls = parsePieces expContents
   when (length testDecls /= length expDecls) $
-    error $ "Mismatched number of pieces in files " ++ test ++ " and " ++ exp
+    error $ concat [ "Mismatched number of pieces in files "
+                   , test, " (", show $ length testDecls, ")"
+                   , " and "
+                   , exp, " (", show $ length expDecls, ")"
+                   ]
   return $ describe ("hindent applied to chunks in " ++ test) $ foldl1 (>>) $ zipWith (mkSpec style) testDecls expDecls
 
 mkSpec :: HIndent.Style -> String -> String -> Spec
@@ -54,7 +58,7 @@ mkSpec style input desired = it "works" $
     Right builder -> L.unpack (L.toLazyText builder) `shouldBe` desired
 
 parsePieces :: String -> [String]
-parsePieces str = map (intercalate "\n") pieces
+parsePieces str = map (intercalate "\n" . map mkNewlines) pieces
   where
     pieces = unfoldr unfolder (lines str)
 
@@ -68,3 +72,7 @@ parsePieces str = map (intercalate "\n") pieces
     pieceBreak :: (String, String) -> Bool
     pieceBreak ("", "") = error "Two consecutive line breaks!"
     pieceBreak (line, next) = null line && head next /= ' '
+
+    mkNewlines :: String -> String
+    mkNewlines ">" = ""
+    mkNewlines x = x
