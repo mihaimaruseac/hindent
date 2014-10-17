@@ -20,3 +20,10 @@ foo = x -- test
 foo = x
   where -- another test
     x = blah
+
+f = case undefined of
+      Just p
+        -- If it's the potato.
+        | zot  -> undefined
+        -- The geriatric concumbine.
+        | otherwise -> hael

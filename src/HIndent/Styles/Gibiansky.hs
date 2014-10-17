@@ -34,6 +34,7 @@ gibiansky =
                            , Extender decls
                            , Extender condecls
                            , Extender guardedAlts
+                           , Extender alt
                            ]
         , styleDefConfig =
            defaultConfig { configMaxColumns = maxColumns
@@ -194,19 +195,19 @@ listExpr (List _ els) = attemptSingleLine (singleLineList els) (multiLineList el
 listExpr _ = error "Not a list"
 
 singleLineList :: [Exp NodeInfo] -> Printer ()
-singleLineList exprs = do
+singleLineList exps = do
   write "["
-  inter (write ", ") $ map pretty exprs
+  inter (write ", ") $ map pretty exps
   write "]"
 
 multiLineList :: [Exp NodeInfo] -> Printer ()
 multiLineList [] = write "[]"
-multiLineList (first:exprs) = do
+multiLineList (first:exps) = do
   col <- getColumn
   column col $ do
     write "[ "
     pretty first
-    forM_ exprs $ \el -> do
+    forM_ exps $ \el -> do
       newline
       write ", "
       pretty el
@@ -406,4 +407,22 @@ guardedAlts :: Extend GuardedAlts
 guardedAlts _ (UnGuardedAlt _ exp) = do
   write " -> "
   pretty exp
-guardedAlts _ alt = prettyNoExt alt
+guardedAlts _ (GuardedAlts _ alts) =
+  lined $ flip map alts $ \alt@(GuardedAlt _ stmts exp) -> do
+    printComments Before alt
+    write "| "
+    inter (write ", ") $ map pretty stmts
+    write " -> "
+    pretty exp
+
+alt :: Extend Alt
+alt _ (Alt _ p galts mbinds) = do
+  pretty p
+  case galts of
+    UnGuardedAlt{} -> pretty galts
+    GuardedAlts{}  -> indented indentSpaces $ pretty galts
+  forM_ mbinds $ \binds -> do
+    newline
+    indented indentSpaces $
+             (depend (write "where ")
+                     (pretty binds))
