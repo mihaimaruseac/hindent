@@ -37,6 +37,7 @@ gibiansky =
                            , Extender guardedAlts
                            , Extender alt
                            , Extender moduleHead
+                           , Extender exportList
                            ]
         , styleDefConfig =
            defaultConfig { configMaxColumns = maxColumns
@@ -57,6 +58,11 @@ indentOnce = replicateM_ indentSpaces $ write " "
 maxColumns :: Integral a => a
 maxColumns = 100
 
+-- | How many exports to format in a single line.
+-- If an export list has more than this, it will be formatted as multiple lines.
+maxSingleLineExports :: Integral a => a
+maxSingleLineExports = 4
+
 attemptSingleLine :: Printer a -> Printer a -> Printer a
 attemptSingleLine single multiple = do
   -- Try printing on one line.
@@ -69,7 +75,7 @@ attemptSingleLine single multiple = do
     then do
       put prevState
       multiple
-    else 
+    else
       return result
 
 --------------------------------------------------------------------------------
@@ -304,7 +310,7 @@ caseExpr (Case _ exp alts) = do
     pretty exp
     write " of"
   newline
-  
+
   indented indentSpaces $
     if allSingle
     then do
@@ -492,3 +498,24 @@ moduleHead _ (ModuleHead _ name mwarn mexports) = do
     space
     pretty exports
   write " where"
+
+exportList :: Extend ExportSpecList
+exportList _ (ExportSpecList _ exports) = do
+  write "("
+  if length exports <= maxSingleLineExports
+    then do
+      inter (write ", ") $ map pretty exports
+      write ")"
+    else indented indentSpaces' $ do
+      forM_ exports $ \export -> do
+        newline
+        pretty export
+        write ","
+      newline
+      write ")"
+  where
+    wasSingleLine :: [ExportSpec NodeInfo] -> Bool
+    wasSingleLine [] = True
+    wasSingleLine (first:rest) = all (sameLine first) rest
+
+    indentSpaces' = 2 * indentSpaces
