@@ -318,9 +318,9 @@ caseExpr (Case _ exp alts) = do
     else lined $ map pretty alts
   where
     isSingle :: Alt NodeInfo -> Printer Bool
-    isSingle alt = fst <$> sandbox (do
+    isSingle alt' = fst <$> sandbox (do
       line <- gets psLine
-      pretty alt
+      pretty alt'
       line' <- gets psLine
       return $ line == line')
 
@@ -414,8 +414,8 @@ funBody pat rhs mbinds = do
       indented indentSpaces $ writeWhereBinds binds
 
 writeWhereBinds :: Binds NodeInfo -> Printer ()
-writeWhereBinds decls@(BDecls _ binds@(first:rest)) = do
-  printComments Before decls
+writeWhereBinds ds@(BDecls _ binds@(first:rest)) = do
+  printComments Before ds
   pretty first
   forM_ (zip binds rest) $ \(prev, cur) -> do
     let prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
@@ -430,7 +430,7 @@ astStartLine decl =
   let info = ann decl
       comments = nodeInfoComments info
       befores = filter ((== Just Before) . comInfoLocation) comments
-      commentStartLine (Comment _ span _) = srcSpanStartLine span
+      commentStartLine (Comment _ sp _) = srcSpanStartLine sp
   in if null befores
      then startLine $ nodeInfoSpan info
      else minimum $ map (commentStartLine . comInfoComment) befores
@@ -469,8 +469,8 @@ guardedAlts _ (UnGuardedAlt _ exp) = do
   write " -> "
   pretty exp
 guardedAlts _ (GuardedAlts _ alts) =
-  lined $ flip map alts $ \alt@(GuardedAlt _ stmts exp) -> do
-    printComments Before alt
+  lined $ flip map alts $ \a@(GuardedAlt _ stmts exp) -> do
+    printComments Before a
     write "| "
     inter (write ", ") $ map pretty stmts
     write " -> "

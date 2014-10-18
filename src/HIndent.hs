@@ -47,9 +47,9 @@ reformat :: Style -> Text -> Either String Builder
 reformat style x =
   case parseModuleWithComments parseMode
                                (T.unpack x) of
-    ParseOk (mod,comments) ->
+    ParseOk (m,comments) ->
       let (cs,ast) =
-            annotateComments (fromMaybe mod $ applyFixities baseFixities mod) comments
+            annotateComments (fromMaybe m $ applyFixities baseFixities m) comments
       in Right (prettyPrint
                   style
                   -- For the time being, assume that all "free-floating" comments come at the beginning.
@@ -97,8 +97,8 @@ testAst :: Text -> Either String ([ComInfo], Module NodeInfo)
 testAst x =
   case parseModuleWithComments parseMode
                                (T.unpack x) of
-    ParseOk (mod,comments) ->
-      Right (annotateComments mod comments)
+    ParseOk (m,comments) ->
+      Right (annotateComments m comments)
     ParseFailed _ e -> Left e
 
 -- | Styles list, useful for programmatically choosing.
@@ -148,11 +148,11 @@ annotateComments =
         -- If it is, store it in the state; otherwise do nothing.
         -- The location specifies where the comment should lie relative to the node.
         collect :: ComInfoLocation -> Comment -> NodeInfo -> State (Maybe SrcSpanInfo) NodeInfo
-        collect loc c ni@(NodeInfo newL _) =
-          do when (commentLocated loc ni c)
+        collect loc' c ni@(NodeInfo newL _) =
+          do when (commentLocated loc' ni c)
                   (modify (maybe (Just newL)
                                  (\oldL ->
-                                    Just (if (spanTest loc `on` srcInfoSpan) oldL newL
+                                    Just (if (spanTest loc' `on` srcInfoSpan) oldL newL
                                              then newL
                                              else oldL))))
              return ni
@@ -169,16 +169,17 @@ annotateComments =
 
 -- | Is the comment after the node?
 commentLocated :: ComInfoLocation -> NodeInfo -> Comment -> Bool
-commentLocated loc (NodeInfo (SrcSpanInfo n _) _) (Comment _ c _) = spanTest loc n c
+commentLocated loc' (NodeInfo (SrcSpanInfo n _) _) (Comment _ c _) =
+  spanTest loc' n c
 
 -- | For @After@, does the first span end before the second starts?
 -- For @Before@, does the first span start after the second ends?
 spanTest :: ComInfoLocation -> SrcSpan -> SrcSpan -> Bool
-spanTest loc first second = 
+spanTest loc' first second =
   (srcSpanStartLine after > srcSpanEndLine before) ||
   ((srcSpanStartLine after == srcSpanEndLine before) &&
    (srcSpanStartColumn after > srcSpanEndColumn before))
-  where
-    (before, after) = case loc of
-      After  -> (first, second)
-      Before -> (second, first)
+  where (before,after) =
+          case loc' of
+            After -> (first,second)
+            Before -> (second,first)

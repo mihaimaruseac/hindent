@@ -93,6 +93,7 @@ alts _ x =
     _ -> prettyNoExt x
 
 -- | Handle do specially.
+guardedAlt :: t -> GuardedAlt NodeInfo -> Printer ()
 guardedAlt _ x =
   case x of
     GuardedAlt _ stmts (Do _ dos) ->
@@ -108,6 +109,7 @@ guardedAlt _ x =
     _ -> prettyNoExt x
 
 -- | Handle do specially.
+ifAlt :: t -> IfAlt NodeInfo -> Printer ()
 ifAlt _ (IfAlt _ cond (Do _ dos)) =
   do pretty cond
      swing (write " -> do")
@@ -169,16 +171,16 @@ exp _ (If _ if' then' else') =
                   newline
                   branch "else " else')
      -- Special handling for do.
-  where branch string e =
+  where branch str e =
           case e of
             Do _ stmts ->
-              do write string
+              do write str
                  write "do"
                  newline
                  indentSpaces <- getIndentSpaces
                  indented indentSpaces (lined (map pretty stmts))
             _ ->
-              depend (write string)
+              depend (write str)
                      (pretty e)
 -- | App algorithm similar to ChrisDone algorithm, but with no
 -- parent-child alignment.
@@ -223,13 +225,13 @@ exp _ e = prettyNoExt e
 
 -- | Specially format records. Indent where clauses only 2 spaces.
 decl :: t -> Decl NodeInfo -> Printer ()
-decl _ (PatBind _ pat mty rhs mbinds) =
+decl _ (PatBind _ pat mty rhs' mbinds) =
   case mty of
     Just e ->
       error ("Unimplemented (Maybe Type) in PatBind." ++ show e)
     Nothing ->
       do pretty pat
-         pretty rhs
+         pretty rhs'
          case mbinds of
            Nothing -> return ()
            Just binds ->
