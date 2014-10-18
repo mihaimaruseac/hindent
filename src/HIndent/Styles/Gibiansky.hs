@@ -419,22 +419,21 @@ writeWhereBinds decls@(BDecls _ binds@(first:rest)) = do
   pretty first
   forM_ (zip binds rest) $ \(prev, cur) -> do
     let prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
-        curLine = bindStartLine cur
+        curLine = astStartLine cur
         emptyLines = curLine - prevLine
     replicateM_ emptyLines newline
     pretty cur
-
-  where
-    bindStartLine :: Decl NodeInfo -> Int
-    bindStartLine decl =
-      let info = ann decl
-          comments = nodeInfoComments info
-          befores = filter ((== Just Before) . comInfoLocation) comments
-          commentStartLine (Comment _ span _) = srcSpanStartLine span
-      in if null befores
-         then startLine $ nodeInfoSpan info
-         else minimum $ map (commentStartLine . comInfoComment) befores
 writeWhereBinds binds = prettyNoExt binds
+
+astStartLine :: Annotated ast => ast NodeInfo -> Int
+astStartLine decl =
+  let info = ann decl
+      comments = nodeInfoComments info
+      befores = filter ((== Just Before) . comInfoLocation) comments
+      commentStartLine (Comment _ span _) = srcSpanStartLine span
+  in if null befores
+     then startLine $ nodeInfoSpan info
+     else minimum $ map (commentStartLine . comInfoComment) befores
 
 isDoBlock :: Rhs l -> Bool
 isDoBlock (UnGuardedRhs _ Do{}) = True
@@ -506,15 +505,20 @@ exportList _ (ExportSpecList _ exports) = do
       inter (write ", ") $ map pretty exports
       write ")"
     else indented indentSpaces' $ do
-      forM_ exports $ \export -> do
-        newline
-        pretty export
+      -- First export
+      let first:rest = exports
+      newline
+      pretty first
+      write ","
+
+      forM_ (zip rest exports) $ \(cur, prev) -> do
+        let prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
+            curLine = astStartLine cur
+            emptyLines = curLine - prevLine
+        replicateM_ (max 1 emptyLines) newline
+        pretty cur
         write ","
       newline
       write ")"
   where
-    wasSingleLine :: [ExportSpec NodeInfo] -> Bool
-    wasSingleLine [] = True
-    wasSingleLine (first:rest) = all (sameLine first) rest
-
     indentSpaces' = 2 * indentSpaces
