@@ -76,7 +76,7 @@ import           Prelude hiding (exp)
 -- * Pretty printing class
 
 -- | Pretty printing class.
-class (Annotated ast,Typeable1 ast) => Pretty ast where
+class (Annotated ast,Typeable ast) => Pretty ast where
   prettyInternal :: MonadState PrintState m => ast NodeInfo -> m ()
 
 -- | Pretty print using extenders.
