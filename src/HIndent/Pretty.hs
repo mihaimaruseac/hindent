@@ -88,10 +88,11 @@ pretty a =
        PrintState{psExtenders = es,psUserState = s} ->
          do
            printComments Before a
-           case listToMaybe (mapMaybe (makePrinter s) es) of
-              Just (Printer m) -> modify (execState m)
-              Nothing -> prettyNoExt a
-           printComments After a
+           depend
+             (case listToMaybe (mapMaybe (makePrinter s) es) of
+                Just (Printer m) -> modify (execState m)
+                Nothing -> prettyNoExt a)
+             (printComments After a)
   where makePrinter s (Extender f) =
           case cast a of
             Just v -> Just (f s v)
