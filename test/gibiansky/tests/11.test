@@ -1,14 +1,14 @@
-data A = B  -- ^ hi
-       | C Int -- ^ hi
-       | D Float -- ^ hi
+data A = B             -- ^ hi
+       | C Int         -- ^ hi
+       | D Float       -- ^ hi
        | E Float Float -- ^ hi
 
-data A = B  -- ^ hi
-            -- continuing the comment
-       | C Int -- ^ hi
-       | D Float -- ^ hi
+data A = B             -- ^ hi
+                       -- continuing the comment
+       | C Int         -- ^ hi
+       | D Float       -- ^ hi
        | E Float Float -- ^ hi
-            -- continuing the comment
+                       -- continuing the comment
 
 a = case x of
   Nothing -> 2
@@ -36,11 +36,11 @@ a = case x of
   Just something -> do
     putStrLn "hello"
 
-data X = X { a :: Int -- ^ hi
-         , b :: String -- ^hi
-         }
+data X = X { a :: Int    -- ^ hi
+           , b :: String -- ^ hi
+           }
 
-data X = X { a :: Int -- ^ hi
-         , b :: String -- ^hi
-         -- continued
-         }
+data X = X { a :: Int    -- ^ hi
+           , b :: String -- ^ hi
+                         -- continued
+           }
