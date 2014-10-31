@@ -31,6 +31,7 @@ gibiansky =
                            , Extender typ
                            , Extender exprs
                            , Extender rhss
+                           , Extender guardedRhs
                            , Extender decls
                            , Extender condecls
                            , Extender guardedAlts
@@ -359,6 +360,12 @@ rhss _ (UnGuardedRhs _ exp) = do
   pretty exp
 rhss _ rhs = prettyNoExt rhs
 
+guardedRhs :: Extend GuardedRhs
+guardedRhs _ (GuardedRhs _ stmts exp) = do
+  indented 1 $ prefixedLined "," (map (\p -> space >> pretty p) stmts)
+  write " = "
+  pretty exp
+
 decls :: Extend Decl
 decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
   pretty dataOrNew
@@ -384,8 +391,7 @@ decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
 
 decls _ (PatBind _ pat Nothing rhs mbinds) = funBody [pat] rhs mbinds
 decls _ (FunBind _ matches) =
-  forM_ matches $ \match -> do
-
+  inter (write "\n") $ flip map matches $ \match -> do
     (name, pat, rhs, mbinds) <-
       case match of
         Match _ name pat rhs mbinds -> return (name, pat, rhs, mbinds)
