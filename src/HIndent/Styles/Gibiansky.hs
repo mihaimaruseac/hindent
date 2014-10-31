@@ -176,6 +176,7 @@ exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "$"))) _) = dollarExpr e
 exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "<*>"))) _) = applicativeExpr exp
 exprs _ exp@Lambda{} = lambdaExpr exp
 exprs _ exp@Case{} = caseExpr exp
+exprs _ (Tuple _ _ exps) = parens $ inter (write ", ") $ map pretty exps
 exprs _ exp = prettyNoExt exp
 
 letExpr :: Exp NodeInfo -> Printer ()
@@ -418,10 +419,7 @@ writeWhereBinds ds@(BDecls _ binds@(first:rest)) = do
   printComments Before ds
   pretty first
   forM_ (zip binds rest) $ \(prev, cur) -> do
-    let prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
-        curLine = astStartLine cur
-        emptyLines = curLine - prevLine
-    replicateM_ emptyLines newline
+    replicateM_ (lineDelta cur prev) newline
     pretty cur
 writeWhereBinds binds = prettyNoExt binds
 
@@ -512,13 +510,18 @@ exportList _ (ExportSpecList _ exports) = do
       write ","
 
       forM_ (zip rest exports) $ \(cur, prev) -> do
-        let prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
-            curLine = astStartLine cur
-            emptyLines = curLine - prevLine
-        replicateM_ (max 1 emptyLines) newline
+        replicateM_ (max 1 $ lineDelta cur prev) newline
         pretty cur
         write ","
       newline
       write ")"
   where
     indentSpaces' = 2 * indentSpaces
+
+lineDelta :: Annotated ast => ast NodeInfo -> ast NodeInfo -> Int
+lineDelta cur prev = emptyLines
+  where
+    prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
+    curLine = astStartLine cur
+    emptyLines = curLine - prevLine
+
