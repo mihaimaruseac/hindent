@@ -28,12 +28,12 @@ e.g.:
 ```
 
 By default it uses the style called `fundamental`, if you want to use
-another, `john-tibell`, run `M-x customize-variable
+another, `johan-tibell`, run `M-x customize-variable
 hindent-style`. If you want to configure per-project, make a file
 called `.dir-locals.el` in the project root directory like this:
 
 ``` lisp
-((nil . ((hindent-style . "john-tibell"))))
+((nil . ((hindent-style . "johan-tibell"))))
 ```
 
 ## Vim
