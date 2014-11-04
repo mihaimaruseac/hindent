@@ -13,3 +13,9 @@ tests = hello
   , name "space space space space space space space space space space space" thing
   , name "space space space space space space space space space space space" thing
   ]
+
+tests = hello goodbye
+  [ name "space space space space space space space space space space space" thing
+  , name "space space space space space space space space space space space" thing
+  , name "space space space space space space space space space space space" thing
+  ]
