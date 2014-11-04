@@ -204,7 +204,16 @@ appExpr app@(App _ f x) = do
   when (curLine - prevLine > 1) $ do
     -- Restore to before printing.
     put prevState
-    separateArgs app
+
+    allArgsSeparate <- not <$> canSingleLine (pretty f)
+    if allArgsSeparate
+      then separateArgs app
+      else do
+        col <- getColumn
+        column col $ do
+          pretty f
+          newline
+          indented indentSpaces $ pretty x
 
   where
     singleLine = spaced [pretty f, pretty x]
@@ -215,6 +224,15 @@ appExpr app@(App _ f x) = do
         newline
         indentOnce
         pretty x
+
+    canSingleLine :: Printer a -> Printer Bool
+    canSingleLine printer = do
+      st <- get
+      prevLine <- getLineNum
+      printer
+      curLine <- getLineNum
+      put st
+      return $ prevLine == curLine
 
     -- Separate a function application into the function
     -- and all of its arguments. Arguments are returned in reverse order.
