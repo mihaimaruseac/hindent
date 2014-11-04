@@ -16,3 +16,9 @@ a = veryLongLongLongName
       veryLongLongLongArg
       veryLongLongLongArg
       veryLongLongLongArg
+
+tests = hello
+  [ name "space space space space space space space space space space space" thing
+  , name "space space space space space space space space space space space" thing
+  , name "space space space space space space space space space space space" thing
+  ]
