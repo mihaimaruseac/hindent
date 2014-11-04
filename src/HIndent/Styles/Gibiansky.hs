@@ -257,7 +257,8 @@ multiLineList :: [Exp NodeInfo] -> Printer ()
 multiLineList [] = write "[]"
 multiLineList (first:exps) = do
   col <- getColumn
-  column col $ do
+  ind <- gets psIndentLevel
+  column (max col ind) $ do
     write "[ "
     pretty first
     forM_ exps $ \el -> do
