@@ -193,7 +193,47 @@ letExpr (Let _ binds result) = do
 letExpr _ = error "Not a let"
 
 appExpr :: Exp NodeInfo -> Printer ()
-appExpr (App _ f x) = spaced [pretty f, pretty x]
+appExpr app@(App _ f x) = do
+  prevState <- get
+  prevLine <- getLineNum
+  attemptSingleLine singleLine multiLine
+  curLine <- getLineNum
+
+  -- If the multiline version takes more than two lines,
+  -- print everything with one argument per line.
+  when (curLine - prevLine > 1) $ do
+    -- Restore to before printing.
+    put prevState
+    separateArgs app
+
+  where
+    singleLine = spaced [pretty f, pretty x]
+    multiLine = do
+      col <- getColumn
+      column col $ do
+        pretty f
+        newline
+        indentOnce
+        pretty x
+
+    -- Separate a function application into the function
+    -- and all of its arguments. Arguments are returned in reverse order.
+    collectArgs :: Exp NodeInfo -> (Exp NodeInfo, [Exp NodeInfo])
+    collectArgs (App _ f x) = 
+      let (fun, args) = collectArgs f in
+        (fun, x : args)
+    collectArgs nonApp = (nonApp, [])
+
+    separateArgs :: Exp NodeInfo -> Printer ()
+    separateArgs expr = 
+      let (fun, args) = collectArgs expr
+      in do
+        col <- getColumn
+        column col $ do
+          pretty fun
+          newline
+          indented indentSpaces $ lined $ map pretty $ reverse args
+
 appExpr _ = error "Not an app"
 
 doExpr :: Exp NodeInfo -> Printer ()
