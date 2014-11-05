@@ -40,7 +40,7 @@ gibiansky =
                            , Extender exportList
                            ]
         , styleDefConfig =
-           defaultConfig { configMaxColumns = maxColumns
+           defaultConfig { configMaxColumns = 100
                          , configIndentSpaces = indentSpaces
                          , configClearEmptyLines =  True
                          }
@@ -53,10 +53,6 @@ indentSpaces = 2
 -- | Printer to indent one level.
 indentOnce :: Printer ()
 indentOnce = replicateM_ indentSpaces $ write " "
-
--- | Max number of columns per line.
-maxColumns :: Integral a => a
-maxColumns = 100
 
 -- | How many exports to format in a single line.
 -- If an export list has more than this, it will be formatted as multiple lines.
@@ -71,6 +67,7 @@ attemptSingleLine single multiple = do
 
   --  If it doesn't fit, reprint on multiple lines.
   col <- getColumn
+  maxColumns <- configMaxColumns <$> gets psConfig
   if col > maxColumns
     then do
       put prevState
@@ -237,13 +234,13 @@ appExpr app@(App _ f x) = do
     -- Separate a function application into the function
     -- and all of its arguments. Arguments are returned in reverse order.
     collectArgs :: Exp NodeInfo -> (Exp NodeInfo, [Exp NodeInfo])
-    collectArgs (App _ g y) = 
+    collectArgs (App _ g y) =
       let (fun, args) = collectArgs g in
         (fun, y : args)
     collectArgs nonApp = (nonApp, [])
 
     separateArgs :: Exp NodeInfo -> Printer ()
-    separateArgs expr = 
+    separateArgs expr =
       let (fun, args) = collectArgs expr
       in do
         col <- getColumn
@@ -449,7 +446,7 @@ decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
     indented indentSpaces $ pretty deriv
 
 decls _ (PatBind _ pat Nothing rhs mbinds) = funBody [pat] rhs mbinds
-decls _ (FunBind _ matches) = 
+decls _ (FunBind _ matches) =
   lined $  flip map matches $ \match -> do
     (name, pat, rhs, mbinds) <-
       case match of
@@ -589,4 +586,3 @@ lineDelta cur prev = emptyLines
     prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
     curLine = astStartLine cur
     emptyLines = curLine - prevLine
-
