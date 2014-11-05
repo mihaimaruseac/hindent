@@ -229,7 +229,7 @@ appExpr app@(App _ f x) = do
     canSingleLine printer = do
       st <- get
       prevLine <- getLineNum
-      printer
+      _ <- printer
       curLine <- getLineNum
       put st
       return $ prevLine == curLine
@@ -237,9 +237,9 @@ appExpr app@(App _ f x) = do
     -- Separate a function application into the function
     -- and all of its arguments. Arguments are returned in reverse order.
     collectArgs :: Exp NodeInfo -> (Exp NodeInfo, [Exp NodeInfo])
-    collectArgs (App _ f x) = 
-      let (fun, args) = collectArgs f in
-        (fun, x : args)
+    collectArgs (App _ g y) = 
+      let (fun, args) = collectArgs g in
+        (fun, y : args)
     collectArgs nonApp = (nonApp, [])
 
     separateArgs :: Exp NodeInfo -> Printer ()
@@ -449,8 +449,8 @@ decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
     indented indentSpaces $ pretty deriv
 
 decls _ (PatBind _ pat Nothing rhs mbinds) = funBody [pat] rhs mbinds
-decls _ (FunBind _ matches) =
-  inter (write "\n") $ flip map matches $ \match -> do
+decls _ (FunBind _ matches) = 
+  lined $  flip map matches $ \match -> do
     (name, pat, rhs, mbinds) <-
       case match of
         Match _ name pat rhs mbinds -> return (name, pat, rhs, mbinds)

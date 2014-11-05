@@ -1,0 +1,3 @@
+instance A B where
+  f x = 3
+  f y = 3
