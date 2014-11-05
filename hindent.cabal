@@ -25,7 +25,7 @@ library
                      HIndent.Styles.ChrisDone
                      HIndent.Styles.JohanTibell
                      HIndent.Styles.Gibiansky
-  build-depends:     base >= 4 && <5
+  build-depends:     base >= 4.7 && <5
                    , data-default
                    , haskell-src-exts == 1.15.*
                    , monad-loops
