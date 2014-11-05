@@ -40,7 +40,7 @@ gibiansky =
                            , Extender exportList
                            ]
         , styleDefConfig =
-           defaultConfig { configMaxColumns = maxColumns
+           defaultConfig { configMaxColumns = 100
                          , configIndentSpaces = indentSpaces
                          , configClearEmptyLines =  True
                          }
@@ -53,10 +53,6 @@ indentSpaces = 2
 -- | Printer to indent one level.
 indentOnce :: Printer ()
 indentOnce = replicateM_ indentSpaces $ write " "
-
--- | Max number of columns per line.
-maxColumns :: Integral a => a
-maxColumns = 100
 
 -- | How many exports to format in a single line.
 -- If an export list has more than this, it will be formatted as multiple lines.
@@ -71,6 +67,7 @@ attemptSingleLine single multiple = do
 
   --  If it doesn't fit, reprint on multiple lines.
   col <- getColumn
+  maxColumns <- configMaxColumns <$> gets psConfig
   if col > maxColumns
     then do
       put prevState
@@ -193,7 +190,65 @@ letExpr (Let _ binds result) = do
 letExpr _ = error "Not a let"
 
 appExpr :: Exp NodeInfo -> Printer ()
-appExpr (App _ f x) = spaced [pretty f, pretty x]
+appExpr app@(App _ f x) = do
+  prevState <- get
+  prevLine <- getLineNum
+  attemptSingleLine singleLine multiLine
+  curLine <- getLineNum
+
+  -- If the multiline version takes more than two lines,
+  -- print everything with one argument per line.
+  when (curLine - prevLine > 1) $ do
+    -- Restore to before printing.
+    put prevState
+
+    allArgsSeparate <- not <$> canSingleLine (pretty f)
+    if allArgsSeparate
+      then separateArgs app
+      else do
+        col <- getColumn
+        column col $ do
+          pretty f
+          newline
+          indented indentSpaces $ pretty x
+
+  where
+    singleLine = spaced [pretty f, pretty x]
+    multiLine = do
+      col <- getColumn
+      column col $ do
+        pretty f
+        newline
+        indentOnce
+        pretty x
+
+    canSingleLine :: Printer a -> Printer Bool
+    canSingleLine printer = do
+      st <- get
+      prevLine <- getLineNum
+      _ <- printer
+      curLine <- getLineNum
+      put st
+      return $ prevLine == curLine
+
+    -- Separate a function application into the function
+    -- and all of its arguments. Arguments are returned in reverse order.
+    collectArgs :: Exp NodeInfo -> (Exp NodeInfo, [Exp NodeInfo])
+    collectArgs (App _ g y) =
+      let (fun, args) = collectArgs g in
+        (fun, y : args)
+    collectArgs nonApp = (nonApp, [])
+
+    separateArgs :: Exp NodeInfo -> Printer ()
+    separateArgs expr =
+      let (fun, args) = collectArgs expr
+      in do
+        col <- getColumn
+        column col $ do
+          pretty fun
+          newline
+          indented indentSpaces $ lined $ map pretty $ reverse args
+
 appExpr _ = error "Not an app"
 
 doExpr :: Exp NodeInfo -> Printer ()
@@ -217,7 +272,8 @@ multiLineList :: [Exp NodeInfo] -> Printer ()
 multiLineList [] = write "[]"
 multiLineList (first:exps) = do
   col <- getColumn
-  column col $ do
+  ind <- gets psIndentLevel
+  column (max col ind) $ do
     write "[ "
     pretty first
     forM_ exps $ \el -> do
@@ -391,7 +447,7 @@ decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
 
 decls _ (PatBind _ pat Nothing rhs mbinds) = funBody [pat] rhs mbinds
 decls _ (FunBind _ matches) =
-  inter (write "\n") $ flip map matches $ \match -> do
+  lined $  flip map matches $ \match -> do
     (name, pat, rhs, mbinds) <-
       case match of
         Match _ name pat rhs mbinds -> return (name, pat, rhs, mbinds)
@@ -530,4 +586,3 @@ lineDelta cur prev = emptyLines
     prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
     curLine = astStartLine cur
     emptyLines = curLine - prevLine
-

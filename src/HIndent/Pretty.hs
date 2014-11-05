@@ -38,6 +38,7 @@ module HIndent.Pretty
   , indented
   , column
   , getColumn
+  , getLineNum
   , depend
   , dependBind
   , swing
@@ -212,6 +213,10 @@ column i p =
 -- | Get the current indent level.
 getColumn :: MonadState PrintState m => m Int64
 getColumn = gets psColumn
+
+-- | Get the current line number.
+getLineNum :: MonadState PrintState m => m Int64
+getLineNum = gets psLine
 
 -- | Output a newline.
 newline :: MonadState PrintState m => m ()
