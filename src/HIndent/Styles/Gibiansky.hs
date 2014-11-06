@@ -412,8 +412,18 @@ caseExpr _ = error "Not a case"
 
 rhss :: Extend Rhs
 rhss _ (UnGuardedRhs _ exp) = do
-  write " = "
-  pretty exp
+  write " ="
+  if onNextLine exp
+    then indented indentSpaces $ do
+      newline
+      pretty exp
+    else do
+      space
+      pretty exp
+  
+  where
+    onNextLine Let{} = True
+    onNextLine _ = False
 rhss _ rhs = prettyNoExt rhs
 
 guardedRhs :: Extend GuardedRhs
