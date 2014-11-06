@@ -136,6 +136,16 @@ typ _ (TyForall _ _ (Just ctx) rest) =
       write  "=> "
       indented 3 $ pretty rest
 
+typ _ (TyTuple _ boxed types) = parens $ do
+  boxed'
+  inter (write ", ") $ map pretty types
+  boxed'
+
+  where
+    boxed' = case boxed of
+      Boxed   -> return ()
+      Unboxed -> write "#"
+
 typ _ ty@(TyFun _ from to) =
   -- If the function argument types are on the same line,
   -- put the entire function type on the same line.

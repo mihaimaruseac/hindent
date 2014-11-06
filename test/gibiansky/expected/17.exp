@@ -1,0 +1,3 @@
+type EventSource a = (AddHandler a, a -> IO ())
+
+type EventSource a = (AddHandler a, a -> IO ())

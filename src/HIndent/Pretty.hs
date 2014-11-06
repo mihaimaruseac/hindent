@@ -766,8 +766,12 @@ decl (ClassDecl _ ctx dhead fundeps decls) =
             (do newline
                 indentSpaces <- getIndentSpaces
                 indented indentSpaces (lined (map pretty (fromMaybe [] decls))))
-decl TypeDecl{} =
-  error "FIXME: No implementation for TypeDecl."
+decl (TypeDecl _ typehead typ) =
+  depend (write "type ")
+         (depend (pretty typehead)
+                 (depend (write " = ")
+                         (pretty typ)))
+
 decl TypeFamDecl{} =
   error "FIXME: No implementation for TypeFamDecl."
 decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
