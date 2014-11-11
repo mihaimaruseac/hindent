@@ -38,6 +38,7 @@ gibiansky =
                            , Extender alt
                            , Extender moduleHead
                            , Extender exportList
+                           , Extender fieldUpdate
                            ]
         , styleDefConfig =
            defaultConfig { configMaxColumns = 100
@@ -184,6 +185,7 @@ exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "$"))) _) = dollarExpr e
 exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "<*>"))) _) = applicativeExpr exp
 exprs _ exp@Lambda{} = lambdaExpr exp
 exprs _ exp@Case{} = caseExpr exp
+exprs _ exp@RecUpdate{} = recUpdateExpr exp
 exprs _ (Tuple _ _ exps) = parens $ inter (write ", ") $ map pretty exps
 exprs _ exp = prettyNoExt exp
 
@@ -420,6 +422,26 @@ caseExpr (Case _ exp alts) = do
 
 caseExpr _ = error "Not a case"
 
+recUpdateExpr :: Exp NodeInfo -> Printer ()
+recUpdateExpr (RecUpdate _ exp updates) = do
+  pretty exp
+  write " "
+  attemptSingleLine single mult
+
+  where
+    single = do
+      write "{ "
+      inter (write ", ") $ map pretty updates
+      write " }"
+    mult = do
+      col <- getColumn
+      column col $ do
+        write "{ "
+        inter (newline >> write ", ") $ map pretty updates
+        newline
+        write "}"
+recUpdateExpr _ = error "Not a record update"
+
 rhss :: Extend Rhs
 rhss _ (UnGuardedRhs _ exp) = do
   write " ="
@@ -606,3 +628,10 @@ lineDelta cur prev = emptyLines
     prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
     curLine = astStartLine cur
     emptyLines = curLine - prevLine
+
+fieldUpdate :: Extend FieldUpdate
+fieldUpdate _ (FieldUpdate _ name val) = do
+  pretty name
+  write " = "
+  pretty val
+fieldUpdate _ upd = prettyNoExt upd
