@@ -523,7 +523,7 @@ writeWhereBinds ds@(BDecls _ binds@(first:rest)) = do
   printComments Before ds
   pretty first
   forM_ (zip binds rest) $ \(prev, cur) -> do
-    replicateM_ (lineDelta cur prev) newline
+    replicateM_ (max 1 $ lineDeltaDecl cur prev) newline
     pretty cur
 writeWhereBinds binds = prettyNoExt binds
 
@@ -622,7 +622,14 @@ exportList _ (ExportSpecList _ exports) = do
   where
     indentSpaces' = 2 * indentSpaces
 
-lineDelta :: Annotated ast => ast NodeInfo -> ast NodeInfo -> Int
+-- This is a hack.
+-- Case statements don't properly report their bounds; see haskell-src-exts #186.
+lineDeltaDecl :: Decl NodeInfo -> Decl NodeInfo -> Int
+lineDeltaDecl cur (PatBind _ _ _ (UnGuardedRhs _ (Case _ _ alts)) _) =
+  lineDelta cur (last alts)
+lineDeltaDecl cur prev = lineDelta cur prev
+
+lineDelta :: (Annotated ast1, Annotated ast2) => ast1 NodeInfo -> ast2 NodeInfo -> Int
 lineDelta cur prev = emptyLines
   where
     prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
