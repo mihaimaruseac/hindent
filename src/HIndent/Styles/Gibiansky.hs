@@ -185,7 +185,8 @@ exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "$"))) _) = dollarExpr e
 exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "<*>"))) _) = applicativeExpr exp
 exprs _ exp@Lambda{} = lambdaExpr exp
 exprs _ exp@Case{} = caseExpr exp
-exprs _ exp@RecUpdate{} = recUpdateExpr exp
+exprs _ (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) updates
+exprs _ (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
 exprs _ (Tuple _ _ exps) = parens $ inter (write ", ") $ map pretty exps
 exprs _ exp = prettyNoExt exp
 
@@ -422,9 +423,9 @@ caseExpr (Case _ exp alts) = do
 
 caseExpr _ = error "Not a case"
 
-recUpdateExpr :: Exp NodeInfo -> Printer ()
-recUpdateExpr (RecUpdate _ exp updates) = do
-  pretty exp
+recUpdateExpr :: Printer () -> [FieldUpdate NodeInfo] -> Printer ()
+recUpdateExpr expWriter updates = do
+  expWriter
   write " "
   attemptSingleLine single mult
 
@@ -440,7 +441,6 @@ recUpdateExpr (RecUpdate _ exp updates) = do
         inter (newline >> write ", ") $ map pretty updates
         newline
         write "}"
-recUpdateExpr _ = error "Not a record update"
 
 rhss :: Extend Rhs
 rhss _ (UnGuardedRhs _ exp) = do
