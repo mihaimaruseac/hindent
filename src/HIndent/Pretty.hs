@@ -999,7 +999,7 @@ instance Pretty GuardedRhs where
                                   do space
                                      pretty p)
                                stmts))
-           swing (write " = ")
+           swing (write " " >> rhsSeparator >> write " ")
                  (pretty e)
 
 instance Pretty InstDecl where

@@ -384,8 +384,8 @@ caseExpr (Case _ exp alts) = do
     if allSingle
     then do
       maxPatLen <- maximum <$> mapM (patternLen . altPattern) alts
-      lined $ map (prettyCase maxPatLen) alts
-    else lined $ map pretty alts
+      lined $ map (prettyCase $ Just maxPatLen) alts
+    else lined $ map (prettyCase Nothing) alts
   where
     isSingle :: Alt NodeInfo -> Printer Bool
     isSingle alt' = fst <$> sandbox (do
@@ -404,15 +404,20 @@ caseExpr (Case _ exp alts) = do
       col' <- getColumn
       return $ col' - col)
 
-    prettyCase :: Int -> Alt NodeInfo -> Printer ()
-    prettyCase patlen (Alt _ p galts mbinds) = do
+    prettyCase :: Maybe Int -> Alt NodeInfo -> Printer ()
+    prettyCase mpatlen (Alt _ p galts mbinds) = do
       -- Padded pattern
-      col <- getColumn
-      pretty p
-      col' <- getColumn
-      replicateM_ (patlen - fromIntegral (col' - col)) space
+      case mpatlen of
+        Just patlen -> do
+          col <- getColumn
+          pretty p
+          col' <- getColumn
+          replicateM_ (patlen - fromIntegral (col' - col)) space
+        Nothing -> pretty p
 
-      pretty galts
+      case galts of
+        UnGuardedRhs{} -> pretty galts
+        GuardedRhss{} -> indented indentSpaces $ pretty galts
 
       --  Optional where clause!
       forM_ mbinds $ \binds -> do
@@ -456,7 +461,15 @@ rhss _ (UnGuardedRhs _ exp) = do
   where
     onNextLine Let{} = True
     onNextLine _ = False
-rhss _ rhs = prettyNoExt rhs
+rhss _ (GuardedRhss _ rs) =
+  lined $ flip map rs $ \a@(GuardedRhs _ stmts exp) -> do
+    printComments Before a
+    write "| "
+    inter (write ", ") $ map pretty stmts
+    write " "
+    rhsSeparator
+    write " "
+    pretty exp
 
 guardedRhs :: Extend GuardedRhs
 guardedRhs _ (GuardedRhs _ stmts exp) = do
@@ -508,7 +521,12 @@ decls _ decl = prettyNoExt decl
 funBody :: [Pat NodeInfo] -> Rhs NodeInfo -> Maybe (Binds NodeInfo) -> Printer ()
 funBody pat rhs mbinds = do
   spaced $ map pretty pat
-  withCaseContext False $ pretty rhs
+
+  withCaseContext False $ case rhs of
+    UnGuardedRhs{} -> pretty rhs
+    GuardedRhss{}  -> do
+      newline 
+      indented indentSpaces $ pretty rhs
 
   -- Process the binding group, if it exists.
   forM_ mbinds $ \binds -> do
@@ -571,7 +589,9 @@ condecls _ other = prettyNoExt other
 alt :: Extend Alt
 alt _ (Alt _ p rhs mbinds) = do
   pretty p
-  pretty rhs
+  case rhs of
+    UnGuardedRhs{} -> pretty rhs
+    GuardedRhss{}  -> indented indentSpaces $ pretty rhs
   forM_ mbinds $ \binds -> do
     newline
     indented indentSpaces $
