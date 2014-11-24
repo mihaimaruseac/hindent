@@ -65,7 +65,7 @@ prettyPrint style m =
   psOutput (execState (runPrinter m)
                       (case style of
                          Style _name _author _desc st extenders config ->
-                           PrintState 0 mempty False 0 1 st extenders config False))
+                           PrintState 0 mempty False 0 1 st extenders config False False))
 
 -- | Parse mode, includes all extensions, doesn't assume any fixities.
 parseMode :: ParseMode

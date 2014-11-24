@@ -44,11 +44,12 @@ data PrintState =
                        ,psExtenders :: ![Extender s] -- ^ Extenders.
                        ,psConfig :: !Config -- ^ Config which styles may or may not pay attention to.
                        ,psEolComment :: !Bool -- ^ An end of line comment has just been outputted.
+                       ,psInsideCase :: !Bool -- ^ Whether we're in a case statement, used for Rhs printing.
                        }
 
 instance Eq PrintState where
-  PrintState ilevel out newline col line _ _ _ eolc == PrintState ilevel' out' newline' col' line' _ _ _ eolc' =
-    (ilevel,out,newline,col,line,eolc) == (ilevel',out',newline',col',line',eolc')
+  PrintState ilevel out newline col line _ _ _ eolc inc == PrintState ilevel' out' newline' col' line' _ _ _ eolc' inc' =
+    (ilevel,out,newline,col,line,eolc, inc) == (ilevel',out',newline',col',line',eolc', inc')
 
 -- | A printer extender. Takes as argument the user state that the
 -- printer was run with, and the current node to print. Use

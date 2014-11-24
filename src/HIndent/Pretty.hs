@@ -24,6 +24,8 @@ module HIndent.Pretty
   , maybeCtx
   , printComment
   , printComments
+  , withCaseContext
+  , rhsSeparator
   -- * Interspersing
   , inter
   , spaced
@@ -223,6 +225,25 @@ newline :: MonadState PrintState m => m ()
 newline =
   do write "\n"
      modify (\s -> s {psNewline = True})
+
+-- | Set the context to a case context, where RHS is printed with -> .
+withCaseContext :: MonadState PrintState m
+                => Bool -> m a -> m a
+withCaseContext bool pr = 
+  do original <- gets psInsideCase
+     modify (\s -> s {psInsideCase = bool})
+     result <- pr
+     modify (\s -> s {psInsideCase = original})
+     return result
+
+-- | Get the current RHS separator, either = or -> .
+rhsSeparator :: MonadState PrintState m
+             => m ()
+rhsSeparator = 
+  do inCase <- gets psInsideCase
+     if inCase
+        then write "->"
+        else write "="
 
 -- | Make the latter's indentation depend upon the end column of the
 -- former.
@@ -570,7 +591,7 @@ exp (Case _ e alts) =
                 write " of")
      newline
      indentSpaces <- getIndentSpaces
-     indented indentSpaces (lined (map pretty alts))
+     indented indentSpaces (lined (map (withCaseContext True . pretty) alts))
 exp (Do _ stmts) =
   depend (write "do ")
          (lined (map pretty stmts))
@@ -736,7 +757,7 @@ instance Pretty Decl where
 decl :: MonadState PrintState m => Decl NodeInfo -> m ()
 decl (PatBind _ pat rhs mbinds) = 
   do pretty pat
-     pretty rhs
+     withCaseContext False (pretty rhs)
      indentSpaces <- getIndentSpaces
      case mbinds of
        Nothing -> return ()
@@ -999,7 +1020,7 @@ instance Pretty Match where
         do depend (do pretty name
                       space)
                   (spaced (map pretty pats))
-           pretty rhs
+           withCaseContext False (pretty rhs)
            case mbinds of
              Nothing -> return ()
              Just binds ->
@@ -1017,7 +1038,7 @@ instance Pretty Match where
                         Symbol _ s -> string s)
                   (do space
                       spaced (map pretty pats))
-           pretty rhs
+           withCaseContext False (pretty rhs)
            case mbinds of
              Nothing -> return ()
              Just binds ->
@@ -1051,8 +1072,8 @@ instance Pretty QualConDecl where
 instance Pretty Rhs where
   prettyInternal x =
     case x of
-      UnGuardedRhs _ e ->
-        (swing (write " = ")
+      UnGuardedRhs _ e -> do
+        (swing (write " " >> rhsSeparator >> write " ")
                (pretty e))
       GuardedRhss _ gas ->
         do newline
@@ -1079,8 +1100,7 @@ instance Pretty InstRule where
          Nothing -> return ()
          Just xs -> spaced (map pretty xs)
        depend (maybeCtx mctx)
-              (do space
-                  pretty ihead)
+              (pretty ihead)
 
 
 instance Pretty InstHead where

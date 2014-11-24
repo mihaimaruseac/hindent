@@ -380,7 +380,7 @@ caseExpr (Case _ exp alts) = do
     write " of"
   newline
 
-  indented indentSpaces $
+  withCaseContext True $ indented indentSpaces $
     if allSingle
     then do
       maxPatLen <- maximum <$> mapM (patternLen . altPattern) alts
@@ -443,7 +443,8 @@ recUpdateExpr expWriter updates = do
 
 rhss :: Extend Rhs
 rhss _ (UnGuardedRhs _ exp) = do
-  write " ="
+  write " " 
+  rhsSeparator
   if onNextLine exp
     then indented indentSpaces $ do
       newline
@@ -460,7 +461,9 @@ rhss _ rhs = prettyNoExt rhs
 guardedRhs :: Extend GuardedRhs
 guardedRhs _ (GuardedRhs _ stmts exp) = do
   indented 1 $ prefixedLined "," (map (\p -> space >> pretty p) stmts)
-  write " = "
+  write " " 
+  rhsSeparator
+  write " "
   pretty exp
 
 decls :: Extend Decl
@@ -505,7 +508,7 @@ decls _ decl = prettyNoExt decl
 funBody :: [Pat NodeInfo] -> Rhs NodeInfo -> Maybe (Binds NodeInfo) -> Printer ()
 funBody pat rhs mbinds = do
   spaced $ map pretty pat
-  pretty rhs
+  withCaseContext False $ pretty rhs
 
   -- Process the binding group, if it exists.
   forM_ mbinds $ \binds -> do
