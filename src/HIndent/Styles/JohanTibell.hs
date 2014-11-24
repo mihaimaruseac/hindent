@@ -47,9 +47,7 @@ johanTibell =
            ,Extender exp
            ,Extender guardedRhs
            ,Extender rhs
-           ,Extender ifAlt
-           ,Extender alts
-           ,Extender guardedAlt]
+           ]
         ,styleDefConfig =
            defaultConfig {configMaxColumns = 80
                          ,configIndentSpaces = 4}}
@@ -73,48 +71,6 @@ rhs _ x =
                                     pretty p)
                               gas))
     _ -> prettyNoExt x
-
--- | Case alts.
-alts :: t -> GuardedAlts NodeInfo -> Printer ()
--- | Handle do specially.
-alts _ x =
-  case x of
-    UnGuardedAlt _ (Do _ dos) ->
-      swing (write " -> do")
-            (lined (map pretty dos))
-    GuardedAlts _ gas ->
-      do newline
-         indentSpaces <- getIndentSpaces
-         indented indentSpaces
-                  (lined (map (\p ->
-                                 do write "|"
-                                    pretty p)
-                              gas))
-    _ -> prettyNoExt x
-
--- | Handle do specially.
-guardedAlt :: t -> GuardedAlt NodeInfo -> Printer ()
-guardedAlt _ x =
-  case x of
-    GuardedAlt _ stmts (Do _ dos) ->
-      do indented 1
-                  (do (prefixedLined
-                         ","
-                         (map (\p ->
-                                 do space
-                                    pretty p)
-                              stmts)))
-         swing (write " -> do ")
-               (lined (map pretty dos))
-    _ -> prettyNoExt x
-
--- | Handle do specially.
-ifAlt :: t -> IfAlt NodeInfo -> Printer ()
-ifAlt _ (IfAlt _ cond (Do _ dos)) =
-  do pretty cond
-     swing (write " -> do")
-           (lined (map pretty dos))
-ifAlt _ e = prettyNoExt e
 
 -- | Implement dangling right-hand-sides.
 guardedRhs :: t -> GuardedRhs NodeInfo -> Printer ()
@@ -225,11 +181,7 @@ exp _ e = prettyNoExt e
 
 -- | Specially format records. Indent where clauses only 2 spaces.
 decl :: t -> Decl NodeInfo -> Printer ()
-decl _ (PatBind _ pat mty rhs' mbinds) =
-  case mty of
-    Just e ->
-      error ("Unimplemented (Maybe Type) in PatBind." ++ show e)
-    Nothing ->
+decl _ (PatBind _ pat rhs' mbinds) =
       do pretty pat
          pretty rhs'
          case mbinds of

@@ -27,7 +27,7 @@ library
                      HIndent.Styles.Gibiansky
   build-depends:     base >= 4 && <5
                    , data-default
-                   , haskell-src-exts == 1.15.*
+                   , haskell-src-exts == 1.16.*
                    , monad-loops
                    , mtl
                    , text
@@ -56,7 +56,7 @@ test-suite hspec
   build-depends:     base >= 4 && <5
                    , hindent
                    , data-default
-                   , haskell-src-exts == 1.15.*
+                   , haskell-src-exts == 1.16.*
                    , monad-loops
                    , mtl
                    , text

@@ -43,8 +43,6 @@ chrisDone =
            ,Extender fieldupdate
            ,Extender rhs
            ,Extender guardedrhs
-           ,Extender guardedalt
-           ,Extender unguardedalt
            ,Extender stmt
            ,Extender decl]
         ,styleDefConfig =
@@ -141,32 +139,6 @@ guardedrhs _ (GuardedRhs _ stmts e) =
                  e
                  (indented 1 .
                   pretty))
-
--- | I want guarded alts be dependent or newline.
-guardedalt :: s -> GuardedAlt NodeInfo -> Printer ()
-guardedalt _ (GuardedAlt _ stmts e) =
-  indented 1
-           (do (prefixedLined
-                  ","
-                  (map (\p ->
-                          do space
-                             pretty p)
-                       stmts))
-               dependOrNewline
-                 (write " -> ")
-                 e
-                 (indented 1 .
-                  pretty))
-
--- | I want unguarded alts be dependent or newline.
-unguardedalt :: s -> GuardedAlts NodeInfo -> Printer ()
-unguardedalt _ (UnGuardedAlt _ e) =
-  dependOrNewline
-    (write " -> ")
-    e
-    (indented 2 .
-     pretty)
-unguardedalt _ e = prettyNoExt e
 
 -- Do statements need to handle infix expression indentation specially because
 -- do x *

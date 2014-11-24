@@ -34,7 +34,6 @@ gibiansky =
                            , Extender guardedRhs
                            , Extender decls
                            , Extender condecls
-                           , Extender guardedAlts
                            , Extender alt
                            , Extender moduleHead
                            , Extender exportList
@@ -487,7 +486,7 @@ decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
     newline
     indented indentSpaces $ pretty deriv
 
-decls _ (PatBind _ pat Nothing rhs mbinds) = funBody [pat] rhs mbinds
+decls _ (PatBind _ pat rhs mbinds) = funBody [pat] rhs mbinds
 decls _ (FunBind _ matches) =
   lined $  flip map matches $ \match -> do
     (name, pat, rhs, mbinds) <-
@@ -523,7 +522,7 @@ writeWhereBinds ds@(BDecls _ binds@(first:rest)) = do
   printComments Before ds
   pretty first
   forM_ (zip binds rest) $ \(prev, cur) -> do
-    replicateM_ (max 1 $ lineDeltaDecl cur prev) newline
+    replicateM_ (max 1 $ lineDelta cur prev) newline
     pretty cur
 writeWhereBinds binds = prettyNoExt binds
 
@@ -566,24 +565,10 @@ condecls _ (RecDecl _ name fields) =
     write "}"
 condecls _ other = prettyNoExt other
 
-guardedAlts :: Extend GuardedAlts
-guardedAlts _ (UnGuardedAlt _ exp) = do
-  write " -> "
-  pretty exp
-guardedAlts _ (GuardedAlts _ alts) =
-  lined $ flip map alts $ \a@(GuardedAlt _ stmts exp) -> do
-    printComments Before a
-    write "| "
-    inter (write ", ") $ map pretty stmts
-    write " -> "
-    pretty exp
-
 alt :: Extend Alt
-alt _ (Alt _ p galts mbinds) = do
+alt _ (Alt _ p rhs mbinds) = do
   pretty p
-  case galts of
-    UnGuardedAlt{} -> pretty galts
-    GuardedAlts{}  -> indented indentSpaces $ pretty galts
+  pretty rhs
   forM_ mbinds $ \binds -> do
     newline
     indented indentSpaces $
@@ -621,13 +606,6 @@ exportList _ (ExportSpecList _ exports) = do
       write ")"
   where
     indentSpaces' = 2 * indentSpaces
-
--- This is a hack.
--- Case statements don't properly report their bounds; see haskell-src-exts #186.
-lineDeltaDecl :: Decl NodeInfo -> Decl NodeInfo -> Int
-lineDeltaDecl cur (PatBind _ _ _ (UnGuardedRhs _ (Case _ _ alts)) _) =
-  lineDelta cur (last alts)
-lineDeltaDecl cur prev = lineDelta cur prev
 
 lineDelta :: (Annotated ast1, Annotated ast2) => ast1 NodeInfo -> ast2 NodeInfo -> Int
 lineDelta cur prev = emptyLines

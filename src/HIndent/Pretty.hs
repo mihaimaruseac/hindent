@@ -355,6 +355,14 @@ maybeCtx =
            pretty p >>
            write " => ")
 
+-- | Maybe render an overlap definition.
+maybeOverlap :: MonadState PrintState m => Maybe (Overlap NodeInfo) -> m ()
+maybeOverlap =
+  maybe (return ())
+        (\p ->
+           pretty p >>
+           space)
+
 -- | Swing the second printer below and indented with respect to the first.
 swing :: MonadState PrintState m => m () -> m b -> m b
 swing a b =
@@ -373,16 +381,12 @@ instance Pretty Context where
       CxSingle _ a -> pretty a
       CxTuple _ as ->
         parens (commas (map pretty as))
-      CxParen _ c -> parens (pretty c)
       CxEmpty _ -> parens (return ())
 
 instance Pretty Pat where
   prettyInternal x =
     case x of
-      PLit _ l -> pretty l
-      PNeg _ l ->
-        depend (write "-")
-               (pretty l)
+      PLit _ sign l -> pretty sign >> pretty l
       PNPlusK _ n k ->
         depend (do pretty n
                    write "+")
@@ -461,22 +465,22 @@ prettyInfixOp x =
     Special _ s -> pretty s
 
 instance Pretty Type where
-  prettyInternal x =
+  prettyInternal x = 
     case x of
-      TyForall _ mbinds ctx ty ->
+      TyForall _ mbinds ctx ty -> 
         depend (case mbinds of
                   Nothing -> return ()
-                  Just ts ->
+                  Just ts -> 
                     do write "forall "
                        spaced (map pretty ts)
                        write ". ")
                (depend (maybeCtx ctx)
                        (pretty ty))
-      TyFun _ a b ->
+      TyFun _ a b -> 
         depend (do pretty a
                    write " -> ")
                (pretty b)
-      TyTuple _ boxed tys ->
+      TyTuple _ boxed tys -> 
         depend (write (case boxed of
                          Unboxed -> "(#"
                          Boxed -> "("))
@@ -485,22 +489,35 @@ instance Pretty Type where
                             Unboxed -> "#)"
                             Boxed -> ")"))
       TyList _ t -> brackets (pretty t)
+      TyParArray _ t -> 
+        brackets (do write ":"
+                     pretty t
+                     write ":")
       TyApp _ f a -> spaced [pretty f,pretty a]
       TyVar _ n -> pretty n
       TyCon _ p -> pretty p
       TyParen _ e -> parens (pretty e)
-      TyInfix _ a op b ->
+      TyInfix _ a op b -> 
         depend (do pretty a
                    space)
                (depend (do pretty op
                            space)
                        (pretty b))
-      TyKind _ ty k ->
+      TyKind _ ty k -> 
         parens (do pretty ty
                    write " :: "
                    pretty k)
-      TyPromoted{} ->
+      TyBang _ bangty right -> 
+        do pretty bangty
+           pretty right
+      TyEquals _ left right -> 
+        do pretty left
+           write " == "
+           pretty right
+      TyPromoted{} -> 
         error "FIXME: No implementation for TyPromoted."
+      TySplice{} -> 
+        error "FIXME: No implementation for TySplice."
 
 instance Pretty Exp where
   prettyInternal = exp
@@ -676,14 +693,12 @@ exp x@LeftArrApp{} = pretty' x
 exp x@RightArrApp{} = pretty' x
 exp x@LeftArrHighApp{} = pretty' x
 exp x@RightArrHighApp{} = pretty' x
+exp x@ParArray{} = pretty' x
+exp x@ParArrayFromTo{} = pretty' x
+exp x@ParArrayFromThenTo{} = pretty' x
+exp x@ParArrayComp{} = pretty' x
 exp ParComp{} =
   error "FIXME: No implementation for ParComp."
-
-instance Pretty IfAlt where
-  prettyInternal (IfAlt _ cond body) =
-    do pretty cond
-       swing (write " -> ")
-             (pretty body)
 
 instance Pretty Stmt where
   prettyInternal x =
@@ -719,25 +734,21 @@ instance Pretty Decl where
 
 -- | Render a declaration.
 decl :: MonadState PrintState m => Decl NodeInfo -> m ()
-decl (PatBind _ pat mty rhs mbinds) =
-  case mty of
-    Just e ->
-      error ("Unimplemented (Maybe Type) in PatBind." ++ show e)
-    Nothing ->
-      do pretty pat
-         pretty rhs
-         indentSpaces <- getIndentSpaces
-         case mbinds of
-           Nothing -> return ()
-           Just binds ->
-             do newline
-                indented indentSpaces
-                         (depend (write "where ")
-                                 (pretty binds))
-decl (InstDecl _ ctx dhead decls) =
+decl (PatBind _ pat rhs mbinds) = 
+  do pretty pat
+     pretty rhs
+     indentSpaces <- getIndentSpaces
+     case mbinds of
+       Nothing -> return ()
+       Just binds -> 
+         do newline
+            indented indentSpaces
+                     (depend (write "where ")
+                             (pretty binds))
+decl (InstDecl _ moverlap dhead decls) =
   do indentSpaces <- getIndentSpaces
      depend (write "instance ")
-            (depend (maybeCtx ctx)
+            (depend (maybeOverlap moverlap)
                     (depend (pretty dhead)
                             (unless (null (fromMaybe [] decls))
                                     (write " where"))))
@@ -832,7 +843,10 @@ decl SpecInlineSig{} =
   error "FIXME: No implementation for SpecInlineSig."
 decl InstSig{} =
   error "FIXME: No implementation for InstSig."
+decl ClosedTypeFamDecl{} =
+  error "FIXME: No implementation for ClosedTypeFamDecl."
 decl x@WarnPragmaDecl{} = pretty' x
+decl x@MinimalPragma{} = pretty' x
 decl x@AnnPragma{} = pretty' x
 decl x@InfixDecl{} = pretty' x
 decl x@DefaultDecl{} = pretty' x
@@ -859,30 +873,27 @@ instance Pretty Alt where
                                    (pretty binds))
 
 instance Pretty Asst where
-  prettyInternal x =
+  prettyInternal x = 
     case x of
-      ClassA _ name types ->
+      ClassA _ name types -> 
         spaced (pretty name :
                 map pretty types)
-      InfixA{} ->
+      InfixA{} -> 
         error "FIXME: No implementation for InfixA."
-      IParam{} ->
+      IParam{} -> 
         error "FIXME: No implementation for IParam."
-      EqualP _ a b ->
+      EqualP _ a b -> 
         do pretty a
            write " ~ "
            pretty b
+      ParenA _ asst -> parens $ pretty asst
+      VarA _ var -> pretty var
 
 instance Pretty BangType where
   prettyInternal x =
     case x of
-      BangedTy _ ty ->
-        depend (write "!")
-               (pretty ty)
-      UnBangedTy _ ty -> pretty ty
-      UnpackedTy _ ty ->
-        depend (write "{-# UNPACK #-} !")
-               (pretty ty)
+      BangedTy _ -> write "!"
+      UnpackedTy _ -> write "{-# UNPACK #-} !"
 
 instance Pretty Binds where
   prettyInternal x =
@@ -917,6 +928,11 @@ instance Pretty ClassDecl where
            pretty this
            write " = "
            pretty that
+      ClsDefSig _ name ty ->
+        do write "default "
+           pretty name
+           write " :: "
+           pretty ty
 
 instance Pretty ConDecl where
   prettyInternal x =
@@ -950,34 +966,6 @@ instance Pretty FieldUpdate where
               (pretty e)
       FieldPun _ n -> pretty n
       FieldWildcard _ -> write ".."
-
-instance Pretty GuardedAlts where
-  prettyInternal x =
-    case x of
-      UnGuardedAlt _ e ->
-        swing (write " -> ")
-              (pretty e)
-      GuardedAlts _ gas ->
-        do newline
-           indented 2
-                    (lined (map (\p ->
-                                   do write "|"
-                                      pretty p)
-                                gas))
-
-instance Pretty GuardedAlt where
-  prettyInternal x =
-    case x of
-      GuardedAlt _ stmts e ->
-        do indented 1
-                    (do (prefixedLined
-                           ","
-                           (map (\p ->
-                                   do space
-                                      pretty p)
-                                stmts)))
-           swing (write " -> ")
-                 (pretty e)
 
 instance Pretty GuardedRhs where
   prettyInternal x =
@@ -1084,23 +1072,49 @@ instance Pretty Splice where
         depend (write "$")
                (parens (pretty e))
 
+instance Pretty InstRule where
+  prettyInternal (IParen _ rule) = parens $ pretty rule
+  prettyInternal (IRule _ mvarbinds mctx ihead) = 
+    do case mvarbinds of
+         Nothing -> return ()
+         Just xs -> spaced (map pretty xs)
+       depend (maybeCtx mctx)
+              (do space
+                  pretty ihead)
+
+
 instance Pretty InstHead where
-  prettyInternal x =
+  prettyInternal x = 
     case x of
-      IHead _ name tys ->
-        spaced (pretty name :
-                map pretty tys)
-      IHInfix l a o b -> pretty (IHead l o [a,b])
+      -- Base cases
+      IHCon _ name -> pretty name
+      IHInfix _ typ name -> 
+        depend (pretty typ)
+               (do space
+                   prettyInfixOp name)
+      -- Recursive application
+      IHApp _ ihead typ -> 
+        depend (pretty ihead)
+               (do space
+                   pretty typ)
+      -- Wrapping in parens
       IHParen _ h -> parens (pretty h)
 
 instance Pretty DeclHead where
-  prettyInternal x =
+  prettyInternal x = 
     case x of
-      DHead _ name tys ->
-        spaced (pretty name :
-                map pretty tys)
-      DHInfix l a o b -> pretty (DHead l o [a,b])
+      DHead _ name -> pretty name
       DHParen _ h -> parens (pretty h)
+      DHInfix _ var name -> 
+        do pretty var
+           space
+           write "`"
+           pretty name
+           write "`"
+      DHApp _ dhead var -> 
+        depend (pretty dhead)
+               (do space
+                   pretty var)
 
 instance Pretty SpecialCon where
   prettyInternal s =
@@ -1118,6 +1132,15 @@ instance Pretty SpecialCon where
                 "#)")
       Cons _ -> write ":"
       UnboxedSingleCon _ -> write "(##)"
+
+instance Pretty Overlap where
+  prettyInternal (Overlap _) = write "{-# OVERLAP #-}"
+  prettyInternal (NoOverlap _) = write "{-# NO_OVERLAP #-}"
+  prettyInternal (Incoherent _) = write "{-# INCOHERENT #-}"
+
+instance Pretty Sign where
+  prettyInternal (Signless _) = return ()
+  prettyInternal (Negative _) = write "-"
 
 --------------------------------------------------------------------------------
 -- * Unimplemented or incomplete printers
