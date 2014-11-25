@@ -1,0 +1,50 @@
+a = 
+  [1
+  ,2
+  ,3]
+
+a = 
+  [1
+  ,2
+  ,3]
+
+a = 
+  [1
+  ,2
+  ,3]
+
+a = 
+  [Just
+     theRightAnswerWithAVeryLongLine
+  ,Just
+     theRightAnswerWithAVeryLongLine
+  ,Just
+     theRightAnswerWithAVeryLongLine
+  ,Nothing]
+
+a = 
+  [Just
+     theRightAnswerWithAVeryLongLine
+  ,Just
+     theRightAnswerWithAVeryLongLine
+  ,Just
+     theRightAnswerWithAVeryLongLine
+  ,Nothing]
+
+a = 
+  [Just
+     theRightAnswerWithAVeryLongLine
+  ,Just
+     theRightAnswerWithAVeryLongLine
+  ,Just
+     theRightAnswerWithAVeryLongLine
+  ,Nothing]
+
+a = 
+  [Just
+     theRightAnswerWithAVeryLongLine
+  ,Just
+     theRightAnswerWithAVeryLongLine
+  ,Just
+     theRightAnswerWithAVeryLongLine
+  ,Nothing]

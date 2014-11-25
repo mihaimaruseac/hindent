@@ -40,6 +40,15 @@ executable hindent
                    , hindent
                    , text
 
+executable hindent-generate-tests
+  hs-source-dirs:    src/main
+  ghc-options:       -Wall -O2
+  main-is:           TestGenerate.hs
+  build-depends:     base >= 4 && < 5
+                   , hindent
+                   , text
+                   , directory
+
 test-suite hspec
   type: exitcode-stdio-1.0
   hs-source-dirs: test

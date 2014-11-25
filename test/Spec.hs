@@ -13,7 +13,7 @@ import qualified Data.Text.Lazy.Builder as L
 import qualified HIndent
 
 styles :: [FilePath]
-styles = ["gibiansky"]
+styles = ["fundamental", "gibiansky"]
 
 testDir, expectedDir :: String
 testDir = "tests"
