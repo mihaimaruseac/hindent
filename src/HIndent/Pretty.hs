@@ -229,7 +229,7 @@ newline =
 -- | Set the context to a case context, where RHS is printed with -> .
 withCaseContext :: MonadState PrintState m
                 => Bool -> m a -> m a
-withCaseContext bool pr = 
+withCaseContext bool pr =
   do original <- gets psInsideCase
      modify (\s -> s {psInsideCase = bool})
      result <- pr
@@ -239,7 +239,7 @@ withCaseContext bool pr =
 -- | Get the current RHS separator, either = or -> .
 rhsSeparator :: MonadState PrintState m
              => m ()
-rhsSeparator = 
+rhsSeparator =
   do inCase <- gets psInsideCase
      if inCase
         then write "->"
@@ -486,22 +486,22 @@ prettyInfixOp x =
     Special _ s -> pretty s
 
 instance Pretty Type where
-  prettyInternal x = 
+  prettyInternal x =
     case x of
-      TyForall _ mbinds ctx ty -> 
+      TyForall _ mbinds ctx ty ->
         depend (case mbinds of
                   Nothing -> return ()
-                  Just ts -> 
+                  Just ts ->
                     do write "forall "
                        spaced (map pretty ts)
                        write ". ")
                (depend (maybeCtx ctx)
                        (pretty ty))
-      TyFun _ a b -> 
+      TyFun _ a b ->
         depend (do pretty a
                    write " -> ")
                (pretty b)
-      TyTuple _ boxed tys -> 
+      TyTuple _ boxed tys ->
         depend (write (case boxed of
                          Unboxed -> "(#"
                          Boxed -> "("))
@@ -510,7 +510,7 @@ instance Pretty Type where
                             Unboxed -> "#)"
                             Boxed -> ")"))
       TyList _ t -> brackets (pretty t)
-      TyParArray _ t -> 
+      TyParArray _ t ->
         brackets (do write ":"
                      pretty t
                      write ":")
@@ -518,26 +518,26 @@ instance Pretty Type where
       TyVar _ n -> pretty n
       TyCon _ p -> pretty p
       TyParen _ e -> parens (pretty e)
-      TyInfix _ a op b -> 
+      TyInfix _ a op b ->
         depend (do pretty a
                    space)
                (depend (do pretty op
                            space)
                        (pretty b))
-      TyKind _ ty k -> 
+      TyKind _ ty k ->
         parens (do pretty ty
                    write " :: "
                    pretty k)
-      TyBang _ bangty right -> 
+      TyBang _ bangty right ->
         do pretty bangty
            pretty right
-      TyEquals _ left right -> 
+      TyEquals _ left right ->
         do pretty left
            write " == "
            pretty right
-      TyPromoted{} -> 
+      TyPromoted{} ->
         error "FIXME: No implementation for TyPromoted."
-      TySplice{} -> 
+      TySplice{} ->
         error "FIXME: No implementation for TySplice."
 
 instance Pretty Exp where
@@ -755,13 +755,13 @@ instance Pretty Decl where
 
 -- | Render a declaration.
 decl :: MonadState PrintState m => Decl NodeInfo -> m ()
-decl (PatBind _ pat rhs mbinds) = 
+decl (PatBind _ pat rhs mbinds) =
   do pretty pat
      withCaseContext False (pretty rhs)
      indentSpaces <- getIndentSpaces
      case mbinds of
        Nothing -> return ()
-       Just binds -> 
+       Just binds ->
          do newline
             indented indentSpaces
                      (depend (write "where ")
@@ -894,16 +894,16 @@ instance Pretty Alt where
                                    (pretty binds))
 
 instance Pretty Asst where
-  prettyInternal x = 
+  prettyInternal x =
     case x of
-      ClassA _ name types -> 
+      ClassA _ name types ->
         spaced (pretty name :
                 map pretty types)
-      InfixA{} -> 
+      InfixA{} ->
         error "FIXME: No implementation for InfixA."
-      IParam{} -> 
+      IParam{} ->
         error "FIXME: No implementation for IParam."
-      EqualP _ a b -> 
+      EqualP _ a b ->
         do pretty a
            write " ~ "
            pretty b
@@ -1095,7 +1095,7 @@ instance Pretty Splice where
 
 instance Pretty InstRule where
   prettyInternal (IParen _ rule) = parens $ pretty rule
-  prettyInternal (IRule _ mvarbinds mctx ihead) = 
+  prettyInternal (IRule _ mvarbinds mctx ihead) =
     do case mvarbinds of
          Nothing -> return ()
          Just xs -> spaced (map pretty xs)
@@ -1104,16 +1104,16 @@ instance Pretty InstRule where
 
 
 instance Pretty InstHead where
-  prettyInternal x = 
+  prettyInternal x =
     case x of
       -- Base cases
       IHCon _ name -> pretty name
-      IHInfix _ typ name -> 
+      IHInfix _ typ name ->
         depend (pretty typ)
                (do space
                    prettyInfixOp name)
       -- Recursive application
-      IHApp _ ihead typ -> 
+      IHApp _ ihead typ ->
         depend (pretty ihead)
                (do space
                    pretty typ)
@@ -1121,17 +1121,17 @@ instance Pretty InstHead where
       IHParen _ h -> parens (pretty h)
 
 instance Pretty DeclHead where
-  prettyInternal x = 
+  prettyInternal x =
     case x of
       DHead _ name -> pretty name
       DHParen _ h -> parens (pretty h)
-      DHInfix _ var name -> 
+      DHInfix _ var name ->
         do pretty var
            space
            write "`"
            pretty name
            write "`"
-      DHApp _ dhead var -> 
+      DHApp _ dhead var ->
         depend (pretty dhead)
                (do space
                    pretty var)
