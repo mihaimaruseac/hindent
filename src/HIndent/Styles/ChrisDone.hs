@@ -146,7 +146,8 @@ guardedrhs _ (GuardedRhs _ stmts e) =
 -- is two invalid statements, not one valid infix op.
 stmt :: s -> Stmt NodeInfo -> Printer ()
 stmt _ (Qualifier _ e@(InfixApp _ a op b)) =
-  do col <- fmap (psColumn . snd) (sandbox (write ""))
+  do col <- fmap (psColumn . snd)
+                 (sandbox (write ""))
      infixApp e a op b (Just col)
 stmt _ e = prettyNoExt e
 
@@ -234,7 +235,9 @@ sandboxSingles :: Pretty ast
                => [ast NodeInfo] -> Printer (Bool,PrintState)
 sandboxSingles args =
   sandbox (allM (\(i,arg) ->
-                   do when (i /= (0::Int)) newline
+                   do when (i /=
+                            (0 :: Int))
+                           newline
                       line <- gets psLine
                       pretty arg
                       st <- get
@@ -276,10 +279,12 @@ isShort :: (Pretty ast)
         => ast NodeInfo -> Printer (Bool,PrintState)
 isShort p =
   do line <- gets psLine
-     orig <- fmap (psColumn . snd) (sandbox (write ""))
+     orig <- fmap (psColumn . snd)
+                  (sandbox (write ""))
      (_,st) <- sandbox (pretty p)
      return (psLine st == line &&
-             (psColumn st < orig + shortName),st)
+             (psColumn st < orig + shortName)
+            ,st)
 
 -- | Is the given expression "small"? I.e. does it fit on one line and
 -- under 'smallColumnLimit' columns.
@@ -293,12 +298,10 @@ isSmall p =
 -- | Is an expression flat?
 isFlat :: Exp NodeInfo -> Bool
 isFlat (Lambda _ _ e) = isFlat e
-isFlat (App _ a b) =
-  isName a && isName b
+isFlat (App _ a b) = isName a && isName b
   where isName (Var{}) = True
         isName _ = False
-isFlat (InfixApp _ a _ b) =
-  isFlat a && isFlat b
+isFlat (InfixApp _ a _ b) = isFlat a && isFlat b
 isFlat (NegApp _ a) = isFlat a
 isFlat VarQuote{} = True
 isFlat TypQuote{} = True
