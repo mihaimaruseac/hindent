@@ -29,7 +29,8 @@ smallColumnLimit :: Int64
 smallColumnLimit = 50
 
 -- | Empty state.
-data State = State
+data State =
+  State
 
 -- | The printer style.
 chrisDone :: Style
@@ -42,7 +43,7 @@ chrisDone =
            [Extender exp
            ,Extender fieldupdate
            ,Extender rhs
-           ,Extender guardedrhs
+           ,Extender contextualGuardedRhs
            ,Extender stmt
            ,Extender decl]
         ,styleDefConfig =
@@ -116,13 +117,39 @@ fieldupdate _ e =
 
 -- | Right-hand sides are dependent.
 rhs :: s -> Rhs NodeInfo -> Printer ()
-rhs _ (UnGuardedRhs _ e) =
+rhs s grhs =
+  do inCase <- gets psInsideCase
+     if inCase
+        then unguardedalt s grhs
+        else unguardedrhs s grhs
+
+-- | Right-hand sides are dependent.
+unguardedrhs :: s -> Rhs NodeInfo -> Printer ()
+unguardedrhs _ (UnGuardedRhs _ e) =
   do indentSpaces <- getIndentSpaces
      indented indentSpaces
               (dependOrNewline (write " = ")
                                e
                                pretty)
-rhs _ e = prettyNoExt e
+unguardedrhs _ e = prettyNoExt e
+
+-- | Unguarded case alts.
+unguardedalt :: t -> Rhs NodeInfo -> Printer ()
+unguardedalt _ (UnGuardedRhs _ e) =
+  dependOrNewline
+    (write " -> ")
+    e
+    (indented 2 .
+     pretty)
+unguardedalt _ e = prettyNoExt e
+
+-- | Decide whether to do alts or rhs based on the context.
+contextualGuardedRhs :: s -> GuardedRhs NodeInfo -> Printer ()
+contextualGuardedRhs s grhs =
+  do inCase <- gets psInsideCase
+     if inCase
+        then guardedalt s grhs
+        else guardedrhs s grhs
 
 -- | I want guarded RHS be dependent or newline.
 guardedrhs :: s -> GuardedRhs NodeInfo -> Printer ()
@@ -136,6 +163,22 @@ guardedrhs _ (GuardedRhs _ stmts e) =
                       stmts)
                dependOrNewline
                  (write " = ")
+                 e
+                 (indented 1 .
+                  pretty))
+
+-- | I want guarded alts be dependent or newline.
+guardedalt :: s -> GuardedRhs NodeInfo -> Printer ()
+guardedalt _ (GuardedRhs _ stmts e) =
+  indented 1
+           (do (prefixedLined
+                  ","
+                  (map (\p ->
+                          do space
+                             pretty p)
+                       stmts))
+               dependOrNewline
+                 (write " -> ")
                  e
                  (indented 1 .
                   pretty))
