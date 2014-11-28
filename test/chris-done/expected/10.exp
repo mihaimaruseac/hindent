@@ -1,18 +1,18 @@
 unless hello $
 case thing of
-  Left a = 3
-  Right b = 5
+  Left a -> 3
+  Right b -> 5
 
 when hello $
 case thing of
-  Left a = 3
-  Right b = 5
+  Left a -> 3
+  Right b -> 5
 
 a = 
   \line -> 
     case a of
-      Left a = a
-      Right b = b
+      Left a -> a
+      Right b -> b
 
 map (\x -> x)
     [1,2,3]

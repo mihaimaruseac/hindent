@@ -16,33 +16,33 @@ data A
 
 a = 
   case x of
-    Nothing = 2
-    Just something = 3
+    Nothing -> 2
+    Just something -> 3
 
 a = 
   case x of
-    Nothing = do putStrLn "hi"
-    Just something = 3
+    Nothing -> do putStrLn "hi"
+    Just something -> 3
 
 a = 
   case x of
-    Nothing = 
+    Nothing -> 
       case y of
-        1 = 2
-        3 = 4
-    Just something = 3
+        1 -> 2
+        3 -> 4
+    Just something -> 3
 
 a = 
   case x of
-    Nothing = 2
-    Just x = 10
-    Just something = 3
+    Nothing -> 2
+    Just x -> 10
+    Just something -> 3
 
 a = 
   case x of
-    Nothing = 2
-    Just x = 10
-    Just something = do putStrLn "hello"
+    Nothing -> 2
+    Just x -> 10
+    Just something -> do putStrLn "hello"
 
 data X =
   X {a :: Int    -- ^ hi

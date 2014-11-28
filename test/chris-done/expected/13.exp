@@ -21,7 +21,7 @@ f =
   case undefined of
     Just p
     -- If it's the potato.
-      | zot = undefined
+      | zot -> undefined
       |
       -- The geriatric concumbine.
-        otherwise = hael
+        otherwise -> hael
