@@ -47,6 +47,7 @@ johanTibell =
            ,Extender exp
            ,Extender guardedRhs
            ,Extender rhs
+           ,Extender fieldupdate
            ]
         ,styleDefConfig =
            defaultConfig {configMaxColumns = 80
@@ -289,6 +290,15 @@ isFlat Con{} = return True
 isFlat (LeftSection _ e _) = isFlat e
 isFlat (RightSection _ _ e) = isFlat e
 isFlat _ = return False
+
+-- | rhs on field update on the same line as lhs.
+fieldupdate :: t -> FieldUpdate NodeInfo -> Printer ()
+fieldupdate _ e =
+  case e of
+    FieldUpdate _ n e' -> do pretty n
+                             write " = "
+                             pretty e'
+    _ -> prettyNoExt e
 
 --------------------------------------------------------------------------------
 -- Helpers
