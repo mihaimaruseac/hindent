@@ -196,6 +196,8 @@ exp _ (List _ es) =
   where p =
           brackets (inter (write ", ")
                           (map pretty es))
+exp _ (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) updates
+exp _ (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
 exp _ e = prettyNoExt e
 
 -- | Specially format records. Indent where clauses only 2 spaces.
@@ -253,6 +255,34 @@ conDecl _ (RecDecl _ name fields) =
                                    (map (depend space . pretty) fields))
              write "}")
 conDecl _ e = prettyNoExt e
+
+-- | Record decls are formatted like: Foo
+-- { bar :: X
+-- }
+recDecl :: ConDecl NodeInfo -> Printer ()
+recDecl (RecDecl _ name fields) =
+  do pretty name
+     indentSpaces <- getIndentSpaces
+     newline
+     column indentSpaces
+            (do depend (write "{")
+                       (prefixedLined ","
+                                      (map (depend space . pretty) fields))
+                newline
+                write "} ")
+recDecl r = prettyNoExt r
+
+recUpdateExpr :: Printer () -> [FieldUpdate NodeInfo] -> Printer ()
+recUpdateExpr expWriter updates = do
+  expWriter
+  newline
+  indentSpaces <- getIndentSpaces
+  write "{ "
+  -- -2 because the "{ " moved us 2 chars to the right.
+  indented (indentSpaces -2) $ do
+    prefixedLined ", " $ map pretty updates
+    newline
+  write "}"
 
 --------------------------------------------------------------------------------
 -- Predicates
@@ -352,19 +382,3 @@ infixApp e a op b indent =
                     do indentSpaces <- getIndentSpaces
                        column (col + indentSpaces)
                               (pretty b)
-
--- | Record decls are formatted like: Foo
--- { bar :: X
--- }
-recDecl :: ConDecl NodeInfo -> Printer ()
-recDecl (RecDecl _ name fields) =
-  do pretty name
-     indentSpaces <- getIndentSpaces
-     newline
-     column indentSpaces
-            (do depend (write "{")
-                       (prefixedLined ","
-                                      (map (depend space . pretty) fields))
-                newline
-                write "} ")
-recDecl r = prettyNoExt r
