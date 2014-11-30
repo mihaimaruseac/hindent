@@ -1,0 +1,6 @@
+sayHello :: IO ()
+sayHello = do
+    name <- getLine
+    putStrLn $ greeting name
+    where
+        greeting name = "Hello, " ++ name ++ "!"

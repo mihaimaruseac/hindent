@@ -208,7 +208,7 @@ decl _ (PatBind _ pat rhs' mbinds) =
            Just binds ->
              do newline
                 indented 2
-                         (do write "where "
+                         (do write "where"
                              newline
                              indented 2 (pretty binds))
 -- | Handle records specially for a prettier display (see guide).
