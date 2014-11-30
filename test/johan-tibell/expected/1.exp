@@ -1,4 +1,3 @@
 getGitProvider :: EventProvider GitRecord ()
-getGitProvider = 
-    EventProvider {getModuleName = "Git"
-                  ,getEvents = getRepoCommits}
+getGitProvider = EventProvider {getModuleName = "Git"
+                               ,getEvents = getRepoCommits}

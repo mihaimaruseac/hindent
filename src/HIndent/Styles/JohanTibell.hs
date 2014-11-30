@@ -74,7 +74,7 @@ rhs s x =
     _ -> do inCase <- gets psInsideCase
             if inCase
                then unguardedalt s x
-               else prettyNoExt x
+               else unguardedrhs s x
 
 -- | Implement dangling right-hand-sides.
 guardedRhs :: t -> GuardedRhs NodeInfo -> Printer ()
@@ -93,9 +93,18 @@ guardedRhs _ e = prettyNoExt e
 
 -- | Unguarded case alts.
 unguardedalt :: t -> Rhs NodeInfo -> Printer ()
-unguardedalt _ (UnGuardedRhs _ e) = do write " -> "
-                                       indented 4 (pretty e)
+unguardedalt _ (UnGuardedRhs _ e) =
+  do indentSpaces <- getIndentSpaces
+     write " -> "
+     indented indentSpaces (pretty e)
 unguardedalt _ e = prettyNoExt e
+
+unguardedrhs :: s -> Rhs NodeInfo -> Printer ()
+unguardedrhs _ (UnGuardedRhs _ e) =
+  do indentSpaces <- getIndentSpaces
+     write " = "
+     indented indentSpaces (pretty e)
+unguardedrhs _ e = prettyNoExt e
 
 -- | Expression customizations.
 exp :: t -> Exp NodeInfo -> Printer ()
