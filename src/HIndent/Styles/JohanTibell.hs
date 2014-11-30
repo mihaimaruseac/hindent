@@ -58,7 +58,7 @@ johanTibell =
 
 -- | Handle do specially and also space out guards more.
 rhs :: t -> Rhs NodeInfo -> Printer ()
-rhs _ x =
+rhs s x =
   case x of
     UnGuardedRhs _ (Do _ dos) ->
       swing (write " = do")
@@ -71,7 +71,10 @@ rhs _ x =
                                  do write "|"
                                     pretty p)
                               gas))
-    _ -> prettyNoExt x
+    _ -> do inCase <- gets psInsideCase
+            if inCase
+               then unguardedalt s x
+               else prettyNoExt x
 
 -- | Implement dangling right-hand-sides.
 guardedRhs :: t -> GuardedRhs NodeInfo -> Printer ()
@@ -87,6 +90,12 @@ guardedRhs _ (GuardedRhs _ stmts (Do _ dos)) =
      swing (write " = do")
            (lined (map pretty dos))
 guardedRhs _ e = prettyNoExt e
+
+-- | Unguarded case alts.
+unguardedalt :: t -> Rhs NodeInfo -> Printer ()
+unguardedalt _ (UnGuardedRhs _ e) = do write " -> "
+                                       indented 4 (pretty e)
+unguardedalt _ e = prettyNoExt e
 
 -- | Expression customizations.
 exp :: t -> Exp NodeInfo -> Printer ()
