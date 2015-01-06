@@ -62,7 +62,7 @@ import           Control.Monad.State.Strict hiding (state)
 import           Data.Int
 import           Data.List
 import           Data.Maybe
-import           Data.Monoid
+import           Data.Monoid hiding (Alt)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
