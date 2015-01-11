@@ -690,7 +690,7 @@ exp (LCase _ alts) =
   do write "\\case"
      indentSpaces <- getIndentSpaces
      newline
-     indented indentSpaces (lined (map pretty alts))
+     indented indentSpaces (lined (map (withCaseContext True . pretty) alts))
 exp (MultiIf _ alts) =
   depend (write "if ")
          (lined (map (\p ->

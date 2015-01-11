@@ -184,6 +184,7 @@ exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "$"))) _) = dollarExpr e
 exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "<*>"))) _) = applicativeExpr exp
 exprs _ exp@Lambda{} = lambdaExpr exp
 exprs _ exp@Case{} = caseExpr exp
+exprs _ exp@LCase{} = lambdaCaseExpr exp
 exprs _ (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) updates
 exprs _ (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
 exprs _ (Tuple _ _ exps) = parens $ inter (write ", ") $ map pretty exps
@@ -373,13 +374,26 @@ lambdaExpr _ = error "Not a lambda"
 
 caseExpr :: Exp NodeInfo -> Printer ()
 caseExpr (Case _ exp alts) = do
-  allSingle <- and <$> mapM isSingle alts
 
   depend (write "case ") $ do
     pretty exp
     write " of"
   newline
 
+  writeCaseAlts alts
+caseExpr _ = error "Not a case"
+
+lambdaCaseExpr :: Exp NodeInfo -> Printer ()
+lambdaCaseExpr (LCase _ alts) = do
+  write "\\case"
+  newline
+  writeCaseAlts alts
+lambdaCaseExpr _ = error "Not a lambda case"
+
+
+writeCaseAlts :: [Alt NodeInfo] -> Printer ()
+writeCaseAlts alts = do
+  allSingle <- and <$> mapM isSingle alts
   withCaseContext True $ indented indentSpaces $
     if allSingle
     then do
@@ -425,7 +439,6 @@ caseExpr (Case _ exp alts) = do
         indented indentSpaces $ depend (write "where ") (pretty binds)
 
 
-caseExpr _ = error "Not a case"
 
 recUpdateExpr :: Printer () -> [FieldUpdate NodeInfo] -> Printer ()
 recUpdateExpr expWriter updates = do
