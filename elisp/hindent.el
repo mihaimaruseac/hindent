@@ -53,11 +53,16 @@
                                               hindent-style)))
                 (cond
                  ((= ret 1)
-                  (error (with-current-buffer temp
+                  (let ((error-string
+			 (with-current-buffer temp
                            (let ((string (progn (goto-char (point-min))
                                                 (buffer-substring (line-beginning-position)
                                                                   (line-end-position)))))
-                             string))))
+                             string))
+			 ))
+		    (if (string= error-string "hindent: Parse error: EOF")
+			(message "language pragma")
+		      (error error-string))))
                  ((= ret 0)
                   (let ((new-str (with-current-buffer temp
                                    (buffer-string))))
@@ -150,6 +155,30 @@ expected to work."
          ;; comments, even though they are highlighted as such
          (not (save-excursion (goto-char (line-beginning-position))
                               (looking-at "{-# "))))))
+
+(defun hindent-reformat-region ()
+  (interactive)
+  (save-excursion
+    (save-restriction
+      (if (> (point) (mark))
+	  (exchange-point-and-mark))
+      (while (< (point) (mark))
+	(hindent/reformat-decl)
+	(let ((dpoints (hindent-decl-points)))
+	  (if dpoints ;; if we're in a comment hindent-decl-points returns nil
+	      (goto-char (min (mark) (+ 1 (cdr dpoints))))
+	    (forward-line 1)))
+	;; might be on a blank line (which associates with the previous decl
+	(if (search-forward-regexp "^[\\s-]*[^\\]" (mark) t)
+	    nil
+	  (goto-char (mark)))))))
+
+(defun hindent-reformat-buffer ()
+  (interactive)
+  (save-excursion
+    (save-restriction
+      (mark-whole-buffer)
+      (hindent-reformat-region))))
 
 (provide 'hindent)
 
