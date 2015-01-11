@@ -444,7 +444,9 @@ recUpdateExpr :: Printer () -> [FieldUpdate NodeInfo] -> Printer ()
 recUpdateExpr expWriter updates = do
   expWriter
   write " "
-  attemptSingleLine single mult
+  if null updates
+    then write "{}"
+    else attemptSingleLine single mult
 
   where
     single = do
@@ -455,7 +457,11 @@ recUpdateExpr expWriter updates = do
       col <- getColumn
       column col $ do
         write "{ "
-        inter (newline >> write ", ") $ map pretty updates
+        pretty (head updates)
+        forM_ (tail updates) $ \update -> do
+          newline
+          write ", "
+          pretty update
         newline
         write "}"
 
