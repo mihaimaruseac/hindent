@@ -82,6 +82,19 @@
                           (message "Formatted."))
                       (message "Already formatted.")))))))))))))
 
+(defun hindent-reformat-decl-or-fill (justify)
+  "Re-format current declaration, or fill paragraph.
+
+Fill paragraph if in a comment, otherwise reformat the current
+declaration."
+  (interactive (progn
+                 ;; Copied from `fill-paragraph'
+                 (barf-if-buffer-read-only)
+                 (list (if current-prefix-arg 'full))))
+  (if (hindent-in-comment)
+      (fill-paragraph justify t)
+    (hindent/reformat-decl)))
+
 (defun hindent-decl-points (&optional use-line-comments)
   "Get the start and end position of the current
 declaration. This assumes that declarations start at column zero
@@ -178,6 +191,26 @@ expected to work."
     (save-restriction
       (mark-whole-buffer)
       (hindent-reformat-region))))
+
+(defvar hindent-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [remap indent-region] #'hindent-reformat-region)
+    (define-key map [remap fill-paragraph] #'hindent-reformat-decl-or-fill)
+    map)
+  "Keymap for `hindent-mode'.")
+
+;;;###autoload
+(define-minor-mode hindent-mode
+  "Indent code with the hindent program.
+
+Provide the following keybindings:
+
+\\{hindent-mode-map}"
+  :init-value nil
+  :keymap hindent-mode-map
+  :lighter " HI"
+  :group 'haskell
+  :require 'hindent)
 
 (provide 'hindent)
 
