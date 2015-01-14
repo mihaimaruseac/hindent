@@ -18,13 +18,18 @@ executable. Currently a work in progress (see
 ## Emacs
 
 In
-[elisp/hindent.el](https://github.com/chrisdone/hindent/blob/master/elisp/hindent.el),
-there is the function `hindent/reformat-decl` which you can run with
-`M-x hindent/reformat-decl`. Or alternatively define a keybinding,
-e.g.:
+[elisp/hindent.el](https://github.com/chrisdone/hindent/blob/master/elisp/hindent.el)
+there is `hindent-mode`, which provides keybindings to reindent parts of the
+buffer:
 
-``` lisp
-(define-key haskell-mode-map (kbd "C-c i") 'hindent/reformat-decl)
+- `M-q` reformats the current declaration.  When inside a comment, it fills the
+  current paragraph instead, like the standard `M-q`.
+- `C-M-\` reformats the current region.
+
+To enable it, add the following to your init file:
+
+```lisp
+(add-hook 'haskell-mode-hook #'hindent-mode)
 ```
 
 By default it uses the style called `fundamental`, if you want to use
