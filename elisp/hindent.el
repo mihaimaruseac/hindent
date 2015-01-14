@@ -27,7 +27,8 @@
   "fundamental"
   "The style to use for formatting."
   :group 'haskell
-  :type 'string)
+  :type 'string
+  :safe #'stringp)
 
 ;;;###autoload
 (defun hindent/reformat-decl ()
