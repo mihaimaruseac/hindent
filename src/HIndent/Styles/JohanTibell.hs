@@ -214,6 +214,53 @@ exp _ e = prettyNoExt e
 
 -- | Specially format records. Indent where clauses only 2 spaces.
 decl :: t -> Decl NodeInfo -> Printer ()
+-- | Pretty print type signatures like
+--
+-- foo :: (Show x,Read x)
+--     => (Foo -> Bar)
+--     -> Maybe Int
+--     -> (Char -> X -> Y)
+--     -> IO ()
+--
+decl _ (TypeSig _ names ty') =
+  depend (do inter (write ", ")
+                   (map pretty names)
+             write " :: ")
+         (declTy ty')
+  where declTy dty =
+          case dty of
+            TyForall _ mbinds mctx ty ->
+              do case mbinds of
+                   Nothing -> return ()
+                   Just ts ->
+                     do write "forall "
+                        spaced (map pretty ts)
+                        write ". "
+                        newline
+                 case mctx of
+                   Nothing -> prettyTy ty
+                   Just ctx ->
+                     do pretty ctx
+                        newline
+                        indented (-3)
+                                 (depend (write "=> ")
+                                         (prettyTy ty))
+            _ -> prettyTy dty
+        collapseFaps (TyFun _ arg result) = arg : collapseFaps result
+        collapseFaps e = [e]
+        prettyTy ty =
+          do small <- isSmall' ty
+             if small
+                then pretty ty
+                else case collapseFaps ty of
+                       [] -> pretty ty
+                       tys ->
+                         prefixedLined "-> "
+                                       (map pretty tys)
+        isSmall' p =
+          do overflows <- isOverflow (pretty p)
+             oneLine <- isSingleLiner (pretty p)
+             return (not overflows && oneLine)
 decl _ (PatBind _ pat rhs' mbinds) =
       do pretty pat
          pretty rhs'
