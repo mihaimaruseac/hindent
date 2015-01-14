@@ -47,6 +47,7 @@ johanTibell =
            ,Extender exp
            ,Extender guardedRhs
            ,Extender rhs
+           ,Extender stmt
            ,Extender fieldupdate
            ]
         ,styleDefConfig =
@@ -55,6 +56,17 @@ johanTibell =
 
 --------------------------------------------------------------------------------
 -- Extenders
+
+-- Do statements need to handle infix expression indentation specially because
+-- do x *
+--    y
+-- is two invalid statements, not one valid infix op.
+stmt :: s -> Stmt NodeInfo -> Printer ()
+stmt _ (Qualifier _ e@(InfixApp _ a op b)) =
+  do col <- fmap (psColumn . snd)
+                 (sandbox (write ""))
+     infixApp e a op b (Just col)
+stmt _ e = prettyNoExt e
 
 -- | Handle do specially and also space out guards more.
 rhs :: t -> Rhs NodeInfo -> Printer ()
