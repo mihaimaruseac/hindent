@@ -10,6 +10,8 @@ executable. Currently a work in progress (see
 
     $ cabal install hindent
 
+You might need to `cabal install happy` if haskell-src-exts complains.
+
 ## Usage
 
     $ hindent
