@@ -43,9 +43,11 @@ import           Language.Haskell.Exts.Annotated hiding (Style,prettyPrint,Prett
 import           Data.Maybe (fromMaybe)
 
 -- | Format the given source.
-reformat :: Style -> Text -> Either String Builder
-reformat style x =
-  case parseModuleWithComments parseMode
+reformat :: Style -> Maybe [Extension] -> Text -> Either String Builder
+reformat style mexts x =
+  case parseModuleWithComments (case mexts of
+                                  Just exts -> parseMode {extensions = exts}
+                                  Nothing -> parseMode)
                                (T.unpack x) of
     ParseOk (m,comments) ->
       let (cs,ast) =
@@ -81,7 +83,7 @@ parseMode =
 test :: Style -> Text -> IO ()
 test style =
   either error (T.putStrLn . T.toLazyText) .
-  reformat style
+  reformat style Nothing
 
 -- | Test with all styles, prints to stdout.
 testAll :: Text -> IO ()

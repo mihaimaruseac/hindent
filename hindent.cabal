@@ -41,6 +41,7 @@ executable hindent
                    , hindent
                    , text
                    , descriptive >= 0.0.2 && < 0.1
+                   , haskell-src-exts
 
 executable hindent-generate-tests
   hs-source-dirs:    src/main

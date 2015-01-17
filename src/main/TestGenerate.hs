@@ -58,7 +58,7 @@ generateTests from to = do
 expectationFileContents :: HIndent.Style -> String -> String
 expectationFileContents style contents =
   let testDecls = parsePieces contents
-      fmt input = L.unpack $ L.toLazyText $ case HIndent.reformat style $ L.pack input of
+      fmt input = L.unpack $ L.toLazyText $ case HIndent.reformat style Nothing $ L.pack input of
                                               Left err      -> error err
                                               Right builder -> builder
       outputs = map (replaceEmptyNewlines . fmt) testDecls
