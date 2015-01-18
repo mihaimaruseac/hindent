@@ -92,7 +92,7 @@ modl _ (Module _ mayModHead pragmas imps decls) = do
 
   forM_ mayModHead $ \modHead -> do
       pretty modHead
-      unless (null imps && null decls) newline
+      unless (null imps && null decls) (newline >> newline)
 
   onSeparateLines imps
   unless (null imps || null decls) (newline >> newline)
