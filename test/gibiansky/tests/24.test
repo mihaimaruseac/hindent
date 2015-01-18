@@ -4,3 +4,11 @@ import B
 
 {-# LANGUAGE FlexibleContexts, OverloadedStrings, RecordWildCards, RankNTypes #-}
 >
+
+blah x
+  | x = do
+      putStrLn a
+
+unless x $
+  unless y $
+    putStrLn "Hello"
