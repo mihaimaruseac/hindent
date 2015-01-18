@@ -78,7 +78,6 @@ attemptSingleLine single multiple = do
 
 --------------------------------------------------------------------------------
 -- Extenders
-
 type Extend f = forall t. t -> f NodeInfo -> Printer ()
 
 -- | Format whole modules.
@@ -593,7 +592,6 @@ decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
   forM_ mayDeriving $ \deriv -> do
     newline
     indented indentSpaces $ pretty deriv
-
 decls _ (PatBind _ pat rhs mbinds) = funBody [pat] rhs mbinds
 decls _ (FunBind _ matches) =
   lined $ flip map matches $ \match -> do
