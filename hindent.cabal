@@ -26,7 +26,6 @@ library
                      HIndent.Styles.ChrisDone
                      HIndent.Styles.JohanTibell
                      HIndent.Styles.Gibiansky
-                     HIndent.Styles.TonyDay
   build-depends:     base >= 4 && <5
                    , data-default
                    , haskell-src-exts == 1.16.*

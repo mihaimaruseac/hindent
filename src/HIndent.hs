@@ -14,7 +14,6 @@ module HIndent
   ,johanTibell
   ,fundamental
   ,gibiansky
-  ,tonyDay
   -- * Testing
   ,test
   ,testAll
@@ -27,7 +26,6 @@ import           HIndent.Styles.ChrisDone (chrisDone)
 import           HIndent.Styles.Fundamental (fundamental)
 import           HIndent.Styles.Gibiansky (gibiansky)
 import           HIndent.Styles.JohanTibell (johanTibell)
-import           HIndent.Styles.TonyDay (tonyDay)
 import           HIndent.Types
 
 import           Control.Monad.State.Strict
@@ -108,7 +106,7 @@ testAst x =
 -- | Styles list, useful for programmatically choosing.
 styles :: [Style]
 styles =
-  [fundamental,chrisDone,johanTibell,gibiansky,tonyDay]
+  [fundamental,chrisDone,johanTibell,gibiansky]
 
 -- | Annotate the AST with comments.
 annotateComments :: forall ast. (Data (ast NodeInfo),Traversable ast,Annotated ast)
