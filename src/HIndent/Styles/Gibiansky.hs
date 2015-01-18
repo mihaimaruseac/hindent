@@ -529,9 +529,9 @@ rhss _ (UnGuardedRhs _ exp) = do
 rhss _ (GuardedRhss _ rs) =
   lined $ flip map rs $ \a@(GuardedRhs _ stmts exp) -> do
     printComments Before a
-    write "| "
-    inter (write ", ") $ map pretty stmts
-    rhsRest exp
+    depend (write "| ") $ do
+      inter (write ", ") $ map pretty stmts
+      rhsRest exp
 
 guardedRhs :: Extend GuardedRhs
 guardedRhs _ (GuardedRhs _ stmts exp) = do
