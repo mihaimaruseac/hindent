@@ -6,6 +6,7 @@ import           Data.Foldable
 import           Control.Applicative ((<$>))
 import           Control.Monad (unless, when, replicateM_)
 import           Control.Monad.State (gets, get, put)
+import           Data.Maybe (isNothing)
 
 import           HIndent.Pretty
 import           HIndent.Types
@@ -20,33 +21,31 @@ data State = State
 
 -- | The printer style.
 gibiansky :: Style
-gibiansky =
-  Style { styleName = "gibiansky"
-        , styleAuthor = "Andrew Gibiansky"
-        , styleDescription = "Andrew Gibiansky's style"
-        , styleInitialState = State
-        , styleExtenders = [ Extender imp
-                           , Extender modl
-                           , Extender context
-                           , Extender derivings
-                           , Extender typ
-                           , Extender exprs
-                           , Extender rhss
-                           , Extender guardedRhs
-                           , Extender decls
-                           , Extender condecls
-                           , Extender alt
-                           , Extender moduleHead
-                           , Extender exportList
-                           , Extender fieldUpdate
-                           , Extender pragmas
-                           ]
-        , styleDefConfig =
-           defaultConfig { configMaxColumns = 100
-                         , configIndentSpaces = indentSpaces
-                         , configClearEmptyLines =  True
-                         }
-        }
+gibiansky = Style { styleName = "gibiansky"
+                  , styleAuthor = "Andrew Gibiansky"
+                  , styleDescription = "Andrew Gibiansky's style"
+                  , styleInitialState = State
+                  , styleExtenders = [ Extender imp
+                                     , Extender modl
+                                     , Extender context
+                                     , Extender derivings
+                                     , Extender typ
+                                     , Extender exprs
+                                     , Extender rhss
+                                     , Extender guardedRhs
+                                     , Extender decls
+                                     , Extender condecls
+                                     , Extender alt
+                                     , Extender moduleHead
+                                     , Extender exportList
+                                     , Extender fieldUpdate
+                                     , Extender pragmas
+                                     ]
+                  , styleDefConfig = defaultConfig { configMaxColumns = 100
+                                                   , configIndentSpaces = indentSpaces
+                                                   , configClearEmptyLines = True
+                                                   }
+                  }
 
 -- | Number of spaces to indent by.
 indentSpaces :: Integral a => a
@@ -86,12 +85,16 @@ type Extend f = forall t. t -> f NodeInfo -> Printer ()
 modl :: Extend Module
 modl _ (Module _ mayModHead pragmas imps decls) = do
   onSeparateLines pragmas
+  unless (null pragmas) $
+    unless (null imps && null decls && isNothing mayModHead) $
+      newline >> newline
 
   forM_ mayModHead $ \modHead -> do
       pretty modHead
-      unless (null pragmas && null imps && null decls) newline
+      unless (null imps && null decls) (newline >> newline)
 
   onSeparateLines imps
+  unless (null imps || null decls) (newline >> newline)
   onSeparateLines decls
 modl _ m = prettyNoExt m
 
@@ -510,7 +513,7 @@ recUpdateExpr expWriter updates = do
 
 rhss :: Extend Rhs
 rhss _ (UnGuardedRhs _ exp) = do
-  write " " 
+  write " "
   rhsSeparator
   if onNextLine exp
     then indented indentSpaces $ do
@@ -519,7 +522,7 @@ rhss _ (UnGuardedRhs _ exp) = do
     else do
       space
       pretty exp
-  
+
   where
     onNextLine Let{} = True
     onNextLine _ = False
@@ -536,7 +539,7 @@ rhss _ (GuardedRhss _ rs) =
 guardedRhs :: Extend GuardedRhs
 guardedRhs _ (GuardedRhs _ stmts exp) = do
   indented 1 $ prefixedLined "," (map (\p -> space >> pretty p) stmts)
-  write " " 
+  write " "
   rhsSeparator
   write " "
   pretty exp
@@ -587,7 +590,7 @@ funBody pat rhs mbinds = do
   withCaseContext False $ case rhs of
     UnGuardedRhs{} -> pretty rhs
     GuardedRhss{}  -> do
-      newline 
+      newline
       indented indentSpaces $ pretty rhs
 
   -- Process the binding group, if it exists.
