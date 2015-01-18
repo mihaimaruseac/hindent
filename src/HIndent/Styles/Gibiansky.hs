@@ -2,18 +2,18 @@
 
 module HIndent.Styles.Gibiansky where
 
-import Data.Foldable
-import Control.Applicative((<$>))
-import Control.Monad (unless, when, replicateM_)
-import Control.Monad.State (gets, get, put)
+import           Data.Foldable
+import           Control.Applicative ((<$>))
+import           Control.Monad (unless, when, replicateM_)
+import           Control.Monad.State (gets, get, put)
 
-import HIndent.Pretty
-import HIndent.Types
+import           HIndent.Pretty
+import           HIndent.Types
 
-import Language.Haskell.Exts.Annotated.Syntax
-import Language.Haskell.Exts.SrcLoc
-import Language.Haskell.Exts.Comments
-import Prelude hiding (exp, all, mapM_, minimum, and, maximum)
+import           Language.Haskell.Exts.Annotated.Syntax
+import           Language.Haskell.Exts.SrcLoc
+import           Language.Haskell.Exts.Comments
+import           Prelude hiding (exp, all, mapM_, minimum, and, maximum)
 
 -- | Empty state.
 data State = State
@@ -84,10 +84,12 @@ type Extend f = forall t. t -> f NodeInfo -> Printer ()
 -- | Format whole modules.
 modl :: Extend Module
 modl _ (Module _ mayModHead pragmas imps decls) = do
+  onSeparateLines pragmas
+
   forM_ mayModHead $ \modHead -> do
       pretty modHead
       unless (null pragmas && null imps && null decls) newline
-  onSeparateLines pragmas
+
   onSeparateLines imps
   onSeparateLines decls
 modl _ m = prettyNoExt m
