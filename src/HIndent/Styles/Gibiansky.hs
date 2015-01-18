@@ -91,7 +91,7 @@ modl _ (Module _ mayModHead pragmas imps decls) = do
 
   forM_ mayModHead $ \modHead -> do
       pretty modHead
-      unless (null imps && null decls) (newline >> newline)
+      unless (null imps && null decls) newline
 
   onSeparateLines imps
   unless (null imps || null decls) (newline >> newline)
@@ -531,14 +531,15 @@ rhss _ (GuardedRhss _ rs) =
     printComments Before a
     write "| "
     inter (write ", ") $ map pretty stmts
-    write " "
-    rhsSeparator
-    write " "
-    pretty exp
+    rhsRest exp
 
 guardedRhs :: Extend GuardedRhs
 guardedRhs _ (GuardedRhs _ stmts exp) = do
   indented 1 $ prefixedLined "," (map (\p -> space >> pretty p) stmts)
+  rhsRest exp
+
+rhsRest :: Pretty ast => ast NodeInfo -> Printer ()
+rhsRest exp = do
   write " "
   rhsSeparator
   write " "
