@@ -53,7 +53,7 @@ useTestFiles style test exp = do
 
 mkSpec :: HIndent.Style -> String -> String -> Spec
 mkSpec style input desired = it "works" $
-  case HIndent.reformat style (L.pack input) of
+  case HIndent.reformat style Nothing (L.pack input) of
     Left err      -> expectationFailure ("Error: " ++ err)
     Right builder -> L.unpack (L.toLazyText builder) `shouldBe` desired
 
