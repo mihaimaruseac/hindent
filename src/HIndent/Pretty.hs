@@ -139,6 +139,8 @@ printComment mayNodespan (ComInfo (Comment inline cspan str) _) =
         then do write "{-"
                 string str
                 write "-}"
+                when (1 == srcSpanStartColumn cspan) $
+                  modify (\s -> s {psEolComment = True})
         else do write "--"
                 string str
                 modify (\s ->
