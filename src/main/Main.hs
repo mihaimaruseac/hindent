@@ -9,6 +9,7 @@
 module Main where
 
 import           HIndent
+import           HIndent.Types
 
 import           Control.Applicative
 import           Data.List
@@ -19,18 +20,17 @@ import qualified Data.Text.Lazy.IO as T
 import           Data.Version (showVersion)
 import           Descriptive
 import           Descriptive.Options
-import           Language.Haskell.Exts.Annotated hiding (Style)
+import           Language.Haskell.Exts.Annotated hiding (Style,style)
 import           Paths_hindent (version)
 import           System.Environment
+import           Text.Read
 
 -- | Main entry point.
 main :: IO ()
 main =
   do args <- getArgs
      case consume options (map T.pack args) of
-       Left{} ->
-         error (T.unpack (textDescription (describe options [])))
-       Right result ->
+       Succeeded result ->
          case result of
            Left{} ->
              putStrLn ("hindent " ++ showVersion version)
@@ -38,21 +38,34 @@ main =
              T.interact
                (either error T.toLazyText .
                 reformat style (Just exts))
+       _ ->
+         error (T.unpack (textDescription (describe options [])))
 
 -- | Program options.
 options :: Consumer [Text] Option (Either Text (Style,[Extension]))
 options =
   fmap Left (constant "--version") <|>
-  (fmap Right ((,) <$> style <*> exts))
+  fmap Right ((,) <$> style <*> exts)
   where style =
-          constant "--style" *>
-          foldr1 (<|>)
-                 (map (\style ->
-                         fmap (const style)
-                              (constant (styleName style)))
-                      styles)
+          makeStyle <$>
+          (constant "--style" *>
+           foldr1 (<|>)
+                  (map (\s ->
+                          fmap (const s)
+                               (constant (styleName s)))
+                       styles)) <*>
+          lineLen
         exts =
           fmap getExtensions (many (prefix "X" "Language extension"))
+        lineLen =
+          fmap (>>= (readMaybe . T.unpack))
+               (optional (arg "line-length" "Desired length of lines"))
+        makeStyle s mlen =
+          case mlen of
+            Nothing -> s
+            Just len ->
+              s {styleDefConfig =
+                   (styleDefConfig s) {configMaxColumns = len}}
 
 --------------------------------------------------------------------------------
 -- Extensions stuff stolen from hlint
