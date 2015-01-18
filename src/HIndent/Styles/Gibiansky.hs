@@ -26,6 +26,7 @@ gibiansky =
         , styleDescription = "Andrew Gibiansky's style"
         , styleInitialState = State
         , styleExtenders = [ Extender imp
+                           , Extender modl
                            , Extender context
                            , Extender derivings
                            , Extender typ
@@ -80,6 +81,16 @@ attemptSingleLine single multiple = do
 
 type Extend f = forall t. t -> f NodeInfo -> Printer ()
 
+-- | Format whole modules.
+modl :: Extend Module
+modl _ (Module _ mayModHead pragmas imps decls) = do
+  forM_ mayModHead $ \modHead -> do
+      pretty modHead
+      unless (null pragmas && null imps && null decls) newline
+  onSeparateLines pragmas
+  onSeparateLines imps
+  onSeparateLines decls
+modl _ m = prettyNoExt m
 
 -- | Format import statements.
 imp :: Extend ImportDecl
@@ -591,6 +602,14 @@ writeWhereBinds ds@(BDecls _ binds@(first:rest)) = do
     replicateM_ (max 1 $ lineDelta cur prev) newline
     pretty cur
 writeWhereBinds binds = prettyNoExt binds
+
+onSeparateLines :: (Pretty ast, Annotated ast) => [ast NodeInfo] -> Printer ()
+onSeparateLines vals@(first:rest) = do
+  pretty first
+  forM_ (zip vals rest) $ \(prev, cur) -> do
+    replicateM_ (max 1 $ lineDelta cur prev) newline
+    pretty cur
+onSeparateLines [] = return ()
 
 astStartLine :: Annotated ast => ast NodeInfo -> Int
 astStartLine decl =
