@@ -39,6 +39,7 @@ gibiansky =
                            , Extender moduleHead
                            , Extender exportList
                            , Extender fieldUpdate
+                           , Extender pragmas
                            ]
         , styleDefConfig =
            defaultConfig { configMaxColumns = 100
@@ -93,6 +94,13 @@ modl _ (Module _ mayModHead pragmas imps decls) = do
   onSeparateLines imps
   onSeparateLines decls
 modl _ m = prettyNoExt m
+
+pragmas :: Extend ModulePragma
+pragmas _ (LanguagePragma _ names) = do
+  write "{-# LANGUAGE "
+  inter (write ", ") $ map pretty names
+  write " #-}"
+pragmas _ p = prettyNoExt p
 
 -- | Format import statements.
 imp :: Extend ImportDecl
