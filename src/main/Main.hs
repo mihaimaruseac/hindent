@@ -56,21 +56,24 @@ options =
            foldr1 (<|>)
                   (map (\s ->
                           fmap (const s)
-                               (constant (styleName s)
-                                         (styleDescription s)))
+                               (constant (styleName s) (styleDescription s)))
                        styles)) <*>
-          lineLen
+          lineLen <*>
+          refactor
         exts =
           fmap getExtensions (many (prefix "X" "Language extension"))
         lineLen =
           fmap (>>= (readMaybe . T.unpack))
                (optional (arg "line-length" "Desired length of lines"))
-        makeStyle s mlen =
+        refactor =
+          switch "refactor" "Allow refactorings"
+        makeStyle s mlen refac =
           case mlen of
             Nothing -> s
             Just len ->
               s {styleDefConfig =
-                   (styleDefConfig s) {configMaxColumns = len}}
+                   (styleDefConfig s) {configMaxColumns = len
+                                      ,configRefactor = refac}}
 
 --------------------------------------------------------------------------------
 -- Extensions stuff stolen from hlint

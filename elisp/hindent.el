@@ -193,6 +193,47 @@ expected to work."
       (mark-whole-buffer)
       (hindent-reformat-region))))
 
+(defun hindent-reformat-module ()
+  "Re-format the entire module at once."
+  (interactive)
+  (let ((start-end (cons (point-min) (point-max))))
+    (when start-end
+      (let ((original (current-buffer))
+            (orig-str (buffer-substring-no-properties (car start-end)
+                                                      (cdr start-end))))
+        (with-temp-buffer
+          (let ((temp (current-buffer)))
+            (with-current-buffer original
+              (let ((ret (call-process-region (car start-end)
+                                              (cdr start-end)
+                                              "hindent"
+                                              nil  ; delete
+                                              temp ; output
+                                              nil
+                                              "--style"
+                                              hindent-style)))
+                (cond
+                 ((= ret 1)
+                  (let ((error-string
+			 (with-current-buffer temp
+                           (let ((string (progn (goto-char (point-min))
+                                                (buffer-substring (line-beginning-position)
+                                                                  (line-end-position)))))
+                             string))))
+		    (if (string= error-string "hindent: Parse error: EOF")
+			(message "language pragma")
+		      (error error-string))))
+                 ((= ret 0)
+                  (let ((new-str (with-current-buffer temp
+                                   (buffer-string))))
+                    (if (not (string= new-str orig-str))
+                        (progn
+                          (delete-region (car start-end)
+                                         (cdr start-end))
+                          (insert new-str)
+                          (message "Formatted."))
+                      (message "Already formatted.")))))))))))))
+
 (defvar hindent-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [remap indent-region] #'hindent-reformat-region)

@@ -74,13 +74,15 @@ data Config =
   Config {configMaxColumns :: !Int64 -- ^ Maximum columns to fit code into ideally.
          ,configIndentSpaces :: !Int64 -- ^ How many spaces to indent?
          ,configClearEmptyLines :: !Bool  -- ^ Remove spaces on lines that are otherwise empty?
+         ,configRefactor :: !Bool -- ^ Allow styles to make (isomorphic) AST changes?
          }
 
 instance Default Config where
   def =
     Config {configMaxColumns = 80
            ,configIndentSpaces = 2
-           ,configClearEmptyLines = False}
+           ,configClearEmptyLines = False
+           ,configRefactor = False}
 
 -- | Default style configuration.
 defaultConfig :: Config
