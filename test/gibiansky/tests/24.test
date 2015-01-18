@@ -12,3 +12,5 @@ blah x
 unless x $
   unless y $
     putStrLn "Hello"
+
+a = let (x, y) = z in z
