@@ -74,8 +74,7 @@ attemptSingleLine single multiple = do
     then do
       put prevState
       multiple
-    else
-      return result
+    else return result
 
 --------------------------------------------------------------------------------
 -- Extenders
@@ -91,8 +90,8 @@ modl _ (Module _ mayModHead pragmas imps decls) = do
       newline >> newline
 
   forM_ mayModHead $ \modHead -> do
-      pretty modHead
-      unless (null imps && null decls) (newline >> newline)
+    pretty modHead
+    unless (null imps && null decls) (newline >> newline)
 
   onSeparateLines imps
   unless (null imps || null decls) (newline >> newline)
@@ -117,8 +116,8 @@ imp :: Extend ImportDecl
 imp _ ImportDecl{..} = do
   write "import "
   write $ if importQualified
-          then "qualified "
-          else "          "
+            then "qualified "
+            else "          "
   pretty importModule
 
   forM_ importAs $ \name -> do
@@ -142,50 +141,47 @@ derivings _ (Deriving _ instHeads) = do
   go instHeads
 
   where
-    go insts | length insts == 1
-             = pretty $ head insts
-             | otherwise
-             = parens $ inter (comma >> space) $ map pretty insts
+    go insts
+      | length insts == 1 = pretty $ head insts
+      | otherwise = parens $ inter (comma >> space) $ map pretty insts
 
 -- | Format function type declarations.
 typ :: Extend Type
-
 -- For contexts, check whether the context and all following function types
 -- are on the same line. If they are, print them on the same line; otherwise
 -- print the context and each argument to the function on separate lines.
 typ _ (TyForall _ _ (Just ctx) rest) =
   if all (sameLine ctx) $ collectTypes rest
-  then do
-    pretty ctx
-    write " => "
-    pretty rest
-  else do
-    col <- getColumn
-    pretty ctx
-    column (col - 3) $ do
-      newline
-      write  "=> "
-      indented 3 $ pretty rest
-
+    then do
+      pretty ctx
+      write " => "
+      pretty rest
+    else do
+      col <- getColumn
+      pretty ctx
+      column (col - 3) $ do
+        newline
+        write "=> "
+        indented 3 $ pretty rest
 typ _ (TyTuple _ boxed types) = writeTuple boxed types
-
 typ _ ty@(TyFun _ from to) =
   -- If the function argument types are on the same line,
   -- put the entire function type on the same line.
   if all (sameLine from) $ collectTypes ty
-  then do
-    pretty from
-    write " -> "
-    pretty to
-  -- If the function argument types are on different lines,
-  -- write one argument type per line.
-  else do
-    col <- getColumn
-    pretty from
-    column (col - 3) $ do
-      newline
-      write "-> "
-      indented 3 $ pretty to
+    then do
+      pretty from
+      write " -> "
+      pretty to
+    else 
+    -- If the function argument types are on different lines,
+    -- write one argument type per line.
+    do
+      col <- getColumn
+      pretty from
+      column (col - 3) $ do
+        newline
+        write "-> "
+        indented 3 $ pretty to
 typ _ t = prettyNoExt t
 
 writeTuple :: Pretty ast => Boxed -> [ast NodeInfo] -> Printer ()
@@ -193,11 +189,11 @@ writeTuple boxed vals = parens $ do
   boxed'
   inter (write ", ") $ map pretty vals
   boxed'
-
   where
-    boxed' = case boxed of
-      Boxed   -> return ()
-      Unboxed -> write "#"
+    boxed' =
+      case boxed of
+        Boxed   -> return ()
+        Unboxed -> write "#"
 
 sameLine :: (Annotated ast, Annotated ast') => ast NodeInfo -> ast' NodeInfo -> Bool
 sameLine x y = line x == line y
@@ -229,9 +225,9 @@ exprs _ exp = prettyNoExt exp
 letExpr :: Exp NodeInfo -> Printer ()
 letExpr (Let _ binds result) = do
   cols <- depend (write "let ") $ do
-    col <- getColumn
-    pretty binds
-    return $ col - 4
+            col <- getColumn
+            pretty binds
+            return $ col - 4
   column cols $ do
     newline
     write "in "
@@ -284,8 +280,8 @@ appExpr app@(App _ f x) = do
     -- and all of its arguments. Arguments are returned in reverse order.
     collectArgs :: Exp NodeInfo -> (Exp NodeInfo, [Exp NodeInfo])
     collectArgs (App _ g y) =
-      let (fun, args) = collectArgs g in
-        (fun, y : args)
+      let (fun, args) = collectArgs g
+      in (fun, y : args)
     collectArgs nonApp = (nonApp, [])
 
     separateArgs :: Exp NodeInfo -> Printer ()
@@ -297,7 +293,6 @@ appExpr app@(App _ f x) = do
           pretty fun
           newline
           indented indentSpaces $ lined $ map pretty $ reverse args
-
 appExpr _ = error "Not an app"
 
 doExpr :: Exp NodeInfo -> Printer ()
@@ -344,6 +339,7 @@ dollarExpr (InfixApp _ left op right) = do
     else do
       write " "
       pretty right
+
   where
     needsNewline Case{} = True
     needsNewline exp = lineDelta exp op > 0
@@ -358,12 +354,12 @@ applicativeExpr exp@InfixApp{} =
   where
     singleLine :: Exp NodeInfo -> Exp NodeInfo -> [Exp NodeInfo] -> Printer ()
     singleLine first second rest = spaced
-      [ pretty first
-      , write "<$>"
-      , pretty second
-      , write "<*>"
-      , inter (write " <*> ") $ map pretty rest
-      ]
+                                     [ pretty first
+                                     , write "<$>"
+                                     , pretty second
+                                     , write "<*>"
+                                     , inter (write " <*> ") $ map pretty rest
+                                     ]
 
     multiLine :: Exp NodeInfo -> Exp NodeInfo -> [Exp NodeInfo] -> Printer ()
     multiLine first second rest = do
@@ -431,7 +427,6 @@ lambdaExpr _ = error "Not a lambda"
 
 caseExpr :: Exp NodeInfo -> Printer ()
 caseExpr (Case _ exp alts) = do
-
   depend (write "case ") $ do
     pretty exp
     write " of"
@@ -465,27 +460,30 @@ writeCaseAlts alts = do
   allSingle <- and <$> mapM isSingle alts
   withCaseContext True $ indented indentSpaces $
     if allSingle
-    then do
-      maxPatLen <- maximum <$> mapM (patternLen . altPattern) alts
-      lined $ map (prettyCase $ Just maxPatLen) alts
-    else lined $ map (prettyCase Nothing) alts
+      then do
+        maxPatLen <- maximum <$> mapM (patternLen . altPattern) alts
+        lined $ map (prettyCase $ Just maxPatLen) alts
+      else lined $ map (prettyCase Nothing) alts
+
   where
     isSingle :: Alt NodeInfo -> Printer Bool
-    isSingle alt' = fst <$> sandbox (do
-      line <- gets psLine
-      pretty alt'
-      line' <- gets psLine
-      return $ line == line')
+    isSingle alt' = fst <$> sandbox
+                              (do
+                                 line <- gets psLine
+                                 pretty alt'
+                                 line' <- gets psLine
+                                 return $ line == line')
 
     altPattern :: Alt l -> Pat l
     altPattern (Alt _ p _ _) = p
 
     patternLen :: Pat NodeInfo -> Printer Int
-    patternLen pat = fromIntegral <$> fst <$> sandbox (do
-      col <- getColumn
-      pretty pat
-      col' <- getColumn
-      return $ col' - col)
+    patternLen pat = fromIntegral <$> fst <$> sandbox
+                                                (do
+                                                   col <- getColumn
+                                                   pretty pat
+                                                   col' <- getColumn
+                                                   return $ col' - col)
 
     prettyCase :: Maybe Int -> Alt NodeInfo -> Printer ()
     prettyCase mpatlen (Alt _ p galts mbinds) = do
@@ -500,13 +498,12 @@ writeCaseAlts alts = do
 
       case galts of
         UnGuardedRhs{} -> pretty galts
-        GuardedRhss{} -> indented indentSpaces $ pretty galts
+        GuardedRhss{}  -> indented indentSpaces $ pretty galts
 
       --  Optional where clause!
       forM_ mbinds $ \binds -> do
         newline
         indented indentSpaces $ depend (write "where ") (pretty binds)
-
 
 
 recUpdateExpr :: Printer () -> [FieldUpdate NodeInfo] -> Printer ()
@@ -580,7 +577,7 @@ decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
   write " "
   pretty declHead
   case constructors of
-    []  -> return ()
+    [] -> return ()
     [x] -> do
       write " = "
       pretty x
@@ -599,14 +596,13 @@ decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
 
 decls _ (PatBind _ pat rhs mbinds) = funBody [pat] rhs mbinds
 decls _ (FunBind _ matches) =
-  lined $  flip map matches $ \match -> do
-    (name, pat, rhs, mbinds) <-
-      case match of
-        Match _ name pat rhs mbinds -> return (name, pat, rhs, mbinds)
-        InfixMatch _ left name pat rhs mbinds -> do
-          pretty left
-          write " "
-          return (name, pat, rhs, mbinds)
+  lined $ flip map matches $ \match -> do
+    (name, pat, rhs, mbinds) <- case match of
+                                  Match _ name pat rhs mbinds -> return (name, pat, rhs, mbinds)
+                                  InfixMatch _ left name pat rhs mbinds -> do
+                                    pretty left
+                                    write " "
+                                    return (name, pat, rhs, mbinds)
 
     pretty name
     write " "
@@ -617,11 +613,12 @@ funBody :: [Pat NodeInfo] -> Rhs NodeInfo -> Maybe (Binds NodeInfo) -> Printer (
 funBody pat rhs mbinds = do
   spaced $ map pretty pat
 
-  withCaseContext False $ case rhs of
-    UnGuardedRhs{} -> pretty rhs
-    GuardedRhss{}  -> do
-      newline
-      indented indentSpaces $ pretty rhs
+  withCaseContext False $
+    case rhs of
+      UnGuardedRhs{} -> pretty rhs
+      GuardedRhss{} -> do
+        newline
+        indented indentSpaces $ pretty rhs
 
   -- Process the binding group, if it exists.
   forM_ mbinds $ \binds -> do
@@ -654,8 +651,8 @@ astStartLine decl =
       befores = filter ((== Just Before) . comInfoLocation) comments
       commentStartLine (Comment _ sp _) = srcSpanStartLine sp
   in if null befores
-     then startLine $ nodeInfoSpan info
-     else minimum $ map (commentStartLine . comInfoComment) befores
+       then startLine $ nodeInfoSpan info
+       else minimum $ map (commentStartLine . comInfoComment) befores
 
 isDoBlock :: Rhs l -> Bool
 isDoBlock (UnGuardedRhs _ Do{}) = True
@@ -669,12 +666,11 @@ condecls _ (RecDecl _ name fields) =
   depend (pretty name >> space) $ do
     write "{ "
     case fields of
-      []         -> return ()
-      [x]        -> do
+      [] -> return ()
+      [x] -> do
         pretty x
         eol <- gets psEolComment
         unless eol space
-
       first:rest -> do
         pretty first
         newline
@@ -727,6 +723,7 @@ exportList _ (ExportSpecList _ exports) = do
         write ","
       newline
       write ")"
+
   where
     indentSpaces' = 2 * indentSpaces
 
