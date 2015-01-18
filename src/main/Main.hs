@@ -30,29 +30,33 @@ main :: IO ()
 main =
   do args <- getArgs
      case consume options (map T.pack args) of
-       Succeeded result ->
-         case result of
-           Left{} ->
-             putStrLn ("hindent " ++ showVersion version)
-           Right (style,exts) ->
-             T.interact
-               (either error T.toLazyText .
-                reformat style (Just exts))
+       Succeeded (style,exts) ->
+         T.interact
+           (either error T.toLazyText .
+            reformat style (Just exts))
+       Failed (Wrap (Stopped Version) _) ->
+         putStrLn ("hindent " ++ showVersion version)
        _ ->
          error (T.unpack (textDescription (describe options [])))
 
+-- | Options that stop the argument parser.
+data Stoppers = Version
+  deriving (Show)
+
 -- | Program options.
-options :: Consumer [Text] Option (Either Text (Style,[Extension]))
+options :: Consumer [Text] (Option Stoppers) (Style,[Extension])
 options =
-  fmap Left (constant "--version") <|>
-  fmap Right ((,) <$> style <*> exts)
-  where style =
+  ver *>
+  ((,) <$> style <*> exts)
+  where ver =
+          stop (flag "version" "Print the version" Version)
+        style =
           makeStyle <$>
-          (constant "--style" *>
+          (constant "--style" "Style to print with" *>
            foldr1 (<|>)
                   (map (\s ->
                           fmap (const s)
-                               (constant (styleName s)))
+                               (constant (styleName s) (styleDescription s)))
                        styles)) <*>
           lineLen <*>
           refactor
@@ -61,14 +65,15 @@ options =
         lineLen =
           fmap (>>= (readMaybe . T.unpack))
                (optional (arg "line-length" "Desired length of lines"))
-        refactor = flag "refactor" "Allow refactorings"
-        makeStyle s mlen refactor =
+        refactor =
+          switch "refactor" "Allow refactorings"
+        makeStyle s mlen refac =
           case mlen of
             Nothing -> s
             Just len ->
               s {styleDefConfig =
                    (styleDefConfig s) {configMaxColumns = len
-                                      ,configRefactor = refactor}}
+                                      ,configRefactor = refac}}
 
 --------------------------------------------------------------------------------
 -- Extensions stuff stolen from hlint

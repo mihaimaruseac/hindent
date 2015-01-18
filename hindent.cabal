@@ -41,7 +41,7 @@ executable hindent
   build-depends:     base >= 4 && < 5
                    , hindent
                    , text
-                   , descriptive == 0.1.*
+                   , descriptive == 0.2.*
                    , haskell-src-exts
 
 executable hindent-generate-tests
