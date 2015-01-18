@@ -335,7 +335,7 @@ dollarExpr (InfixApp _ left op right) = do
       pretty right
   where
     needsNewline Case{} = True
-    needsNewline _ = False
+    needsNewline exp = lineDelta exp op > 0
 dollarExpr _ = error "Not an application"
 
 applicativeExpr :: Exp NodeInfo -> Printer ()
