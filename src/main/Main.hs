@@ -54,18 +54,21 @@ options =
                           fmap (const s)
                                (constant (styleName s)))
                        styles)) <*>
-          lineLen
+          lineLen <*>
+          refactor
         exts =
           fmap getExtensions (many (prefix "X" "Language extension"))
         lineLen =
           fmap (>>= (readMaybe . T.unpack))
                (optional (arg "line-length" "Desired length of lines"))
-        makeStyle s mlen =
+        refactor = flag "refactor" "Allow refactorings"
+        makeStyle s mlen refactor =
           case mlen of
             Nothing -> s
             Just len ->
               s {styleDefConfig =
-                   (styleDefConfig s) {configMaxColumns = len}}
+                   (styleDefConfig s) {configMaxColumns = len
+                                      ,configRefactor = refactor}}
 
 --------------------------------------------------------------------------------
 -- Extensions stuff stolen from hlint
