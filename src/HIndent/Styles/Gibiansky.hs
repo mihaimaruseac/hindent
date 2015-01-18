@@ -40,6 +40,7 @@ gibiansky = Style { styleName = "gibiansky"
                                      , Extender exportList
                                      , Extender fieldUpdate
                                      , Extender pragmas
+                                     , Extender pat
                                      ]
                   , styleDefConfig = defaultConfig { configMaxColumns = 100
                                                    , configIndentSpaces = indentSpaces
@@ -98,12 +99,18 @@ modl _ (Module _ mayModHead pragmas imps decls) = do
   onSeparateLines decls
 modl _ m = prettyNoExt m
 
+-- | Format pragmas differently (language pragmas).
 pragmas :: Extend ModulePragma
 pragmas _ (LanguagePragma _ names) = do
   write "{-# LANGUAGE "
   inter (write ", ") $ map pretty names
   write " #-}"
 pragmas _ p = prettyNoExt p
+
+-- | Format patterns.
+pat :: Extend Pat
+pat _ (PTuple _ boxed pats) = writeTuple boxed pats
+pat _ p = prettyNoExt p
 
 -- | Format import statements.
 imp :: Extend ImportDecl
@@ -160,15 +167,7 @@ typ _ (TyForall _ _ (Just ctx) rest) =
       write  "=> "
       indented 3 $ pretty rest
 
-typ _ (TyTuple _ boxed types) = parens $ do
-  boxed'
-  inter (write ", ") $ map pretty types
-  boxed'
-
-  where
-    boxed' = case boxed of
-      Boxed   -> return ()
-      Unboxed -> write "#"
+typ _ (TyTuple _ boxed types) = writeTuple boxed types
 
 typ _ ty@(TyFun _ from to) =
   -- If the function argument types are on the same line,
@@ -188,6 +187,17 @@ typ _ ty@(TyFun _ from to) =
       write "-> "
       indented 3 $ pretty to
 typ _ t = prettyNoExt t
+
+writeTuple :: Pretty ast => Boxed -> [ast NodeInfo] -> Printer ()
+writeTuple boxed vals = parens $ do
+  boxed'
+  inter (write ", ") $ map pretty vals
+  boxed'
+
+  where
+    boxed' = case boxed of
+      Boxed   -> return ()
+      Unboxed -> write "#"
 
 sameLine :: (Annotated ast, Annotated ast') => ast NodeInfo -> ast' NodeInfo -> Bool
 sameLine x y = line x == line y
@@ -524,13 +534,14 @@ rhss _ (UnGuardedRhs rhsLoc exp) = do
       pretty exp
 
   where
+    -- Cannot use lineDelta because we need to look at rhs start line, not end line
     prevLine = srcSpanStartLine . srcInfoSpan . nodeInfoSpan $ rhsLoc
     curLine = astStartLine exp
     emptyLines = curLine - prevLine
 
     onNextLine Let{} = True
     onNextLine Case{} = True
-    onNextLine exp = emptyLines > 0
+    onNextLine _ = emptyLines > 0
 rhss _ (GuardedRhss _ rs) =
   lined $ flip map rs $ \a@(GuardedRhs _ stmts exp) -> do
     printComments Before a
