@@ -4,10 +4,10 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
-
+>
 -- top comment
 module Test1 where
-
+>
 import Control.Monad
 import Control.Monad (unless)
 import Control.Monad (when)
@@ -22,11 +22,11 @@ import HIndent.Styles.TonyDay
 import Language.Haskell.Exts.Annotated
 import Language.Haskell.Exts.Annotated
        hiding (Style, prettyPrint, Pretty, style, parse)
-
+>
 -- floating between imps and decls
 -- before decl1
 x1 = 1
-
+>
 -- before decl2
 x2 = 2
 -- trailing
