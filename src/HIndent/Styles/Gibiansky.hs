@@ -220,6 +220,7 @@ exprs _ exp@InfixApp{} = opExpr exp
 exprs _ exp@Lambda{} = lambdaExpr exp
 exprs _ exp@Case{} = caseExpr exp
 exprs _ exp@LCase{} = lambdaCaseExpr exp
+exprs _ exp@If{} = ifExpr exp
 exprs _ (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) updates
 exprs _ (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
 exprs _ (Tuple _ _ exps) = parens $ inter (write ", ") $ map pretty exps
@@ -446,6 +447,18 @@ lambdaCaseExpr (LCase _ alts) = do
   writeCaseAlts alts
 lambdaCaseExpr _ = error "Not a lambda case"
 
+ifExpr :: Exp NodeInfo -> Printer ()
+ifExpr (If _ cond thenExpr elseExpr) =
+  depend (write "if") $ do
+    write " "
+    pretty cond
+    newline
+    write "then "
+    pretty thenExpr
+    newline
+    write "else "
+    pretty elseExpr
+ifExpr _ = error "Not an if statement"
 
 writeCaseAlts :: [Alt NodeInfo] -> Printer ()
 writeCaseAlts alts = do
