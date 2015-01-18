@@ -265,10 +265,14 @@ appExpr app@(App _ f x) = do
 appExpr _ = error "Not an app"
 
 doExpr :: Exp NodeInfo -> Printer ()
-doExpr (Do _ stmts) = do
+doExpr (Do _ stmts@(first:rest)) = do
   write "do"
   newline
-  indented 2 $ lined (map pretty stmts)
+  indented 2 $ do
+    pretty first
+    forM_ (zip stmts rest) $ \(prev, cur) -> do
+      replicateM_ (max 1 $ lineDelta cur prev) newline
+      pretty cur
 doExpr _ = error "Not a do"
 
 listExpr :: Exp NodeInfo -> Printer ()
