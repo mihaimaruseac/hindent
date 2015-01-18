@@ -182,6 +182,7 @@ exprs _ exp@Do{} = doExpr exp
 exprs _ exp@List{} = listExpr exp
 exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "$"))) _) = dollarExpr exp
 exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "<*>"))) _) = applicativeExpr exp
+exprs _ exp@InfixApp{} = opExpr exp
 exprs _ exp@Lambda{} = lambdaExpr exp
 exprs _ exp@Case{} = caseExpr exp
 exprs _ exp@LCase{} = lambdaCaseExpr exp
@@ -360,6 +361,27 @@ applicativeExpr exp@InfixApp{} =
     isAp (QVarOp _ (UnQual _ (Symbol _ "<*>"))) = True
     isAp _ = False
 applicativeExpr _ = error "Not an application"
+
+opExpr :: Exp NodeInfo -> Printer ()
+opExpr (InfixApp _ left op right) = do
+  col <- getColumn
+  column col $ do
+    pretty left
+
+    let delta = lineDelta op left
+    if delta == 0
+      then space
+      else replicateM_ delta newline
+
+    pretty op
+
+    let delta = lineDelta right op
+    if delta == 0
+      then space
+      else replicateM_ delta newline
+
+    pretty right
+opExpr exp = prettyNoExt exp
 
 lambdaExpr :: Exp NodeInfo -> Printer ()
 lambdaExpr (Lambda _ pats exp) = do
