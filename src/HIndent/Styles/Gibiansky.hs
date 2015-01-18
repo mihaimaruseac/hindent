@@ -512,7 +512,7 @@ recUpdateExpr expWriter updates = do
         write "}"
 
 rhss :: Extend Rhs
-rhss _ (UnGuardedRhs _ exp) = do
+rhss _ (UnGuardedRhs rhsLoc exp) = do
   write " "
   rhsSeparator
   if onNextLine exp
@@ -524,8 +524,13 @@ rhss _ (UnGuardedRhs _ exp) = do
       pretty exp
 
   where
+    prevLine = srcSpanStartLine . srcInfoSpan . nodeInfoSpan $ rhsLoc
+    curLine = astStartLine exp
+    emptyLines = curLine - prevLine
+
     onNextLine Let{} = True
-    onNextLine _ = False
+    onNextLine Case{} = True
+    onNextLine exp = emptyLines > 0
 rhss _ (GuardedRhss _ rs) =
   lined $ flip map rs $ \a@(GuardedRhs _ stmts exp) -> do
     printComments Before a

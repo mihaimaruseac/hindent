@@ -10,9 +10,11 @@ main :: IO ()
 main = return ()
 
 main :: IO ()
-main = return ()
+main =
+  return ()
 
 main :: a
      -> b
      -> c
-main = return ()
+main =
+  return ()
