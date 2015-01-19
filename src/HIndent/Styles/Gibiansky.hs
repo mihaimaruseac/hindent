@@ -65,12 +65,16 @@ attemptSingleLine :: Printer a -> Printer a -> Printer a
 attemptSingleLine single multiple = do
   -- Try printing on one line.
   prevState <- get
+  prevLine <- getLineNum
   result <- single
 
   --  If it doesn't fit, reprint on multiple lines.
+  --  It doesn't fit if it is forced to go over the column limit or wraps
+  --  itself onto another line
+  line <- getLineNum
   col <- getColumn
   maxColumns <- configMaxColumns <$> gets psConfig
-  if col > maxColumns
+  if col > maxColumns || prevLine /= line
     then do
       put prevState
       multiple
