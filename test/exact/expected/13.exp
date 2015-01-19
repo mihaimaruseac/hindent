@@ -1,0 +1,26 @@
+a = b
+  where
+    blah = blah
+
+    hello = hello
+
+a = b
+  where
+    blah = blah
+
+    hello = hello
+
+foo = x
+  where
+    x = blah
+
+foo = x
+  where
+    x = blah
+
+f = case undefined of
+      Just p
+
+        | zot  -> undefined
+
+        | otherwise -> hael
