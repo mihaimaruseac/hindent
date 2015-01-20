@@ -312,7 +312,7 @@ doExpr :: Exp NodeInfo -> Printer ()
 doExpr (Do _ stmts) = do
   write "do"
   newline
-  indented 2 $ onSeparateLines stmts
+  indented indentSpaces $ onSeparateLines stmts
 doExpr _ = error "Not a do"
 
 listExpr :: Exp NodeInfo -> Printer ()
