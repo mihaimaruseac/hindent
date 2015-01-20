@@ -39,6 +39,8 @@ module HIndent.Pretty
   -- * Indentation
   , indented
   , column
+  , getLineLength
+  , getMaxExtent
   , getColumn
   , getLineNum
   , depend
@@ -58,6 +60,7 @@ module HIndent.Pretty
 import           HIndent.Types
 
 import           Language.Haskell.Exts.Comments
+import           Control.Applicative ((<$>))
 import           Control.Monad.State.Strict hiding (state)
 import           Data.Int
 import           Data.List
@@ -223,11 +226,34 @@ getColumn = gets psColumn
 getLineNum :: MonadState PrintState m => m Int64
 getLineNum = gets psLine
 
+-- | Get the length of a specific previous line. If lineNum is the current
+-- line it returns the current length, if the line is yet to be written it
+-- returns zero
+getLineLength :: (Functor m, MonadState PrintState m) => Int64 -> m Int64
+getLineLength lineNum =
+  do currLine <- getLineNum
+     getOffsetLineLength (currLine - lineNum)
+  where getOffsetLineLength offset
+	  | offset < 0 = return 0 -- A line yet to be written
+	  | offset == 0 = getColumn -- The current line being written
+	  | otherwise = (`genericIndex` (offset - 1)) <$> gets psPreviousLineLengths -- A previous line
+
+-- | Get the maximum horizontal extent of the given printer
+getMaxExtent :: (Functor m, MonadState PrintState m) => m a -> m (a, Int64)
+getMaxExtent p =
+  do prevLine <- getLineNum
+     result <- p
+     currLine <- getLineNum
+     maxCol <- maximum <$> mapM getLineLength [prevLine..currLine]
+     return (result, maxCol)
+
 -- | Output a newline.
 newline :: MonadState PrintState m => m ()
 newline =
-  do write "\n"
-     modify (\s -> s {psNewline = True})
+  do col <- getColumn
+     write "\n"
+     modify (\s -> s {psPreviousLineLengths = col : psPreviousLineLengths s
+                     ,psNewline = True})
 
 -- | Set the context to a case context, where RHS is printed with -> .
 withCaseContext :: MonadState PrintState m
