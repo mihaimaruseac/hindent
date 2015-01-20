@@ -434,8 +434,7 @@ lambdaExpr (Lambda _ pats exp) = do
   write " ->"
   attemptSingleLine (write " " >> pretty exp) $ do
     newline
-    indentOnce
-    pretty exp
+    indented indentSpaces $ pretty exp
 lambdaExpr _ = error "Not a lambda"
 
 caseExpr :: Exp NodeInfo -> Printer ()
