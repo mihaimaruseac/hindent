@@ -145,6 +145,7 @@ printComment mayNodespan (ComInfo (Comment inline cspan str) _) =
                 string str
                 modify (\s ->
                           s {psEolComment = True})
+                newline
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
