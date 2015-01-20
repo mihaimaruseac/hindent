@@ -6,6 +6,7 @@ import           Data.Foldable
 import           Control.Applicative ((<$>))
 import           Control.Monad (unless, when, replicateM_)
 import           Control.Monad.State (gets, get, put)
+import           Control.Monad.State.Strict (runState)
 import           Data.Maybe (isNothing)
 
 import           HIndent.Pretty
@@ -65,20 +66,29 @@ attemptSingleLine :: Printer a -> Printer a -> Printer a
 attemptSingleLine single multiple = do
   -- Try printing on one line.
   prevState <- get
-  prevLine <- getLineNum
-  result <- single
+  (result, maxColUsed) <- getMaxExtent single
 
-  --  If it doesn't fit, reprint on multiple lines.
-  --  It doesn't fit if it is forced to go over the column limit or wraps
-  --  itself onto another line
-  line <- getLineNum
-  col <- getColumn
+  --  If the first line doesn't fit, reprint on multiple lines.
   maxColumns <- configMaxColumns <$> gets psConfig
-  if col > maxColumns || prevLine /= line
+  if maxColUsed > maxColumns
     then do
       put prevState
       multiple
     else return result
+
+-- | select the printer which minimizes the number of columns used
+-- returning the first in a tie
+minimizeColumns :: Printer a -> Printer a -> Printer a
+minimizeColumns x y = do
+  ((xResult, xMaxCol), xState) <- runState (runPrinter $ getMaxExtent x) <$> get
+  ((yResult, yMaxCol), yState) <- runState (runPrinter $ getMaxExtent y) <$> get
+  if xMaxCol <= yMaxCol
+    then do
+      put xState
+      return xResult
+    else do
+      put yState
+      return yResult
 
 --------------------------------------------------------------------------------
 -- Extenders
@@ -352,7 +362,7 @@ applicativeExpr :: Exp NodeInfo -> Printer ()
 applicativeExpr exp@InfixApp{} =
   case applicativeArgs of
     Just (first:second:rest) ->
-      attemptSingleLine (singleLine first second rest) (multiLine first second rest)
+      minimizeColumns (singleLine first second rest) (multiLine first second rest)
     _ -> prettyNoExt exp
   where
     singleLine :: Exp NodeInfo -> Exp NodeInfo -> [Exp NodeInfo] -> Printer ()
@@ -515,7 +525,7 @@ recUpdateExpr expWriter updates = do
   write " "
   if null updates
     then write "{}"
-    else attemptSingleLine single mult
+    else minimizeColumns single mult
 
   where
     single = do
