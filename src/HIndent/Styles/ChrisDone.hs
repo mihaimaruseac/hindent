@@ -192,6 +192,14 @@ stmt _ (Qualifier _ e@(InfixApp _ a op b)) =
   do col <- fmap (psColumn . snd)
                  (sandbox (write ""))
      infixApp e a op b (Just col)
+stmt _ (Generator _ p e) =
+  do indentSpaces <- getIndentSpaces
+     pretty p
+     indented indentSpaces
+              (dependOrNewline
+                 (write " <- ")
+                 e
+                 pretty)
 stmt _ e = prettyNoExt e
 
 -- | Expressions
