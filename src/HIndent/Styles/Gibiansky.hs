@@ -6,6 +6,7 @@ import           Data.Foldable
 import           Control.Applicative ((<$>))
 import           Control.Monad (unless, when, replicateM_)
 import           Control.Monad.State (gets, get, put)
+import           Control.Monad.State.Strict (runState)
 import           Data.Maybe (isNothing)
 
 import           HIndent.Pretty
@@ -65,16 +66,29 @@ attemptSingleLine :: Printer a -> Printer a -> Printer a
 attemptSingleLine single multiple = do
   -- Try printing on one line.
   prevState <- get
-  result <- single
+  (result, maxColUsed) <- getMaxExtent single
 
-  --  If it doesn't fit, reprint on multiple lines.
-  col <- getColumn
+  --  If the first line doesn't fit, reprint on multiple lines.
   maxColumns <- configMaxColumns <$> gets psConfig
-  if col > maxColumns
+  if maxColUsed > maxColumns
     then do
       put prevState
       multiple
     else return result
+
+-- | select the printer which minimizes the number of columns used
+-- returning the first in a tie
+minimizeColumns :: Printer a -> Printer a -> Printer a
+minimizeColumns x y = do
+  ((xResult, xMaxCol), xState) <- runState (runPrinter $ getMaxExtent x) <$> get
+  ((yResult, yMaxCol), yState) <- runState (runPrinter $ getMaxExtent y) <$> get
+  if xMaxCol <= yMaxCol
+    then do
+      put xState
+      return xResult
+    else do
+      put yState
+      return yResult
 
 --------------------------------------------------------------------------------
 -- Extenders
@@ -298,7 +312,7 @@ doExpr :: Exp NodeInfo -> Printer ()
 doExpr (Do _ stmts) = do
   write "do"
   newline
-  indented 2 $ onSeparateLines stmts
+  indented indentSpaces $ onSeparateLines stmts
 doExpr _ = error "Not a do"
 
 listExpr :: Exp NodeInfo -> Printer ()
@@ -348,7 +362,7 @@ applicativeExpr :: Exp NodeInfo -> Printer ()
 applicativeExpr exp@InfixApp{} =
   case applicativeArgs of
     Just (first:second:rest) ->
-      attemptSingleLine (singleLine first second rest) (multiLine first second rest)
+      minimizeColumns (singleLine first second rest) (multiLine first second rest)
     _ -> prettyNoExt exp
   where
     singleLine :: Exp NodeInfo -> Exp NodeInfo -> [Exp NodeInfo] -> Printer ()
@@ -420,8 +434,7 @@ lambdaExpr (Lambda _ pats exp) = do
   write " ->"
   attemptSingleLine (write " " >> pretty exp) $ do
     newline
-    indentOnce
-    pretty exp
+    indented indentSpaces $ pretty exp
 lambdaExpr _ = error "Not a lambda"
 
 caseExpr :: Exp NodeInfo -> Printer ()
@@ -511,7 +524,7 @@ recUpdateExpr expWriter updates = do
   write " "
   if null updates
     then write "{}"
-    else attemptSingleLine single mult
+    else minimizeColumns single mult
 
   where
     single = do

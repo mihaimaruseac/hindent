@@ -37,6 +37,7 @@ newtype Printer a =
 data PrintState =
   forall s. PrintState {psIndentLevel :: !Int64 -- ^ Current indentation level.
                        ,psOutput :: !Builder -- ^ The current output.
+                       ,psPreviousLineLengths :: ![Int64] -- ^ The line lengths starting at the most recently written
                        ,psNewline :: !Bool -- ^ Just outputted a newline?
                        ,psColumn :: !Int64 -- ^ Current column.
                        ,psLine :: !Int64 -- ^ Current line number.
@@ -48,7 +49,7 @@ data PrintState =
                        }
 
 instance Eq PrintState where
-  PrintState ilevel out newline col line _ _ _ eolc inc == PrintState ilevel' out' newline' col' line' _ _ _ eolc' inc' =
+  PrintState ilevel out _ newline col line _ _ _ eolc inc == PrintState ilevel' out' _ newline' col' line' _ _ _ eolc' inc' =
     (ilevel,out,newline,col,line,eolc, inc) == (ilevel',out',newline',col',line',eolc', inc')
 
 -- | A printer extender. Takes as argument the user state that the
