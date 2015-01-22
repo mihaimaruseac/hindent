@@ -102,7 +102,7 @@ pretty a =
              (printComments After a)
   where makePrinter s (Extender f) =
           case cast a of
-            Just v -> Just (f s v)
+            Just v -> Just (f v)
             Nothing -> Nothing
         makePrinter s (CatchAll f) = f s a
 

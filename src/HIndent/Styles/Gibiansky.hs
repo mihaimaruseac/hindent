@@ -78,11 +78,11 @@ attemptSingleLine single multiple = do
 
 --------------------------------------------------------------------------------
 -- Extenders
-type Extend f = forall t. t -> f NodeInfo -> Printer t ()
+type Extend f = forall t. f NodeInfo -> Printer t ()
 
 -- | Format whole modules.
 modl :: Extend Module
-modl _ (Module _ mayModHead pragmas imps decls) = do
+modl (Module _ mayModHead pragmas imps decls) = do
   onSeparateLines pragmas
   unless (null pragmas) $
     unless (null imps && null decls && isNothing mayModHead) $
@@ -95,24 +95,24 @@ modl _ (Module _ mayModHead pragmas imps decls) = do
   onSeparateLines imps
   unless (null imps || null decls) (newline >> newline)
   onSeparateLines decls
-modl _ m = prettyNoExt m
+modl m = prettyNoExt m
 
 -- | Format pragmas differently (language pragmas).
 pragmas :: Extend ModulePragma
-pragmas _ (LanguagePragma _ names) = do
+pragmas (LanguagePragma _ names) = do
   write "{-# LANGUAGE "
   inter (write ", ") $ map pretty names
   write " #-}"
-pragmas _ p = prettyNoExt p
+pragmas p = prettyNoExt p
 
 -- | Format patterns.
 pat :: Extend Pat
-pat _ (PTuple _ boxed pats) = writeTuple boxed pats
-pat _ p = prettyNoExt p
+pat (PTuple _ boxed pats) = writeTuple boxed pats
+pat p = prettyNoExt p
 
 -- | Format import statements.
 imp :: Extend ImportDecl
-imp _ ImportDecl{..} = do
+imp ImportDecl{..} = do
   write "import "
   write $ if importQualified
             then "qualified "
@@ -129,13 +129,13 @@ imp _ ImportDecl{..} = do
 
 -- | Format contexts with spaces and commas between class constraints.
 context :: Extend Context
-context _ (CxTuple _ asserts) =
+context (CxTuple _ asserts) =
   parens $ inter (comma >> space) $ map pretty asserts
-context _ ctx = prettyNoExt ctx
+context ctx = prettyNoExt ctx
 
 -- | Format deriving clauses with spaces and commas between class constraints.
 derivings :: Extend Deriving
-derivings _ (Deriving _ instHeads) = do
+derivings (Deriving _ instHeads) = do
   write "deriving "
   go instHeads
 
@@ -149,7 +149,7 @@ typ :: Extend Type
 -- For contexts, check whether the context and all following function types
 -- are on the same line. If they are, print them on the same line; otherwise
 -- print the context and each argument to the function on separate lines.
-typ _ (TyForall _ _ (Just ctx) rest) =
+typ (TyForall _ _ (Just ctx) rest) =
   if all (sameLine ctx) $ collectTypes rest
     then do
       pretty ctx
@@ -162,8 +162,8 @@ typ _ (TyForall _ _ (Just ctx) rest) =
         newline
         write "=> "
         indented 3 $ pretty rest
-typ _ (TyTuple _ boxed types) = writeTuple boxed types
-typ _ ty@(TyFun _ from to) =
+typ (TyTuple _ boxed types) = writeTuple boxed types
+typ ty@(TyFun _ from to) =
   -- If the function argument types are on the same line,
   -- put the entire function type on the same line.
   if all (sameLine from) $ collectTypes ty
@@ -181,7 +181,7 @@ typ _ ty@(TyFun _ from to) =
         newline
         write "-> "
         indented 3 $ pretty to
-typ _ t = prettyNoExt t
+typ t = prettyNoExt t
 
 writeTuple :: Pretty ast => Boxed -> [ast NodeInfo] -> Printer s ()
 writeTuple boxed vals = parens $ do
@@ -205,21 +205,21 @@ collectTypes (TyFun _ from to) = from : collectTypes to
 collectTypes ty = [ty]
 
 exprs :: Extend Exp
-exprs _ exp@Let{} = letExpr exp
-exprs _ exp@App{} = appExpr exp
-exprs _ exp@Do{} = doExpr exp
-exprs _ exp@List{} = listExpr exp
-exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "$"))) _) = dollarExpr exp
-exprs _ exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "<*>"))) _) = applicativeExpr exp
-exprs _ exp@InfixApp{} = opExpr exp
-exprs _ exp@Lambda{} = lambdaExpr exp
-exprs _ exp@Case{} = caseExpr exp
-exprs _ exp@LCase{} = lambdaCaseExpr exp
-exprs _ exp@If{} = ifExpr exp
-exprs _ (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) updates
-exprs _ (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
-exprs _ (Tuple _ _ exps) = parens $ inter (write ", ") $ map pretty exps
-exprs _ exp = prettyNoExt exp
+exprs exp@Let{} = letExpr exp
+exprs exp@App{} = appExpr exp
+exprs exp@Do{} = doExpr exp
+exprs exp@List{} = listExpr exp
+exprs exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "$"))) _) = dollarExpr exp
+exprs exp@(InfixApp _ _ (QVarOp _ (UnQual _ (Symbol _ "<*>"))) _) = applicativeExpr exp
+exprs exp@InfixApp{} = opExpr exp
+exprs exp@Lambda{} = lambdaExpr exp
+exprs exp@Case{} = caseExpr exp
+exprs exp@LCase{} = lambdaCaseExpr exp
+exprs exp@If{} = ifExpr exp
+exprs (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) updates
+exprs (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
+exprs (Tuple _ _ exps) = parens $ inter (write ", ") $ map pretty exps
+exprs exp = prettyNoExt exp
 
 letExpr :: Exp NodeInfo -> Printer s ()
 letExpr (Let _ binds result) = do
@@ -531,7 +531,7 @@ recUpdateExpr expWriter updates = do
         write "}"
 
 rhss :: Extend Rhs
-rhss _ (UnGuardedRhs rhsLoc exp) = do
+rhss (UnGuardedRhs rhsLoc exp) = do
   write " "
   rhsSeparator
   if onNextLine exp
@@ -551,7 +551,7 @@ rhss _ (UnGuardedRhs rhsLoc exp) = do
     onNextLine Let{} = True
     onNextLine Case{} = True
     onNextLine _ = emptyLines > 0
-rhss _ (GuardedRhss _ rs) =
+rhss (GuardedRhss _ rs) =
   lined $ flip map rs $ \a@(GuardedRhs _ stmts exp) -> do
     printComments Before a
     depend (write "| ") $ do
@@ -559,7 +559,7 @@ rhss _ (GuardedRhss _ rs) =
       rhsRest exp
 
 guardedRhs :: Extend GuardedRhs
-guardedRhs _ (GuardedRhs _ stmts exp) = do
+guardedRhs (GuardedRhs _ stmts exp) = do
   indented 1 $ prefixedLined "," (map (\p -> space >> pretty p) stmts)
   rhsRest exp
 
@@ -571,7 +571,7 @@ rhsRest exp = do
   pretty exp
 
 decls :: Extend Decl
-decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
+decls (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
   pretty dataOrNew
   write " "
   pretty declHead
@@ -592,8 +592,8 @@ decls _ (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
   forM_ mayDeriving $ \deriv -> do
     newline
     indented indentSpaces $ pretty deriv
-decls _ (PatBind _ pat rhs mbinds) = funBody [pat] rhs mbinds
-decls _ (FunBind _ matches) =
+decls (PatBind _ pat rhs mbinds) = funBody [pat] rhs mbinds
+decls (FunBind _ matches) =
   lined $ flip map matches $ \match -> do
     (name, pat, rhs, mbinds) <- case match of
                                   Match _ name pat rhs mbinds -> return (name, pat, rhs, mbinds)
@@ -605,7 +605,7 @@ decls _ (FunBind _ matches) =
     pretty name
     write " "
     funBody pat rhs mbinds
-decls _ decl = prettyNoExt decl
+decls decl = prettyNoExt decl
 
 funBody :: [Pat NodeInfo] -> Rhs NodeInfo -> Maybe (Binds NodeInfo) -> Printer s ()
 funBody pat rhs mbinds = do
@@ -657,10 +657,10 @@ isDoBlock (UnGuardedRhs _ Do{}) = True
 isDoBlock _ = False
 
 condecls :: Extend ConDecl
-condecls _ (ConDecl _ name bangty) =
+condecls (ConDecl _ name bangty) =
   depend (pretty name) $
     forM_ bangty $ \ty -> space >> pretty ty
-condecls _ (RecDecl _ name fields) =
+condecls (RecDecl _ name fields) =
   depend (pretty name >> space) $ do
     write "{ "
     case fields of
@@ -678,10 +678,10 @@ condecls _ (RecDecl _ name fields) =
           pretty field
           newline
     write "}"
-condecls _ other = prettyNoExt other
+condecls other = prettyNoExt other
 
 alt :: Extend Alt
-alt _ (Alt _ p rhs mbinds) = do
+alt (Alt _ p rhs mbinds) = do
   pretty p
   case rhs of
     UnGuardedRhs{} -> pretty rhs
@@ -692,7 +692,7 @@ alt _ (Alt _ p rhs mbinds) = do
       depend (write "where ") (pretty binds)
 
 moduleHead :: Extend ModuleHead
-moduleHead _ (ModuleHead _ name mwarn mexports) = do
+moduleHead (ModuleHead _ name mwarn mexports) = do
   forM_ mwarn pretty
   write "module "
   pretty name
@@ -702,7 +702,7 @@ moduleHead _ (ModuleHead _ name mwarn mexports) = do
   write " where"
 
 exportList :: Extend ExportSpecList
-exportList _ (ExportSpecList _ exports) = do
+exportList (ExportSpecList _ exports) = do
   write "("
   if length exports <= maxSingleLineExports
     then do
@@ -733,8 +733,8 @@ lineDelta cur prev = emptyLines
     emptyLines = curLine - prevLine
 
 fieldUpdate :: Extend FieldUpdate
-fieldUpdate _ (FieldUpdate _ name val) = do
+fieldUpdate (FieldUpdate _ name val) = do
   pretty name
   write " = "
   pretty val
-fieldUpdate _ upd = prettyNoExt upd
+fieldUpdate upd = prettyNoExt upd

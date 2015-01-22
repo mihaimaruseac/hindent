@@ -55,7 +55,7 @@ instance Eq (PrintState s) where
 -- printer was run with, and the current node to print. Use
 -- 'prettyNoExt' to fallback to the built-in printer.
 data Extender s where
-  Extender :: forall s a. (Typeable a) => (s -> a -> Printer s ()) -> Extender s
+  Extender :: forall s a. (Typeable a) => (a -> Printer s ()) -> Extender s
   CatchAll :: forall s. (forall a. Typeable a => s -> a -> Maybe (Printer s ())) -> Extender s
 
 -- | A printer style.
