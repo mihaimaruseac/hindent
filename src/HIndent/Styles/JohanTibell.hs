@@ -61,7 +61,7 @@ johanTibell =
 -- do x *
 --    y
 -- is two invalid statements, not one valid infix op.
-stmt :: s -> Stmt NodeInfo -> Printer ()
+stmt :: s -> Stmt NodeInfo -> Printer s ()
 stmt _ (Qualifier _ e@(InfixApp _ a op b)) =
   do col <- fmap (psColumn . snd)
                  (sandbox (write ""))
@@ -69,7 +69,7 @@ stmt _ (Qualifier _ e@(InfixApp _ a op b)) =
 stmt _ e = prettyNoExt e
 
 -- | Handle do specially and also space out guards more.
-rhs :: t -> Rhs NodeInfo -> Printer ()
+rhs :: s -> Rhs NodeInfo -> Printer s ()
 rhs s x =
   case x of
     UnGuardedRhs _ (Do _ dos) ->
@@ -89,7 +89,7 @@ rhs s x =
                else unguardedrhs s x
 
 -- | Implement dangling right-hand-sides.
-guardedRhs :: t -> GuardedRhs NodeInfo -> Printer ()
+guardedRhs :: s -> GuardedRhs NodeInfo -> Printer s ()
 -- | Handle do specially.
 guardedRhs _ (GuardedRhs _ stmts (Do _ dos)) =
   do indented 1
@@ -104,14 +104,14 @@ guardedRhs _ (GuardedRhs _ stmts (Do _ dos)) =
 guardedRhs _ e = prettyNoExt e
 
 -- | Unguarded case alts.
-unguardedalt :: t -> Rhs NodeInfo -> Printer ()
+unguardedalt :: s -> Rhs NodeInfo -> Printer s ()
 unguardedalt _ (UnGuardedRhs _ e) =
   do indentSpaces <- getIndentSpaces
      write " -> "
      indented indentSpaces (pretty e)
 unguardedalt _ e = prettyNoExt e
 
-unguardedrhs :: s -> Rhs NodeInfo -> Printer ()
+unguardedrhs :: s -> Rhs NodeInfo -> Printer s ()
 unguardedrhs _ (UnGuardedRhs _ e) =
   do indentSpaces <- getIndentSpaces
      write " = "
@@ -119,7 +119,7 @@ unguardedrhs _ (UnGuardedRhs _ e) =
 unguardedrhs _ e = prettyNoExt e
 
 -- | Expression customizations.
-exp :: t -> Exp NodeInfo -> Printer ()
+exp :: t -> Exp NodeInfo -> Printer s ()
 -- | Space out tuples.
 exp _ (Tuple _ boxed exps) =
   depend (write (case boxed of
@@ -213,7 +213,7 @@ exp _ (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
 exp _ e = prettyNoExt e
 
 -- | Specially format records. Indent where clauses only 2 spaces.
-decl :: t -> Decl NodeInfo -> Printer ()
+decl :: t -> Decl NodeInfo -> Printer s ()
 -- | Pretty print type signatures like
 --
 -- foo :: (Show x,Read x)
@@ -290,7 +290,7 @@ decl _ (DataDecl _ dataornew ctx dhead condecls@[_] mderivs)
 decl _ e = prettyNoExt e
 
 -- | Use special record display, used by 'dataDecl' in a record scenario.
-qualConDecl :: QualConDecl NodeInfo -> Printer ()
+qualConDecl :: QualConDecl NodeInfo -> Printer s ()
 qualConDecl x =
     case x of
         QualConDecl _ tyvars ctx d ->
@@ -305,7 +305,7 @@ qualConDecl x =
                      (recDecl d))
 
 -- | Fields are preceded with a space.
-conDecl :: t -> ConDecl NodeInfo -> Printer ()
+conDecl :: t -> ConDecl NodeInfo -> Printer s ()
 conDecl _ (RecDecl _ name fields) =
   depend (do pretty name
              write " ")
@@ -318,7 +318,7 @@ conDecl _ e = prettyNoExt e
 -- | Record decls are formatted like: Foo
 -- { bar :: X
 -- }
-recDecl :: ConDecl NodeInfo -> Printer ()
+recDecl :: ConDecl NodeInfo -> Printer s ()
 recDecl (RecDecl _ name fields) =
   do pretty name
      indentSpaces <- getIndentSpaces
@@ -331,7 +331,7 @@ recDecl (RecDecl _ name fields) =
                 write "} ")
 recDecl r = prettyNoExt r
 
-recUpdateExpr :: Printer () -> [FieldUpdate NodeInfo] -> Printer ()
+recUpdateExpr :: Printer s () -> [FieldUpdate NodeInfo] -> Printer s ()
 recUpdateExpr expWriter updates = do
   expWriter
   newline
@@ -352,14 +352,14 @@ isRecord (QualConDecl _ _ _ RecDecl{}) = True
 isRecord _ = False
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
-isOverflow :: Printer a -> Printer Bool
+isOverflow :: Printer s a -> Printer s Bool
 isOverflow p =
   do (_,st) <- sandbox p
      columnLimit <- getColumnLimit
      return (psColumn st > columnLimit)
 
 -- | Is the given expression a single-liner when printed?
-isSingleLiner :: MonadState PrintState m
+isSingleLiner :: MonadState (PrintState s) m
               => m a -> m Bool
 isSingleLiner p =
   do line <- gets psLine
@@ -368,7 +368,7 @@ isSingleLiner p =
 
 -- | Is the expression "short"? Used for app heads.
 isShort :: (Pretty ast)
-        => ast NodeInfo -> Printer (Bool)
+        => ast NodeInfo -> Printer s (Bool)
 isShort p =
   do line <- gets psLine
      orig <- fmap (psColumn . snd) (sandbox (write ""))
@@ -377,7 +377,7 @@ isShort p =
              (psColumn st < orig + shortName))
 
 -- | Is an expression flat?
-isFlat :: Exp NodeInfo -> Printer Bool
+isFlat :: Exp NodeInfo -> Printer s Bool
 isFlat (Lambda _ _ e) = isFlat e
 isFlat (App _ a b) =
   return (isName a && isName b)
@@ -399,7 +399,7 @@ isFlat (RightSection _ _ e) = isFlat e
 isFlat _ = return False
 
 -- | rhs on field update on the same line as lhs.
-fieldupdate :: t -> FieldUpdate NodeInfo -> Printer ()
+fieldupdate :: t -> FieldUpdate NodeInfo -> Printer s ()
 fieldupdate _ e =
   case e of
     FieldUpdate _ n e' -> do pretty n
@@ -416,7 +416,7 @@ infixApp :: (Pretty ast,Pretty ast1,Pretty ast2)
          -> ast1 NodeInfo
          -> ast2 NodeInfo
          -> Maybe Int64
-         -> Printer ()
+         -> Printer s ()
 infixApp e a op b indent =
   do is <- isFlat e
      overflow <- isOverflow

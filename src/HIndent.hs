@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings, TupleSections, ScopedTypeVariables #-}
 
 -- | Haskell indenter.
@@ -62,12 +63,12 @@ reformat style mexts x =
     ParseFailed _ e -> Left e
 
 -- | Pretty print the given printable thing.
-prettyPrint :: Style -> Printer () -> Builder
+prettyPrint :: Style -> (forall s. Printer s ()) -> Builder
 prettyPrint style m =
-  psOutput (execState (runPrinter m)
-                      (case style of
-                         Style _name _author _desc st extenders config ->
-                           PrintState 0 mempty False 0 1 st extenders config False False))
+  case style of
+    Style _name _author _desc st extenders config ->
+      psOutput (execState (runPrinter m)
+                          (PrintState 0 mempty False 0 1 st extenders config False False))
 
 -- | Parse mode, includes all extensions, doesn't assume any fixities.
 parseMode :: ParseMode

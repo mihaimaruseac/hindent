@@ -13,6 +13,10 @@ module HIndent.Pretty
     Pretty
   , pretty
   , prettyNoExt
+  -- * User state
+  ,getState
+  ,putState
+  ,modifyState
   -- * Insertion
   , write
   , newline
@@ -80,10 +84,10 @@ import           Prelude hiding (exp)
 
 -- | Pretty printing class.
 class (Annotated ast,Typeable ast) => Pretty ast where
-  prettyInternal :: MonadState PrintState m => ast NodeInfo -> m ()
+  prettyInternal :: MonadState (PrintState s) m => ast NodeInfo -> m ()
 
 -- | Pretty print using extenders.
-pretty :: (Pretty ast,MonadState PrintState m)
+pretty :: (Pretty ast,MonadState (PrintState s) m)
        => ast NodeInfo -> m ()
 pretty a =
   do st <- get
@@ -105,12 +109,12 @@ pretty a =
 -- | Run the basic printer for the given node without calling an
 -- extension hook for this node, but do allow extender hooks in child
 -- nodes. Also auto-inserts comments.
-prettyNoExt :: (Pretty ast,MonadState PrintState m)
+prettyNoExt :: (Pretty ast,MonadState (PrintState s) m)
             => ast NodeInfo -> m ()
 prettyNoExt = prettyInternal
 
 -- | Print comments of a node.
-printComments :: (Pretty ast,MonadState PrintState m)
+printComments :: (Pretty ast,MonadState (PrintState s) m)
               => ComInfoLocation -> ast NodeInfo -> m ()
 printComments loc' ast =
   forM_ comments $ \comment ->
@@ -124,7 +128,7 @@ printComments loc' ast =
         comments = nodeInfoComments info
 
 -- | Pretty print a comment.
-printComment :: MonadState PrintState m => Maybe SrcSpan -> ComInfo -> m ()
+printComment :: MonadState (PrintState s) m => Maybe SrcSpan -> ComInfo -> m ()
 printComment mayNodespan (ComInfo (Comment inline cspan str) _) =
   do -- Insert proper amount of space before comment.
      -- This maintains alignment. This cannot force comments
@@ -148,15 +152,27 @@ printComment mayNodespan (ComInfo (Comment inline cspan str) _) =
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
-pretty' :: (Pretty ast,P.Pretty (ast SrcSpanInfo),Functor ast,MonadState PrintState m)
+pretty' :: (Pretty ast,P.Pretty (ast SrcSpanInfo),Functor ast,MonadState (PrintState s) m)
         => ast NodeInfo -> m ()
 pretty' = write . T.fromText . T.pack . P.prettyPrint . fmap nodeInfoSpan
 
 --------------------------------------------------------------------------------
 -- * Combinators
 
+-- | Get the user state.
+getState :: Printer s s
+getState = gets psUserState
+
+-- | Put the user state.
+putState :: s -> Printer s ()
+putState s' = modifyState (const s')
+
+-- | Modify the user state.
+modifyState :: (s -> s) -> Printer s ()
+modifyState f = modify (\s -> s {psUserState = f (psUserState s)})
+
 -- | Increase indentation level by n spaces for the given printer.
-indented :: MonadState PrintState m => Int64 -> m a -> m a
+indented :: MonadState (PrintState s) m => Int64 -> m a -> m a
 indented i p =
   do level <- gets psIndentLevel
      modify (\s -> s {psIndentLevel = level + i})
@@ -165,15 +181,15 @@ indented i p =
      return m
 
 -- | Print all the printers separated by spaces.
-spaced :: MonadState PrintState m => [m ()] -> m ()
+spaced :: MonadState (PrintState s) m => [m ()] -> m ()
 spaced = inter space
 
 -- | Print all the printers separated by commas.
-commas :: MonadState PrintState m => [m ()] -> m ()
+commas :: MonadState (PrintState s) m => [m ()] -> m ()
 commas = inter comma
 
 -- | Print all the printers separated by sep.
-inter :: MonadState PrintState m => m () -> [m ()] -> m ()
+inter :: MonadState (PrintState s) m => m () -> [m ()] -> m ()
 inter sep ps =
   foldr (\(i,p) next ->
            depend (do p
@@ -185,12 +201,12 @@ inter sep ps =
         (zip [1 ..] ps)
 
 -- | Print all the printers separated by newlines.
-lined :: MonadState PrintState m => [m ()] -> m ()
+lined :: MonadState (PrintState s) m => [m ()] -> m ()
 lined ps = sequence_ (intersperse newline ps)
 
 -- | Print all the printers separated newlines and optionally a line
 -- prefix.
-prefixedLined :: MonadState PrintState m => Text -> [m ()] -> m ()
+prefixedLined :: MonadState (PrintState s) m => Text -> [m ()] -> m ()
 prefixedLined pref ps' =
   case ps' of
     [] -> return ()
@@ -206,7 +222,7 @@ prefixedLined pref ps' =
 
 -- | Set the (newline-) indent level to the given column for the given
 -- printer.
-column :: MonadState PrintState m => Int64 -> m a -> m a
+column :: MonadState (PrintState s) m => Int64 -> m a -> m a
 column i p =
   do level <- gets psIndentLevel
      modify (\s -> s {psIndentLevel = i})
@@ -215,21 +231,21 @@ column i p =
      return m
 
 -- | Get the current indent level.
-getColumn :: MonadState PrintState m => m Int64
+getColumn :: MonadState (PrintState s) m => m Int64
 getColumn = gets psColumn
 
 -- | Get the current line number.
-getLineNum :: MonadState PrintState m => m Int64
+getLineNum :: MonadState (PrintState s) m => m Int64
 getLineNum = gets psLine
 
 -- | Output a newline.
-newline :: MonadState PrintState m => m ()
+newline :: MonadState (PrintState s) m => m ()
 newline =
   do write "\n"
      modify (\s -> s {psNewline = True})
 
 -- | Set the context to a case context, where RHS is printed with -> .
-withCaseContext :: MonadState PrintState m
+withCaseContext :: MonadState (PrintState s) m
                 => Bool -> m a -> m a
 withCaseContext bool pr =
   do original <- gets psInsideCase
@@ -239,7 +255,7 @@ withCaseContext bool pr =
      return result
 
 -- | Get the current RHS separator, either = or -> .
-rhsSeparator :: MonadState PrintState m
+rhsSeparator :: MonadState (PrintState s) m
              => m ()
 rhsSeparator =
   do inCase <- gets psInsideCase
@@ -249,7 +265,7 @@ rhsSeparator =
 
 -- | Make the latter's indentation depend upon the end column of the
 -- former.
-depend :: MonadState PrintState m => m () -> m b -> m b
+depend :: MonadState (PrintState s) m => m () -> m b -> m b
 depend maker dependent =
   do state' <- get
      maker
@@ -261,7 +277,7 @@ depend maker dependent =
 
 -- | Make the latter's indentation depend upon the end column of the
 -- former.
-dependBind :: MonadState PrintState m => m a -> (a -> m b) -> m b
+dependBind :: MonadState (PrintState s) m => m a -> (a -> m b) -> m b
 dependBind maker dependent =
   do state' <- get
      v <- maker
@@ -272,7 +288,7 @@ dependBind maker dependent =
         else (dependent v)
 
 -- | Wrap in parens.
-parens :: MonadState PrintState m => m a -> m a
+parens :: MonadState (PrintState s) m => m a -> m a
 parens p =
   depend (write "(")
          (do v <- p
@@ -280,7 +296,7 @@ parens p =
              return v)
 
 -- | Wrap in braces.
-braces :: MonadState PrintState m => m a -> m a
+braces :: MonadState (PrintState s) m => m a -> m a
 braces p =
   depend (write "{")
          (do v <- p
@@ -288,7 +304,7 @@ braces p =
              return v)
 
 -- | Wrap in brackets.
-brackets :: MonadState PrintState m => m a -> m a
+brackets :: MonadState (PrintState s) m => m a -> m a
 brackets p =
   depend (write "[")
          (do v <- p
@@ -296,20 +312,20 @@ brackets p =
              return v)
 
 -- | Write a space.
-space :: MonadState PrintState m => m ()
+space :: MonadState (PrintState s) m => m ()
 space = write " "
 
 -- | Write a comma.
-comma :: MonadState PrintState m => m ()
+comma :: MonadState (PrintState s) m => m ()
 comma = write ","
 
 -- | Write an integral.
-int :: (Integral n, MonadState PrintState m)
+int :: (Integral n, MonadState (PrintState s) m)
     => n -> m ()
 int = write . decimal
 
 -- | Write out a string, updating the current position information.
-write :: MonadState PrintState m => Builder -> m ()
+write :: MonadState (PrintState s) m => Builder -> m ()
 write x =
   do eol <- gets psEolComment
      when (eol && x /= "\n") newline
@@ -341,16 +357,16 @@ write x =
           LT.length (LT.filter (== '\n') x')
 
 -- | Write a string.
-string :: MonadState PrintState m =>String -> m ()
+string :: MonadState (PrintState s) m =>String -> m ()
 string = write . T.fromText . T.pack
 
 -- | Indent spaces, e.g. 2.
-getIndentSpaces :: MonadState PrintState m => m Int64
+getIndentSpaces :: MonadState (PrintState s) m => m Int64
 getIndentSpaces =
   gets (configIndentSpaces . psConfig)
 
 -- | Column limit, e.g. 80
-getColumnLimit :: MonadState PrintState m => m Int64
+getColumnLimit :: MonadState (PrintState s) m => m Int64
 getColumnLimit =
   gets (configMaxColumns . psConfig)
 
@@ -371,7 +387,7 @@ nullBinds (BDecls _ x) = null x
 nullBinds (IPBinds _ x) = null x
 
 -- | Maybe render a class context.
-maybeCtx :: MonadState PrintState m => Maybe (Context NodeInfo) -> m ()
+maybeCtx :: MonadState (PrintState s) m => Maybe (Context NodeInfo) -> m ()
 maybeCtx =
   maybe (return ())
         (\p ->
@@ -379,7 +395,7 @@ maybeCtx =
            write " => ")
 
 -- | Maybe render an overlap definition.
-maybeOverlap :: MonadState PrintState m => Maybe (Overlap NodeInfo) -> m ()
+maybeOverlap :: MonadState (PrintState s) m => Maybe (Overlap NodeInfo) -> m ()
 maybeOverlap =
   maybe (return ())
         (\p ->
@@ -387,7 +403,7 @@ maybeOverlap =
            space)
 
 -- | Swing the second printer below and indented with respect to the first.
-swing :: MonadState PrintState m => m () -> m b -> m b
+swing :: MonadState (PrintState s) m => m () -> m b -> m b
 swing a b =
   do orig <- gets psIndentLevel
      a
@@ -477,7 +493,7 @@ instance Pretty Pat where
       PVar{} -> pretty' x
 
 -- | Pretty print a name for being an infix operator.
-prettyInfixOp :: MonadState PrintState m => QName NodeInfo -> m ()
+prettyInfixOp :: MonadState (PrintState s) m => QName NodeInfo -> m ()
 prettyInfixOp x =
   case x of
     Qual{} -> pretty' x
@@ -546,7 +562,7 @@ instance Pretty Exp where
   prettyInternal = exp
 
 -- | Render an expression.
-exp :: MonadState PrintState m => Exp NodeInfo -> m ()
+exp :: MonadState (PrintState s) m => Exp NodeInfo -> m ()
 exp (InfixApp _ a op b) =
   depend (do pretty a
              space
@@ -756,7 +772,7 @@ instance Pretty Decl where
   prettyInternal = decl
 
 -- | Render a declaration.
-decl :: MonadState PrintState m => Decl NodeInfo -> m ()
+decl :: MonadState (PrintState s) m => Decl NodeInfo -> m ()
 decl (PatBind _ pat rhs mbinds) =
   do pretty pat
      withCaseContext False (pretty rhs)
