@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings, RecordWildCards, RankNTypes #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 module HIndent.Styles.Gibiansky where
 
@@ -17,14 +18,14 @@ import           Language.Haskell.Exts.Comments
 import           Prelude hiding (exp, all, mapM_, minimum, and, maximum)
 
 -- | Empty state.
-data State = State
+data State = State { gibianskyForceSingleLine :: Bool }
 
 -- | The printer style.
 gibiansky :: Style
 gibiansky = Style { styleName = "gibiansky"
                   , styleAuthor = "Andrew Gibiansky"
                   , styleDescription = "Andrew Gibiansky's style"
-                  , styleInitialState = State
+                  , styleInitialState = State { gibianskyForceSingleLine = False }
                   , styleExtenders = [ Extender imp
                                      , Extender modl
                                      , Extender context
@@ -61,11 +62,14 @@ indentOnce = replicateM_ indentSpaces $ write " "
 maxSingleLineExports :: Integral a => a
 maxSingleLineExports = 4
 
-attemptSingleLine :: Printer s a -> Printer s a -> Printer s a
+attemptSingleLine :: Printer State a -> Printer State a -> Printer State a
 attemptSingleLine single multiple = do
   -- Try printing on one line.
   prevState <- get
+  let forceSingle = gibianskyForceSingleLine $ psUserState prevState
+  modifyState $ \st -> st { gibianskyForceSingleLine = True }
   result <- single
+  modifyState $ \st -> st { gibianskyForceSingleLine = forceSingle }
 
   --  If it doesn't fit, reprint on multiple lines.
   col <- getColumn
@@ -78,7 +82,7 @@ attemptSingleLine single multiple = do
 
 --------------------------------------------------------------------------------
 -- Extenders
-type Extend f = forall t. f NodeInfo -> Printer t ()
+type Extend f = f NodeInfo -> Printer State ()
 
 -- | Format whole modules.
 modl :: Extend Module
@@ -183,7 +187,7 @@ typ ty@(TyFun _ from to) =
         indented 3 $ pretty to
 typ t = prettyNoExt t
 
-writeTuple :: Pretty ast => Boxed -> [ast NodeInfo] -> Printer s ()
+writeTuple :: Pretty ast => Boxed -> [ast NodeInfo] -> Printer State ()
 writeTuple boxed vals = parens $ do
   boxed'
   inter (write ", ") $ map pretty vals
@@ -221,7 +225,7 @@ exprs (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
 exprs (Tuple _ _ exps) = parens $ inter (write ", ") $ map pretty exps
 exprs exp = prettyNoExt exp
 
-letExpr :: Exp NodeInfo -> Printer s ()
+letExpr :: Exp NodeInfo -> Printer State ()
 letExpr (Let _ binds result) = do
   cols <- depend (write "let ") $ do
             col <- getColumn
@@ -233,7 +237,7 @@ letExpr (Let _ binds result) = do
     pretty result
 letExpr _ = error "Not a let"
 
-appExpr :: Exp NodeInfo -> Printer s ()
+appExpr :: Exp NodeInfo -> Printer State ()
 appExpr app@(App _ f x) = do
   prevState <- get
   prevLine <- getLineNum
@@ -267,7 +271,7 @@ appExpr app@(App _ f x) = do
         indentOnce
         pretty x
 
-    canSingleLine :: Printer s a -> Printer s Bool
+    canSingleLine :: Printer State a -> Printer State Bool
     canSingleLine printer = do
       st <- get
       prevLine <- getLineNum
@@ -284,7 +288,7 @@ appExpr app@(App _ f x) = do
       in (fun, y : args)
     collectArgs nonApp = (nonApp, [])
 
-    separateArgs :: Exp NodeInfo -> Printer s ()
+    separateArgs :: Exp NodeInfo -> Printer State ()
     separateArgs expr =
       let (fun, args) = collectArgs expr
       in do
@@ -295,24 +299,24 @@ appExpr app@(App _ f x) = do
           indented indentSpaces $ lined $ map pretty $ reverse args
 appExpr _ = error "Not an app"
 
-doExpr :: Exp NodeInfo -> Printer s ()
+doExpr :: Exp NodeInfo -> Printer State ()
 doExpr (Do _ stmts) = do
   write "do"
   newline
   indented 2 $ onSeparateLines stmts
 doExpr _ = error "Not a do"
 
-listExpr :: Exp NodeInfo -> Printer s ()
+listExpr :: Exp NodeInfo -> Printer State ()
 listExpr (List _ els) = attemptSingleLine (singleLineList els) (multiLineList els)
 listExpr _ = error "Not a list"
 
-singleLineList :: [Exp NodeInfo] -> Printer s ()
+singleLineList :: [Exp NodeInfo] -> Printer State ()
 singleLineList exps = do
   write "["
   inter (write ", ") $ map pretty exps
   write "]"
 
-multiLineList :: [Exp NodeInfo] -> Printer s ()
+multiLineList :: [Exp NodeInfo] -> Printer State ()
 multiLineList [] = write "[]"
 multiLineList (first:exps) = do
   col <- getColumn
@@ -327,7 +331,7 @@ multiLineList (first:exps) = do
     newline
     write "]"
 
-dollarExpr :: Exp NodeInfo -> Printer s ()
+dollarExpr :: Exp NodeInfo -> Printer State ()
 dollarExpr (InfixApp _ left op right) = do
   pretty left
   write " "
@@ -345,14 +349,14 @@ dollarExpr (InfixApp _ left op right) = do
     needsNewline exp = lineDelta exp op > 0
 dollarExpr _ = error "Not an application"
 
-applicativeExpr :: Exp NodeInfo -> Printer s ()
+applicativeExpr :: Exp NodeInfo -> Printer State ()
 applicativeExpr exp@InfixApp{} =
   case applicativeArgs of
     Just (first:second:rest) ->
       attemptSingleLine (singleLine first second rest) (multiLine first second rest)
     _ -> prettyNoExt exp
   where
-    singleLine :: Exp NodeInfo -> Exp NodeInfo -> [Exp NodeInfo] -> Printer s ()
+    singleLine :: Exp NodeInfo -> Exp NodeInfo -> [Exp NodeInfo] -> Printer State ()
     singleLine first second rest = spaced
                                      [ pretty first
                                      , write "<$>"
@@ -361,7 +365,7 @@ applicativeExpr exp@InfixApp{} =
                                      , inter (write " <*> ") $ map pretty rest
                                      ]
 
-    multiLine :: Exp NodeInfo -> Exp NodeInfo -> [Exp NodeInfo] -> Printer s ()
+    multiLine :: Exp NodeInfo -> Exp NodeInfo -> [Exp NodeInfo] -> Printer State ()
     multiLine first second rest = do
       pretty first
       depend (write " ") $ do
@@ -393,7 +397,7 @@ applicativeExpr exp@InfixApp{} =
     isAp _ = False
 applicativeExpr _ = error "Not an application"
 
-opExpr :: Exp NodeInfo -> Printer s ()
+opExpr :: Exp NodeInfo -> Printer State ()
 opExpr (InfixApp _ left op right) = do
   col <- getColumn
   column col $ do
@@ -414,7 +418,7 @@ opExpr (InfixApp _ left op right) = do
     pretty right
 opExpr exp = prettyNoExt exp
 
-lambdaExpr :: Exp NodeInfo -> Printer s ()
+lambdaExpr :: Exp NodeInfo -> Printer State ()
 lambdaExpr (Lambda _ pats exp) = do
   write "\\"
   spaced $ map pretty pats
@@ -425,7 +429,7 @@ lambdaExpr (Lambda _ pats exp) = do
     pretty exp
 lambdaExpr _ = error "Not a lambda"
 
-caseExpr :: Exp NodeInfo -> Printer s ()
+caseExpr :: Exp NodeInfo -> Printer State ()
 caseExpr (Case _ exp alts) = do
   depend (write "case ") $ do
     pretty exp
@@ -435,14 +439,14 @@ caseExpr (Case _ exp alts) = do
   writeCaseAlts alts
 caseExpr _ = error "Not a case"
 
-lambdaCaseExpr :: Exp NodeInfo -> Printer s ()
+lambdaCaseExpr :: Exp NodeInfo -> Printer State ()
 lambdaCaseExpr (LCase _ alts) = do
   write "\\case"
   newline
   writeCaseAlts alts
 lambdaCaseExpr _ = error "Not a lambda case"
 
-ifExpr :: Exp NodeInfo -> Printer s ()
+ifExpr :: Exp NodeInfo -> Printer State ()
 ifExpr (If _ cond thenExpr elseExpr) =
   depend (write "if") $ do
     write " "
@@ -455,7 +459,7 @@ ifExpr (If _ cond thenExpr elseExpr) =
     pretty elseExpr
 ifExpr _ = error "Not an if statement"
 
-writeCaseAlts :: [Alt NodeInfo] -> Printer s ()
+writeCaseAlts :: [Alt NodeInfo] -> Printer State ()
 writeCaseAlts alts = do
   allSingle <- and <$> mapM isSingle alts
   withCaseContext True $ indented indentSpaces $
@@ -466,7 +470,7 @@ writeCaseAlts alts = do
       else lined $ map (prettyCase Nothing) alts
 
   where
-    isSingle :: Alt NodeInfo -> Printer s Bool
+    isSingle :: Alt NodeInfo -> Printer State Bool
     isSingle alt' = fst <$> sandbox
                               (do
                                  line <- gets psLine
@@ -477,7 +481,7 @@ writeCaseAlts alts = do
     altPattern :: Alt l -> Pat l
     altPattern (Alt _ p _ _) = p
 
-    patternLen :: Pat NodeInfo -> Printer s Int
+    patternLen :: Pat NodeInfo -> Printer State Int
     patternLen pat = fromIntegral <$> fst <$> sandbox
                                                 (do
                                                    col <- getColumn
@@ -485,7 +489,7 @@ writeCaseAlts alts = do
                                                    col' <- getColumn
                                                    return $ col' - col)
 
-    prettyCase :: Maybe Int -> Alt NodeInfo -> Printer s ()
+    prettyCase :: Maybe Int -> Alt NodeInfo -> Printer State ()
     prettyCase mpatlen (Alt _ p galts mbinds) = do
       -- Padded pattern
       case mpatlen of
@@ -506,7 +510,7 @@ writeCaseAlts alts = do
         indented indentSpaces $ depend (write "where ") (pretty binds)
 
 
-recUpdateExpr :: Printer s () -> [FieldUpdate NodeInfo] -> Printer s ()
+recUpdateExpr :: Printer State () -> [FieldUpdate NodeInfo] -> Printer State ()
 recUpdateExpr expWriter updates = do
   expWriter
   write " "
@@ -564,7 +568,7 @@ guardedRhs (GuardedRhs _ stmts exp) = do
   indented 1 $ prefixedLined "," (map (\p -> space >> pretty p) stmts)
   rhsRest exp
 
-rhsRest :: Pretty ast => ast NodeInfo -> Printer s ()
+rhsRest :: Pretty ast => ast NodeInfo -> Printer State ()
 rhsRest exp = do
   write " "
   rhsSeparator
@@ -608,7 +612,7 @@ decls (FunBind _ matches) =
     funBody pat rhs mbinds
 decls decl = prettyNoExt decl
 
-funBody :: [Pat NodeInfo] -> Rhs NodeInfo -> Maybe (Binds NodeInfo) -> Printer s ()
+funBody :: [Pat NodeInfo] -> Rhs NodeInfo -> Maybe (Binds NodeInfo) -> Printer State ()
 funBody pat rhs mbinds = do
   spaced $ map pretty pat
 
@@ -629,13 +633,13 @@ funBody pat rhs mbinds = do
       newline
       indented indentSpaces $ writeWhereBinds binds
 
-writeWhereBinds :: Binds NodeInfo -> Printer s ()
+writeWhereBinds :: Binds NodeInfo -> Printer State ()
 writeWhereBinds ds@(BDecls _ binds) = do
   printComments Before ds
   onSeparateLines binds
 writeWhereBinds binds = prettyNoExt binds
 
-onSeparateLines :: (Pretty ast, Annotated ast) => [ast NodeInfo] -> Printer s ()
+onSeparateLines :: (Pretty ast, Annotated ast) => [ast NodeInfo] -> Printer State ()
 onSeparateLines vals@(first:rest) = do
   pretty first
   forM_ (zip vals rest) $ \(prev, cur) -> do
