@@ -52,12 +52,12 @@ options =
           stop (flag "version" "Print the version" Version)
         style =
           makeStyle <$>
-          (constant "--style" "Style to print with" *>
+          (constant "--style" "Style to print with" () *>
            foldr1 (<|>)
                   (map (\s ->
-                          fmap (const s)
-                               (constant (styleName s)
-                                         (styleDescription s)))
+                          constant (styleName s)
+                                   (styleDescription s)
+                                   s)
                        styles)) <*>
           lineLen
         exts =
