@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings, RecordWildCards, RankNTypes #-}
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+{-# OPTIONS_GHC  -fno-warn-name-shadowing  #-}
 
 module HIndent.Styles.Gibiansky where
 
@@ -177,10 +177,9 @@ typ ty@(TyFun _ from to) =
       pretty from
       write " -> "
       pretty to
-    else
-    -- If the function argument types are on different lines,
-    -- write one argument type per line.
-    do
+    else do
+      -- If the function argument types are on different lines,
+      -- write one argument type per line.
       col <- getColumn
       pretty from
       column (col - 3) $ do
