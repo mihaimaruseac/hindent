@@ -251,7 +251,8 @@ appExpr app@(App _ f x) = do
       then separateArgs app
       else do
         col <- getColumn
-        column col $ do
+        ind <- gets psIndentLevel
+        column (max col ind) $ do
           pretty f
           newline
           indented indentSpaces $ pretty x
