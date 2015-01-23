@@ -64,21 +64,23 @@ maxSingleLineExports = 4
 
 attemptSingleLine :: Printer State a -> Printer State a -> Printer State a
 attemptSingleLine single multiple = do
-  -- Try printing on one line.
   prevState <- get
-  let forceSingle = gibianskyForceSingleLine $ psUserState prevState
-  modifyState $ \st -> st { gibianskyForceSingleLine = True }
-  result <- single
-  modifyState $ \st -> st { gibianskyForceSingleLine = forceSingle }
+  if gibianskyForceSingleLine $ psUserState prevState
+    then single
+    else do
+      -- Try printing on one line.
+      modifyState $ \st -> st { gibianskyForceSingleLine = True }
+      result <- single
+      modifyState $ \st -> st { gibianskyForceSingleLine = False }
 
-  --  If it doesn't fit, reprint on multiple lines.
-  col <- getColumn
-  maxColumns <- configMaxColumns <$> gets psConfig
-  if col > maxColumns
-    then do
-      put prevState
-      multiple
-    else return result
+      --  If it doesn't fit, reprint on multiple lines.
+      col <- getColumn
+      maxColumns <- configMaxColumns <$> gets psConfig
+      if col > maxColumns
+        then do
+          put prevState
+          multiple
+        else return result
 
 --------------------------------------------------------------------------------
 -- Extenders

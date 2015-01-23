@@ -3,11 +3,20 @@ a = veryLongLongLongName veryLongLongLongArg veryLongLongLongArg veryLongLongLon
 a = veryLongLongLongName veryLongLongLongArg veryLongLongLongArg veryLongLongLongArg
       veryLongLongLongArg
 
-a = veryLongLongLongName veryLongLongLongArg veryLongLongLongArg veryLongLongLongArg
-      veryLongLongLongArg veryLongLongLongArg
+a = veryLongLongLongName
+      veryLongLongLongArg
+      veryLongLongLongArg
+      veryLongLongLongArg
+      veryLongLongLongArg
+      veryLongLongLongArg
 
-a = veryLongLongLongName veryLongLongLongArg veryLongLongLongArg veryLongLongLongArg
-      veryLongLongLongArg veryLongLongLongArg veryLongLongLongArg
+a = veryLongLongLongName
+      veryLongLongLongArg
+      veryLongLongLongArg
+      veryLongLongLongArg
+      veryLongLongLongArg
+      veryLongLongLongArg
+      veryLongLongLongArg
 
 a = veryLongLongLongName
       veryLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongArg
