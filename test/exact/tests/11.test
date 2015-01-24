@@ -1,0 +1,45 @@
+data A = B
+       | C Int
+       | D Float
+       | E Float Float
+
+data A = B
+
+       | C Int
+       | D Float
+       | E Float Float
+
+a = case x of
+  Nothing -> 2
+  Just something -> 3
+
+a = case x of
+  Nothing -> do
+    putStrLn "hi"
+  Just something -> 3
+
+a = case x of
+  Nothing -> case y of
+    1 -> 2
+    3 -> 4
+  Just something -> 3
+
+a = case x of
+  Nothing -> 2
+  Just x -> 10
+  Just something -> 3
+
+a = case x of
+  Nothing -> 2
+  Just x -> 10
+  Just something -> do
+    putStrLn "hello"
+
+data X = X { a :: Int
+           , b :: String
+           }
+
+data X = X { a :: Int
+           , b :: String
+
+           }
