@@ -20,6 +20,7 @@ library
   hs-source-dirs:    src/
   ghc-options:       -Wall -O2
   exposed-modules:   HIndent
+                     HIndent.AST
                      HIndent.Types
                      HIndent.Pretty
                      HIndent.Styles.Fundamental
