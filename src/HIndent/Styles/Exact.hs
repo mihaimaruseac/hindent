@@ -85,7 +85,7 @@ type Extend f = forall t. t -> f NodeInfo -> Printer ()
 
 exact' :: (Exact.ExactP ast, Pretty ast) => Extend ast
 exact' _ a = write . T.fromText . T.pack $
-             Exact.exactPrint (fmap nodeInfoSpan a) []
+             Exact.exactPrint (fmap nodeInfoSpan a) (fmap comInfoComment $ nodeInfoComments $ ann a)
 
 module' :: Extend Module
 module' = exact'
