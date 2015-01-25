@@ -1,5 +1,5 @@
 name:                hindent
-version:             4.3.0
+version:             4.3.1
 synopsis:            Extensible Haskell pretty printer
 description:         Extensible Haskell pretty printer. Both a library and an executable.
                      .
@@ -40,7 +40,7 @@ executable hindent
   build-depends:     base >= 4 && < 5
                    , hindent
                    , text
-                   , descriptive == 0.3.*
+                   , descriptive >= 0.3 && < 0.5
                    , haskell-src-exts
 
 executable hindent-generate-tests
