@@ -32,9 +32,13 @@ library
   build-depends:     base >= 4 && <5
                    , data-default
                    , haskell-src-exts == 1.16.*
+                   , hlint
                    , monad-loops
                    , mtl
+                   , pretty
+                   , pretty-show
                    , text
+                   , transformers >= 0.3.0.0
 
 executable hindent
   hs-source-dirs:    src/main
@@ -43,6 +47,7 @@ executable hindent
   build-depends:     base >= 4 && < 5
                    , hindent
                    , text
+                   , hlint
                    , descriptive == 0.2.*
                    , haskell-src-exts
 
@@ -53,6 +58,7 @@ executable hindent-generate-tests
   build-depends:     base >= 4 && < 5
                    , hindent
                    , text
+                   , hlint
                    , directory
 
 test-suite hspec
@@ -65,6 +71,7 @@ test-suite hspec
                    , haskell-src-exts == 1.16.*
                    , monad-loops
                    , mtl
+                   , hlint
                    , text
                    , hspec
                    , directory
