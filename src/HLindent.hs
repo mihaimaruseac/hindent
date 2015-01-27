@@ -1,36 +1,38 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module TestParsing where
+module HLindent where
 
 import Data.Traversable
 import           Control.Applicative
-import           Data.Either
+-- import           Data.Either
 import qualified Data.Text.Lazy as Text
 import qualified Data.Text.Lazy.Builder as Text
 import qualified Data.Text.Lazy.IO as Text
 import Language.Haskell.HLint3
 import           HIndent
 import HIndent.AST
-import           HIndent.Merge
+-- import           HIndent.Merge
 import           HIndent.Pretty
-import           HIndent.Styles.TonyDay hiding (State)
+-- import           HIndent.Styles.TonyDay hiding (State)
 import           HIndent.Types
 import           Language.Haskell.Exts.Annotated hiding (Style,prettyPrint,Pretty,style,parse)
 import           Control.Monad.State.Strict
-import Data.Typeable
+-- import Data.Typeable
 import Text.Show.Pretty hiding (Con)
 import Text.PrettyPrint.HughesPJ (Doc)
-import Data.Functor.Identity
-
-t1 :: String
-t1 = "test/tony-day/test1.hs"
+-- import Data.Functor.Identity
 
 tc1 :: Text.Text
 tc1 = Text.pack "{- multi -}\nx=1\n{- multi -}\nx'=2\n\n{- multi -}"
 
 tc2 :: Text.Text
 tc2 = Text.pack "-- single\nx=1\n-- single\nx'=2\n\n-- single"
+
+tc3 :: Text.Text
+tc3 = Text.pack "putStrLn {- inside -} . show -- single"
+
+
 
 file :: FilePath -> IO Text.Text
 file = Text.readFile
@@ -80,8 +82,6 @@ posnT' :: Functor f => f NodeInfo -> f ((Int, Int), (Int, Int), [ComInfo])
 posnT' ast = fmap (\(NodeInfo (SrcSpanInfo (SrcSpan _ l0 c0 l1 c1) _) cs)
                       -> ((l0,c0),(l1,c1),cs) ) ast
 
-
-
 -- show' $ posnT $ fst $ getParse "x1 = putStrLn . show"
 -- show' $ posnT' $ snd $ getAst "x1 = putStrLn . show {- end -}"
 
@@ -98,8 +98,7 @@ getIdeas :: Text.Text -> IO [Idea]
 getIdeas t = do
   (flags, classify, hint) <- autoSettings
   let (m,c) = getParse t
-      scope = scopeCreate m
-  return $ hintModule hint scope m
+  return $ applyHints classify hint [(m,c)]
 
 
 
@@ -142,29 +141,6 @@ order ast =
 -}
 
 -- show' $ posnT $ fst $ getParse "Proxy a a' b b' m"
-
-
-isProxy :: Exp t -> Bool
-isProxy (Con _ (UnQual _ (Ident _ i))) = i == "Proxy"
-isProxy _ = False
-
-isX (UnQual _ (Ident _ i)) = i == "X"
-isX _ = False
-
-isUnit (Special _ (UnitCon _)) = True
-isUnit _ = False
-
-ident (Var _ (UnQual _ (Ident _ i))) = Just i
-ident _ = Nothing
-
-data S = S { foundProxy :: Bool }
-
-{-
-lookForProxy ast
-  | isProxy = modify (\x -> x {foundProxy=True})
-  | isUnit =
--}
-
 -- incT (snd $ getAst "Proxy X () () b")
 {-
 toProducer (App a3 (App a4 (App a5 (App a6 (Con a7 (UnQual a8 (Ident a9 "Proxy"))) (Con a10 (UnQual a11 (Ident a12 "X")))) (Con a13 (Special a14 (UnitCon a15)))) (Con a16 (Special a17 (UnitCon a18)))) (Var a19 (UnQual a20 (Ident a21 b)))) = App a3 (Con a7 (UnQual a8 (Ident a9 "Producer"))) (Var a19 (UnQual a20 (Ident a21 b)))
