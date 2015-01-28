@@ -4,7 +4,7 @@ Extensible Haskell pretty printer. Both a library and an
 executable. Currently a work in progress (see
 [FIXME items](https://github.com/chrisdone/hindent/blob/master/src/HIndent/Pretty.hs)).
 
-[Haddock API documentation](http://chrisdone.github.io/hindent/).
+[Documentation](http://chrisdone.github.io/hindent/).
 
 ## Install
 
