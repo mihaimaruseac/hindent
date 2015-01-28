@@ -44,7 +44,8 @@ data Stoppers = Version
   deriving (Show)
 
 -- | Program options.
-options :: Consumer [Text] (Option Stoppers) (Style,[Extension])
+options :: Monad m
+        => Consumer [Text] (Option Stoppers) m (Style,[Extension])
 options =
   ver *>
   ((,) <$> style <*> exts)
