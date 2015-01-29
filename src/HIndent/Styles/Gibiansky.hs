@@ -114,6 +114,7 @@ pragmas p = prettyNoExt p
 -- | Format patterns.
 pat :: Extend Pat
 pat (PTuple _ boxed pats) = writeTuple boxed pats
+pat (PList _ pats) = singleLineList pats
 pat p = prettyNoExt p
 
 -- | Format import statements.
@@ -310,7 +311,7 @@ listExpr :: Exp NodeInfo -> Printer State ()
 listExpr (List _ els) = attemptSingleLine (singleLineList els) (multiLineList els)
 listExpr _ = error "Not a list"
 
-singleLineList :: [Exp NodeInfo] -> Printer State ()
+singleLineList :: Pretty a => [a NodeInfo] -> Printer State ()
 singleLineList exps = do
   write "["
   inter (write ", ") $ map pretty exps
