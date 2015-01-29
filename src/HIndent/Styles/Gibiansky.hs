@@ -238,6 +238,12 @@ letExpr (Let _ binds result) = do
     pretty result
 letExpr _ = error "Not a let"
 
+keepingColumn :: Printer State () -> Printer State ()
+keepingColumn printer = do
+  col <- getColumn
+  ind <- gets psIndentLevel
+  column (max col ind) printer
+
 appExpr :: Exp NodeInfo -> Printer State ()
 appExpr app@(App _ f x) = do
   prevState <- get
@@ -254,23 +260,18 @@ appExpr app@(App _ f x) = do
     allArgsSeparate <- not <$> canSingleLine (pretty f)
     if allArgsSeparate
       then separateArgs app
-      else do
-        col <- getColumn
-        ind <- gets psIndentLevel
-        column (max col ind) $ do
-          pretty f
-          newline
-          indented indentSpaces $ pretty x
+      else keepingColumn $ do
+        pretty f
+        newline
+        indented indentSpaces $ pretty x
 
   where
     singleLine = spaced [pretty f, pretty x]
-    multiLine = do
-      col <- getColumn
-      column col $ do
-        pretty f
-        newline
-        indentOnce
-        pretty x
+    multiLine = keepingColumn $ do
+      pretty f
+      newline
+      indentOnce
+      pretty x
 
     canSingleLine :: Printer State a -> Printer State Bool
     canSingleLine printer = do
@@ -292,12 +293,10 @@ appExpr app@(App _ f x) = do
     separateArgs :: Exp NodeInfo -> Printer State ()
     separateArgs expr =
       let (fun, args) = collectArgs expr
-      in do
-        col <- getColumn
-        column col $ do
-          pretty fun
-          newline
-          indented indentSpaces $ lined $ map pretty $ reverse args
+      in keepingColumn $ do
+        pretty fun
+        newline
+        indented indentSpaces $ lined $ map pretty $ reverse args
 appExpr _ = error "Not an app"
 
 doExpr :: Exp NodeInfo -> Printer State ()
@@ -319,18 +318,15 @@ singleLineList exps = do
 
 multiLineList :: [Exp NodeInfo] -> Printer State ()
 multiLineList [] = write "[]"
-multiLineList (first:exps) = do
-  col <- getColumn
-  ind <- gets psIndentLevel
-  column (max col ind) $ do
-    write "[ "
-    pretty first
-    forM_ exps $ \el -> do
-      newline
-      write ", "
-      pretty el
+multiLineList (first:exps) = keepingColumn $ do
+  write "[ "
+  pretty first
+  forM_ exps $ \el -> do
     newline
-    write "]"
+    write ", "
+    pretty el
+  newline
+  write "]"
 
 dollarExpr :: Exp NodeInfo -> Printer State ()
 dollarExpr (InfixApp _ left op right) = do
@@ -399,24 +395,22 @@ applicativeExpr exp@InfixApp{} =
 applicativeExpr _ = error "Not an application"
 
 opExpr :: Exp NodeInfo -> Printer State ()
-opExpr (InfixApp _ left op right) = do
-  col <- getColumn
-  column col $ do
-    pretty left
+opExpr (InfixApp _ left op right) = keepingColumn $ do
+  pretty left
 
-    let delta = lineDelta op left
-    if delta == 0
-      then space
-      else replicateM_ delta newline
+  let delta = lineDelta op left
+  if delta == 0
+    then space
+    else replicateM_ delta newline
 
-    pretty op
+  pretty op
 
-    let delta = lineDelta right op
-    if delta == 0
-      then space
-      else replicateM_ delta newline
+  let delta = lineDelta right op
+  if delta == 0
+    then space
+    else replicateM_ delta newline
 
-    pretty right
+  pretty right
 opExpr exp = prettyNoExt exp
 
 lambdaExpr :: Exp NodeInfo -> Printer State ()
