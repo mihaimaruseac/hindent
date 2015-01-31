@@ -44,7 +44,8 @@ data Stoppers = Version
   deriving (Show)
 
 -- | Program options.
-options :: Consumer [Text] (Option Stoppers) (Style,[Extension])
+options :: Monad m
+        => Consumer [Text] (Option Stoppers) m (Style,[Extension])
 options =
   ver *>
   ((,) <$> style <*> exts)
@@ -52,11 +53,12 @@ options =
           stop (flag "version" "Print the version" Version)
         style =
           makeStyle <$>
-          (constant "--style" "Style to print with" *>
+          (constant "--style" "Style to print with" () *>
            foldr1 (<|>)
                   (map (\s ->
-                          fmap (const s)
-                               (constant (styleName s) (styleDescription s)))
+                          constant (styleName s)
+                                   (styleDescription s)
+                                   s)
                        styles)) <*>
           lineLen <*>
           refactor

@@ -61,8 +61,8 @@ chrisDone =
 --     -> (Char -> X -> Y)
 --     -> IO ()
 --
-decl :: t -> Decl NodeInfo -> Printer ()
-decl _ (TypeSig _ names ty') =
+decl :: Decl NodeInfo -> Printer s ()
+decl (TypeSig _ names ty') =
   depend (do inter (write ", ")
                    (map pretty names)
              write " :: ")
@@ -101,11 +101,11 @@ decl _ (TypeSig _ names ty') =
           do overflows <- isOverflow (pretty p)
              oneLine <- isSingleLiner (pretty p)
              return (not overflows && oneLine)
-decl _ e = prettyNoExt e
+decl e = prettyNoExt e
 
 -- | I want field updates to be dependent or newline.
-fieldupdate :: t -> FieldUpdate NodeInfo -> Printer ()
-fieldupdate _ e =
+fieldupdate :: FieldUpdate NodeInfo -> Printer t ()
+fieldupdate e =
   case e of
     FieldUpdate _ n e' ->
       dependOrNewline
@@ -116,44 +116,44 @@ fieldupdate _ e =
     _ -> prettyNoExt e
 
 -- | Right-hand sides are dependent.
-rhs :: s -> Rhs NodeInfo -> Printer ()
-rhs s grhs =
+rhs :: Rhs NodeInfo -> Printer t ()
+rhs grhs =
   do inCase <- gets psInsideCase
      if inCase
-        then unguardedalt s grhs
-        else unguardedrhs s grhs
+        then unguardedalt grhs
+        else unguardedrhs grhs
 
 -- | Right-hand sides are dependent.
-unguardedrhs :: s -> Rhs NodeInfo -> Printer ()
-unguardedrhs _ (UnGuardedRhs _ e) =
+unguardedrhs :: Rhs NodeInfo -> Printer t ()
+unguardedrhs (UnGuardedRhs _ e) =
   do indentSpaces <- getIndentSpaces
      indented indentSpaces
               (dependOrNewline (write " = ")
                                e
                                pretty)
-unguardedrhs _ e = prettyNoExt e
+unguardedrhs e = prettyNoExt e
 
 -- | Unguarded case alts.
-unguardedalt :: t -> Rhs NodeInfo -> Printer ()
-unguardedalt _ (UnGuardedRhs _ e) =
+unguardedalt :: Rhs NodeInfo -> Printer t ()
+unguardedalt (UnGuardedRhs _ e) =
   dependOrNewline
     (write " -> ")
     e
     (indented 2 .
      pretty)
-unguardedalt _ e = prettyNoExt e
+unguardedalt e = prettyNoExt e
 
 -- | Decide whether to do alts or rhs based on the context.
-contextualGuardedRhs :: s -> GuardedRhs NodeInfo -> Printer ()
-contextualGuardedRhs s grhs =
+contextualGuardedRhs :: GuardedRhs NodeInfo -> Printer t ()
+contextualGuardedRhs grhs =
   do inCase <- gets psInsideCase
      if inCase
-        then guardedalt s grhs
-        else guardedrhs s grhs
+        then guardedalt grhs
+        else guardedrhs grhs
 
 -- | I want guarded RHS be dependent or newline.
-guardedrhs :: s -> GuardedRhs NodeInfo -> Printer ()
-guardedrhs _ (GuardedRhs _ stmts e) =
+guardedrhs :: GuardedRhs NodeInfo -> Printer t ()
+guardedrhs (GuardedRhs _ stmts e) =
   indented 1
            (do prefixedLined
                  ","
@@ -168,8 +168,8 @@ guardedrhs _ (GuardedRhs _ stmts e) =
                   pretty))
 
 -- | I want guarded alts be dependent or newline.
-guardedalt :: s -> GuardedRhs NodeInfo -> Printer ()
-guardedalt _ (GuardedRhs _ stmts e) =
+guardedalt :: GuardedRhs NodeInfo -> Printer t ()
+guardedalt (GuardedRhs _ stmts e) =
   indented 1
            (do (prefixedLined
                   ","
@@ -187,24 +187,32 @@ guardedalt _ (GuardedRhs _ stmts e) =
 -- do x *
 --    y
 -- is two invalid statements, not one valid infix op.
-stmt :: s -> Stmt NodeInfo -> Printer ()
-stmt _ (Qualifier _ e@(InfixApp _ a op b)) =
+stmt :: Stmt NodeInfo -> Printer t ()
+stmt (Qualifier _ e@(InfixApp _ a op b)) =
   do col <- fmap (psColumn . snd)
                  (sandbox (write ""))
      infixApp e a op b (Just col)
-stmt _ e = prettyNoExt e
+stmt (Generator _ p e) =
+  do indentSpaces <- getIndentSpaces
+     pretty p
+     indented indentSpaces
+              (dependOrNewline
+                 (write " <- ")
+                 e
+                 pretty)
+stmt e = prettyNoExt e
 
 -- | Expressions
-exp :: s -> Exp NodeInfo -> Printer ()
+exp :: Exp NodeInfo -> Printer t ()
 -- Infix applications will render on one line if possible, otherwise
 -- if any of the arguments are not "flat" then that expression is
 -- line-separated.
-exp _ e@(InfixApp _ a op b) =
+exp e@(InfixApp _ a op b) =
   infixApp e a op b Nothing
 -- | We try to render everything on a flat line. More than one of the
 -- arguments are not flat and it wouldn't be a single liner.
 -- If the head is short we depend, otherwise we swing.
-exp _ (App _ op a) =
+exp (App _ op a) =
   do orig <- gets psIndentLevel
      dependBind
        (do (short,st) <- isShort f
@@ -231,7 +239,7 @@ exp _ (App _ op a) =
           flatten f' (a' : b)
         flatten f' as = (f',as)
 -- | Lambdas are dependent if they can be.
-exp _ (Lambda _ ps b) =
+exp (Lambda _ ps b) =
   depend (write "\\")
          (do spaced (map pretty ps)
              dependOrNewline
@@ -239,7 +247,7 @@ exp _ (Lambda _ ps b) =
                b
                (indented 1 .
                 pretty))
-exp _ (Tuple _ boxed exps) =
+exp (Tuple _ boxed exps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
                    Boxed -> "("))
@@ -253,7 +261,7 @@ exp _ (Tuple _ boxed exps) =
                       Unboxed -> "#)"
                       Boxed -> ")"))
   where p = commas (map pretty exps)
-exp _ (List _ es) =
+exp (List _ es) =
   do (ok,st) <- sandbox renderFlat
      if ok
         then put st
@@ -267,7 +275,7 @@ exp _ (List _ es) =
              let overflow = psColumn st > columnLimit
                  single = psLine st == line
              return (not overflow && single)
-exp _ e = prettyNoExt e
+exp e = prettyNoExt e
 
 --------------------------------------------------------------------------------
 -- Indentation helpers
@@ -275,7 +283,7 @@ exp _ e = prettyNoExt e
 -- | Sandbox and render the nodes on multiple lines, returning whether
 -- each is a single line.
 sandboxSingles :: Pretty ast
-               => [ast NodeInfo] -> Printer (Bool,PrintState)
+               => [ast NodeInfo] -> Printer t (Bool,PrintState t)
 sandboxSingles args =
   sandbox (allM (\(i,arg) ->
                    do when (i /=
@@ -289,7 +297,7 @@ sandboxSingles args =
 
 -- | Render multi-line nodes.
 multi :: Pretty ast
-      => Int64 -> [ast NodeInfo] -> Bool -> Printer ()
+      => Int64 -> [ast NodeInfo] -> Bool -> Printer t ()
 multi orig args headIsShort =
   if headIsShort
      then lined (map pretty args)
@@ -304,7 +312,7 @@ multi orig args headIsShort =
 -- | Sandbox and render the node on a single line, return whether it's
 -- on a single line and whether it's overflowing.
 sandboxNonOverflowing :: Pretty ast
-                      => [ast NodeInfo] -> Printer ((Bool,Bool),PrintState)
+                      => [ast NodeInfo] -> Printer t ((Bool,Bool),PrintState t)
 sandboxNonOverflowing args =
   sandbox (do line <- gets psLine
               columnLimit <- getColumnLimit
@@ -319,7 +327,7 @@ sandboxNonOverflowing args =
 
 -- | Is the expression "short"? Used for app heads.
 isShort :: (Pretty ast)
-        => ast NodeInfo -> Printer (Bool,PrintState)
+        => ast NodeInfo -> Printer t (Bool,PrintState t)
 isShort p =
   do line <- gets psLine
      orig <- fmap (psColumn . snd)
@@ -331,8 +339,8 @@ isShort p =
 
 -- | Is the given expression "small"? I.e. does it fit on one line and
 -- under 'smallColumnLimit' columns.
-isSmall :: MonadState PrintState m
-        => m a -> m (Bool,PrintState)
+isSmall :: MonadState (PrintState t) m
+        => m a -> m (Bool,PrintState t)
 isSmall p =
   do line <- gets psLine
      (_,st) <- sandbox p
@@ -357,21 +365,21 @@ isFlat (RightSection _ _ e) = isFlat e
 isFlat _ = False
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
-isOverflow :: Printer a -> Printer Bool
+isOverflow :: Printer t a -> Printer t Bool
 isOverflow p =
   do (_,st) <- sandbox p
      columnLimit <- getColumnLimit
      return (psColumn st > columnLimit)
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
-isOverflowMax :: Printer a -> Printer Bool
+isOverflowMax :: Printer t a -> Printer t Bool
 isOverflowMax p =
   do (_,st) <- sandbox p
      columnLimit <- getColumnLimit
      return (psColumn st > columnLimit + 20)
 
 -- | Is the given expression a single-liner when printed?
-isSingleLiner :: MonadState PrintState m
+isSingleLiner :: MonadState (PrintState t) m
               => m a -> m Bool
 isSingleLiner p =
   do line <- gets psLine
@@ -387,7 +395,7 @@ infixApp :: (Pretty ast,Pretty ast1,Pretty ast2)
          -> ast1 NodeInfo
          -> ast2 NodeInfo
          -> Maybe Int64
-         -> Printer ()
+         -> Printer t ()
 infixApp e a op b indent =
   do let is = isFlat e
      overflow <- isOverflow
@@ -415,10 +423,10 @@ infixApp e a op b indent =
 
 -- | Make the right hand side dependent if it's flat, otherwise
 -- newline it.
-dependOrNewline :: Printer ()
+dependOrNewline :: Printer t ()
                 -> Exp NodeInfo
-                -> (Exp NodeInfo -> Printer ())
-                -> Printer ()
+                -> (Exp NodeInfo -> Printer t ())
+                -> Printer t ()
 dependOrNewline left right f =
   do if isFlat right
         then renderDependent

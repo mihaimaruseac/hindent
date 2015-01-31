@@ -1,11 +1,11 @@
-module Main(main) where
+module Main (main) where
 
-import Control.Monad
-import Control.Applicative
-import Data.List (find, unfoldr, break, isPrefixOf, intercalate)
+import           Control.Monad
+import           Control.Applicative
+import           Data.List (find, unfoldr, break, isPrefixOf, intercalate)
 
-import Test.Hspec
-import System.Directory
+import           Test.Hspec
+import           System.Directory
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Builder as L
@@ -24,10 +24,10 @@ main = forM_ styles testStyle
 
 testStyle :: FilePath -> IO ()
 testStyle style = do
-  let Just theStyle = find ((== T.pack style). HIndent.styleName) HIndent.styles
+  let Just theStyle = find ((== T.pack style) . HIndent.styleName) HIndent.styles
   testFilenames <- filter (not . isPrefixOf ".") <$> getDirectoryContents tests
   let expFiles = map ((expected ++) . expectedFilename) testFilenames
-      testFiles = map (tests++) testFilenames
+      testFiles = map (tests ++) testFilenames
   specs <- forM (zip testFiles expFiles) (uncurry $ useTestFiles theStyle)
   hspec $ foldl1 (>>) specs
 
@@ -44,12 +44,20 @@ useTestFiles style test exp = do
   let testDecls = parsePieces testContents
       expDecls = parsePieces expContents
   when (length testDecls /= length expDecls) $
-    error $ concat [ "Mismatched number of pieces in files "
-                   , test, " (", show $ length testDecls, ")"
-                   , " and "
-                   , exp, " (", show $ length expDecls, ")"
-                   ]
-  return $ describe ("hindent applied to chunks in " ++ test) $ foldl1 (>>) $ zipWith (mkSpec style) testDecls expDecls
+    error $ concat
+              [ "Mismatched number of pieces in files "
+              , test
+              , " ("
+              , show $ length testDecls
+              , ")"
+              , " and "
+              , exp
+              , " ("
+              , show $ length expDecls
+              , ")"
+              ]
+  return $ describe ("hindent applied to chunks in " ++ test) $ foldl1 (>>) $ zipWith (mkSpec style)
+                                                                                testDecls expDecls
 
 mkSpec :: HIndent.Style -> String -> String -> Spec
 mkSpec style input desired = it "works" $
@@ -65,9 +73,9 @@ parsePieces str = map (intercalate "\n" . map mkNewlines) pieces
     unfolder :: [String] -> Maybe ([String], [String])
     unfolder [] = Nothing
     unfolder remaining = Just $
-     case break pieceBreak (zip remaining (tail remaining ++ [""]))  of
-       (nonNull, [])     -> (map fst nonNull, [])
-       (nonNull, _:rest) -> (map fst nonNull, map fst rest)
+      case break pieceBreak (zip remaining (tail remaining ++ [""])) of
+        (nonNull, [])     -> (map fst nonNull, [])
+        (nonNull, _:rest) -> (map fst nonNull, map fst rest)
 
     pieceBreak :: (String, String) -> Bool
     pieceBreak ("", "") = error "Two consecutive line breaks!"

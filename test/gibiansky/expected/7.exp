@@ -13,7 +13,8 @@ a = b
     value = 3
     value' = 5
 
-a = b
+a =
+  b
   where
     value = 3
     value' = 5
