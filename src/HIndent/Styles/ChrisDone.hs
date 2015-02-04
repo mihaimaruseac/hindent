@@ -389,37 +389,40 @@ isSingleLiner p =
 --------------------------------------------------------------------------------
 -- Helpers
 
-infixApp :: (Pretty ast,Pretty ast1,Pretty ast2)
-         => Exp NodeInfo
-         -> ast NodeInfo
-         -> ast1 NodeInfo
-         -> ast2 NodeInfo
+infixApp :: Exp NodeInfo
+         -> Exp NodeInfo
+         -> QOp NodeInfo
+         -> Exp NodeInfo
          -> Maybe Int64
-         -> Printer t ()
+         -> Printer s ()
 infixApp e a op b indent =
   do let is = isFlat e
      overflow <- isOverflow
-                   (depend (do pretty a
+                   (depend (do prettyWithIndent a
                                space
                                pretty op
                                space)
-                           (do pretty b))
+                           (do prettyWithIndent b))
      if is && not overflow
-        then do depend (do pretty a
+        then do depend (do prettyWithIndent a
                            space
                            pretty op
                            space)
                        (do pretty b)
-        else do pretty a
+        else do prettyWithIndent a
                 space
                 pretty op
                 newline
                 case indent of
-                  Nothing -> pretty b
+                  Nothing -> prettyWithIndent b
                   Just col ->
                     do indentSpaces <- getIndentSpaces
                        column (col + indentSpaces)
-                              (pretty b)
+                              (prettyWithIndent b)
+  where prettyWithIndent e' =
+          case e' of
+            (InfixApp _ a' op' b') -> infixApp e' a' op' b' indent
+            _ -> pretty e'
 
 -- | Make the right hand side dependent if it's flat, otherwise
 -- newline it.
