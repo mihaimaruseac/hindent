@@ -408,7 +408,7 @@ infixApp e a op b indent =
                            space
                            pretty op
                            space)
-                       (do pretty b)
+                       (do prettyWithIndent b)
         else do prettyWithIndent a
                 space
                 pretty op
