@@ -19,7 +19,7 @@ import Data.Int
 import Data.Maybe
 import HIndent.Pretty
 import HIndent.Types
-import HIndent.Styles.ChrisDone (infixApp)
+import HIndent.Styles.ChrisDone (infixApp,dependOrNewline)
 
 import Language.Haskell.Exts.Annotated.Syntax
 import Prelude hiding (exp)
@@ -67,6 +67,14 @@ stmt (Qualifier _ e@(InfixApp _ a op b)) =
   do col <- fmap (psColumn . snd)
                  (sandbox (write ""))
      infixApp e a op b (Just col)
+stmt (Generator _ p e) =
+  do indentSpaces <- getIndentSpaces
+     pretty p
+     indented indentSpaces
+              (dependOrNewline
+                 (write " <- ")
+                 e
+                 pretty)
 stmt e = prettyNoExt e
 
 -- | Handle do specially and also space out guards more.
