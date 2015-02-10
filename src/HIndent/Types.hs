@@ -20,6 +20,7 @@ module HIndent.Types
 
 import Control.Applicative
 import Control.Monad.State.Strict (MonadState(..),State)
+import Control.Monad.Trans.Maybe
 import Data.Data
 import Data.Default
 import Data.Int (Int64)
@@ -30,7 +31,7 @@ import Language.Haskell.Exts.SrcLoc
 
 -- | A pretty printing monad.
 newtype Printer s a =
-  Printer {runPrinter :: State (PrintState s) a}
+  Printer {runPrinter :: MaybeT (State (PrintState s)) a}
   deriving (Applicative,Monad,Functor,MonadState (PrintState s))
 
 -- | The state of the pretty printer.
