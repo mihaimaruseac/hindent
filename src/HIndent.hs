@@ -23,6 +23,7 @@ module HIndent
   where
 
 import           Control.Monad.Trans.Maybe
+import           Data.Functor.Identity
 import           HIndent.Pretty
 import           HIndent.Styles.ChrisDone (chrisDone)
 import           HIndent.Styles.Fundamental (fundamental)
@@ -68,8 +69,11 @@ prettyPrint :: Style -> (forall s. Printer s ()) -> Builder
 prettyPrint style m =
   case style of
     Style _name _author _desc st extenders config ->
-      psOutput (execState (runMaybeT (runPrinter m))
-                          (PrintState 0 mempty False 0 1 st extenders config False False))
+      maybe ""
+            psOutput
+            (runIdentity
+               (runMaybeT (execStateT (runPrinter m)
+                                      (PrintState 0 mempty False 0 1 st extenders config False False))))
 
 -- | Parse mode, includes all extensions, doesn't assume any fixities.
 parseMode :: ParseMode
