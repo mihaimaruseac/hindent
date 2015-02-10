@@ -69,7 +69,7 @@ prettyPrint :: Style -> (forall s. Printer s ()) -> Builder
 prettyPrint style m =
   case style of
     Style _name _author _desc st extenders config ->
-      maybe ""
+      maybe (error "Printer failed with mzero call.")
             psOutput
             (runIdentity
                (runMaybeT (execStateT (runPrinter m)
