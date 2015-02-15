@@ -1,0 +1,8 @@
+main = do
+  case foo of
+    Something -> do
+      x
+>
+    Else -> x
+>
+    Bar -> x
