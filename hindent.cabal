@@ -15,6 +15,14 @@ build-type:          Simple
 cabal-version:       >=1.8
 data-files:          elisp/hindent.el vim/hindent.vim
 extra-source-files:  README.md
+                     test/chris-done/expected/*.exp
+                     test/chris-done/tests/*.test
+                     test/gibiansky/expected/*.exp
+                     test/gibiansky/tests/*.test
+                     test/fundamental/expected/*.exp
+                     test/fundamental/tests/*.test
+                     test/johan-tibell/expected/*.exp
+                     test/johan-tibell/tests/*.test
 
 library
   hs-source-dirs:    src/
