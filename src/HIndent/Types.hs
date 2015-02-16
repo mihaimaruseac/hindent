@@ -29,6 +29,7 @@ import Data.Int (Int64)
 import Data.Text (Text)
 import Data.Text.Lazy.Builder (Builder)
 import Language.Haskell.Exts.Comments
+import Language.Haskell.Exts.Parser
 import Language.Haskell.Exts.SrcLoc
 
 -- | A pretty printing monad.
@@ -48,10 +49,11 @@ data PrintState s =
              ,psConfig :: !Config -- ^ Config which styles may or may not pay attention to.
              ,psEolComment :: !Bool -- ^ An end of line comment has just been outputted.
              ,psInsideCase :: !Bool -- ^ Whether we're in a case statement, used for Rhs printing.
+             ,psParseMode :: !ParseMode -- ^ Mode used to parse the original AST.
              }
 
 instance Eq (PrintState s) where
-  PrintState ilevel out newline col line _ _ _ eolc inc == PrintState ilevel' out' newline' col' line' _ _ _ eolc' inc' =
+  PrintState ilevel out newline col line _ _ _ eolc inc pm == PrintState ilevel' out' newline' col' line' _ _ _ eolc' inc' pm' =
     (ilevel,out,newline,col,line,eolc, inc) == (ilevel',out',newline',col',line',eolc', inc')
 
 -- | A printer extender. Takes as argument the user state that the

@@ -30,6 +30,7 @@ library
   exposed-modules:   HIndent
                      HIndent.Types
                      HIndent.Pretty
+                     HIndent.Comments
                      HIndent.Styles.Fundamental
                      HIndent.Styles.ChrisDone
                      HIndent.Styles.JohanTibell
