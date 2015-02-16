@@ -8,13 +8,18 @@
 module HIndent.Styles.ChrisDone where
 
 import HIndent.Pretty
+import HIndent.Comments
 import HIndent.Types
 
 import Control.Monad
 import Control.Monad.Loops
 import Control.Monad.State.Class
 import Data.Int
+import Data.Maybe
+import Language.Haskell.Exts.Annotated (parseExpWithComments)
+import Language.Haskell.Exts.Annotated.Fixity
 import Language.Haskell.Exts.Annotated.Syntax
+import Language.Haskell.Exts.Parser (ParseResult(..))
 import Prelude hiding (exp)
 
 --------------------------------------------------------------------------------
@@ -204,6 +209,17 @@ stmt e = prettyNoExt e
 
 -- | Expressions
 exp :: Exp NodeInfo -> Printer t ()
+exp e@(QuasiQuote _ "i" s) =
+  do parseMode <- gets psParseMode
+     case parseExpWithComments parseMode s of
+       ParseOk (e',comments) ->
+         do depend (do write "["
+                       string "i"
+                       write "|")
+                   (do exp (snd (annotateComments (fromMaybe e' (applyFixities baseFixities e'))
+                                                  comments))
+                       write "|]")
+       _ -> prettyNoExt e
 -- Infix applications will render on one line if possible, otherwise
 -- if any of the arguments are not "flat" then that expression is
 -- line-separated.
