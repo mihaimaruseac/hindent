@@ -52,6 +52,8 @@ executable hindent
                    , text
                    , descriptive >= 0.7 && < 0.9
                    , haskell-src-exts >= 1.16
+                   , applicative-quoters
+                   , ghc-prim
 
 executable hindent-generate-tests
   hs-source-dirs:    src/main
