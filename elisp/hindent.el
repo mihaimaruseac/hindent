@@ -129,7 +129,7 @@ expected to work."
    ;; Otherwise we just do our line-based hack.
    (t
     (save-excursion
-      (let ((start (or (flet
+      (let ((start (or (cl-flet
                            ((jump ()
                                   (search-backward-regexp "^[^ \n]" nil t 1)
                                   (cond
@@ -143,7 +143,7 @@ expected to work."
                          (jump))
                        0))
             (end (progn (goto-char (1+ (point)))
-                        (or (flet
+                        (or (cl-flet
                                 ((jump ()
                                        (when (search-forward-regexp "[\n]+[^ \n]" nil t 1)
                                          (cond
