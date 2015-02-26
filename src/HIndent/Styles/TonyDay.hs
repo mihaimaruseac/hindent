@@ -15,10 +15,10 @@
 module HIndent.Styles.TonyDay where
 
 import HIndent.Pretty
-import HIndent.Styles.ChrisDone
+import qualified HIndent.Styles.ChrisDone as Chris
 import HIndent.Types
 
-import Control.Monad.State.Strict hiding (state)
+import Control.Monad.State.Strict hiding (state, State)
 import Data.List
 import Language.Haskell.Exts.Annotated hiding (Style,prettyPrint,Pretty,style,parse)
 
@@ -31,20 +31,20 @@ tonyDay =
   Style {styleName = "tony-day"
         ,styleAuthor = "Tony Day"
         ,styleDescription = "Cleans up a module, using ChrisDone style for lower level."
-        ,styleInitialState = HIndent.Styles.ChrisDone.State
+        ,styleInitialState = State
         ,styleExtenders =
-           [Extender HIndent.Styles.ChrisDone.exp
-           ,Extender fieldupdate
-           ,Extender rhs
-           ,Extender contextualGuardedRhs
-           ,Extender stmt
+           [Extender Chris.exp
+           ,Extender Chris.fieldupdate
+           ,Extender Chris.rhs
+           ,Extender Chris.contextualGuardedRhs
+           ,Extender Chris.stmt
            ,Extender decl'
            ,Extender module']
         ,styleDefConfig =
            defaultConfig {configMaxColumns = 80
                          ,configIndentSpaces = 2}}
 
-type Extend f = forall t. t -> f NodeInfo -> Printer ()
+type Extend f = f NodeInfo -> Printer HIndent.Styles.TonyDay.State ()
 
 {-|
   Outputs 2 new lines.
@@ -53,7 +53,8 @@ type Extend f = forall t. t -> f NodeInfo -> Printer ()
   - separation of module exports into logical units, often denoted by haddock (not yet implemented)
   - separation of discrete function declaration+body 
 -}
-sepSection :: MonadState PrintState m => m ()
+
+sepSection :: Printer State ()
 sepSection =
   do write "\n\n"
      modify (\s -> s {psNewline = True})
@@ -196,8 +197,8 @@ clean (Module a mayModHead pragmas imps decls) =
 clean m = m
 
 -- | cleans up a module, and opinionated macro-format
-module' :: t -> Module NodeInfo -> Printer ()
-module' _ x = let x' = clean x in
+module' :: Module NodeInfo -> Printer State ()
+module' x = let x' = clean x in
     case x' of
       Module _ mayModHead pragmas imps decls ->
         do
@@ -218,8 +219,8 @@ module' _ x = let x' = clean x in
 
 -- | adds an extra newline between declarations, unless it's a TypeSig
 decl' :: Extend Decl
-decl' s x = do
-  decl s x
+decl' x = do
+  Chris.decl x
   when (notSig x) newline
     where
       notSig (TypeSig{}) = False

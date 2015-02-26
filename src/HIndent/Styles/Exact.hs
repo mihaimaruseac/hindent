@@ -81,10 +81,10 @@ exact =
         ,styleDefConfig = def}
 
 
-type Extend f = forall t. t -> f NodeInfo -> Printer ()
+type Extend f = f NodeInfo -> Printer State ()
 
 exact' :: (Exact.ExactP ast, Pretty ast) => Extend ast
-exact' _ a = write . T.fromText . T.pack $
+exact' a = write . T.fromText . T.pack $
              Exact.exactPrint (fmap nodeInfoSpan a) (fmap comInfoComment $ nodeInfoComments $ ann a)
 
 module' :: Extend Module
