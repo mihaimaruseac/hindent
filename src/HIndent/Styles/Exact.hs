@@ -15,6 +15,9 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy.Builder as T
 import qualified Language.Haskell.Exts.Annotated.ExactPrint as Exact
 import           Language.Haskell.Exts.Annotated.Syntax
+import qualified Control.Monad.State.Strict as S
+import Data.Traversable
+import Data.Monoid
 
 -- | Empty state.
 data State = State
@@ -83,9 +86,12 @@ exact =
 
 type Extend f = f NodeInfo -> Printer State ()
 
-exact' :: (Exact.ExactP ast, Pretty ast) => Extend ast
+toList :: Traversable t =>  t t1 -> [t1]
+toList ast = reverse $ S.execState (traverse (\x -> S.modify (\xs -> x:xs)) ast) []
+
+exact' :: (Exact.ExactP ast, Pretty ast, Traversable ast) => Extend ast
 exact' a = write . T.fromText . T.pack $
-             Exact.exactPrint (fmap nodeInfoSpan a) (fmap comInfoComment $ nodeInfoComments $ ann a)
+             Exact.exactPrint (fmap nodeInfoSpan a) (mconcat (toList (fmap (fmap comInfoComment . nodeInfoComments) a)))
 
 module' :: Extend Module
 module' = exact'

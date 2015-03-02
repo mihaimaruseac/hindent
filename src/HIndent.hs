@@ -21,6 +21,7 @@ module HIndent
   ,test
   ,testAll
   ,testAst
+  , annotateComments
   )
   where
 
