@@ -28,7 +28,7 @@ library
   hs-source-dirs:    src/
   ghc-options:       -Wall -O2
   exposed-modules:   HIndent
-                     HIndent.AST
+                     HIndent.Refactoring
                      HIndent.Types
                      HIndent.Pretty
                      HIndent.Comments

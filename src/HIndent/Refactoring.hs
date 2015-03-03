@@ -3,11 +3,10 @@
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
 {-# OPTIONS_GHC -fno-warn-unused-matches #-}
 
-module HLindent where
+module HIndent.Refactoring where
 
 import           Control.Applicative
 import           Control.Monad.State.Strict
-import           Data.Default
 import           Data.List
 import           Data.Monoid
 import           Data.Text.Lazy (Text)
@@ -16,18 +15,20 @@ import qualified Data.Text.Lazy.Builder as Text
 import qualified Data.Text.Lazy.IO as Text
 import           Data.Traversable
 import           HIndent
-import           HIndent.AST
+import           HIndent.Comments
 import           HIndent.Pretty
-import qualified HIndent.Styles.Exact as Exact
+import           HIndent.Styles.TonyDay
 import           HIndent.Types
 import           Language.Haskell.Exts.Annotated hiding (Style,prettyPrint,Pretty,style,parse)
-import qualified Language.Haskell.Exts.Annotated.ExactPrint as Exact
 import           Language.Haskell.HLint3
 import           Prelude
 import           Text.PrettyPrint.HughesPJ (Doc)
 import           Text.Show.Pretty hiding (Con)
 
--- combos & helpers
+-- helpers
+getParse :: Text.Text -> (Module SrcSpanInfo, [Comment])
+getParse t = fromParseResult (parseModuleWithComments parseMode (Text.unpack t))
+
 getAst :: Text.Text -> Module NodeInfo
 getAst = uncurry (placeComments LowestLayer) . getParse
 
@@ -47,7 +48,7 @@ getPretty' :: Attachment -> Style -> Text.Text -> Text.Text
 getPretty' att style = Text.toLazyText . prettyAst style . getAst' att 
 
 prettyAst :: Pretty ast => Style -> ast NodeInfo -> Text.Builder
-prettyAst style ast = prettyPrint style (pretty ast)
+prettyAst style ast = prettyPrint parseMode style (pretty ast)
 
 toList :: Traversable t =>  t t1 -> [t1]
 toList = reverse . flip execState [] . traverse (\x -> modify (\xs -> x:xs))
@@ -59,19 +60,40 @@ posn ast = fmap (\(NodeInfo (SrcSpanInfo (SrcSpan _ l0 c0 l1 c1) _) cs)
 show' :: (Show a) => a -> Doc
 show' = ppDoc 
 
+showText :: Text.Text -> IO ()
+showText t = 
+  Text.putStr t
+
+commentLoc :: Attachment -> Text.Text -> [Int]
+commentLoc att = findIndices (not . null) . toList . getComments . getAst' att
+
+-- hlint
+getDeclsIdea :: Text.Text -> IO [Idea]
+getDeclsIdea t = do
+  (flags, classify, hint) <- autoSettings
+  let (m@(Module _ _ _ _ decls),c) = getParse t
+      scope = scopeCreate m
+  return $ concat $ hintDecl hint scope m <$> decls
+
+getIdeas :: Text.Text -> IO [Idea]
+getIdeas t = do
+  (flags, classify, hint) <- autoSettings
+  let (m,c) = getParse t
+  return $ applyHints classify hint [(m,c)]
+
 -- testing
-commentLoc :: Text.Text -> [Int]
-commentLoc = findIndices (not . null) . toList . getComments . getAst
+ts :: [Text]
+ts = 
+  [ "x = putStrLn . show --end\n"
+  , "{-1-}x\n"
+  , "x{-1-}"
+  , "{-1-} x1 = putStrLn {-2-} . show {-3-}\n"
+  ]
 
-commentLoc' :: Attachment -> Text.Text -> [Int]
-commentLoc' att = findIndices (not . null) . toList . getComments . getAst' att
-
--- tests
-t1 :: Text.Text
-t1 = "x1 = putStrLn . show --end\n"
-
-t1CommentLoc :: Bool
-t1CommentLoc = commentLoc' LowestLayer t1 == [14] && commentLoc' HighestLayer t1 == [0]
+testCommentLoc :: Bool
+testCommentLoc = 
+  commentLoc LowestLayer (ts!!0) == [14] && 
+  commentLoc HighestLayer (ts!!0) == [0]
 
 exactOk' :: Text.Text -> Bool
 exactOk' t = t == getPretty' LowestLayer exact t && 
@@ -80,14 +102,8 @@ exactOk' t = t == getPretty' LowestLayer exact t &&
 exactOk :: Text.Text -> Bool
 exactOk t = t == getPretty exact t
 
-t1Ok :: Bool
-t1Ok = exactOk' t1
-
-t2 :: Text
-t2 = "x1 = putStrLn {-1-} . {-2-} show {-3-}\n"
-
-t2Ok :: Bool
-t2Ok = exactOk t2
+testExact :: [Bool]
+testExact = exactOk <$> ts
 
 {- 
 difficulties with using HighestLayer
@@ -237,140 +253,7 @@ Module
 
 -}
 
-t3 :: Text.Text
-t3 = "{-1-} x1 = putStrLn {-2-} . show {-3-}\n"
-
-testt3Ok :: Bool
-testt3Ok = exactOk t3
-
-
-t = "x = putStrLn {-1-} . show -- the end"
-
-
-testEP :: (ExactP t, Traversable t) => t NodeInfo -> String
-testEP a = Exact.exactPrint (fmap nodeInfoSpan a) (mconcat $ toList $ fmap (fmap comInfoComment . nodeInfoComments) a)
-
-defaultPrintState :: PrintState Exact.State
-defaultPrintState = PrintState 0 mempty False 0 1 Exact.State [] def False False
-
-expPutStrLn' :: Exp NodeInfo
-expPutStrLn' = Var
-        NodeInfo
-          { nodeInfoSpan =
-              SrcSpanInfo
-                { srcInfoSpan = SrcSpan "<unknown>.hs" 1 18 1 26
-                , srcInfoPoints = []
-                }
-          , nodeInfoComments = []
-          }
-        (UnQual
-           NodeInfo
-             { nodeInfoSpan =
-                 SrcSpanInfo
-                   { srcInfoSpan = SrcSpan "<unknown>.hs" 1 18 1 26
-                   , srcInfoPoints = []
-                   }
-             , nodeInfoComments = []
-             }
-           (Ident
-              NodeInfo
-                { nodeInfoSpan =
-                    SrcSpanInfo
-                      { srcInfoSpan = SrcSpan "<unknown>.hs" 1 18 1 26
-                      , srcInfoPoints = []
-                      }
-                , nodeInfoComments =
-                    [ ComInfo
-                        { comInfoComment =
-                            Comment True (SrcSpan "<unknown>.hs" 1 27 1 39) " inside "
-                        , comInfoLocation = Just After
-                        }
-                    ]
-                }
-              "putStrLn"))
-
-expShow' :: Exp NodeInfo
-expShow' = Var
-        NodeInfo
-          { nodeInfoSpan =
-              SrcSpanInfo
-                { srcInfoSpan = SrcSpan "<unknown>.hs" 1 42 1 46
-                , srcInfoPoints = []
-                }
-          , nodeInfoComments = []
-          }
-        (UnQual
-           NodeInfo
-             { nodeInfoSpan =
-                 SrcSpanInfo
-                   { srcInfoSpan = SrcSpan "<unknown>.hs" 1 42 1 46
-                   , srcInfoPoints = []
-                   }
-             , nodeInfoComments = []
-             }
-           (Ident
-              NodeInfo
-                { nodeInfoSpan =
-                    SrcSpanInfo
-                      { srcInfoSpan = SrcSpan "<unknown>.hs" 1 42 1 46
-                      , srcInfoPoints = []
-                      }
-                , nodeInfoComments =
-                    [ ComInfo
-                        { comInfoComment =
-                            Comment False (SrcSpan "<unknown>.hs" 1 47 1 52) "end"
-                        , comInfoLocation = Just After
-                        }
-                    ]
-                }
-              "show"))
-
-dot' :: QOp NodeInfo
-dot' = QVarOp
-        NodeInfo
-          { nodeInfoSpan =
-              SrcSpanInfo
-                { srcInfoSpan = SrcSpan "<unknown>.hs" 1 40 1 41
-                , srcInfoPoints = []
-                }
-          , nodeInfoComments = []
-          }
-        (UnQual
-           NodeInfo
-             { nodeInfoSpan =
-                 SrcSpanInfo
-                   { srcInfoSpan = SrcSpan "<unknown>.hs" 1 40 1 41
-                   , srcInfoPoints = []
-                   }
-             , nodeInfoComments = []
-             }
-           (Symbol
-              NodeInfo
-                { nodeInfoSpan =
-                    SrcSpanInfo
-                      { srcInfoSpan = SrcSpan "<unknown>.hs" 1 40 1 41
-                      , srcInfoPoints = []
-                      }
-                , nodeInfoComments = []
-                }
-              "."))
-
-app' :: Exp NodeInfo -> Exp NodeInfo -> QOp NodeInfo -> Exp NodeInfo
-app' x1 x2 op1 = InfixApp
-     NodeInfo
-       { nodeInfoSpan =
-           SrcSpanInfo
-             { srcInfoSpan = SrcSpan "<unknown>.hs" 1 18 1 46
-             , srcInfoPoints = []
-             }
-       , nodeInfoComments = []
-       }
-       x1
-       op1
-       x2
-
-
--- var' :: SExp NodeInfo
+var' :: ComInfoLocation -> Text -> Exp NodeInfo
 var' place att = 
   let cloc = if place == Before then SrcSpan "" 1 1 1 6 else SrcSpan "" 1 2 1 7
       sloc = if place == Before then SrcSpan "" 1 6 1 7 else SrcSpan "" 1 1 1 2
@@ -411,61 +294,47 @@ var' place att =
               "x"))
 
 
--- testAll' :: Text -> IO ()
-testAll' i =
-  forM_ styles
-        (\style ->
-           do Text.putStrLn ("-- " <> (Text.fromStrict $ styleName style) <> ":")
-              Text.putStrLn $ Text.toLazyText $ prettyAst style $ getAst i
-              Text.putStrLn "")
+testVar' :: IO ()
+testVar' =
+  showText $ Text.toLazyText $ mconcat 
+  [ "-- " 
+  <> Text.fromText (styleName s) 
+  <> " " 
+  <> (Text.fromLazyText . Text.pack . show) l 
+  <> " " 
+  <> Text.fromLazyText t 
+  <> ":\n" 
+  <> prettyAst s (var' l t)
+  <> "\n"
+  | s <- styles
+  , l <- [Before,After]
+  , t <- ["Var","UnQual","Ident"] :: [Text]
+  ]
 
+-- module merging
+-- | sort of a mappend anyway
+maybeMappend :: (a -> a -> a) -> Maybe a -> Maybe a -> Maybe a
+maybeMappend ma x x' =
+  case x of
+    Nothing -> case x' of
+      Nothing -> Nothing
+      Just v' -> Just v'
+    Just v -> case x' of
+      Nothing -> Just v
+      Just v' -> Just (ma v v')
 
--- the rest
-file :: FilePath -> IO Text.Text
-file = Text.readFile
+-- | favours the first module header, but merges the export list (but no duplicate check)
+mergeModuleHead :: ModuleHead a -> ModuleHead a -> ModuleHead a
+mergeModuleHead (ModuleHead a name' warn exports)
+                (ModuleHead _ _ warn' exports') =
+  ModuleHead a name' (maybeMappend const warn warn')
+  (maybeMappend (\(ExportSpecList a' es) (ExportSpecList _ es') -> ExportSpecList a' (es<>es')) exports exports')
 
-showText :: Text.Text -> IO ()
-showText t = 
-  Text.putStr t
+-- | full merge of two modules
+mergeModule :: (Show a) => Module a -> Module a -> Module a
+mergeModule (Module a h pragmas imps decls)
+            (Module _ h' pragmas' imps' decls') =
+  clean (Module a (maybeMappend mergeModuleHead h h')  (pragmas<>pragmas')
+         (imps <> imps') (decls <> decls'))
 
-getParse :: Text.Text -> (Module SrcSpanInfo, [Comment])
-getParse t = fromParseResult (parseModuleWithComments parseMode (Text.unpack t))
-
-
-getDecl :: Module NodeInfo -> Decl NodeInfo
-getDecl (Module _ _ _ _ decls) = head decls
-
-getSrcSpan :: NodeInfo -> SrcSpan
-getSrcSpan (NodeInfo (SrcSpanInfo s _) _) = s
-
-showT :: (Traversable t, Show a) => t a -> [String]
-showT ast = execState (traverse (\x -> modify (\xs -> show x:xs)) ast) []
-
-
-
-incT :: Module a -> Module Int
-incT ast = flip evalState 0 $ traverse inc ast
-
-inc :: t -> State Int Int
-inc _ = do
-      modify (+1)
-      get
-      
--- show' $ posnT $ fst $ getParse "x1 = putStrLn . show"
--- show' $ posnT' $ snd $ getAst "x1 = putStrLn . show {- end -}"
-
--- hlint
-getDeclsIdea :: Text.Text -> IO [Idea]
-getDeclsIdea t = do
-  (flags, classify, hint) <- autoSettings
-  let (m@(Module _ _ _ _ decls),c) = getParse t
-      scope = scopeCreate m
-  return $ concat $ hintDecl hint scope m <$> decls
-
-
-getIdeas :: Text.Text -> IO [Idea]
-getIdeas t = do
-  (flags, classify, hint) <- autoSettings
-  let (m,c) = getParse t
-  return $ applyHints classify hint [(m,c)]
 

@@ -62,7 +62,7 @@ options =
                                                 (styleDescription s)
                                                 s)
                                     styles))
-                       lineLen|]
+                       lineLen refactor|]
         exts =
           fmap getExtensions (many (prefix "X" "Language extension"))
         lineLen =
