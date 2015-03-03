@@ -47,11 +47,7 @@ library
                    , pretty
                    , pretty-show
                    , text
-<<<<<<< HEAD
-                   , transformers >= 0.3.0.0
-=======
                    , transformers
->>>>>>> master
 
 executable hindent
   hs-source-dirs:    src/main
