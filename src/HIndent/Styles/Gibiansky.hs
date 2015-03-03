@@ -458,12 +458,20 @@ ifExpr _ = error "Not an if statement"
 writeCaseAlts :: [Alt NodeInfo] -> Printer State ()
 writeCaseAlts alts = do
   allSingle <- and <$> mapM isSingle alts
-  withCaseContext True $ indented indentSpaces $
-    if allSingle
-      then do
-        maxPatLen <- maximum <$> mapM (patternLen . altPattern) alts
-        lined $ map (prettyCase $ Just maxPatLen) alts
-      else lined $ map (prettyCase Nothing) alts
+  withCaseContext True $ indented indentSpaces $ do
+    prettyPr <- if allSingle
+                then do
+                  maxPatLen <- maximum <$> mapM (patternLen . altPattern) alts
+                  return $ prettyCase (Just maxPatLen)
+                else return $ prettyCase Nothing
+
+    case alts of 
+      [] -> return ()
+      first:rest -> do
+        prettyPr first
+        forM_ (zip alts rest) $ \(prev, cur) -> do
+          replicateM_ (max 1 $ lineDelta cur prev) newline
+          prettyPr cur
 
   where
     isSingle :: Alt NodeInfo -> Printer State Bool
@@ -635,6 +643,7 @@ writeWhereBinds ds@(BDecls _ binds) = do
   onSeparateLines binds
 writeWhereBinds binds = prettyNoExt binds
 
+-- Print all the ASTs on separate lines, respecting user spacing.
 onSeparateLines :: (Pretty ast, Annotated ast) => [ast NodeInfo] -> Printer State ()
 onSeparateLines vals@(first:rest) = do
   pretty first

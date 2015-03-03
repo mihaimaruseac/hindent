@@ -1,6 +1,7 @@
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 -- | Main entry point to hindent.
 --
@@ -12,6 +13,7 @@ import           HIndent
 import           HIndent.Types
 
 import           Control.Applicative
+import           Control.Applicative.QQ.Idiom
 import           Data.List
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -20,6 +22,7 @@ import qualified Data.Text.Lazy.IO as T
 import           Data.Version (showVersion)
 import           Descriptive
 import           Descriptive.Options
+import           GHC.Tuple
 import           Language.Haskell.Exts.Annotated hiding (Style,style)
 import           Paths_hindent (version)
 import           System.Environment
@@ -48,20 +51,18 @@ options :: Monad m
         => Consumer [Text] (Option Stoppers) m (Style,[Extension])
 options =
   ver *>
-  ((,) <$> style <*> exts)
+  [i|(,) style exts|]
   where ver =
           stop (flag "version" "Print the version" Version)
         style =
-          makeStyle <$>
-          (constant "--style" "Style to print with" () *>
-           foldr1 (<|>)
-                  (map (\s ->
-                          constant (styleName s)
-                                   (styleDescription s)
-                                   s)
-                       styles)) <*>
-          lineLen <*>
-          refactor
+          [i|makeStyle (constant "--style" "Style to print with" () *>
+                        foldr1 (<|>)
+                               (map (\s ->
+                                       constant (styleName s)
+                                                (styleDescription s)
+                                                s)
+                                    styles))
+                       lineLen|]
         exts =
           fmap getExtensions (many (prefix "X" "Language extension"))
         lineLen =
@@ -113,5 +114,5 @@ badExtensions =
     ,TransformListComp -- steals the group keyword
     ,XmlSyntax, RegularPatterns -- steals a-b
     ,UnboxedTuples -- breaks (#) lens operator
-    ,QuasiQuotes -- breaks [x| ...], making whitespace free list comps break
+    -- ,QuasiQuotes -- breaks [x| ...], making whitespace free list comps break
     ]

@@ -8,13 +8,18 @@
 module HIndent.Styles.ChrisDone where
 
 import HIndent.Pretty
+import HIndent.Comments
 import HIndent.Types
 
 import Control.Monad
 import Control.Monad.Loops
 import Control.Monad.State.Class
 import Data.Int
+import Data.Maybe
+import Language.Haskell.Exts.Annotated (parseExpWithComments)
+import Language.Haskell.Exts.Annotated.Fixity
 import Language.Haskell.Exts.Annotated.Syntax
+import Language.Haskell.Exts.Parser (ParseResult(..))
 import Prelude hiding (exp)
 
 --------------------------------------------------------------------------------
@@ -204,6 +209,17 @@ stmt e = prettyNoExt e
 
 -- | Expressions
 exp :: Exp NodeInfo -> Printer t ()
+exp e@(QuasiQuote _ "i" s) =
+  do parseMode <- gets psParseMode
+     case parseExpWithComments parseMode s of
+       ParseOk (e',comments) ->
+         do depend (do write "["
+                       string "i"
+                       write "|")
+                   (do exp (snd (annotateComments (fromMaybe e' (applyFixities baseFixities e'))
+                                                  comments))
+                       write "|]")
+       _ -> prettyNoExt e
 -- Infix applications will render on one line if possible, otherwise
 -- if any of the arguments are not "flat" then that expression is
 -- line-separated.
@@ -389,37 +405,40 @@ isSingleLiner p =
 --------------------------------------------------------------------------------
 -- Helpers
 
-infixApp :: (Pretty ast,Pretty ast1,Pretty ast2)
-         => Exp NodeInfo
-         -> ast NodeInfo
-         -> ast1 NodeInfo
-         -> ast2 NodeInfo
+infixApp :: Exp NodeInfo
+         -> Exp NodeInfo
+         -> QOp NodeInfo
+         -> Exp NodeInfo
          -> Maybe Int64
-         -> Printer t ()
+         -> Printer s ()
 infixApp e a op b indent =
   do let is = isFlat e
      overflow <- isOverflow
-                   (depend (do pretty a
+                   (depend (do prettyWithIndent a
                                space
                                pretty op
                                space)
-                           (do pretty b))
+                           (do prettyWithIndent b))
      if is && not overflow
-        then do depend (do pretty a
+        then do depend (do prettyWithIndent a
                            space
                            pretty op
                            space)
-                       (do pretty b)
-        else do pretty a
+                       (do prettyWithIndent b)
+        else do prettyWithIndent a
                 space
                 pretty op
                 newline
                 case indent of
-                  Nothing -> pretty b
+                  Nothing -> prettyWithIndent b
                   Just col ->
                     do indentSpaces <- getIndentSpaces
                        column (col + indentSpaces)
-                              (pretty b)
+                              (prettyWithIndent b)
+  where prettyWithIndent e' =
+          case e' of
+            (InfixApp _ a' op' b') -> infixApp e' a' op' b' indent
+            _ -> pretty e'
 
 -- | Make the right hand side dependent if it's flat, otherwise
 -- newline it.

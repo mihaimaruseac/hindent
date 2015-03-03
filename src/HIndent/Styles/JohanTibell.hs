@@ -19,6 +19,7 @@ import Data.Int
 import Data.Maybe
 import HIndent.Pretty
 import HIndent.Types
+import HIndent.Styles.ChrisDone (infixApp,dependOrNewline)
 
 import Language.Haskell.Exts.Annotated.Syntax
 import Prelude hiding (exp)
@@ -66,6 +67,14 @@ stmt (Qualifier _ e@(InfixApp _ a op b)) =
   do col <- fmap (psColumn . snd)
                  (sandbox (write ""))
      infixApp e a op b (Just col)
+stmt (Generator _ p e) =
+  do indentSpaces <- getIndentSpaces
+     pretty p
+     indented indentSpaces
+              (dependOrNewline
+                 (write " <- ")
+                 e
+                 pretty)
 stmt e = prettyNoExt e
 
 -- | Handle do specially and also space out guards more.
@@ -406,38 +415,3 @@ fieldupdate e =
                              write " = "
                              pretty e'
     _ -> prettyNoExt e
-
---------------------------------------------------------------------------------
--- Helpers
-
-infixApp :: (Pretty ast,Pretty ast1,Pretty ast2)
-         => Exp NodeInfo
-         -> ast NodeInfo
-         -> ast1 NodeInfo
-         -> ast2 NodeInfo
-         -> Maybe Int64
-         -> Printer s ()
-infixApp e a op b indent =
-  do is <- isFlat e
-     overflow <- isOverflow
-                   (depend (do pretty a
-                               space
-                               pretty op
-                               space)
-                           (do pretty b))
-     if is && not overflow
-        then do depend (do pretty a
-                           space
-                           pretty op
-                           space)
-                       (do pretty b)
-        else do pretty a
-                space
-                pretty op
-                newline
-                case indent of
-                  Nothing -> pretty b
-                  Just col ->
-                    do indentSpaces <- getIndentSpaces
-                       column (col + indentSpaces)
-                              (pretty b)

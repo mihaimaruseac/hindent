@@ -1,5 +1,5 @@
 name:                hindent
-version:             4.3.4
+version:             4.3.12
 synopsis:            Extensible Haskell pretty printer
 description:         Extensible Haskell pretty printer. Both a library and an executable.
                      .
@@ -15,6 +15,14 @@ build-type:          Simple
 cabal-version:       >=1.8
 data-files:          elisp/hindent.el vim/hindent.vim
 extra-source-files:  README.md
+                     test/chris-done/expected/*.exp
+                     test/chris-done/tests/*.test
+                     test/gibiansky/expected/*.exp
+                     test/gibiansky/tests/*.test
+                     test/fundamental/expected/*.exp
+                     test/fundamental/tests/*.test
+                     test/johan-tibell/expected/*.exp
+                     test/johan-tibell/tests/*.test
 
 library
   hs-source-dirs:    src/
@@ -23,6 +31,7 @@ library
                      HIndent.AST
                      HIndent.Types
                      HIndent.Pretty
+                     HIndent.Comments
                      HIndent.Styles.Fundamental
                      HIndent.Styles.ChrisDone
                      HIndent.Styles.JohanTibell
@@ -38,7 +47,11 @@ library
                    , pretty
                    , pretty-show
                    , text
+<<<<<<< HEAD
                    , transformers >= 0.3.0.0
+=======
+                   , transformers
+>>>>>>> master
 
 executable hindent
   hs-source-dirs:    src/main
@@ -48,8 +61,10 @@ executable hindent
                    , hindent
                    , text
                    , hlint
-                   , descriptive >= 0.7 && < 0.8
-                   , haskell-src-exts
+                   , descriptive >= 0.7 && < 0.10
+                   , haskell-src-exts >= 1.16
+                   , applicative-quoters
+                   , ghc-prim
 
 executable hindent-generate-tests
   hs-source-dirs:    src/main
