@@ -44,14 +44,16 @@
         (with-temp-buffer
           (let ((temp (current-buffer)))
             (with-current-buffer original
-              (let ((ret (call-process-region (car start-end)
+              (let ((ret (apply #'call-process-region
+                                (append (list (car start-end)
                                               (cdr start-end)
                                               "hindent"
-                                              nil  ; delete
+                                              nil ; delete
                                               temp ; output
                                               nil
                                               "--style"
-                                              hindent-style)))
+                                              hindent-style)
+                                        (hindent-extra-arguments)))))
                 (cond
                  ((= ret 1)
                   (let ((error-string
@@ -82,6 +84,13 @@
                               (delete-trailing-whitespace new-start new-end)))
                           (message "Formatted."))
                       (message "Already formatted.")))))))))))))
+
+(defun hindent-extra-arguments ()
+  "Pass in extra arguments, such as extensions and optionally
+other things later."
+  (if (boundp 'haskell-language-extensions)
+      haskell-language-extensions
+    '()))
 
 (defun hindent-reformat-decl-or-fill (justify)
   "Re-format current declaration, or fill paragraph.

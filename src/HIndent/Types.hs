@@ -19,44 +19,49 @@ module HIndent.Types
   ) where
 
 import Control.Applicative
-import Control.Monad.State.Strict (MonadState(..),State)
+import Control.Monad
+import Control.Monad.State.Strict (MonadState(..),StateT)
+import Control.Monad.Trans.Maybe
 import Data.Data
 import Data.Default
+import Data.Functor.Identity
 import Data.Int (Int64)
 import Data.Text (Text)
 import Data.Text.Lazy.Builder (Builder)
 import Language.Haskell.Exts.Comments
+import Language.Haskell.Exts.Parser
 import Language.Haskell.Exts.SrcLoc
 
 -- | A pretty printing monad.
-newtype Printer a =
-  Printer {runPrinter :: State PrintState a}
-  deriving (Applicative,Monad,Functor,MonadState PrintState)
+newtype Printer s a =
+  Printer {runPrinter :: StateT (PrintState s) (MaybeT Identity) a}
+  deriving (Applicative,Monad,Functor,MonadState (PrintState s),MonadPlus,Alternative)
 
 -- | The state of the pretty printer.
-data PrintState =
-  forall s. PrintState {psIndentLevel :: !Int64 -- ^ Current indentation level.
-                       ,psOutput :: !Builder -- ^ The current output.
-                       ,psNewline :: !Bool -- ^ Just outputted a newline?
-                       ,psColumn :: !Int64 -- ^ Current column.
-                       ,psLine :: !Int64 -- ^ Current line number.
-                       ,psUserState :: !s -- ^ User state.
-                       ,psExtenders :: ![Extender s] -- ^ Extenders.
-                       ,psConfig :: !Config -- ^ Config which styles may or may not pay attention to.
-                       ,psEolComment :: !Bool -- ^ An end of line comment has just been outputted.
-                       ,psInsideCase :: !Bool -- ^ Whether we're in a case statement, used for Rhs printing.
-                       }
+data PrintState s =
+  PrintState {psIndentLevel :: !Int64 -- ^ Current indentation level.
+             ,psOutput :: !Builder -- ^ The current output.
+             ,psNewline :: !Bool -- ^ Just outputted a newline?
+             ,psColumn :: !Int64 -- ^ Current column.
+             ,psLine :: !Int64 -- ^ Current line number.
+             ,psUserState :: !s -- ^ User state.
+             ,psExtenders :: ![Extender s] -- ^ Extenders.
+             ,psConfig :: !Config -- ^ Config which styles may or may not pay attention to.
+             ,psEolComment :: !Bool -- ^ An end of line comment has just been outputted.
+             ,psInsideCase :: !Bool -- ^ Whether we're in a case statement, used for Rhs printing.
+             ,psParseMode :: !ParseMode -- ^ Mode used to parse the original AST.
+             }
 
-instance Eq PrintState where
-  PrintState ilevel out newline col line _ _ _ eolc inc == PrintState ilevel' out' newline' col' line' _ _ _ eolc' inc' =
+instance Eq (PrintState s) where
+  PrintState ilevel out newline col line _ _ _ eolc inc pm == PrintState ilevel' out' newline' col' line' _ _ _ eolc' inc' pm' =
     (ilevel,out,newline,col,line,eolc, inc) == (ilevel',out',newline',col',line',eolc', inc')
 
 -- | A printer extender. Takes as argument the user state that the
 -- printer was run with, and the current node to print. Use
 -- 'prettyNoExt' to fallback to the built-in printer.
 data Extender s where
-  Extender :: forall s a. (Typeable a) => (s -> a -> Printer ()) -> Extender s
-  CatchAll :: forall s. (forall a. Typeable a => s -> a -> Maybe (Printer ())) -> Extender s
+  Extender :: forall s a. (Typeable a) => (a -> Printer s ()) -> Extender s
+  CatchAll :: forall s. (forall a. Typeable a => s -> a -> Maybe (Printer s ())) -> Extender s
 
 -- | A printer style.
 data Style =

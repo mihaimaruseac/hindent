@@ -1,5 +1,5 @@
 name:                hindent
-version:             4.2.2
+version:             4.3.12
 synopsis:            Extensible Haskell pretty printer
 description:         Extensible Haskell pretty printer. Both a library and an executable.
                      .
@@ -15,24 +15,39 @@ build-type:          Simple
 cabal-version:       >=1.8
 data-files:          elisp/hindent.el vim/hindent.vim
 extra-source-files:  README.md
+                     test/chris-done/expected/*.exp
+                     test/chris-done/tests/*.test
+                     test/gibiansky/expected/*.exp
+                     test/gibiansky/tests/*.test
+                     test/fundamental/expected/*.exp
+                     test/fundamental/tests/*.test
+                     test/johan-tibell/expected/*.exp
+                     test/johan-tibell/tests/*.test
 
 library
   hs-source-dirs:    src/
   ghc-options:       -Wall -O2
   exposed-modules:   HIndent
+                     HIndent.Refactoring
                      HIndent.Types
                      HIndent.Pretty
+                     HIndent.Comments
                      HIndent.Styles.Fundamental
                      HIndent.Styles.ChrisDone
                      HIndent.Styles.JohanTibell
                      HIndent.Styles.Gibiansky
                      HIndent.Styles.TonyDay
+                     HIndent.Styles.Exact
   build-depends:     base >= 4 && <5
                    , data-default
                    , haskell-src-exts == 1.16.*
+                   , hlint
                    , monad-loops
                    , mtl
+                   , pretty
+                   , pretty-show
                    , text
+                   , transformers
 
 executable hindent
   hs-source-dirs:    src/main
@@ -41,8 +56,11 @@ executable hindent
   build-depends:     base >= 4 && < 5
                    , hindent
                    , text
-                   , descriptive == 0.2.*
-                   , haskell-src-exts
+                   , hlint
+                   , descriptive >= 0.7 && < 0.10
+                   , haskell-src-exts >= 1.16
+                   , applicative-quoters
+                   , ghc-prim
 
 executable hindent-generate-tests
   hs-source-dirs:    src/main
@@ -51,6 +69,7 @@ executable hindent-generate-tests
   build-depends:     base >= 4 && < 5
                    , hindent
                    , text
+                   , hlint
                    , directory
 
 test-suite hspec
@@ -63,6 +82,7 @@ test-suite hspec
                    , haskell-src-exts == 1.16.*
                    , monad-loops
                    , mtl
+                   , hlint
                    , text
                    , hspec
                    , directory

@@ -19,6 +19,7 @@ import Data.Int
 import Data.Maybe
 import HIndent.Pretty
 import HIndent.Types
+import HIndent.Styles.ChrisDone (infixApp,dependOrNewline)
 
 import Language.Haskell.Exts.Annotated.Syntax
 import Prelude hiding (exp)
@@ -61,16 +62,24 @@ johanTibell =
 -- do x *
 --    y
 -- is two invalid statements, not one valid infix op.
-stmt :: s -> Stmt NodeInfo -> Printer ()
-stmt _ (Qualifier _ e@(InfixApp _ a op b)) =
+stmt :: Stmt NodeInfo -> Printer s ()
+stmt (Qualifier _ e@(InfixApp _ a op b)) =
   do col <- fmap (psColumn . snd)
                  (sandbox (write ""))
      infixApp e a op b (Just col)
-stmt _ e = prettyNoExt e
+stmt (Generator _ p e) =
+  do indentSpaces <- getIndentSpaces
+     pretty p
+     indented indentSpaces
+              (dependOrNewline
+                 (write " <- ")
+                 e
+                 pretty)
+stmt e = prettyNoExt e
 
 -- | Handle do specially and also space out guards more.
-rhs :: t -> Rhs NodeInfo -> Printer ()
-rhs s x =
+rhs :: Rhs NodeInfo -> Printer s ()
+rhs x =
   case x of
     UnGuardedRhs _ (Do _ dos) ->
       swing (write " = do")
@@ -85,13 +94,13 @@ rhs s x =
                               gas))
     _ -> do inCase <- gets psInsideCase
             if inCase
-               then unguardedalt s x
-               else unguardedrhs s x
+               then unguardedalt x
+               else unguardedrhs x
 
 -- | Implement dangling right-hand-sides.
-guardedRhs :: t -> GuardedRhs NodeInfo -> Printer ()
+guardedRhs :: GuardedRhs NodeInfo -> Printer s ()
 -- | Handle do specially.
-guardedRhs _ (GuardedRhs _ stmts (Do _ dos)) =
+guardedRhs (GuardedRhs _ stmts (Do _ dos)) =
   do indented 1
               (do prefixedLined
                     ","
@@ -101,27 +110,27 @@ guardedRhs _ (GuardedRhs _ stmts (Do _ dos)) =
                          stmts))
      swing (write " = do")
            (lined (map pretty dos))
-guardedRhs _ e = prettyNoExt e
+guardedRhs e = prettyNoExt e
 
 -- | Unguarded case alts.
-unguardedalt :: t -> Rhs NodeInfo -> Printer ()
-unguardedalt _ (UnGuardedRhs _ e) =
+unguardedalt :: Rhs NodeInfo -> Printer s ()
+unguardedalt (UnGuardedRhs _ e) =
   do indentSpaces <- getIndentSpaces
      write " -> "
      indented indentSpaces (pretty e)
-unguardedalt _ e = prettyNoExt e
+unguardedalt e = prettyNoExt e
 
-unguardedrhs :: s -> Rhs NodeInfo -> Printer ()
-unguardedrhs _ (UnGuardedRhs _ e) =
+unguardedrhs :: Rhs NodeInfo -> Printer s ()
+unguardedrhs (UnGuardedRhs _ e) =
   do indentSpaces <- getIndentSpaces
      write " = "
      indented indentSpaces (pretty e)
-unguardedrhs _ e = prettyNoExt e
+unguardedrhs e = prettyNoExt e
 
 -- | Expression customizations.
-exp :: t -> Exp NodeInfo -> Printer ()
+exp :: Exp NodeInfo -> Printer s ()
 -- | Space out tuples.
-exp _ (Tuple _ boxed exps) =
+exp (Tuple _ boxed exps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
                    Boxed -> "("))
@@ -136,7 +145,7 @@ exp _ (Tuple _ boxed exps) =
                       Boxed -> ")"))
   where p = inter (write ", ") (map pretty exps)
 -- | Space out tuples.
-exp _ (TupleSection _ boxed mexps) =
+exp (TupleSection _ boxed mexps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
                    Boxed -> "("))
@@ -145,10 +154,10 @@ exp _ (TupleSection _ boxed mexps) =
                       Unboxed -> "#)"
                       Boxed -> ")"))
 -- | Infix apps, same algorithm as ChrisDone at the moment.
-exp _ e@(InfixApp _ a op b) =
+exp e@(InfixApp _ a op b) =
   infixApp e a op b Nothing
 -- | If bodies are indented 4 spaces. Handle also do-notation.
-exp _ (If _ if' then' else') =
+exp (If _ if' then' else') =
   do depend (write "if ")
             (pretty if')
      newline
@@ -171,7 +180,7 @@ exp _ (If _ if' then' else') =
                      (pretty e)
 -- | App algorithm similar to ChrisDone algorithm, but with no
 -- parent-child alignment.
-exp _ (App _ op a) =
+exp (App _ op a) =
   do orig <- gets psIndentLevel
      headIsShort <- isShort f
      depend (do pretty f
@@ -198,7 +207,7 @@ exp _ (App _ op a) =
           flatten f' (a' : b)
         flatten f' as = (((f',as)))
 -- | Space out commas in list.
-exp _ (List _ es) =
+exp (List _ es) =
   do single <- isSingleLiner p
      underflow <- fmap not (isOverflow p)
      if single && underflow
@@ -208,12 +217,12 @@ exp _ (List _ es) =
   where p =
           brackets (inter (write ", ")
                           (map pretty es))
-exp _ (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) updates
-exp _ (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
-exp _ e = prettyNoExt e
+exp (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) updates
+exp (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
+exp e = prettyNoExt e
 
 -- | Specially format records. Indent where clauses only 2 spaces.
-decl :: t -> Decl NodeInfo -> Printer ()
+decl :: Decl NodeInfo -> Printer s ()
 -- | Pretty print type signatures like
 --
 -- foo :: (Show x,Read x)
@@ -222,7 +231,7 @@ decl :: t -> Decl NodeInfo -> Printer ()
 --     -> (Char -> X -> Y)
 --     -> IO ()
 --
-decl _ (TypeSig _ names ty') =
+decl (TypeSig _ names ty') =
   depend (do inter (write ", ")
                    (map pretty names)
              write " :: ")
@@ -261,7 +270,7 @@ decl _ (TypeSig _ names ty') =
           do overflows <- isOverflow (pretty p)
              oneLine <- isSingleLiner (pretty p)
              return (not overflows && oneLine)
-decl _ (PatBind _ pat rhs' mbinds) =
+decl (PatBind _ pat rhs' mbinds) =
       do pretty pat
          pretty rhs'
          case mbinds of
@@ -273,7 +282,7 @@ decl _ (PatBind _ pat rhs' mbinds) =
                              newline
                              indented 2 (pretty binds))
 -- | Handle records specially for a prettier display (see guide).
-decl _ (DataDecl _ dataornew ctx dhead condecls@[_] mderivs)
+decl (DataDecl _ dataornew ctx dhead condecls@[_] mderivs)
   | any isRecord condecls =
     do depend (do pretty dataornew
                   unless (null condecls) space)
@@ -287,10 +296,10 @@ decl _ (DataDecl _ dataornew ctx dhead condecls@[_] mderivs)
           depend (write " =")
                  (inter (write "|")
                         (map (depend space . qualConDecl) xs))
-decl _ e = prettyNoExt e
+decl e = prettyNoExt e
 
 -- | Use special record display, used by 'dataDecl' in a record scenario.
-qualConDecl :: QualConDecl NodeInfo -> Printer ()
+qualConDecl :: QualConDecl NodeInfo -> Printer s ()
 qualConDecl x =
     case x of
         QualConDecl _ tyvars ctx d ->
@@ -305,20 +314,20 @@ qualConDecl x =
                      (recDecl d))
 
 -- | Fields are preceded with a space.
-conDecl :: t -> ConDecl NodeInfo -> Printer ()
-conDecl _ (RecDecl _ name fields) =
+conDecl :: ConDecl NodeInfo -> Printer s ()
+conDecl (RecDecl _ name fields) =
   depend (do pretty name
              write " ")
          (do depend (write "{")
                     (prefixedLined ","
                                    (map (depend space . pretty) fields))
              write "}")
-conDecl _ e = prettyNoExt e
+conDecl e = prettyNoExt e
 
 -- | Record decls are formatted like: Foo
 -- { bar :: X
 -- }
-recDecl :: ConDecl NodeInfo -> Printer ()
+recDecl :: ConDecl NodeInfo -> Printer s ()
 recDecl (RecDecl _ name fields) =
   do pretty name
      indentSpaces <- getIndentSpaces
@@ -331,7 +340,7 @@ recDecl (RecDecl _ name fields) =
                 write "} ")
 recDecl r = prettyNoExt r
 
-recUpdateExpr :: Printer () -> [FieldUpdate NodeInfo] -> Printer ()
+recUpdateExpr :: Printer s () -> [FieldUpdate NodeInfo] -> Printer s ()
 recUpdateExpr expWriter updates = do
   expWriter
   newline
@@ -352,14 +361,14 @@ isRecord (QualConDecl _ _ _ RecDecl{}) = True
 isRecord _ = False
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
-isOverflow :: Printer a -> Printer Bool
+isOverflow :: Printer s a -> Printer s Bool
 isOverflow p =
   do (_,st) <- sandbox p
      columnLimit <- getColumnLimit
      return (psColumn st > columnLimit)
 
 -- | Is the given expression a single-liner when printed?
-isSingleLiner :: MonadState PrintState m
+isSingleLiner :: MonadState (PrintState s) m
               => m a -> m Bool
 isSingleLiner p =
   do line <- gets psLine
@@ -368,7 +377,7 @@ isSingleLiner p =
 
 -- | Is the expression "short"? Used for app heads.
 isShort :: (Pretty ast)
-        => ast NodeInfo -> Printer (Bool)
+        => ast NodeInfo -> Printer s (Bool)
 isShort p =
   do line <- gets psLine
      orig <- fmap (psColumn . snd) (sandbox (write ""))
@@ -377,7 +386,7 @@ isShort p =
              (psColumn st < orig + shortName))
 
 -- | Is an expression flat?
-isFlat :: Exp NodeInfo -> Printer Bool
+isFlat :: Exp NodeInfo -> Printer s Bool
 isFlat (Lambda _ _ e) = isFlat e
 isFlat (App _ a b) =
   return (isName a && isName b)
@@ -399,45 +408,10 @@ isFlat (RightSection _ _ e) = isFlat e
 isFlat _ = return False
 
 -- | rhs on field update on the same line as lhs.
-fieldupdate :: t -> FieldUpdate NodeInfo -> Printer ()
-fieldupdate _ e =
+fieldupdate :: FieldUpdate NodeInfo -> Printer s ()
+fieldupdate e =
   case e of
     FieldUpdate _ n e' -> do pretty n
                              write " = "
                              pretty e'
     _ -> prettyNoExt e
-
---------------------------------------------------------------------------------
--- Helpers
-
-infixApp :: (Pretty ast,Pretty ast1,Pretty ast2)
-         => Exp NodeInfo
-         -> ast NodeInfo
-         -> ast1 NodeInfo
-         -> ast2 NodeInfo
-         -> Maybe Int64
-         -> Printer ()
-infixApp e a op b indent =
-  do is <- isFlat e
-     overflow <- isOverflow
-                   (depend (do pretty a
-                               space
-                               pretty op
-                               space)
-                           (do pretty b))
-     if is && not overflow
-        then do depend (do pretty a
-                           space
-                           pretty op
-                           space)
-                       (do pretty b)
-        else do pretty a
-                space
-                pretty op
-                newline
-                case indent of
-                  Nothing -> pretty b
-                  Just col ->
-                    do indentSpaces <- getIndentSpaces
-                       column (col + indentSpaces)
-                              (pretty b)
