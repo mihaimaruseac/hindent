@@ -611,7 +611,9 @@ decls (FunBind _ matches) =
                                     write " "
                                     return (name, pat, rhs, mbinds)
 
-    pretty name
+    case name of
+      Symbol _ name' -> string name'
+      name' -> pretty name'
     write " "
     funBody pat rhs mbinds
 decls decl = prettyNoExt decl
