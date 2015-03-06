@@ -13,6 +13,8 @@ copyright:           2014 Chris Done
 category:            Development
 build-type:          Simple
 cabal-version:       >=1.8
+homepage: http://www.github.com/chrisdone/hindent
+bug-reports: https://github.com/chrisdone/hindent/issues
 data-files:          elisp/hindent.el vim/hindent.vim
 extra-source-files:  README.md
                      test/chris-done/expected/*.exp
@@ -23,6 +25,10 @@ extra-source-files:  README.md
                      test/fundamental/tests/*.test
                      test/johan-tibell/expected/*.exp
                      test/johan-tibell/tests/*.test
+
+source-repository head
+    type:           git
+    location:       https://github.com/chrisdone/hindent
 
 library
   hs-source-dirs:    src/
