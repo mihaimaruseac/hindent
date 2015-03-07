@@ -53,7 +53,7 @@ data PrintState s =
              }
 
 instance Eq (PrintState s) where
-  PrintState ilevel out newline col line _ _ _ eolc inc pm == PrintState ilevel' out' newline' col' line' _ _ _ eolc' inc' pm' =
+  PrintState ilevel out newline col line _ _ _ eolc inc _ == PrintState ilevel' out' newline' col' line' _ _ _ eolc' inc' _ =
     (ilevel,out,newline,col,line,eolc, inc) == (ilevel',out',newline',col',line',eolc', inc')
 
 -- | A printer extender. Takes as argument the user state that the
