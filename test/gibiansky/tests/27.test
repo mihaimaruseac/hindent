@@ -1,0 +1,28 @@
+case x of
+  -- First
+  x -> y
+
+case x of
+  -- First
+  x -> y
+>
+  -- Second
+  x -> y
+
+case x of
+  -- First
+  x -> y
+>
+  -- Second
+  x -> y
+>
+  -- Second
+  x -> y
+
+case x of
+  -- First
+  x -> y
+>
+  -- Second
+>
+  x -> y
