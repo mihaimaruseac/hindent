@@ -50,10 +50,11 @@ data PrintState s =
              ,psEolComment :: !Bool -- ^ An end of line comment has just been outputted.
              ,psInsideCase :: !Bool -- ^ Whether we're in a case statement, used for Rhs printing.
              ,psParseMode :: !ParseMode -- ^ Mode used to parse the original AST.
+             ,psCommentPreprocessor :: Config -> [Comment] -> [Comment] -- ^ Preprocessor applied to comments on an AST before printing.
              }
 
 instance Eq (PrintState s) where
-  PrintState ilevel out newline col line _ _ _ eolc inc _ == PrintState ilevel' out' newline' col' line' _ _ _ eolc' inc' _ =
+  PrintState ilevel out newline col line _ _ _ eolc inc _pm _ == PrintState ilevel' out' newline' col' line' _ _ _ eolc' inc' _pm' _ =
     (ilevel,out,newline,col,line,eolc, inc) == (ilevel',out',newline',col',line',eolc', inc')
 
 -- | A printer extender. Takes as argument the user state that the
@@ -71,6 +72,7 @@ data Style =
                   ,styleInitialState :: !s -- ^ User state, if needed.
                   ,styleExtenders :: ![Extender s] -- ^ Extenders to the printer.
                   ,styleDefConfig :: !Config -- ^ Default config to use for this style.
+                  ,styleCommentPreprocessor :: Config -> [Comment] -> [Comment] -- ^ Preprocessor to use for comments.
                   }
 
 -- | Configurations shared among the different styles. Styles may pay

@@ -121,20 +121,26 @@ prettyNoExt = prettyInternal
 -- | Print comments of a node.
 printComments :: (Pretty ast,MonadState (PrintState s) m)
               => ComInfoLocation -> ast NodeInfo -> m ()
-printComments loc' ast =
-  forM_ comments $ \comment ->
-    when (comInfoLocation comment == Just loc') $ do
-      -- Preceeding comments must have a newline before them.
-      hasNewline <- gets psNewline
-      when (not hasNewline && loc' == Before) newline
+printComments loc' ast = do
+  preprocessor <- gets psCommentPreprocessor
+  config <- gets psConfig
 
-      printComment (Just $ srcInfoSpan $ nodeInfoSpan info) comment
+  let correctLocation comment = comInfoLocation comment == Just loc'
+      commentsWithLocation = filter correctLocation (nodeInfoComments info)
+      comments = preprocessor config $ map comInfoComment commentsWithLocation
+
+  forM_ comments $ \comment -> do
+    -- Preceeding comments must have a newline before them.
+    hasNewline <- gets psNewline
+    when (not hasNewline && loc' == Before) newline
+
+    printComment (Just $ srcInfoSpan $ nodeInfoSpan info) comment
   where info = ann ast
-        comments = nodeInfoComments info
+ 
 
 -- | Pretty print a comment.
-printComment :: MonadState (PrintState s) m => Maybe SrcSpan -> ComInfo -> m ()
-printComment mayNodespan (ComInfo (Comment inline cspan str) _) =
+printComment :: MonadState (PrintState s) m => Maybe SrcSpan -> Comment -> m ()
+printComment mayNodespan (Comment inline cspan str) =
   do -- Insert proper amount of space before comment.
      -- This maintains alignment. This cannot force comments
      -- to go before the left-most possible indent (specified by depends).

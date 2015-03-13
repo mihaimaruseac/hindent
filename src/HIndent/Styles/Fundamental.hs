@@ -21,4 +21,5 @@ fundamental =
         ,styleDescription = "This style adds no extensions to the built-in printer."
         ,styleInitialState = State
         ,styleExtenders = []
-        ,styleDefConfig = def}
+        ,styleDefConfig = def
+        ,styleCommentPreprocessor = const id}

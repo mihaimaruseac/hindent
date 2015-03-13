@@ -2,8 +2,7 @@ a = b
   where
     blah = blah
 
-    -- hello
-    -- bye
+    -- hello bye
     hello = hello
 
 a = b

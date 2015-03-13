@@ -109,7 +109,6 @@ cppSplitBlocks inp =
     inBlock f (HaskellSource txt) = HaskellSource (f txt)
     inBlock _ dir = dir
 
-
 -- | Print the module.
 prettyPrint :: ParseMode
             -> Style
@@ -118,8 +117,8 @@ prettyPrint :: ParseMode
             -> Either a Builder
 prettyPrint mode' style m comments =
   let (cs,ast) =
-        annotateComments (fromMaybe m (applyFixities baseFixities m))
-                         comments
+        annotateComments (fromMaybe m $ applyFixities baseFixities m) comments
+      csComments = map comInfoComment cs
   in Right (runPrinterStyle
               mode'
               style
@@ -127,18 +126,18 @@ prettyPrint mode' style m comments =
               -- If they were not at the beginning, they would be after some ast node.
               -- Thus, print them before going for the ast.
               (do mapM_ (printComment Nothing)
-                        (reverse cs)
+                        (styleCommentPreprocessor style (styleDefConfig style) (reverse csComments))
                   pretty ast))
 
 -- | Pretty print the given printable thing.
 runPrinterStyle :: ParseMode -> Style -> (forall s. Printer s ()) -> Builder
-runPrinterStyle mode' (Style _name _author _desc st extenders config) m =
+runPrinterStyle mode' (Style _name _author _desc st extenders config preprocessor) m =
   maybe (error "Printer failed with mzero call.")
         psOutput
         (runIdentity
            (runMaybeT (execStateT
                          (runPrinter m)
-                         (PrintState 0 mempty False 0 1 st extenders config False False mode'))))
+                         (PrintState 0 mempty False 0 1 st extenders config False False mode' preprocessor))))
 
 -- | Parse mode, includes all extensions, doesn't assume any fixities.
 parseMode :: ParseMode
