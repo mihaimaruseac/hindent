@@ -468,9 +468,11 @@ writeCaseAlts alts = do
     case alts of 
       [] -> return ()
       first:rest -> do
+        printComments Before first
         prettyPr first
         forM_ (zip alts rest) $ \(prev, cur) -> do
           replicateM_ (max 1 $ lineDelta cur prev) newline
+          printComments Before cur
           prettyPr cur
 
   where
