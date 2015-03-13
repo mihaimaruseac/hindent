@@ -720,6 +720,7 @@ exp (MultiIf _ alts) =
                         do write "| "
                            pretty p)
                      alts))
+exp (Lit _ lit) = prettyInternal lit
 exp x@XTag{} = pretty' x
 exp x@XETag{} = pretty' x
 exp x@XPcdata{} = pretty' x
@@ -728,7 +729,6 @@ exp x@XChildTag{} = pretty' x
 exp x@Var{} = pretty' x
 exp x@IPVar{} = pretty' x
 exp x@Con{} = pretty' x
-exp x@Lit{} = pretty' x
 exp x@CorePragma{} = pretty' x
 exp x@SCCPragma{} = pretty' x
 exp x@GenPragma{} = pretty' x
@@ -1238,7 +1238,23 @@ instance Pretty Kind where
   prettyInternal = pretty'
 
 instance Pretty Literal where
-  prettyInternal = pretty'
+  prettyInternal (String _ _ rep) = do
+    write "\""
+    string rep
+    write "\""
+  prettyInternal (Char _ _ rep) = do
+    write "'"
+    string rep
+    write "'"
+  prettyInternal (PrimString _ _ rep) = do
+    write "\""
+    string rep
+    write "\"#"
+  prettyInternal (PrimChar _ _ rep) = do
+    write "'"
+    string rep
+    write "'#"
+  prettyInternal x = pretty' x
 
 instance Pretty Name where
   prettyInternal = pretty'
