@@ -544,7 +544,7 @@ instance Pretty Type where
       TyInfix _ a op b ->
         depend (do pretty a
                    space)
-               (depend (do pretty op
+               (depend (do prettyInfixOp op
                            space)
                        (pretty b))
       TyKind _ ty k ->
