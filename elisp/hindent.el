@@ -30,6 +30,13 @@
   :type 'string
   :safe #'stringp)
 
+(defcustom hindent-process-path
+  "hindent"
+  "Location where the hindent executable is located."
+  :group 'haskell
+  :type 'string
+  :safe #'stringp)
+
 ;;;###autoload
 (defun hindent/reformat-decl ()
   "Re-format the current declaration by parsing and pretty
@@ -47,7 +54,7 @@
               (let ((ret (apply #'call-process-region
                                 (append (list (car start-end)
                                               (cdr start-end)
-                                              "hindent"
+                                              hindent-process-path
                                               nil ; delete
                                               temp ; output
                                               nil
