@@ -231,7 +231,7 @@ letExpr :: Exp NodeInfo -> Printer State ()
 letExpr (Let _ binds result) = do
   cols <- depend (write "let ") $ do
             col <- getColumn
-            pretty binds
+            writeWhereBinds binds
             return $ col - 4
   column cols $ do
     newline
