@@ -564,19 +564,34 @@ rhss (UnGuardedRhs rhsLoc exp) = do
     onNextLine _ = emptyLines > 0
 rhss (GuardedRhss _ rs) =
   lined $ flip map rs $ \a@(GuardedRhs _ stmts exp) -> do
+    let manyStmts = length stmts > 1
+        remainder = do
+          if manyStmts then newline else write " "
+          rhsRest exp
+        writeStmts = 
+          case stmts of
+            x:xs -> do
+              pretty x
+              forM_ xs $ \x -> write "," >> newline >> pretty x
+            [] -> return ()
+
     printComments Before a
-    depend (write "| ") $ do
-      inter (write ", ") $ map pretty stmts
-      rhsRest exp
+    if manyStmts
+      then do 
+        depend (write "| ") writeStmts
+        remainder
+      else
+        depend (write "| ") $ writeStmts >> remainder
+
 
 guardedRhs :: Extend GuardedRhs
 guardedRhs (GuardedRhs _ stmts exp) = do
   indented 1 $ prefixedLined "," (map (\p -> space >> pretty p) stmts)
+  write " "
   rhsRest exp
 
 rhsRest :: Pretty ast => ast NodeInfo -> Printer State ()
 rhsRest exp = do
-  write " "
   rhsSeparator
   write " "
   pretty exp
