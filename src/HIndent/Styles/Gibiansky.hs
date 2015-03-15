@@ -15,7 +15,7 @@ import           HIndent.Types
 import           Language.Haskell.Exts.Annotated.Syntax
 import           Language.Haskell.Exts.SrcLoc
 import           Language.Haskell.Exts.Comments
-import           Prelude hiding (exp, all, mapM_, minimum, and, maximum)
+import           Prelude hiding (exp, all, mapM_, minimum, and, maximum, any)
 
 -- | Empty state.
 data State = State { gibianskyForceSingleLine :: Bool }
@@ -305,7 +305,7 @@ doExpr :: Exp NodeInfo -> Printer State ()
 doExpr (Do _ stmts) = do
   write "do"
   newline
-  indented 2 $ onSeparateLines stmts
+  indented indentSpaces $ onSeparateLines stmts
 doExpr _ = error "Not a do"
 
 listExpr :: Exp NodeInfo -> Printer State ()
@@ -534,7 +534,7 @@ recUpdateExpr expWriter updates =
     mult = do
       expWriter
       newline
-      indented 2 $ keepingColumn $ do
+      indented indentSpaces $ keepingColumn $ do
         write "{ "
         head updates
         forM_ (tail updates) $ \update -> do
@@ -601,22 +601,21 @@ rhsRest exp = do
 
 decls :: Extend Decl
 decls (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
-  pretty dataOrNew
-  write " "
-  pretty declHead
-  case constructors of
-    [] -> return ()
-    [x] -> do
-      write " = "
-      pretty x
-    (x:xs) ->
-      depend (write " ") $ do
-        write "= "
+  depend (pretty dataOrNew >> write " ") $ do
+    pretty declHead
+    case constructors of
+      [] -> return ()
+      [x] -> do
+        write " ="
         pretty x
-        forM_ xs $ \constructor -> do
-          newline
-          write "| "
-          pretty constructor
+      (x:xs) ->
+        depend (write " ") $ do
+          write "="
+          pretty x
+          forM_ xs $ \constructor -> do
+            newline
+            write "|"
+            pretty constructor
 
   forM_ mayDeriving $ \deriv -> do
     newline
@@ -667,12 +666,39 @@ writeWhereBinds binds = prettyNoExt binds
 
 -- Print all the ASTs on separate lines, respecting user spacing.
 onSeparateLines :: (Pretty ast, Annotated ast) => [ast NodeInfo] -> Printer State ()
-onSeparateLines vals@(first:rest) = do
+onSeparateLines [] = return ()
+onSeparateLines vals = do
+  let vals' = map (amap fixSpans) vals
+      (first:rest) = vals'
+
+  
   pretty first
-  forM_ (zip vals rest) $ \(prev, cur) -> do
+  forM_ (zip vals' rest) $ \(prev, cur) -> do
     replicateM_ (max 1 $ lineDelta cur prev) newline
     pretty cur
-onSeparateLines [] = return ()
+
+fixSpans :: NodeInfo -> NodeInfo
+fixSpans info =
+  let infoSpan = nodeInfoSpan info
+      srcSpan = srcInfoSpan infoSpan
+
+      points = srcInfoPoints infoSpan
+      lastPt = last points
+
+      prevLastPt = last (init points)
+      prevPtEnd = (srcSpanEndLine prevLastPt, srcSpanEndColumn prevLastPt)
+
+      lastPtEndLoc = (srcSpanEndLine lastPt, srcSpanEndColumn lastPt)
+      invalidLastPt = srcSpanStartLine lastPt == srcSpanEndLine lastPt &&
+                      srcSpanStartColumn lastPt > srcSpanEndColumn lastPt
+
+      infoEndLoc = (srcSpanEndLine srcSpan, srcSpanEndColumn srcSpan)
+  in if length points > 1 && lastPtEndLoc == infoEndLoc && invalidLastPt
+       then info { nodeInfoSpan = infoSpan { srcInfoSpan = setEnd srcSpan prevPtEnd } }
+       else info
+  where
+    setEnd (SrcSpan fname startL startC _ _) (endL, endC) = SrcSpan fname startL startC endL endC
+
 
 astStartLine :: Annotated ast => ast NodeInfo -> Int
 astStartLine decl =
@@ -690,27 +716,46 @@ isDoBlock _ = False
 
 condecls :: Extend ConDecl
 condecls (ConDecl _ name bangty) =
-  depend (pretty name) $
+  depend (space >> pretty name) $
     forM_ bangty $ \ty -> space >> pretty ty
-condecls (RecDecl _ name fields) =
-  depend (pretty name >> space) $ do
-    write "{ "
-    case fields of
-      [] -> return ()
-      [x] -> do
-        pretty x
-        eol <- gets psEolComment
-        unless eol space
-      first:rest -> do
-        pretty first
+condecls decl@(RecDecl _ name fields) = if hasComments decl
+                                        then multiRec
+                                        else attemptSingleLine singleRec multiRec
+  where
+    singleRec = space >> depend (pretty name >> space) recBody
+    multiRec = do
+      newline
+      indented indentSpaces $ keepingColumn $ do
+        pretty name
         newline
+        indented indentSpaces recBody
+
+    recBody = do
+      write "{ "
+      writeFields fields
+      write "}"
+
+    writeFields [] = return ()
+    writeFields [x] = do
+      pretty x
+      eol <- gets psEolComment
+      unless eol space
+    writeFields (first:rest) = do
+        singleLine <- gets (gibianskyForceSingleLine . psUserState)
+
+        pretty first
+        unless singleLine newline
         forM_ rest $ \field -> do
           comma
           space
           pretty field
-          newline
-    write "}"
+          unless singleLine newline
+
+        when singleLine space
 condecls other = prettyNoExt other
+
+hasComments :: Foldable ast => ast NodeInfo -> Bool
+hasComments = any (not . null . nodeInfoComments)
 
 alt :: Extend Alt
 alt (Alt _ p rhs mbinds) = do

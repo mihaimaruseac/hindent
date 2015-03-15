@@ -1,11 +1,13 @@
-instance A B
+instance A B where
+  x = y
 >
--- Comment
+a = b
 
-instance A B
+instance A B where
+  x = y
 >
 >
--- Comment
+a = b
 
 data ConvertSpec f =
        ConvertSpec

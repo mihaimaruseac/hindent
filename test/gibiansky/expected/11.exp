@@ -42,11 +42,15 @@ a =
     Just something -> do
       putStrLn "hello"
 
-data X = X { a :: Int    -- ^ hi
-           , b :: String -- ^ hi
-           }
+data X =
+       X
+         { a :: Int    -- ^ hi
+         , b :: String -- ^ hi
+         }
 
-data X = X { a :: Int    -- ^ hi
-           , b :: String -- ^ hi
-                         -- continued
-           }
+data X =
+       X
+         { a :: Int    -- ^ hi
+         , b :: String -- ^ hi
+                       -- continued
+         }
