@@ -115,6 +115,7 @@ pragmas p = prettyNoExt p
 pat :: Extend Pat
 pat (PTuple _ boxed pats) = writeTuple boxed pats
 pat (PList _ pats) = singleLineList pats
+pat (PRec _ name fields) = recUpdateExpr (pretty name) (map pretty fields)
 pat p = prettyNoExt p
 
 -- | Format import statements.
@@ -222,8 +223,8 @@ exprs exp@Lambda{} = lambdaExpr exp
 exprs exp@Case{} = caseExpr exp
 exprs exp@LCase{} = lambdaCaseExpr exp
 exprs exp@If{} = ifExpr exp
-exprs (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) updates
-exprs (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
+exprs (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) (map pretty updates)
+exprs (RecConstr _ qname updates) = recUpdateExpr (pretty qname) (map pretty updates)
 exprs (Tuple _ _ exps) = parens $ inter (write ", ") $ map pretty exps
 exprs exp = prettyNoExt exp
 
@@ -516,28 +517,30 @@ writeCaseAlts alts = do
         indented indentSpaces $ depend (write "where ") (pretty binds)
 
 
-recUpdateExpr :: Printer State () -> [FieldUpdate NodeInfo] -> Printer State ()
-recUpdateExpr expWriter updates = do
-  expWriter
-  write " "
+recUpdateExpr :: Printer State () -> [Printer State ()] -> Printer State ()
+recUpdateExpr expWriter updates =
   if null updates
-    then write "{}"
+    then do
+      expWriter
+      write "{}"
     else attemptSingleLine single mult
 
   where
     single = do
-      write "{ "
-      inter (write ", ") $ map pretty updates
+      expWriter
+      write " { "
+      inter (write ", ") updates
       write " }"
     mult = do
-      col <- getColumn
-      column col $ do
+      expWriter
+      newline
+      indented 2 $ keepingColumn $ do
         write "{ "
-        pretty (head updates)
+        head updates
         forM_ (tail updates) $ \update -> do
           newline
           write ", "
-          pretty update
+          update
         newline
         write "}"
 

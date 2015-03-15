@@ -25,14 +25,15 @@ f x
     condition
   = result
 
-a = case x of
-  LongLongRecordConstructor 
-    { longLongLongRecordName = val
-    , longLongLongRecordName = val,
-    , longLongLongRecordName = val
-    , longLongLongRecordName = val
-    , longLongLongRecordName = val
-    }  -> val
+a =
+  case x of
+    LongLongRecordConstructor
+      { longLongLongRecordName = val
+      , longLongLongRecordName = val
+      , longLongLongRecordName = val
+      , longLongLongRecordName = val
+      , longLongLongRecordName = val
+      } -> val
 
 -- This is a test
 -- > Should not get rearranged

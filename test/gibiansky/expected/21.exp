@@ -1,4 +1,5 @@
-a = A { reallyLongName = reallyLongName
-      , reallyLongName = reallyLongName
-      , aaaaaaaaaaaaaaaaaaaaa = aaaaaaaaaaaaaaaa
-      }
+a = A
+  { reallyLongName = reallyLongName
+  , reallyLongName = reallyLongName
+  , aaaaaaaaaaaaaaaaaaaaa = aaaaaaaaaaaaaaaa
+  }
