@@ -12,3 +12,11 @@ a = a
 Hello
 -}
 a = a
+
+type Maybe a = forall r. (a -> r) -> r -> r -- foo bar zot sdfs zot sdfs zot sdfs zot sdfs zot sdfs
+                                            -- zot sdfs zot sdfs zot sdfs zot sdfs
+
+type Maybe a = forall r. (a -> r)
+                      -> r
+                      -> r -- foo bar zot sdfs zot sdfs zot sdfs zot sdfs zot sdfs zot sdfs zot sdfs
+                           -- zot sdfs zot sdfs

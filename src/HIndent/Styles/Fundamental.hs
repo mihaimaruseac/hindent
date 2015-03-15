@@ -22,4 +22,4 @@ fundamental =
         ,styleInitialState = State
         ,styleExtenders = []
         ,styleDefConfig = def
-        ,styleCommentPreprocessor = const id}
+        ,styleCommentPreprocessor = return}

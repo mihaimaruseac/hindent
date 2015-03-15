@@ -119,15 +119,17 @@ prettyPrint mode' style m comments =
   let (cs,ast) =
         annotateComments (fromMaybe m $ applyFixities baseFixities m) comments
       csComments = map comInfoComment cs
-  in Right (runPrinterStyle
-              mode'
-              style
-              -- For the time being, assume that all "free-floating" comments come at the beginning.
-              -- If they were not at the beginning, they would be after some ast node.
-              -- Thus, print them before going for the ast.
-              (do mapM_ (printComment Nothing)
-                        (styleCommentPreprocessor style (styleDefConfig style) (reverse csComments))
-                  pretty ast))
+  in case style of
+      style@(Style { styleCommentPreprocessor = preprocessor }) ->
+        Right (runPrinterStyle
+                  mode'
+                  style
+                  -- For the time being, assume that all "free-floating" comments come at the beginning.
+                  -- If they were not at the beginning, they would be after some ast node.
+                  -- Thus, print them before going for the ast.
+                  (do comments <- preprocessor (reverse csComments)
+                      mapM_ (printComment Nothing) comments
+                      pretty ast))
 
 -- | Pretty print the given printable thing.
 runPrinterStyle :: ParseMode -> Style -> (forall s. Printer s ()) -> Builder

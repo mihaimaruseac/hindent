@@ -18,6 +18,9 @@ import           Language.Haskell.Exts.SrcLoc
 import           Language.Haskell.Exts.Comments
 import           Prelude hiding (exp, all, mapM_, minimum, and, maximum, concatMap, or, any)
 
+import Control.Monad.State.Strict (MonadState)
+import Debug.Trace
+
 -- | Empty state.
 data State = State { gibianskyForceSingleLine :: Bool }
 
@@ -59,63 +62,75 @@ commentContent (Comment _ _ content) = content
 commentSrcSpan :: Comment -> SrcSpan
 commentSrcSpan (Comment _ srcSpan _) = srcSpan
 
-commentPreprocessor :: Config -> [Comment] -> [Comment]
-commentPreprocessor config = concatMap mergeGroup . groupComments Nothing []
+commentPreprocessor :: MonadState (PrintState s) m => [Comment] -> m [Comment]
+commentPreprocessor cs = do
+  config <- gets psConfig
+  col <- getColumn
+  return $ go (fromIntegral col) config cs
+  
   where
-    -- Group comments into blocks.
-    -- A comment block is the list of comments that are on consecutive lines,
-    -- and do not have an empty comment in between them. Empty comments are those with only whitespace.
-    -- Empty comments are in their own group.
-    groupComments :: Maybe Int -> [Comment] -> [Comment] -> [[Comment]]
-    groupComments nextLine accum (comment@(Comment multiline srcSpan str):comments)
-      | separateCommentCondition = useAsSeparateCommentGroup
-      | beginningOfUnprocessed str =
-          let (unprocessedLines, postUnprocessed) = span unprocessed comments
-              (endingLine, remLines) = case postUnprocessed of
-                  x:xs -> ([x], xs)
-                  [] -> ([], [])
-              separateCommentGroups = comment : unprocessedLines ++ endingLine
-          in currentGroupAsList ++ map (: []) separateCommentGroups ++ groupComments Nothing [] remLines
-      | isNothing nextLine || Just (srcSpanStartLine srcSpan) == nextLine = groupComments nextLine' (comment:accum) comments
-      | otherwise = currentGroupAsList ++ groupComments (Just $ srcSpanStartLine srcSpan + 1) [comment] comments
-      where
-        separateCommentCondition = or [multiline, isWhitespace str, "  " `isPrefixOf` str, " >" `isPrefixOf` str]
-        useAsSeparateCommentGroup = currentGroupAsList ++ [comment] : groupComments nextLine' [] comments
-        nextCommentStartLine = srcSpanStartLine $ commentSrcSpan $ head comments
-        currentGroupAsList | null accum = []
-                           | otherwise = [reverse accum]
-        nextLine' = 
-          case nextLine of
-            Just x -> Just (x + 1)
-            Nothing -> Just nextCommentStartLine
-    groupComments _ [] [] = []
-    groupComments _ accum [] = [reverse accum]
+   go currentColumn config = concatMap mergeGroup . groupComments Nothing []
+    where
+      -- Group comments into blocks.
+      -- A comment block is the list of comments that are on consecutive lines,
+      -- and do not have an empty comment in between them. Empty comments are those with only whitespace.
+      -- Empty comments are in their own group.
+      groupComments :: Maybe Int -> [Comment] -> [Comment] -> [[Comment]]
+      groupComments nextLine accum (comment@(Comment multiline srcSpan str):comments)
+        | separateCommentCondition = useAsSeparateCommentGroup
+        | beginningOfUnprocessed str =
+            let (unprocessedLines, postUnprocessed) = span unprocessed comments
+                (endingLine, remLines) = case postUnprocessed of
+                    x:xs -> ([x], xs)
+                    [] -> ([], [])
+                separateCommentGroups = comment : unprocessedLines ++ endingLine
+            in currentGroupAsList ++ map (: []) separateCommentGroups ++ groupComments Nothing [] remLines
+        | isNothing nextLine || Just (srcSpanStartLine srcSpan) == nextLine = groupComments nextLine' (comment:accum) comments
+        | otherwise = currentGroupAsList ++ groupComments (Just $ srcSpanStartLine srcSpan + 1) [comment] comments
+        where
+          separateCommentCondition = or [multiline, isWhitespace str, "  " `isPrefixOf` str, " >" `isPrefixOf` str]
+          useAsSeparateCommentGroup = currentGroupAsList ++ [comment] : groupComments nextLine' [] comments
+          nextCommentStartLine = srcSpanStartLine $ commentSrcSpan $ head comments
+          currentGroupAsList | null accum = []
+                            | otherwise = [reverse accum]
+          nextLine' = 
+            case nextLine of
+              Just x -> Just (x + 1)
+              Nothing -> Just nextCommentStartLine
+      groupComments _ [] [] = []
+      groupComments _ accum [] = [reverse accum]
 
-    beginningOfUnprocessed :: String -> Bool
-    beginningOfUnprocessed str = any (`isPrefixOf` str) ["@", " @", "  @"]
+      beginningOfUnprocessed :: String -> Bool
+      beginningOfUnprocessed str = any (`isPrefixOf` str) ["@", " @", "  @"]
 
-    unprocessed :: Comment -> Bool
-    unprocessed (Comment True _ _) = False
-    unprocessed (Comment _ _ str) = not $ beginningOfUnprocessed str
+      unprocessed :: Comment -> Bool
+      unprocessed (Comment True _ _) = False
+      unprocessed (Comment _ _ str) = not $ beginningOfUnprocessed str
 
-    isWhitespace :: String -> Bool
-    isWhitespace = all (\x -> x == ' ' || x == '\t')
+      isWhitespace :: String -> Bool
+      isWhitespace = all (\x -> x == ' ' || x == '\t')
 
-    -- Merge a group of comments into one comment.
-    mergeGroup :: [Comment] -> [Comment]
-    mergeGroup [] = error "Empty comment group"
-    mergeGroup comments@[Comment True _ _] = comments
-    mergeGroup comments = 
-      let maxStartColumn = maximum $ map (srcSpanStartColumn . commentSrcSpan) comments
-          firstLine = srcSpanStartLine $ commentSrcSpan $ head comments
-          firstSrcSpan = commentSrcSpan $ head comments
-          commentLen = length ("--" :: String)
+      commentLen :: Int
+      commentLen = length ("--" :: String)
 
-          lineLen = fromIntegral (configMaxColumns config) - maxStartColumn - commentLen
-          content = breakCommentLines lineLen $ unlines (map commentContent comments)
-          srcSpanLines = map (firstLine +) [0 .. length content - 1]
-          srcSpans = map (\linum -> firstSrcSpan { srcSpanStartLine = linum, srcSpanEndLine = linum, srcSpanStartColumn = maxStartColumn }) srcSpanLines
-      in zipWith (Comment False) srcSpans content
+      -- Merge a group of comments into one comment.
+      mergeGroup :: [Comment] -> [Comment]
+      mergeGroup [] = error "Empty comment group"
+      mergeGroup comments@[Comment True _ _] = comments
+      mergeGroup comments = 
+        let 
+            firstSrcSpan = commentSrcSpan $ head comments
+            firstLine = srcSpanStartLine firstSrcSpan
+            firstCol = srcSpanStartColumn firstSrcSpan
+
+            columnDelta = firstCol - currentColumn
+            maxStartColumn = maximum (map (srcSpanStartColumn . commentSrcSpan) comments)
+
+            lineLen = fromIntegral (configMaxColumns config) - maxStartColumn - commentLen + columnDelta
+            content = breakCommentLines lineLen $ unlines (map commentContent comments)
+            srcSpanLines = map (firstLine +) [0 .. length content - 1]
+            srcSpans = map (\linum -> firstSrcSpan { srcSpanStartLine = linum, srcSpanEndLine = linum, srcSpanStartColumn = maxStartColumn }) srcSpanLines
+        in zipWith (Comment False) srcSpans content
 
 
 -- | Break a comment string into lines of a maximum character length.
@@ -148,7 +163,7 @@ breakCommentLines maxLen str =
             word:remWords ->
               -- If the next word doesn't fit on this line, line break
               let nextRemaining = remainingLen - length word - 1 in
-                if nextRemaining <= 0
+                if nextRemaining < 0
                 then (generatedLine, remainingWords)
                 else go nextRemaining (word:taken) remWords
           where

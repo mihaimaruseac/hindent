@@ -54,7 +54,7 @@ chrisDone =
         ,styleDefConfig =
            defaultConfig {configMaxColumns = 80
                          ,configIndentSpaces = 2}
-        ,styleCommentPreprocessor = const id}
+        ,styleCommentPreprocessor = return}
 
 --------------------------------------------------------------------------------
 -- Extenders

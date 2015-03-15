@@ -123,11 +123,10 @@ printComments :: (Pretty ast,MonadState (PrintState s) m)
               => ComInfoLocation -> ast NodeInfo -> m ()
 printComments loc' ast = do
   preprocessor <- gets psCommentPreprocessor
-  config <- gets psConfig
 
   let correctLocation comment = comInfoLocation comment == Just loc'
       commentsWithLocation = filter correctLocation (nodeInfoComments info)
-      comments = preprocessor config $ map comInfoComment commentsWithLocation
+  comments <- preprocessor $ map comInfoComment commentsWithLocation
 
   forM_ comments $ \comment -> do
     -- Preceeding comments must have a newline before them.
