@@ -857,43 +857,16 @@ decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
                     (depend (write "=")
                             (prefixedLined "|"
                                            (map (depend space . pretty) xs)))
-decl GDataDecl{} =
-  error "FIXME: No implementation for GDataDecl."
-decl DataFamDecl{} =
-  error "FIXME: No implementation for DataFamDecl."
-decl TypeInsDecl{} =
-  error "FIXME: No implementation for TypeInsDecl."
-decl DataInsDecl{} =
-  error "FIXME: No implementation for DataInsDecl."
-decl GDataInsDecl{} =
-  error "FIXME: No implementation for GDataInsDecl."
-decl DerivDecl{} =
-  error "FIXME: No implementation for DerivDecl."
-decl ForImp{} =
-  error "FIXME: No implementation for ForImp."
-decl ForExp{} =
-  error "FIXME: No implementation for ForExp."
-decl RulePragmaDecl{} =
-  error "FIXME: No implementation for RulePragmaDecl."
-decl DeprPragmaDecl{} =
-  error "FIXME: No implementation for DeprPragmaDecl."
-decl InlineSig{} =
-  error "FIXME: No implementation for InlineSig."
-decl InlineConlikeSig{} =
-  error "FIXME: No implementation for InlineConlikeSig."
-decl SpecSig{} =
-  error "FIXME: No implementation for SpecSig."
-decl SpecInlineSig{} =
-  error "FIXME: No implementation for SpecInlineSig."
-decl InstSig{} =
-  error "FIXME: No implementation for InstSig."
-decl ClosedTypeFamDecl{} =
-  error "FIXME: No implementation for ClosedTypeFamDecl."
-decl x@WarnPragmaDecl{} = pretty' x
-decl x@MinimalPragma{} = pretty' x
-decl x@AnnPragma{} = pretty' x
-decl x@InfixDecl{} = pretty' x
-decl x@DefaultDecl{} = pretty' x
+
+decl (InlineSig _ inline _ name) = do
+  write "{-# "
+
+  unless inline $ write "NO"
+  write "INLINE "
+  pretty name
+
+  write " #-}"
+decl x = pretty' x
 
 instance Pretty Deriving where
   prettyInternal (Deriving _ heads) =
