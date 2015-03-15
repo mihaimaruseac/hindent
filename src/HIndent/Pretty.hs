@@ -100,12 +100,12 @@ pretty a =
            depend
              (case listToMaybe (mapMaybe (makePrinter s) es) of
                 Just (Printer m) ->
-                  modify (\s ->
-                            fromMaybe s
-                                      (runIdentity (runMaybeT (execStateT m s))))
+                  modify (\s' ->
+                            fromMaybe s'
+                                      (runIdentity (runMaybeT (execStateT m s'))))
                 Nothing -> prettyNoExt a)
              (printComments After a)
-  where makePrinter s (Extender f) =
+  where makePrinter _ (Extender f) =
           case cast a of
             Just v -> Just (f v)
             Nothing -> Nothing

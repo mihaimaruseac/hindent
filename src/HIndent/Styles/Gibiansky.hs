@@ -16,7 +16,7 @@ import           HIndent.Types
 import           Language.Haskell.Exts.Annotated.Syntax
 import           Language.Haskell.Exts.SrcLoc
 import           Language.Haskell.Exts.Comments
-import           Prelude hiding (exp, all, mapM_, minimum, and, maximum, concatMap, any)
+import           Prelude hiding (exp, all, mapM_, minimum, and, maximum, concatMap, or, any)
 
 -- | Empty state.
 data State = State { gibianskyForceSingleLine :: Bool }
@@ -68,10 +68,18 @@ commentPreprocessor config = concatMap mergeGroup . groupComments Nothing []
     -- Empty comments are in their own group.
     groupComments :: Maybe Int -> [Comment] -> [Comment] -> [[Comment]]
     groupComments nextLine accum (comment@(Comment multiline srcSpan str):comments)
-      | multiline || isWhitespace str || "  " `isPrefixOf` str = useAsSeparateCommentGroup
+      | separateCommentCondition = useAsSeparateCommentGroup
+      | beginningOfUnprocessed str =
+          let (unprocessedLines, postUnprocessed) = span unprocessed comments
+              (endingLine, remLines) = case postUnprocessed of
+                  x:xs -> ([x], xs)
+                  [] -> ([], [])
+              separateCommentGroups = comment : unprocessedLines ++ endingLine
+          in currentGroupAsList ++ map (: []) separateCommentGroups ++ groupComments Nothing [] remLines
       | isNothing nextLine || Just (srcSpanStartLine srcSpan) == nextLine = groupComments nextLine' (comment:accum) comments
       | otherwise = currentGroupAsList ++ groupComments (Just $ srcSpanStartLine srcSpan + 1) [comment] comments
       where
+        separateCommentCondition = or [multiline, isWhitespace str, "  " `isPrefixOf` str, " >" `isPrefixOf` str]
         useAsSeparateCommentGroup = currentGroupAsList ++ [comment] : groupComments nextLine' [] comments
         nextCommentStartLine = srcSpanStartLine $ commentSrcSpan $ head comments
         currentGroupAsList | null accum = []
@@ -82,6 +90,13 @@ commentPreprocessor config = concatMap mergeGroup . groupComments Nothing []
             Nothing -> Just nextCommentStartLine
     groupComments _ [] [] = []
     groupComments _ accum [] = [reverse accum]
+
+    beginningOfUnprocessed :: String -> Bool
+    beginningOfUnprocessed str = any (`isPrefixOf` str) ["@", " @", "  @"]
+
+    unprocessed :: Comment -> Bool
+    unprocessed (Comment True _ _) = False
+    unprocessed (Comment _ _ str) = not $ beginningOfUnprocessed str
 
     isWhitespace :: String -> Bool
     isWhitespace = all (\x -> x == ' ' || x == '\t')
@@ -113,7 +128,7 @@ breakCommentLines maxLen str =
   -- If we already have a line of the appropriate length, leave it alone.
   -- This allows us to format stuff ourselves in some cases.
   if length (lines str) == 1 && length str <= maxLen
-  then [reverse . dropWhile (== '\n') . reverse $ str]
+  then [dropTrailingNewlines str]
   else unfoldr unfolder (words str)
 
   where
@@ -138,6 +153,9 @@ breakCommentLines maxLen str =
                 else go nextRemaining (word:taken) remWords
           where
             generatedLine = ' ' : unwords (reverse taken)
+
+dropTrailingNewlines :: String -> String
+dropTrailingNewlines = reverse . dropWhile (== '\n') . reverse
 
 -- | Number of spaces to indent by.
 indentSpaces :: Integral a => a
