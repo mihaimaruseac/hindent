@@ -83,7 +83,7 @@ cppSplitBlocks :: Text -> [CodeBlock]
 cppSplitBlocks inp = modifyLast (inBlock (`T.append` trailing)) . map (classify . mconcat . intersperse "\n") . groupBy ((==) `on` cppLine) . T.lines $ inp
   where
     cppLine :: Text -> Bool
-    cppLine src = any (`T.isPrefixOf` src) ["#if", "#end", "#else"]
+    cppLine src = any (`T.isPrefixOf` src) ["#if", "#end", "#else", "#define", "#undef"]
 
     classify :: Text -> CodeBlock
     classify text = if cppLine text
