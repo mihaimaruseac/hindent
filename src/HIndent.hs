@@ -80,7 +80,11 @@ reformat style mexts x = mconcat <$> intersperse (T.singleton '\n') <$> mapM pro
 --
 -- will become five blocks, one for each CPP line and one for each pair of declarations.
 cppSplitBlocks :: Text -> [CodeBlock]
-cppSplitBlocks inp = modifyLast (inBlock (`T.append` trailing)) . map (classify . mconcat . intersperse "\n") . groupBy ((==) `on` cppLine) . T.lines $ inp
+cppSplitBlocks inp =
+  modifyLast (inBlock (`T.append` trailing)) .
+  map (classify . mconcat . intersperse "\n") .
+  groupBy ((==) `on` cppLine) .
+  T.lines $ inp
   where
     cppLine :: Text -> Bool
     cppLine src = any (`T.isPrefixOf` src) ["#if", "#end", "#else", "#define", "#undef"]
