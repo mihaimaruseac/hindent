@@ -32,7 +32,7 @@ a =
 
 a =
   case x of
-    Just x 
+    Just x
       | test -> ans
 
 {-# NOINLINE val #-}

@@ -55,7 +55,7 @@ indentSpaces = 2
 
 -- | Printer to indent one level.
 indentOnce :: Printer s ()
-indentOnce = replicateM_ indentSpaces $ write " "
+indentOnce = replicateM_ indentSpaces space
 
 -- | How many exports to format in a single line.
 -- If an export list has more than this, it will be formatted as multiple lines.
@@ -132,7 +132,7 @@ imp ImportDecl{..} = do
     pretty name
 
   forM_ importSpecs $ \speclist -> do
-    write " "
+    space
     pretty speclist
 
 -- | Format contexts with spaces and commas between class constraints.
@@ -333,14 +333,14 @@ multiLineList (first:exps) = keepingColumn $ do
 dollarExpr :: Exp NodeInfo -> Printer State ()
 dollarExpr (InfixApp _ left op right) = do
   pretty left
-  write " "
+  space
   pretty op
   if needsNewline right
     then do
       newline
       depend indentOnce $ pretty right
     else do
-      write " "
+      space
       pretty right
 
   where
@@ -367,7 +367,7 @@ applicativeExpr exp@InfixApp{} =
     multiLine :: Exp NodeInfo -> Exp NodeInfo -> [Exp NodeInfo] -> Printer State ()
     multiLine first second rest = do
       pretty first
-      depend (write " ") $ do
+      depend space $ do
         write "<$> "
         pretty second
         forM_ rest $ \val -> do
@@ -420,7 +420,7 @@ lambdaExpr (Lambda _ pats exp) = do
   write "\\"
   spaced $ map pretty pats
   write " ->"
-  attemptSingleLine (write " " >> pretty exp) $ do
+  attemptSingleLine (space >> pretty exp) $ do
     newline
     indentOnce
     pretty exp
@@ -446,7 +446,7 @@ lambdaCaseExpr _ = error "Not a lambda case"
 ifExpr :: Exp NodeInfo -> Printer State ()
 ifExpr (If _ cond thenExpr elseExpr) =
   depend (write "if") $ do
-    write " "
+    space
     pretty cond
     newline
     write "then "
@@ -483,10 +483,17 @@ writeCaseAlts alts = do
                                  line <- gets psLine
                                  pretty alt'
                                  line' <- gets psLine
-                                 return $ line == line')
+                                 return $ not (isGuarded (altRhs alt')) && line == line')
 
     altPattern :: Alt l -> Pat l
     altPattern (Alt _ p _ _) = p
+
+    altRhs :: Alt l -> Rhs l
+    altRhs (Alt _ _ r _) = r
+
+    isGuarded :: Rhs l -> Bool
+    isGuarded GuardedRhss{} = True
+    isGuarded UnGuardedRhs{} = False
 
     patternLen :: Pat NodeInfo -> Printer State Int
     patternLen pat = fromIntegral <$> fst <$> sandbox
@@ -509,7 +516,9 @@ writeCaseAlts alts = do
 
       case galts of
         UnGuardedRhs{} -> pretty galts
-        GuardedRhss{}  -> indented indentSpaces $ pretty galts
+        GuardedRhss{}  -> do
+          newline
+          indented indentSpaces $ pretty galts
 
       --  Optional where clause!
       forM_ mbinds $ \binds -> do
@@ -546,31 +555,24 @@ recUpdateExpr expWriter updates =
 
 rhss :: Extend Rhs
 rhss (UnGuardedRhs rhsLoc exp) = do
-  write " "
+  space
   rhsSeparator
-  if onNextLine exp
+  if lineBreakAfterRhs rhsLoc exp
     then indented indentSpaces $ do
       newline
       pretty exp
     else do
       space
       pretty exp
-
-  where
-    -- Cannot use lineDelta because we need to look at rhs start line, not end line
-    prevLine = srcSpanStartLine . srcInfoSpan . nodeInfoSpan $ rhsLoc
-    curLine = astStartLine exp
-    emptyLines = curLine - prevLine
-
-    onNextLine Let{} = True
-    onNextLine Case{} = True
-    onNextLine _ = emptyLines > 0
 rhss (GuardedRhss _ rs) =
-  lined $ flip map rs $ \a@(GuardedRhs _ stmts exp) -> do
+  lined $ flip map rs $ \a@(GuardedRhs rhsLoc stmts exp) -> do
     let manyStmts = length stmts > 1
         remainder = do
-          if manyStmts then newline else write " "
-          rhsRest exp
+          if manyStmts then newline else space
+          rhsSeparator
+          if not manyStmts && lineBreakAfterRhs rhsLoc exp
+            then newline >> indented indentSpaces (pretty exp)
+            else space >> pretty exp
         writeStmts = 
           case stmts of
             x:xs -> do
@@ -586,22 +588,33 @@ rhss (GuardedRhss _ rs) =
       else
         depend (write "| ") $ writeStmts >> remainder
 
+lineBreakAfterRhs :: NodeInfo -> Exp NodeInfo -> Bool
+lineBreakAfterRhs rhsLoc exp = onNextLine exp
+  where
+    -- Cannot use lineDelta because we need to look at rhs start line, not end line
+    prevLine = srcSpanStartLine . srcInfoSpan . nodeInfoSpan $ rhsLoc
+    curLine = astStartLine exp
+    emptyLines = curLine - prevLine
+
+    onNextLine Let{} = True
+    onNextLine Case{} = True
+    onNextLine _ = emptyLines > 0
 
 guardedRhs :: Extend GuardedRhs
 guardedRhs (GuardedRhs _ stmts exp) = do
   indented 1 $ prefixedLined "," (map (\p -> space >> pretty p) stmts)
-  write " "
+  space
   rhsRest exp
 
 rhsRest :: Pretty ast => ast NodeInfo -> Printer State ()
 rhsRest exp = do
   rhsSeparator
-  write " "
+  space
   pretty exp
 
 decls :: Extend Decl
 decls (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
-  depend (pretty dataOrNew >> write " ") $ do
+  depend (pretty dataOrNew >> space) $ do
     pretty declHead
     case constructors of
       [] -> return ()
@@ -609,7 +622,7 @@ decls (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
         write " ="
         pretty x
       (x:xs) ->
-        depend (write " ") $ do
+        depend space $ do
           write "="
           pretty x
           forM_ xs $ \constructor -> do
@@ -627,13 +640,13 @@ decls (FunBind _ matches) =
                                   Match _ name pat rhs mbinds -> return (name, pat, rhs, mbinds)
                                   InfixMatch _ left name pat rhs mbinds -> do
                                     pretty left
-                                    write " "
+                                    space
                                     return (name, pat, rhs, mbinds)
 
     case name of
       Symbol _ name' -> string name'
       name' -> pretty name'
-    write " "
+    space
     funBody pat rhs mbinds
 decls decl = prettyNoExt decl
 
