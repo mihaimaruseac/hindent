@@ -37,25 +37,58 @@ import           Data.Maybe (fromMaybe)
 import           Data.Monoid
 import qualified Data.Text.IO as ST
 import           Data.Text.Lazy (Text)
-import qualified Data.Text.Lazy as T
+import qualified Data.Text.Lazy as T hiding (singleton)
 import           Data.Text.Lazy.Builder (Builder)
 import qualified Data.Text.Lazy.Builder as T
 import qualified Data.Text.Lazy.IO as T
-import           Language.Haskell.Exts.Annotated hiding (Style,prettyPrint,Pretty,style,parse)
+import           Language.Haskell.Exts.Annotated hiding (Style, prettyPrint, Pretty, style, parse)
+import           Data.Function (on)
+import           Data.List (groupBy, intersperse)
+import           Control.Applicative ((<$>))
+
+data CodeBlock = HaskellSource Text
+               | CPPDirectives Text
+  deriving (Show, Eq)
 
 -- | Format the given source.
 reformat :: Style -> Maybe [Extension] -> Text -> Either String Builder
-reformat style mexts x =
-  case parseModuleWithComments mode'
-                               (T.unpack x) of
-    ParseOk (m,comments) ->
-      prettyPrint mode' style m comments
-    ParseFailed _ e -> Left e
-  where mode' =
-          (case mexts of
-             Just exts ->
-               parseMode {extensions = exts}
-             Nothing -> parseMode)
+reformat style mexts x = mconcat <$> intersperse (T.singleton '\n') <$> mapM processBlock (cppSplitBlocks x)
+  where
+    processBlock :: CodeBlock -> Either String Builder
+    processBlock (CPPDirectives text) = Right $ T.fromLazyText text
+    processBlock (HaskellSource text) =
+      case parseModuleWithComments mode' (T.unpack text) of
+        ParseOk (m,comments) -> prettyPrint mode' style m comments
+        ParseFailed _ e -> Left e
+
+    mode' =
+      case mexts of
+        Just exts -> parseMode {extensions = exts}
+        Nothing -> parseMode
+
+-- | Break a Haskell code string into chunks, using CPP as a delimiter.
+-- Lines that start with '#if', '#end', or '#else' are their own chunks, and
+-- also act as chunk separators. For example, the code
+--
+-- > #ifdef X
+-- > x = X
+-- > y = Y
+-- > #else
+-- > x = Y
+-- > y = X
+-- > #endif
+--
+-- will become five blocks, one for each CPP line and one for each pair of declarations.
+cppSplitBlocks :: Text -> [CodeBlock]
+cppSplitBlocks = map (classify . mconcat . intersperse "\n") . groupBy ((==) `on` cppLine) . T.lines
+  where
+    cppLine :: Text -> Bool
+    cppLine src = any (`T.isPrefixOf` src) ["#if", "#end", "#else"]
+
+    classify :: Text -> CodeBlock
+    classify text = if cppLine text
+                    then CPPDirectives text
+                    else HaskellSource text
 
 -- | Print the module.
 prettyPrint :: ParseMode

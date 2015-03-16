@@ -1,6 +1,5 @@
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Main entry point to hindent.
