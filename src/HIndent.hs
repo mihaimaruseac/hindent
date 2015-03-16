@@ -80,7 +80,7 @@ reformat style mexts x = mconcat <$> intersperse (T.singleton '\n') <$> mapM pro
 --
 -- will become five blocks, one for each CPP line and one for each pair of declarations.
 cppSplitBlocks :: Text -> [CodeBlock]
-cppSplitBlocks = map (classify . mconcat . intersperse "\n") . groupBy ((==) `on` cppLine) . T.lines
+cppSplitBlocks inp = modifyLast (inBlock (`T.append` trailing)) . map (classify . mconcat . intersperse "\n") . groupBy ((==) `on` cppLine) . T.lines $ inp
   where
     cppLine :: Text -> Bool
     cppLine src = any (`T.isPrefixOf` src) ["#if", "#end", "#else"]
@@ -89,6 +89,22 @@ cppSplitBlocks = map (classify . mconcat . intersperse "\n") . groupBy ((==) `on
     classify text = if cppLine text
                     then CPPDirectives text
                     else HaskellSource text
+
+    -- Hack to work around some parser issues in haskell-src-exts: Some pragmas
+    -- need to have a newline following them in order to parse properly, so we include
+    -- the trailing newline in the code block if it existed.
+    trailing :: Text
+    trailing = if T.isSuffixOf "\n" inp then "\n" else ""
+
+    modifyLast :: (a -> a) -> [a] -> [a]
+    modifyLast _ []  = []
+    modifyLast f [x] = [f x]
+    modifyLast f (x:xs) = x : modifyLast f xs
+
+    inBlock :: (Text -> Text) -> CodeBlock -> CodeBlock
+    inBlock f (HaskellSource txt) = HaskellSource (f txt)
+    inBlock _ dir = dir
+
 
 -- | Print the module.
 prettyPrint :: ParseMode
