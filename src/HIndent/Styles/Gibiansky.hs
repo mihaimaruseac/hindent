@@ -19,7 +19,6 @@ import           Language.Haskell.Exts.Comments
 import           Prelude hiding (exp, all, mapM_, minimum, and, maximum, concatMap, or, any)
 
 import Control.Monad.State.Strict (MonadState)
-import Debug.Trace
 
 -- | Empty state.
 data State = State { gibianskyForceSingleLine :: Bool }
@@ -39,6 +38,7 @@ gibiansky = Style { styleName = "gibiansky"
                                      , Extender rhss
                                      , Extender guardedRhs
                                      , Extender decls
+                                     , Extender stmts
                                      , Extender condecls
                                      , Extender alt
                                      , Extender moduleHead
@@ -688,7 +688,7 @@ rhss (UnGuardedRhs rhsLoc exp) = do
       space
       pretty exp
 rhss (GuardedRhss _ rs) =
-  lined $ flip map rs $ \a@(GuardedRhs rhsLoc stmts exp) -> do
+  flip onSeparateLines' rs $ \a@(GuardedRhs rhsLoc stmts exp) -> do
     let manyStmts = length stmts > 1
         remainder = do
           if manyStmts then newline else space
@@ -735,6 +735,10 @@ rhsRest exp = do
   space
   pretty exp
 
+stmts :: Extend Stmt
+stmts (LetStmt _ binds) = depend (write "let ") (writeWhereBinds binds)
+stmts stmt = prettyNoExt stmt
+
 decls :: Extend Decl
 decls (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
   depend (pretty dataOrNew >> space) $ do
@@ -758,7 +762,8 @@ decls (DataDecl _ dataOrNew Nothing declHead constructors mayDeriving) = do
     indented indentSpaces $ pretty deriv
 decls (PatBind _ pat rhs mbinds) = funBody [pat] rhs mbinds
 decls (FunBind _ matches) =
-  lined $ flip map matches $ \match -> do
+  flip onSeparateLines' matches $ \match -> do
+    printComments Before match
     (name, pat, rhs, mbinds) <- case match of
                                   Match _ name pat rhs mbinds -> return (name, pat, rhs, mbinds)
                                   InfixMatch _ left name pat rhs mbinds -> do
@@ -802,16 +807,19 @@ writeWhereBinds binds = prettyNoExt binds
 
 -- Print all the ASTs on separate lines, respecting user spacing.
 onSeparateLines :: (Pretty ast, Annotated ast) => [ast NodeInfo] -> Printer State ()
-onSeparateLines [] = return ()
-onSeparateLines vals = do
+onSeparateLines = onSeparateLines' pretty
+
+onSeparateLines' :: Annotated ast => (ast NodeInfo -> Printer State ()) -> [ast NodeInfo] -> Printer State ()
+onSeparateLines' _ [] = return ()
+onSeparateLines' pretty' vals = do
   let vals' = map (amap fixSpans) vals
       (first:rest) = vals'
 
   
-  pretty first
+  pretty' first
   forM_ (zip vals' rest) $ \(prev, cur) -> do
     replicateM_ (max 1 $ lineDelta cur prev) newline
-    pretty cur
+    pretty' cur
 
 fixSpans :: NodeInfo -> NodeInfo
 fixSpans info =
