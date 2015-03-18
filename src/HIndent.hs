@@ -52,19 +52,64 @@ data CodeBlock = HaskellSource Text
 
 -- | Format the given source.
 reformat :: Style -> Maybe [Extension] -> Text -> Either String Builder
-reformat style mexts x = mconcat <$> intersperse (T.singleton '\n') <$> mapM processBlock (cppSplitBlocks x)
+reformat style mexts x =
+  mconcat . intersperse "\n" <$> mapM processBlock (cppSplitBlocks x)
   where
     processBlock :: CodeBlock -> Either String Builder
     processBlock (CPPDirectives text) = Right $ T.fromLazyText text
     processBlock (HaskellSource text) =
-      case parseModuleWithComments mode' (T.unpack text) of
-        ParseOk (m,comments) -> prettyPrint mode' style m comments
+      let lines = lines' text
+          prefix = findPrefix lines
+          code = T.unpack $ unlines' $ map (stripPrefix prefix) lines
+      in case parseModuleWithComments mode' code of
+        ParseOk (m, comments) ->
+          T.fromLazyText <$> addPrefix prefix <$> T.toLazyText <$> prettyPrint mode' style m comments
         ParseFailed _ e -> Left e
+
+    lines' = T.split (== '\n')
+    unlines' = mconcat . intersperse "\n"
+
+    addPrefix :: Text -> Text -> Text
+    addPrefix prefix = unlines' . map (prefix <>) . lines'
+
+    stripPrefix :: Text -> Text -> Text
+    stripPrefix prefix line =
+      if T.null (T.dropWhile (== '\n') line)
+      then line
+      else fromMaybe (error "Missing expected prefix") . T.stripPrefix prefix $ line
+
+    findPrefix :: [Text] -> Text
+    findPrefix = takePrefix False . findSmallestPrefix . dropNewlines
+
+    dropNewlines :: [Text] -> [Text]
+    dropNewlines = filter (not . T.null . T.dropWhile (== '\n'))
+
+    takePrefix :: Bool -> Text -> Text
+    takePrefix bracketUsed txt =
+      case T.uncons txt of
+        Nothing -> ""
+        Just ('>', txt') -> if not bracketUsed
+                              then T.cons '>' (takePrefix True txt')
+                              else ""
+        Just (c, txt') -> if c == ' ' || c == '\t'
+                            then T.cons c (takePrefix bracketUsed txt')
+                            else ""
+
+
+    findSmallestPrefix :: [Text] -> Text
+    findSmallestPrefix [] = ""
+    findSmallestPrefix ("":_) = ""
+    findSmallestPrefix (p:ps) = 
+      let first = T.head p
+          startsWithChar c x  = T.length x > 0 && T.head x == c
+      in if all (startsWithChar first) ps
+           then T.cons first (findSmallestPrefix (T.tail p : map T.tail ps))
+           else ""
 
     mode' =
       case mexts of
-        Just exts -> parseMode {extensions = exts}
-        Nothing -> parseMode
+        Just exts -> parseMode { extensions = exts }
+        Nothing   -> parseMode
 
 -- | Break a Haskell code string into chunks, using CPP as a delimiter.
 -- Lines that start with '#if', '#end', or '#else' are their own chunks, and

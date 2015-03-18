@@ -1,0 +1,7 @@
+   x = 3
+
+#if
+    x = 3
+#else
+    y = 3
+#endif
