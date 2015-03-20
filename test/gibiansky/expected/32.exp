@@ -6,7 +6,6 @@ a = b
 instance A B where
   x = y
 >
->
 a = b
 
 data ConvertSpec f =

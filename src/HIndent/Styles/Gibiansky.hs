@@ -20,6 +20,8 @@ import           Language.Haskell.Exts.SrcLoc
 import           Language.Haskell.Exts.Comments
 import           Prelude hiding (exp, all, mapM_, minimum, and, maximum, concatMap, or, any)
 
+import Debug.Trace
+
 -- | Empty state.
 data State = State { gibianskyForceSingleLine :: Bool, gibianskyLetBind :: Bool }
 
@@ -230,8 +232,18 @@ modl (Module _ mayModHead pragmas imps decls) = do
 
   onSeparateLines imps
   unless (null imps || null decls) (newline >> newline)
-  onSeparateLines decls
+
+  unless (null decls) $ do
+    forM_ (init decls) $ \decl -> do
+      pretty decl
+      newline
+      unless (isTypeSig decl) newline
+    pretty (last decls)
 modl m = prettyNoExt m
+
+isTypeSig :: Decl l -> Bool
+isTypeSig TypeSig{} = True
+isTypeSig _ = False
 
 -- | Format pragmas differently (language pragmas).
 pragmas :: Extend ModulePragma
