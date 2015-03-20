@@ -5,10 +5,12 @@ module HIndent.Styles.Gibiansky where
 
 import           Data.Foldable
 import           Control.Applicative ((<$>))
-import           Control.Monad (unless, when, replicateM_)
-import           Control.Monad.State (gets, get, put)
-import           Data.Maybe (isNothing)
+import           Data.Maybe
 import           Data.List (unfoldr, isPrefixOf)
+import           Control.Monad.Trans.Maybe
+import           Data.Functor.Identity
+import           Control.Monad.State.Strict hiding (state, State, forM_)
+import           Data.Typeable
 
 import           HIndent.Pretty
 import           HIndent.Types
@@ -18,17 +20,21 @@ import           Language.Haskell.Exts.SrcLoc
 import           Language.Haskell.Exts.Comments
 import           Prelude hiding (exp, all, mapM_, minimum, and, maximum, concatMap, or, any)
 
-import Control.Monad.State.Strict (MonadState)
-
 -- | Empty state.
-data State = State { gibianskyForceSingleLine :: Bool }
+data State = State { gibianskyForceSingleLine :: Bool, gibianskyLetBind :: Bool }
+
+userGets :: (State -> a) -> Printer State a
+userGets f = gets (f . psUserState)
+
+userModify :: (State -> State) -> Printer State ()
+userModify f = modify (\s -> s { psUserState = f (psUserState s) })
 
 -- | The printer style.
 gibiansky :: Style
 gibiansky = Style { styleName = "gibiansky"
                   , styleAuthor = "Andrew Gibiansky"
                   , styleDescription = "Andrew Gibiansky's style"
-                  , styleInitialState = State { gibianskyForceSingleLine = False }
+                  , styleInitialState = State { gibianskyForceSingleLine = False, gibianskyLetBind = False }
                   , styleExtenders = [ Extender imp
                                      , Extender modl
                                      , Extender context
@@ -46,6 +52,7 @@ gibiansky = Style { styleName = "gibiansky"
                                      , Extender fieldUpdate
                                      , Extender pragmas
                                      , Extender pat
+                                     , Extender qualConDecl
                                      ]
                   , styleDefConfig = defaultConfig { configMaxColumns = 100
                                                    , configIndentSpaces = indentSpaces
@@ -238,7 +245,7 @@ pragmas p = prettyNoExt p
 pat :: Extend Pat
 pat (PTuple _ boxed pats) = writeTuple boxed pats
 pat (PList _ pats) = singleLineList pats
-pat (PRec _ name fields) = recUpdateExpr (pretty name) (map pretty fields)
+pat (PRec _ name fields) = recUpdateExpr fields (pretty name) (map prettyCommentCallbacks fields)
 pat p = prettyNoExt p
 
 -- | Format import statements.
@@ -254,9 +261,35 @@ imp ImportDecl{..} = do
     write " as "
     pretty name
 
-  forM_ importSpecs $ \speclist -> do
+  forM_ importSpecs $ \(ImportSpecList _ importHiding specs) -> do
     space
-    pretty speclist
+    when importHiding $ write "hiding "
+    depend (write "(") $ do
+      case specs of
+        [] -> return ()
+        x:xs -> do
+          pretty x
+          forM_ xs $ \spec -> do
+            write ","
+            col <- getColumn
+            len <- prettyColLength spec
+            maxColumns <- configMaxColumns <$> gets psConfig
+            if col + len > maxColumns 
+              then newline
+              else space
+
+            pretty spec
+      write ")"
+
+-- | Return the number of columns between the start and end of a printer.
+-- Note that if it breaks lines, the line break is not counted; only column is used.
+-- So you probably only want to use this for single-line printers.
+prettyColLength :: (Integral a, Pretty ast) => ast NodeInfo -> Printer State a
+prettyColLength x = fst <$> sandbox (do
+  col <- getColumn
+  pretty x
+  col' <- getColumn
+  return $ fromIntegral $ max (col' - col) 0)
 
 -- | Format contexts with spaces and commas between class constraints.
 context :: Extend Context
@@ -346,8 +379,8 @@ exprs exp@Lambda{} = lambdaExpr exp
 exprs exp@Case{} = caseExpr exp
 exprs exp@LCase{} = lambdaCaseExpr exp
 exprs exp@If{} = ifExpr exp
-exprs (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) (map pretty updates)
-exprs (RecConstr _ qname updates) = recUpdateExpr (pretty qname) (map pretty updates)
+exprs (RecUpdate _ exp updates) = recUpdateExpr updates (pretty exp) (map prettyCommentCallbacks updates)
+exprs (RecConstr _ qname updates) = recUpdateExpr updates (pretty qname) (map prettyCommentCallbacks updates)
 exprs (Tuple _ _ exps) = parens $ inter (write ", ") $ map pretty exps
 exprs exp = prettyNoExt exp
 
@@ -355,7 +388,12 @@ letExpr :: Exp NodeInfo -> Printer State ()
 letExpr (Let _ binds result) = do
   cols <- depend (write "let ") $ do
             col <- getColumn
+
+            oldLetBind <- userGets gibianskyLetBind
+            userModify (\s -> s { gibianskyLetBind = True })
             writeWhereBinds binds
+            userModify (\s -> s { gibianskyLetBind = oldLetBind })
+
             return $ col - 4
   column cols $ do
     newline
@@ -365,6 +403,8 @@ letExpr _ = error "Not a let"
 
 keepingColumn :: Printer State () -> Printer State ()
 keepingColumn printer = do
+  eol <- gets psEolComment
+  when eol newline
   col <- getColumn
   ind <- gets psIndentLevel
   column (max col ind) printer
@@ -461,7 +501,9 @@ dollarExpr (InfixApp _ left op right) = do
   if needsNewline right
     then do
       newline
-      depend indentOnce $ pretty right
+      col <- getColumn
+      ind <- gets psIndentLevel
+      column (max col ind + indentSpaces) $ pretty right
     else do
       space
       pretty right
@@ -594,10 +636,12 @@ writeCaseAlts alts = do
       first:rest -> do
         printComments Before first
         prettyPr first
+        printComments After first
         forM_ (zip alts rest) $ \(prev, cur) -> do
           replicateM_ (max 1 $ lineDelta cur prev) newline
           printComments Before cur
           prettyPr cur
+          printComments After cur
 
   where
     isSingle :: Alt NodeInfo -> Printer State Bool
@@ -648,45 +692,74 @@ writeCaseAlts alts = do
         newline
         indented indentSpaces $ depend (write "where ") (pretty binds)
 
+prettyCommentCallbacks :: (Pretty ast,MonadState (PrintState s) m) => ast NodeInfo -> (ComInfoLocation -> m ()) -> m ()
+prettyCommentCallbacks a f =
+  do st <- get
+     case st of
+       PrintState{psExtenders = es,psUserState = s} ->
+         do
+           printComments Before a
+           f Before
+           depend
+             (case listToMaybe (mapMaybe (makePrinter s) es) of
+                Just (Printer m) ->
+                  modify (\s' ->
+                            fromMaybe s'
+                                      (runIdentity (runMaybeT (execStateT m s'))))
+                Nothing -> prettyNoExt a)
+             (f After >> printComments After a)
+  where makePrinter _ (Extender f) =
+          case cast a of
+            Just v -> Just (f v)
+            Nothing -> Nothing
+        makePrinter s (CatchAll f) = f s a
 
-recUpdateExpr :: Printer State () -> [Printer State ()] -> Printer State ()
-recUpdateExpr expWriter updates =
-  if null updates
-    then do
+
+recUpdateExpr :: Foldable f => [f NodeInfo] -> Printer State () -> [(ComInfoLocation -> Printer State ()) -> Printer State ()] -> Printer State ()
+recUpdateExpr ast expWriter updates
+  | null updates = do
       expWriter
       write "{}"
-    else attemptSingleLine single mult
+  | any hasComments ast = mult
+  | otherwise = attemptSingleLine single mult
 
   where
     single = do
       expWriter
       write " { "
-      inter (write ", ") updates
+      inter (write ", ") updates'
       write " }"
     mult = do
       expWriter
       newline
       indented indentSpaces $ keepingColumn $ do
         write "{ "
-        head updates
+        head updates'
         forM_ (tail updates) $ \update -> do
           newline
-          write ", "
-          update
+          update commaAfterComment
         newline
         write "}"
 
+    updates' = map ($ const $ return ()) updates
+    commaAfterComment loc = case loc of
+      Before -> write ", "
+      After -> return ()
+
 rhss :: Extend Rhs
 rhss (UnGuardedRhs rhsLoc exp) = do
-  space
-  rhsSeparator
-  if lineBreakAfterRhs rhsLoc exp
-    then indented indentSpaces $ do
-      newline
-      pretty exp
-    else do
-      space
-      pretty exp
+  letBind <- userGets gibianskyLetBind
+  let exp'
+        | lineBreakAfterRhs rhsLoc exp =
+            indented indentSpaces $ do
+              newline
+              pretty exp
+        | letBind =
+            depend space (pretty exp)
+        | otherwise = space >> pretty exp
+  if letBind
+    then depend (space >> rhsSeparator) exp'
+    else space >> rhsSeparator >> exp'
 rhss (GuardedRhss _ rs) =
   flip onSeparateLines' rs $ \a@(GuardedRhs rhsLoc stmts exp) -> do
     let manyStmts = length stmts > 1
@@ -764,19 +837,52 @@ decls (PatBind _ pat rhs mbinds) = funBody [pat] rhs mbinds
 decls (FunBind _ matches) =
   flip onSeparateLines' matches $ \match -> do
     printComments Before match
-    (name, pat, rhs, mbinds) <- case match of
-                                  Match _ name pat rhs mbinds -> return (name, pat, rhs, mbinds)
+    (writeName, pat, rhs, mbinds) <- case match of
+                                  Match _ name pat rhs mbinds -> return (pretty name, pat, rhs, mbinds)
                                   InfixMatch _ left name pat rhs mbinds -> do
                                     pretty left
                                     space
-                                    return (name, pat, rhs, mbinds)
-
-    case name of
-      Symbol _ name' -> string name'
-      name' -> pretty name'
+                                    let writeName = case name of
+                                          Symbol _ name' -> string name'
+                                          Ident _ name' -> do
+                                            write "`"
+                                            string name'
+                                            write "`"
+                                    return (writeName, pat, rhs, mbinds)
+    writeName
     space
     funBody pat rhs mbinds
+decls (ClassDecl _ ctx dhead fundeps mayDecls) = do
+  let decls = fromMaybe [] mayDecls
+      noDecls = null decls
+
+  -- Header
+  depend (write "class ") $
+    depend (maybeCtx ctx) $
+      depend (pretty dhead >> space) $
+        depend (unless (null fundeps) (write " | " >> commas (map pretty fundeps))) $
+          unless noDecls (write "where")
+
+  -- Class method declarations
+  unless noDecls $ do
+    newline
+    indentSpaces <- getIndentSpaces
+    indented indentSpaces (onSeparateLines decls)
 decls decl = prettyNoExt decl
+
+qualConDecl :: Extend QualConDecl
+qualConDecl (QualConDecl _ tyvars ctx d) =
+  depend (unless (null (fromMaybe [] tyvars))
+                  (do write " forall "
+                      spaced (map pretty (fromMaybe [] tyvars))
+                      write ". "))
+          (depend (maybeCtx' ctx)
+                  (pretty d))
+  where
+    maybeCtx' = maybe (return ())
+                      (\p ->
+                        pretty p >>
+                        write " =>")
 
 funBody :: [Pat NodeInfo] -> Rhs NodeInfo -> Maybe (Binds NodeInfo) -> Printer State ()
 funBody pat rhs mbinds = do

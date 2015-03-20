@@ -11,17 +11,9 @@ f (Zee x) =
   startswith "No instance for (Show" msg && True
 
 x = do
-  return output
-      { longLongLong = 3
-      , longLongLong = 3
-      , longLongLong = 3
-      , longLongLong = 3
-      , longLongLong = 3
-      , longLongLong = 3
-      }
-
-x = do
-  return output
+  -- hi
+  return
+    output
       { longLongLong = 3
       , longLongLong = 3
       , longLongLong = 3
@@ -33,7 +25,7 @@ x = do
 f x = f $ do
   -- hello
   f x
-  
+
 f x = f $
   -- hello
   f x
@@ -56,14 +48,13 @@ data Widget = forall a. IHaskellWidget a => Widget a
   deriving Typeable
 
 instance Monoid X where
-    mempty = X
-    X `mappend` X = X
+  mempty = X
+  X `mappend` X = X
 
 a =
-  let x =
-         X 
-           { y = z
+  let x = X
+            { y = z
             -- FIXME
-           ,  z = z
-           }
+            , z = z
+            }
   in Z

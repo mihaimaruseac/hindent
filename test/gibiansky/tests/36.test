@@ -7,16 +7,13 @@ f (Zee x) =
   startswith "No instance for (Show" msg && True
 
 x = do
-  return output { longLongLong = 3,  longLongLong = 3, longLongLong = 3, longLongLong = 3, longLongLong = 3, longLongLong = 3}
-
-x = do
   -- hi
   return output { longLongLong = 3,  longLongLong = 3, longLongLong = 3, longLongLong = 3, longLongLong = 3, longLongLong = 3}
 
 f x = f $ do
   -- hello
   f x
-  
+
 f x = f $
   -- hello
   f x
@@ -47,4 +44,3 @@ a =
               -- FIXME
               z = z }
   in Z
-

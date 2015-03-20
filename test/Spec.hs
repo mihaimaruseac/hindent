@@ -78,7 +78,7 @@ parsePieces str = map (intercalate "\n" . map mkNewlines) pieces
         (nonNull, _:rest) -> (map fst nonNull, map fst rest)
 
     pieceBreak :: (String, String) -> Bool
-    pieceBreak ("", "") = error "Two consecutive line breaks!"
+    pieceBreak ("", "") = error $ "Two consecutive line breaks in:\n" ++ str
     pieceBreak (line, next) = null line && head next /= ' '
 
     mkNewlines :: String -> String
