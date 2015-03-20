@@ -20,8 +20,6 @@ import           Language.Haskell.Exts.SrcLoc
 import           Language.Haskell.Exts.Comments
 import           Prelude hiding (exp, all, mapM_, minimum, and, maximum, concatMap, or, any)
 
-import Debug.Trace
-
 -- | Empty state.
 data State = State { gibianskyForceSingleLine :: Bool, gibianskyLetBind :: Bool }
 

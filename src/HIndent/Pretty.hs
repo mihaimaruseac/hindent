@@ -146,9 +146,10 @@ printComment mayNodespan (Comment inline cspan str) =
      case mayNodespan of
        Just nodespan ->
          do let neededSpaces = srcSpanStartColumn cspan -
-                               srcSpanEndColumn nodespan
+                               max 1 (srcSpanEndColumn nodespan)
             replicateM_ neededSpaces space
        Nothing -> return ()
+
      if inline
         then do write "{-"
                 string str

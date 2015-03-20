@@ -1,0 +1,6 @@
+type X = Y
+>
+-- Comment
+instance A a => B a where
+  x = y
+>
