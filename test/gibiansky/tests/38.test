@@ -4,3 +4,6 @@ type X = Y
 instance A a => B a where
   x = y
 >
+
+{-# INLINE x #-}
+x = 3

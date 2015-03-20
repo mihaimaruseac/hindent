@@ -3,3 +3,6 @@ type X = Y
 -- Comment
 instance A a => B a where
   x = y
+
+{-# INLINE x #-}
+x = 3

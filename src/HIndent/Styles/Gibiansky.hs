@@ -235,13 +235,16 @@ modl (Module _ mayModHead pragmas imps decls) = do
     forM_ (init decls) $ \decl -> do
       pretty decl
       newline
-      unless (isTypeSig decl) newline
+      unless (skipFollowingNewline decl) newline
     pretty (last decls)
 modl m = prettyNoExt m
 
-isTypeSig :: Decl l -> Bool
-isTypeSig TypeSig{} = True
-isTypeSig _ = False
+skipFollowingNewline :: Decl l -> Bool
+skipFollowingNewline TypeSig{} = True
+skipFollowingNewline InlineSig{} = True
+skipFollowingNewline AnnPragma{} = True
+skipFollowingNewline MinimalPragma{} = True
+skipFollowingNewline _ = False
 
 -- | Format pragmas differently (language pragmas).
 pragmas :: Extend ModulePragma
