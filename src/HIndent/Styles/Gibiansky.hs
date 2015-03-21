@@ -17,6 +17,7 @@ import           HIndent.Types
 
 import           Language.Haskell.Exts.Annotated.Syntax
 import           Language.Haskell.Exts.SrcLoc
+import           Language.Haskell.Exts.Pretty (prettyPrint)
 import           Language.Haskell.Exts.Comments
 import           Prelude hiding (exp, all, mapM_, minimum, and, maximum, concatMap, or, any)
 
@@ -254,6 +255,13 @@ pragmas (LanguagePragma _ names) = do
   write "{-# LANGUAGE "
   inter (write ", ") $ map pretty names
   write " #-}"
+pragmas (OptionsPragma _ mtool opt) = do
+  write "{-# OPTIONS"
+  forM_ mtool $ \tool -> do
+    write "_"
+    string $ prettyPrint tool
+  string opt
+  write "#-}"
 pragmas p = prettyNoExt p
 
 -- | Format patterns.

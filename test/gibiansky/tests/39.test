@@ -14,3 +14,6 @@ a =
   f $ \x -> do
     -- hello
     z
+
+{-# OPTIONS_GHC -option #-}
+>
