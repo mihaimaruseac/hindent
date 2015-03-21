@@ -10,3 +10,8 @@ a =
   f $ \x ->
     -- hello
     z
+
+a =
+  f $ \x -> do
+    -- hello
+    z
