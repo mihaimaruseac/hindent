@@ -770,9 +770,11 @@ recUpdateExpr ast expWriter updates
         write "}"
 
     updates' = map ($ const $ return ()) updates
-    commaAfterComment loc = case loc of
-      Before -> write ", "
-      After -> return ()
+
+commaAfterComment :: ComInfoLocation -> Printer State ()
+commaAfterComment loc = case loc of
+  Before -> write ", "
+  After -> return ()
 
 rhss :: Extend Rhs
 rhss (UnGuardedRhs rhsLoc exp) = do
@@ -1024,9 +1026,7 @@ condecls decl@(RecDecl _ name fields) = if hasComments decl
         pretty first
         unless singleLine newline
         forM_ rest $ \field -> do
-          comma
-          space
-          pretty field
+          prettyCommentCallbacks field commaAfterComment
           unless singleLine newline
 
         when singleLine space
