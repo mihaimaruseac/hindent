@@ -4,3 +4,8 @@ a =
 
 a =
   if | x, x <- Just y -> y
+
+a =
+  f $ \x ->
+    -- hello
+    z

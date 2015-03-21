@@ -608,10 +608,13 @@ lambdaExpr (Lambda _ pats exp) = do
   write "\\"
   spaced $ map pretty pats
   write " ->"
-  attemptSingleLine (space >> pretty exp) $ do
-    newline
-    indentOnce
-    pretty exp
+  if hasCommentsBefore exp
+    then multi
+    else attemptSingleLine (space >> pretty exp) multi
+      
+  where multi = do
+         newline
+         indented indentSpaces $ pretty exp
 lambdaExpr _ = error "Not a lambda"
 
 caseExpr :: Exp NodeInfo -> Printer State ()
@@ -1029,6 +1032,11 @@ condecls other = prettyNoExt other
 
 hasComments :: Foldable ast => ast NodeInfo -> Bool
 hasComments = any (not . null . nodeInfoComments)
+
+hasCommentsBefore :: Foldable ast => ast NodeInfo -> Bool
+hasCommentsBefore = any (any isBefore . nodeInfoComments)
+  where
+    isBefore com = comInfoLocation com == Just Before
 
 alt :: Extend Alt
 alt (Alt _ p rhs mbinds) = do
