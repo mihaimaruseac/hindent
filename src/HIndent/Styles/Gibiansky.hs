@@ -146,13 +146,15 @@ commentPreprocessor cs = do
 --   -- Hello
 --   -- Note the space after the '-'
 breakCommentLines :: Int -> String -> [String]
-breakCommentLines maxLen str =
-  -- If we already have a line of the appropriate length, leave it alone.
-  -- This allows us to format stuff ourselves in some cases.
-  if length (lines str) == 1 && length str <= maxLen
-  then [dropTrailingNewlines str]
-  else unfoldr unfolder (words str)
+breakCommentLines maxLen str
+  -- If there's no way to do this formatting, just give up
+  | any ((maxLen <) . length) (words str) = [str]
 
+  -- If we already have a line of the appropriate length, leave it alone. This allows us to format
+  -- stuff ourselves in some cases.
+  | length (lines str) == 1 && length str <= maxLen = [dropTrailingNewlines str]
+
+  | otherwise = unfoldr unfolder (words str)
   where
     -- Generate successive lines, consuming the words iteratively.
     unfolder :: [String] -> Maybe (String, [String])
@@ -169,10 +171,10 @@ breakCommentLines maxLen str =
             [] -> (generatedLine, [])
             word:remWords ->
               -- If the next word doesn't fit on this line, line break
-              let nextRemaining = remainingLen - length word - 1 in
-                if nextRemaining < 0
-                then (generatedLine, remainingWords)
-                else go nextRemaining (word:taken) remWords
+              let nextRemaining = remainingLen - length word - 1
+              in if nextRemaining < 0
+                   then (generatedLine, remainingWords)
+                   else go nextRemaining (word : taken) remWords
           where
             generatedLine = ' ' : unwords (reverse taken)
 
