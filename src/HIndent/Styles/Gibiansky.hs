@@ -402,7 +402,7 @@ multiIfExpr :: Exp NodeInfo -> Printer State ()
 multiIfExpr (MultiIf _ alts) =
   withCaseContext True $
     depend (write "if ") $
-      onSeparateLines' (\p -> write "|" >> pretty p) alts
+      onSeparateLines' (depend (write "|") . pretty) alts
 multiIfExpr _ = error "Not a multi if"
 
 letExpr :: Exp NodeInfo -> Printer State ()

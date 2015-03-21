@@ -1,3 +1,6 @@
 a = 
   if | x -> y
      | z -> z
+
+a =
+  if | x, x <- Just y -> y
