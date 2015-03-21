@@ -392,10 +392,18 @@ exprs exp@Lambda{} = lambdaExpr exp
 exprs exp@Case{} = caseExpr exp
 exprs exp@LCase{} = lambdaCaseExpr exp
 exprs exp@If{} = ifExpr exp
+exprs exp@MultiIf{} = multiIfExpr exp
 exprs (RecUpdate _ exp updates) = recUpdateExpr updates (pretty exp) (map prettyCommentCallbacks updates)
 exprs (RecConstr _ qname updates) = recUpdateExpr updates (pretty qname) (map prettyCommentCallbacks updates)
 exprs (Tuple _ _ exps) = parens $ inter (write ", ") $ map pretty exps
 exprs exp = prettyNoExt exp
+
+multiIfExpr :: Exp NodeInfo -> Printer State ()
+multiIfExpr (MultiIf _ alts) =
+  withCaseContext True $
+    depend (write "if ") $
+      onSeparateLines' (\p -> write "|" >> pretty p) alts
+multiIfExpr _ = error "Not a multi if"
 
 letExpr :: Exp NodeInfo -> Printer State ()
 letExpr (Let _ binds result) = do
