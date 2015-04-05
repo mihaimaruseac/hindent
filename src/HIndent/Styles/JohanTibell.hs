@@ -45,6 +45,7 @@ johanTibell =
         ,styleExtenders =
            [Extender decl
            ,Extender context
+           ,Extender typ
            ,Extender conDecl
            ,Extender exp
            ,Extender guardedRhs
@@ -228,6 +229,18 @@ context :: Context NodeInfo -> Printer s ()
 context (CxTuple _ asserts) =
   parens $ inter (comma >> space) $ map pretty asserts
 context ctx = prettyNoExt ctx
+
+unboxParens :: MonadState (PrintState s) m => m a -> m a
+unboxParens p =
+  depend (write "(# ")
+         (do v <- p
+             write " #)"
+             return v)
+
+typ :: Type NodeInfo -> Printer s ()
+typ (TyTuple _ Boxed types) = parens $ inter (write ", ") $ map pretty types
+typ (TyTuple _ Unboxed types) = unboxParens $ inter (write ", ") $ map pretty types
+typ ty = prettyNoExt ty
 
 -- | Specially format records. Indent where clauses only 2 spaces.
 decl :: Decl NodeInfo -> Printer s ()
