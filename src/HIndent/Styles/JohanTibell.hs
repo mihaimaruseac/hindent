@@ -44,6 +44,7 @@ johanTibell =
         ,styleInitialState = State
         ,styleExtenders =
            [Extender decl
+           ,Extender context
            ,Extender conDecl
            ,Extender exp
            ,Extender guardedRhs
@@ -222,11 +223,17 @@ exp (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) updates
 exp (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
 exp e = prettyNoExt e
 
+-- | Format contexts with spaces and commas between class constraints.
+context :: Context NodeInfo -> Printer s ()
+context (CxTuple _ asserts) =
+  parens $ inter (comma >> space) $ map pretty asserts
+context ctx = prettyNoExt ctx
+
 -- | Specially format records. Indent where clauses only 2 spaces.
 decl :: Decl NodeInfo -> Printer s ()
 -- | Pretty print type signatures like
 --
--- foo :: (Show x,Read x)
+-- foo :: (Show x, Read x)
 --     => (Foo -> Bar)
 --     -> Maybe Int
 --     -> (Char -> X -> Y)
