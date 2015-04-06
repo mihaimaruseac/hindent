@@ -279,7 +279,7 @@ decl (TypeSig _ names ty') =
         collapseFaps (TyFun _ arg result) = arg : collapseFaps result
         collapseFaps e = [e]
         prettyTy ty =
-          do small <- isSmall' ty
+          do small <- isSmall (pretty ty)
              if small
                 then pretty ty
                 else case collapseFaps ty of
@@ -287,10 +287,6 @@ decl (TypeSig _ names ty') =
                        tys ->
                          prefixedLined "-> "
                                        (map pretty tys)
-        isSmall' p =
-          do overflows <- isOverflow (pretty p)
-             oneLine <- isSingleLiner (pretty p)
-             return (not overflows && oneLine)
 decl (PatBind _ pat rhs' mbinds) =
       do pretty pat
          pretty rhs'
@@ -382,7 +378,7 @@ isRecord (QualConDecl _ _ _ RecDecl{}) = True
 isRecord _ = False
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
-isOverflow :: Printer s a -> Printer s Bool
+isOverflow :: MonadState (PrintState s) m => m a -> m Bool
 isOverflow p =
   do (_,st) <- sandbox p
      columnLimit <- getColumnLimit
@@ -436,3 +432,9 @@ fieldupdate e =
                              write " = "
                              pretty e'
     _ -> prettyNoExt e
+
+isSmall :: MonadState (PrintState t) m => m a -> m Bool
+isSmall p =
+  do overflows <- isOverflow p
+     oneLine <- isSingleLiner p
+     return (not overflows && oneLine)
