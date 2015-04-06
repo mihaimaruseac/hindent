@@ -48,6 +48,7 @@ module HIndent.Pretty
   , depend
   , dependBind
   , swing
+  , swingBy
   , getIndentSpaces
   , getColumnLimit
   -- * Predicates
@@ -421,6 +422,15 @@ swing a b =
      newline
      indentSpaces <- getIndentSpaces
      column (orig + indentSpaces) b
+
+-- | Swing the second printer below and indented with respect to the first by
+-- the specified amount.
+swingBy :: MonadState (PrintState s) m => Int64 -> m () -> m b -> m b
+swingBy i a b =
+  do orig <- gets psIndentLevel
+     a
+     newline
+     column (orig + i) b
 
 --------------------------------------------------------------------------------
 -- * Instances
