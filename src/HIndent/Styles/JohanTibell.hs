@@ -222,6 +222,13 @@ exp (List _ es) =
                           (map pretty es))
 exp (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) updates
 exp (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
+exp (Let _ binds e) =
+  do newline   -- Make the let swing under.
+     depend (write "let ")
+            (do pretty binds
+                newline
+                indented (-4) (depend (write "in ")
+                                      (pretty e)))
 exp e = prettyNoExt e
 
 match :: Match NodeInfo -> Printer s ()
