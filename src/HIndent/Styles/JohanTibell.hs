@@ -80,25 +80,36 @@ stmt (Generator _ p e) =
                  pretty)
 stmt e = prettyNoExt e
 
--- | Handle do specially and also space out guards more.
+-- | Handle do and case specially and also space out guards more.
 rhs :: Rhs NodeInfo -> Printer s ()
-rhs x =
-  case x of
-    UnGuardedRhs _ (Do _ dos) ->
-      swing (write " = do")
-            (lined (map pretty dos))
-    GuardedRhss _ gas ->
-      do newline
-         indentSpaces <- getIndentSpaces
-         indented indentSpaces
-                  (lined (map (\p ->
-                                 do write "|"
-                                    pretty p)
-                              gas))
-    _ -> do inCase <- gets psInsideCase
-            if inCase
-               then unguardedalt x
-               else unguardedrhs x
+rhs (UnGuardedRhs _ e) =
+  do inCase <- gets psInsideCase
+     write (if inCase then " -> " else " = ")
+     indentSpaces <- getIndentSpaces
+     let indentation | inCase = indentSpaces
+                     | otherwise = max 4 indentSpaces
+     case e of
+       Case _ e' alts ->
+         do swingBy indentation
+                    (do write "case "
+                        pretty e'
+                        write " of")
+                    (lined (map (withCaseContext True . pretty) alts))
+       Do _ dos ->
+         swingBy indentation
+                 (write "do")
+                 (lined (map pretty dos))
+       _ ->
+         do indented indentation (pretty e)
+rhs (GuardedRhss _ gas) =
+  do newline
+     indentSpaces <- getIndentSpaces
+     indented indentSpaces
+              (lined (map (\p ->
+                             do write "|"
+                                pretty p)
+                          gas))
+rhs x = prettyNoExt x
 
 -- | Implement dangling right-hand-sides.
 guardedRhs :: GuardedRhs NodeInfo -> Printer s ()
@@ -111,24 +122,11 @@ guardedRhs (GuardedRhs _ stmts (Do _ dos)) =
                             do space
                                pretty p)
                          stmts))
-     swing (write " = do")
+     inCase <- gets psInsideCase
+     write (if inCase then " -> " else " = ")
+     swing (write "do")
            (lined (map pretty dos))
 guardedRhs e = prettyNoExt e
-
--- | Unguarded case alts.
-unguardedalt :: Rhs NodeInfo -> Printer s ()
-unguardedalt (UnGuardedRhs _ e) =
-  do indentSpaces <- getIndentSpaces
-     write " -> "
-     indented indentSpaces (pretty e)
-unguardedalt e = prettyNoExt e
-
-unguardedrhs :: Rhs NodeInfo -> Printer s ()
-unguardedrhs (UnGuardedRhs _ e) =
-  do indentSpaces <- getIndentSpaces
-     write " = "
-     indented indentSpaces (pretty e)
-unguardedrhs e = prettyNoExt e
 
 -- | Expression customizations.
 exp :: Exp NodeInfo -> Printer s ()
