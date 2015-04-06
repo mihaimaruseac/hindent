@@ -13,8 +13,9 @@
 
 module HIndent.Styles.JohanTibell where
 
-import Control.Monad
+import Control.Monad hiding (forM_)
 import Control.Monad.State.Class
+import Data.Foldable (forM_)
 import Data.Int
 import Data.Maybe
 import HIndent.Pretty
@@ -44,6 +45,7 @@ johanTibell =
         ,styleInitialState = State
         ,styleExtenders =
            [Extender decl
+           ,Extender match
            ,Extender context
            ,Extender typ
            ,Extender conDecl
@@ -222,6 +224,25 @@ exp (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) updates
 exp (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
 exp e = prettyNoExt e
 
+match :: Match NodeInfo -> Printer s ()
+match (Match _ name pats rhs mbinds) =
+  do depend (do pretty name
+                space)
+            (spaced (map pretty pats))
+     withCaseContext False (pretty rhs)
+     forM_ mbinds bindingGroup
+match (InfixMatch _ pat1 name pats rhs mbinds) =
+  do depend (do pretty pat1
+                space
+                case name of
+                  Ident _ i ->
+                    string ("`" ++ i ++ "`")
+                  Symbol _ s -> string s)
+            (do space
+                spaced (map pretty pats))
+     withCaseContext False (pretty rhs)
+     forM_ mbinds bindingGroup
+
 -- | Format contexts with spaces and commas between class constraints.
 context :: Context NodeInfo -> Printer s ()
 context (CxTuple _ asserts) =
@@ -286,16 +307,10 @@ decl (TypeSig _ names ty') =
                          prefixedLined "-> "
                                        (map pretty tys)
 decl (PatBind _ pat rhs' mbinds) =
-      do pretty pat
-         pretty rhs'
-         case mbinds of
-           Nothing -> return ()
-           Just binds ->
-             do newline
-                indented 2
-                         (do write "where"
-                             newline
-                             indented 2 (pretty binds))
+  do pretty pat
+     pretty rhs'
+     forM_ mbinds bindingGroup
+
 -- | Handle records specially for a prettier display (see guide).
 decl (DataDecl _ dataornew ctx dhead condecls@[_] mderivs)
   | any isRecord condecls =
@@ -436,3 +451,11 @@ isSmall p =
   do overflows <- isOverflow p
      oneLine <- isSingleLiner p
      return (not overflows && oneLine)
+
+bindingGroup :: Binds NodeInfo -> Printer s ()
+bindingGroup binds =
+  do newline
+     indented 2
+              (do write "where"
+                  newline
+                  indented 2 (pretty binds))
