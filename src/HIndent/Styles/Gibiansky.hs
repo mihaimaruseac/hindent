@@ -581,7 +581,7 @@ applicativeExpr exp@InfixApp{} =
           start <- collectApplicativeExps left
           return $ start ++ [right]
       | otherwise = Nothing
-    collectApplicativeExps x = return [x]
+    collectApplicativeExps x = Nothing
 
     isFmap :: QOp NodeInfo -> Bool
     isFmap (QVarOp _ (UnQual _ (Symbol _ "<$>"))) = True
