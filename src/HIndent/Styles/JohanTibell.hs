@@ -314,9 +314,10 @@ decl (TypeSig _ names ty') =
                          prefixedLined "-> "
                                        (map pretty tys)
 decl (PatBind _ pat rhs' mbinds) =
-  do pretty pat
-     pretty rhs'
-     forM_ mbinds bindingGroup
+  withCaseContext False $
+    do pretty pat
+       pretty rhs'
+       forM_ mbinds bindingGroup
 
 -- | Handle records specially for a prettier display (see guide).
 decl (DataDecl _ dataornew ctx dhead condecls@[_] mderivs)
