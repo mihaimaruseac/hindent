@@ -9,7 +9,7 @@ import           Data.Maybe
 import           Data.List (unfoldr, isPrefixOf)
 import           Control.Monad.Trans.Maybe
 import           Data.Functor.Identity
-import           Control.Monad.State.Strict hiding (state, State, forM_)
+import           Control.Monad.State.Strict hiding (state, State, forM_, sequence_)
 import           Data.Typeable
 
 import           HIndent.Pretty
@@ -19,7 +19,7 @@ import           Language.Haskell.Exts.Annotated.Syntax
 import           Language.Haskell.Exts.SrcLoc
 import           Language.Haskell.Exts.Pretty (prettyPrint)
 import           Language.Haskell.Exts.Comments
-import           Prelude hiding (exp, all, mapM_, minimum, and, maximum, concatMap, or, any)
+import           Prelude hiding (exp, all, mapM_, minimum, and, maximum, concatMap, or, any, sequence_)
 
 -- | Empty state.
 data State = State { gibianskyForceSingleLine :: Bool, gibianskyLetBind :: Bool }
@@ -581,7 +581,7 @@ applicativeExpr exp@InfixApp{} =
           start <- collectApplicativeExps left
           return $ start ++ [right]
       | otherwise = Nothing
-    collectApplicativeExps x = Nothing
+    collectApplicativeExps _ = Nothing
 
     isFmap :: QOp NodeInfo -> Bool
     isFmap (QVarOp _ (UnQual _ (Symbol _ "<$>"))) = True
@@ -593,22 +593,54 @@ applicativeExpr exp@InfixApp{} =
 applicativeExpr _ = error "Not an application"
 
 opExpr :: Exp NodeInfo -> Printer State ()
-opExpr (InfixApp _ left op right) = keepingColumn $ do
-  pretty left
+opExpr expr@(InfixApp _ left op right) = keepingColumn $ do
+  let deltaLeft = lineDelta op left
+      deltaRight = lineDelta right op
 
-  let delta = lineDelta op left
-  if delta == 0
-    then space
-    else replicateM_ delta newline
+  -- If this starts out as a single line expression, try to keep it as a single line expression. Break
+  -- it up over multiple lines if it doesn't fit using operator columns, but only when all the
+  -- operators are the same.
+  if deltaLeft == 0 && deltaRight == 0 && numOperatorUses op expr >= 2
+    then attemptSingleLine opSingle opMulti
+    else userSpecified deltaLeft deltaRight
+  where
+    -- Use user-specified spacing for the newlines in the operator
+    userSpecified deltaLeft deltaRight = do
+      pretty left
 
-  pretty op
+      if deltaLeft == 0
+        then space
+        else replicateM_ deltaLeft newline
 
-  let delta = lineDelta right op
-  if delta == 0
-    then space
-    else replicateM_ delta newline
+      pretty op
 
-  pretty right
+      if deltaRight == 0
+        then space
+        else replicateM_ deltaRight newline
+
+      pretty right
+
+    -- Write the entire infix expression on one line.
+    opSingle = sequence_ [pretty left, space, pretty op, space, pretty right]
+
+    -- Use operator column layout.
+    opMulti = do
+      let opArguments = collectOpArguments op expr
+      forM_ (init opArguments) $ \arg -> do
+        pretty arg
+        space
+        pretty op
+        newline
+      pretty (last opArguments)
+
+    -- Count the number of times an infix operator is used in a row.
+    numOperatorUses op e = length (collectOpArguments op e) - 1
+
+    -- Collect all arguments to an infix operator.
+    collectOpArguments op expr'@(InfixApp _ left' op' right')
+      | void op == void op' = collectOpArguments op left' ++ collectOpArguments op right'
+      | otherwise = [expr']
+    collectOpArguments _ expr' = [expr']
 opExpr exp = prettyNoExt exp
 
 lambdaExpr :: Exp NodeInfo -> Printer State ()
