@@ -731,11 +731,13 @@ exp (LCase _ alts) =
      newline
      indented indentSpaces (lined (map (withCaseContext True . pretty) alts))
 exp (MultiIf _ alts) =
-  depend (write "if ")
-         (lined (map (\p ->
-                        do write "| "
-                           pretty p)
-                     alts))
+  withCaseContext
+    True
+    (depend (write "if ")
+            (lined (map (\p ->
+                           do write "| "
+                              pretty p)
+                        alts)))
 exp (Lit _ lit) = prettyInternal lit
 exp x@XTag{} = pretty' x
 exp x@XETag{} = pretty' x
