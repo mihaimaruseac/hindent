@@ -979,6 +979,7 @@ writeWhereBinds :: Binds NodeInfo -> Printer State ()
 writeWhereBinds ds@(BDecls _ binds) = do
   printComments Before ds
   onSeparateLines binds
+  printComments After ds
 writeWhereBinds binds = prettyNoExt binds
 
 -- Print all the ASTs on separate lines, respecting user spacing.
