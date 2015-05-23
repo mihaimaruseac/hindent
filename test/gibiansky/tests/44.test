@@ -1,0 +1,3 @@
+test foo bar [] = baz qux --comment zero
+test foo bar [x] = baz qux --comment one
+test foo bar [x:xs] = baz qux --comment two

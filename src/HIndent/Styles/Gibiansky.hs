@@ -923,6 +923,7 @@ decls (FunBind _ matches) =
     writeName
     space
     funBody pat rhs mbinds
+    printComments After match
 decls (ClassDecl _ ctx dhead fundeps mayDecls) = do
   let decls = fromMaybe [] mayDecls
       noDecls = null decls
