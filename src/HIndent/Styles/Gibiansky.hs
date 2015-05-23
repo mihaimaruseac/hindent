@@ -853,6 +853,7 @@ rhss (GuardedRhss _ rs) =
         remainder
       else
         depend (write "| ") $ writeStmts >> remainder
+    printComments After a
 
 lineBreakAfterRhs :: NodeInfo -> Exp NodeInfo -> Bool
 lineBreakAfterRhs rhsLoc exp = onNextLine exp
