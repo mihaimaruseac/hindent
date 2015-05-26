@@ -84,33 +84,6 @@ stmt e = prettyNoExt e
 
 -- | Handle do and case specially and also space out guards more.
 rhs :: Rhs NodeInfo -> Printer s ()
-rhs (UnGuardedRhs _ e) =
-  do inCase <- gets psInsideCase
-     write (if inCase then " -> " else " = ")
-     indentSpaces <- getIndentSpaces
-     let indentation | inCase = indentSpaces
-                     | otherwise = max 4 indentSpaces
-     case e of
-       Case _ e' alts ->
-         do swingBy indentation
-                    (do write "case "
-                        pretty e'
-                        write " of")
-                    (lined (map (withCaseContext True . pretty) alts))
-       Do _ dos ->
-         swingBy indentation
-                 (write "do")
-                 (lined (map pretty dos))
-       _ ->
-         do indented indentation (pretty e)
-rhs (GuardedRhss _ gas) =
-  do newline
-     indentSpaces <- getIndentSpaces
-     indented indentSpaces
-              (lined (map (\p ->
-                             do write "|"
-                                pretty p)
-                          gas))
 rhs x = prettyNoExt x
 
 -- | Implement dangling right-hand-sides.
