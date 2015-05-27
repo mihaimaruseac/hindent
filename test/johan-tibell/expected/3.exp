@@ -3,4 +3,5 @@ sayHello = do
     name <- getLine
     putStrLn $ greeting name
   where
-    greeting name = "Hello, " ++ name ++ "!"
+    greeting name = 
+        "Hello, " ++ name ++ "!"

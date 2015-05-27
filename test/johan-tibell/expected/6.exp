@@ -1,19 +1,25 @@
 f :: Int
 f x
-    | x <- Just x
-    , x <- Just x = 
-        case x of
-            Just x -> e
-    | otherwise = do
-        e
+  | x <- Just x
+  , x <- Just x = 
+      case x of
+          Just x -> 
+              e
+  | otherwise = do
+      e
   where
-    x = y
+    x = 
+        y
 
-g x = case x of
-    a -> x
+g x = 
+    case x of
+        a -> 
+            x
   where
-    foo = case x of
-        _ -> do
-            launchMissiles
+    foo = 
+        case x of
+            _ -> do
+                launchMissiles
       where
-        y = 2
+        y = 
+            2
