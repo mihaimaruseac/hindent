@@ -336,7 +336,11 @@ typ :: Extend Type
 -- For contexts, check whether the context and all following function types
 -- are on the same line. If they are, print them on the same line; otherwise
 -- print the context and each argument to the function on separate lines.
-typ (TyForall _ _ (Just ctx) rest) =
+typ (TyForall _ mforall (Just ctx) rest) = do
+  forM_ mforall $ \forallVars -> do
+    write "forall "
+    spaced $ map pretty forallVars
+    write ". "
   if all (sameLine ctx) $ collectTypes rest
     then do
       pretty ctx
