@@ -20,7 +20,7 @@ import Data.Int
 import Data.Maybe
 import HIndent.Pretty
 import HIndent.Types
-import HIndent.Styles.ChrisDone (infixApp,dependOrNewline)
+import HIndent.Styles.ChrisDone (infixApp)
 
 import Language.Haskell.Exts.Annotated.Syntax
 import Prelude hiding (exp)
@@ -81,6 +81,24 @@ stmt (Generator _ p e) =
                  e
                  pretty)
 stmt e = prettyNoExt e
+
+-- | Make the right hand side dependent if it fits on one line,
+-- otherwise send it to the next line.
+dependOrNewline :: Printer t ()
+                -> Exp NodeInfo
+                -> (Exp NodeInfo -> Printer t ())
+                -> Printer t ()
+dependOrNewline left right f =
+  do flat <- isFlat right
+     if flat
+        then renderDependent
+        else do (fits,st) <- fitsOnOneLine renderDependent
+                if fits
+                   then put st
+                   else do left
+                           newline
+                           (f right)
+  where renderDependent = depend left (f right)
 
 -- | Handle do and case specially and also space out guards more.
 rhs :: Rhs NodeInfo -> Printer s ()
@@ -394,6 +412,14 @@ isOverflow p =
   do (_,st) <- sandbox p
      columnLimit <- getColumnLimit
      return (psColumn st > columnLimit)
+
+-- | Does printing the given thing overflow column limit? (e.g. 80)
+fitsOnOneLine :: MonadState (PrintState s) m => m a -> m (Bool,PrintState s)
+fitsOnOneLine p =
+  do line <- gets psLine
+     (_,st) <- sandbox p
+     columnLimit <- getColumnLimit
+     return (psLine st == line && psColumn st < columnLimit,st)
 
 -- | Is the given expression a single-liner when printed?
 isSingleLiner :: MonadState (PrintState s) m
