@@ -17,6 +17,7 @@ module HIndent
   ,gibiansky
   -- * Testing
   ,test
+  ,testFile
   ,testAll
   ,testAst
   )
@@ -99,7 +100,7 @@ reformat style mexts x =
     findSmallestPrefix :: [Text] -> Text
     findSmallestPrefix [] = ""
     findSmallestPrefix ("":_) = ""
-    findSmallestPrefix (p:ps) = 
+    findSmallestPrefix (p:ps) =
       let first = T.head p
           startsWithChar c x  = T.length x > 0 && T.head x == c
       in if all (startsWithChar first) ps
@@ -195,6 +196,10 @@ parseMode =
           filter isDisabledExtention knownExtensions
         isDisabledExtention (DisableExtension _) = False
         isDisabledExtention _ = True
+
+-- | Test the given file.
+testFile :: FilePath -> Style -> IO ()
+testFile fp style = T.readFile fp >>= test style
 
 -- | Test with the given style, prints to stdout.
 test :: Style -> Text -> IO ()
