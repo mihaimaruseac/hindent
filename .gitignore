@@ -10,3 +10,4 @@ tags
 *.elc
 src/main/Main
 src/main/TestGenerate
+.stack-work
