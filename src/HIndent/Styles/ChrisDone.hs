@@ -410,21 +410,6 @@ fitsInColumnLimit p =
      columnLimit <- getColumnLimit
      return (psColumn st < columnLimit,st)
 
--- -- | Does printing the given thing overflow column limit? (e.g. 80)
--- isOverflowMax :: Printer t a -> Printer t Bool
--- isOverflowMax p =
---   do (_,st) <- sandbox p
---      columnLimit <- getColumnLimit
---      return (psColumn st > columnLimit + 20)
-
--- -- | Is the given expression a single-liner when printed?
--- isSingleLiner :: MonadState (PrintState t) m
---               => m a -> m Bool
--- isSingleLiner p =
---   do line <- gets psLine
---      (_,st) <- sandbox p
---      return (psLine st == line)
-
 --------------------------------------------------------------------------------
 -- Helpers
 
