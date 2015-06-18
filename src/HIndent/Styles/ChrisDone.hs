@@ -425,36 +425,10 @@ infixApp e a op b indent =
        fitsOnOneLine
          (spaced (map (\link ->
                          case link of
-                           OpChainExp e -> pretty e
+                           OpChainExp e' -> pretty e'
                            OpChainLink qop -> pretty qop)
                       (flattenOpChain e)))
      if fits
-        then put st
-        else do prettyWithIndent a
-                space
-                pretty op
-                newline
-                case indent of
-                  Nothing -> prettyWithIndent b
-                  Just col ->
-                    do indentSpaces <- getIndentSpaces
-                       column (col + indentSpaces)
-                              (prettyWithIndent b)
-  where prettyWithIndent e' =
-          case e' of
-            (InfixApp _ a' op' b') ->
-              infixApp e' a' op' b' indent
-            _ -> pretty e'
-infixApp e a op b indent =
-  do let is = isFlat e
-     (fits,st) <-
-       fitsInColumnLimit
-         (depend (do prettyWithIndent a
-                     space
-                     pretty op
-                     space)
-                 (do prettyWithIndent b))
-     if is && fits
         then put st
         else do prettyWithIndent a
                 space
@@ -481,7 +455,7 @@ data OpChainLink l
 -- | Flatten a tree of InfixApp expressions into a chain of operator
 -- links.
 flattenOpChain :: Exp l -> [OpChainLink l]
-flattenOpChain (InfixApp l left op right) =
+flattenOpChain (InfixApp _ left op right) =
   flattenOpChain left <>
   [OpChainLink op] <>
   flattenOpChain right
