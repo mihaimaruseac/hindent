@@ -19,9 +19,8 @@ import Data.Foldable (forM_)
 import Data.Int
 import Data.Maybe
 import HIndent.Pretty
-import HIndent.Types
 import HIndent.Styles.ChrisDone (infixApp)
-
+import HIndent.Types
 import Language.Haskell.Exts.Annotated.Syntax
 import Prelude hiding (exp)
 
@@ -89,15 +88,12 @@ dependOrNewline :: Printer t ()
                 -> (Exp NodeInfo -> Printer t ())
                 -> Printer t ()
 dependOrNewline left right f =
-  do flat <- isFlat right
-     if flat
-        then renderDependent
-        else do (fits,st) <- fitsOnOneLine renderDependent
-                if fits
-                   then put st
-                   else do left
-                           newline
-                           (f right)
+  do (fits,st) <- fitsOnOneLine renderDependent
+     if fits
+        then put st
+        else do left
+                newline
+                (f right)
   where renderDependent = depend left (f right)
 
 -- | Handle do and case specially and also space out guards more.
@@ -184,31 +180,21 @@ exp (If _ if' then' else') =
 -- | App algorithm similar to ChrisDone algorithm, but with no
 -- parent-child alignment.
 exp (App _ op a) =
-  do orig <- gets psIndentLevel
-     headIsShort <- isShort f
-     depend (do pretty f
-                space)
-            (do flats <- mapM isFlat args
-                flatish <- fmap ((< 2) . length . filter not)
-                                (return flats)
-                singleLiner <- isSingleLiner (spaced (map pretty args))
-                overflow <- isOverflow (spaced (map pretty args))
-                if singleLiner &&
-                   ((headIsShort && flatish) ||
-                    all id flats) &&
-                   not overflow
-                   then spaced (map pretty args)
-                   else do newline
-                           indentSpaces <- getIndentSpaces
-                           column (orig + indentSpaces)
-                                  (lined (map pretty args)))
+  do (fits,st) <-
+       fitsOnOneLine (spaced (map pretty (f : args)))
+     if fits
+        then put st
+        else do pretty f
+                newline
+                spaces <- getIndentSpaces
+                indented spaces (lined (map pretty args))
   where (f,args) = flatten op [a]
         flatten :: Exp NodeInfo
                 -> [Exp NodeInfo]
                 -> (Exp NodeInfo,[Exp NodeInfo])
         flatten (App _ f' a') b =
           flatten f' (a' : b)
-        flatten f' as = (((f',as)))
+        flatten f' as = (f',as)
 -- | Space out commas in list.
 exp (List _ es) =
   do single <- isSingleLiner p
@@ -446,10 +432,6 @@ isFlat (App _ a b) =
   return (isName a && isName b)
   where isName (Var{}) = True
         isName _ = False
-isFlat (InfixApp _ a _ b) =
-  do a' <- isFlat a
-     b' <- isFlat b
-     return (a' && b')
 isFlat (NegApp _ a) = isFlat a
 isFlat VarQuote{} = return True
 isFlat TypQuote{} = return True

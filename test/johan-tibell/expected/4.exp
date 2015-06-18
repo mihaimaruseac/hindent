@@ -3,7 +3,5 @@ commitToEvent gitFolderPath timezone commit =
     Event.Event
     { pluginName = getModuleName getGitProvider
     , eventIcon = "glyphicon-cog"
-    , eventDate = localTimeToUTC 
-          timezone
-          (commitDate commit)
+    , eventDate = localTimeToUTC timezone (commitDate commit)
     }
