@@ -69,11 +69,22 @@ chrisDone =
 --
 decl :: Decl NodeInfo -> Printer s ()
 decl (TypeSig _ names ty') =
-  depend (do inter (write ", ")
-                   (map pretty names)
-             write " :: ")
-         (declTy ty')
-  where declTy dty =
+  do (fitting,st) <- isSmallFitting dependent
+     if fitting
+        then put st
+        else do inter (write ", ")
+                      (map pretty names)
+                newline
+                indentSpaces <- getIndentSpaces
+                indented indentSpaces
+                         (depend (write ":: ")
+                                 (declTy ty'))
+  where dependent =
+          depend (do inter (write ", ")
+                           (map pretty names)
+                     write " :: ")
+                 (declTy ty')
+        declTy dty =
           case dty of
             TyForall _ mbinds mctx ty ->
               do case mbinds of
@@ -362,6 +373,15 @@ isSmall p =
   do line <- gets psLine
      (_,st) <- sandbox p
      return (psLine st == line && psColumn st < smallColumnLimit,st)
+
+-- | Is the given expression "small"? I.e. does it fit on one line and
+-- under 'smallColumnLimit' columns.
+isSmallFitting :: MonadState (PrintState t) m
+               => m a -> m (Bool,PrintState t)
+isSmallFitting p =
+  do line <- gets psLine
+     (_,st) <- sandbox p
+     return (psColumn st < smallColumnLimit,st)
 
 -- | Is an expression flat?
 isFlat :: Exp NodeInfo -> Bool

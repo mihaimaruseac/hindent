@@ -103,7 +103,7 @@ guardedRhs (GuardedRhs _ stmts (Do _ dos)) =
               (do prefixedLined
                     ","
                     (map (\p ->
-                            do space 
+                            do space
                                pretty p)
                          stmts))
      inCase <- gets psInsideCase
@@ -260,10 +260,19 @@ decl :: Decl NodeInfo -> Printer s ()
 --     -> IO ()
 --
 decl (TypeSig _ names ty') =
-  depend (do inter (write ", ")
-                   (map pretty names)
-             write " :: ")
-         (declTy ty')
+  do small <- isSmall (declTy ty')
+     if small
+        then depend (do inter (write ", ")
+                              (map pretty names)
+                        write " :: ")
+                    (declTy ty')
+        else do inter (write ", ")
+                      (map pretty names)
+                newline
+                indentSpaces <- getIndentSpaces
+                indented indentSpaces
+                         (depend (write ":: ")
+                                 (declTy ty'))
   where declTy dty =
           case dty of
             TyForall _ mbinds mctx ty ->
