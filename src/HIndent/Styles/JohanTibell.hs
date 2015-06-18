@@ -107,11 +107,29 @@ rhs (UnGuardedRhs _ (Do _ dos)) =
      swingBy indentation
              (write "do")
              (lined (map pretty dos))
-rhs x = prettyNoExt x
+rhs (UnGuardedRhs _ e) =
+  do (fits,st) <-
+       fitsOnOneLine
+         (do write " "
+             rhsSeparator
+             write " "
+             pretty e)
+     if fits
+        then put st
+        else swing (write " " >> rhsSeparator >> write " ")
+                   (pretty e)
+rhs (GuardedRhss _ gas) =
+  do newline
+     indented 2
+              (lined (map (\p ->
+                             do write "|"
+                                pretty p)
+                          gas))
 
 -- | Implement dangling right-hand-sides.
 guardedRhs :: GuardedRhs NodeInfo -> Printer s ()
 -- | Handle do specially.
+
 guardedRhs (GuardedRhs _ stmts (Do _ dos)) =
   do indented 1
               (do prefixedLined
@@ -124,7 +142,32 @@ guardedRhs (GuardedRhs _ stmts (Do _ dos)) =
      write (if inCase then " -> " else " = ")
      swing (write "do")
            (lined (map pretty dos))
-guardedRhs e = prettyNoExt e
+guardedRhs (GuardedRhs _ stmts e) =
+  do (fits,st) <-
+       fitsOnOneLine
+         (indented 1
+                   (do prefixedLined
+                         ","
+                         (map (\p ->
+                                 do space
+                                    pretty p)
+                              stmts)))
+     put st
+     if fits
+        then do (fits',st') <-
+                  fitsOnOneLine
+                    (do write " "
+                        rhsSeparator
+                        write " "
+                        pretty e)
+                if fits'
+                   then put st'
+                   else swingIt
+        else swingIt
+  where swingIt =
+          swing (write " " >> rhsSeparator >> write " ")
+                (pretty e)
+
 
 -- | Expression customizations.
 exp :: Exp NodeInfo -> Printer s ()
@@ -206,7 +249,7 @@ exp (List _ es) =
   where p =
           brackets (inter (write ", ")
                           (map pretty es))
-exp (RecUpdate _ exp updates) = recUpdateExpr (pretty exp) updates
+exp (RecUpdate _ exp' updates) = recUpdateExpr (pretty exp') updates
 exp (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
 exp (Let _ binds e) =
   depend (write "let ")
@@ -217,13 +260,13 @@ exp (Let _ binds e) =
 exp e = prettyNoExt e
 
 match :: Match NodeInfo -> Printer s ()
-match (Match _ name pats rhs mbinds) =
+match (Match _ name pats rhs' mbinds) =
   do depend (do pretty name
                 space)
             (spaced (map pretty pats))
-     withCaseContext False (pretty rhs)
+     withCaseContext False (pretty rhs')
      forM_ mbinds bindingGroup
-match (InfixMatch _ pat1 name pats rhs mbinds) =
+match (InfixMatch _ pat1 name pats rhs' mbinds) =
   do depend (do pretty pat1
                 space
                 case name of
@@ -232,7 +275,7 @@ match (InfixMatch _ pat1 name pats rhs mbinds) =
                   Symbol _ s -> string s)
             (do space
                 spaced (map pretty pats))
-     withCaseContext False (pretty rhs)
+     withCaseContext False (pretty rhs')
      forM_ mbinds bindingGroup
 
 -- | Format contexts with spaces and commas between class constraints.
