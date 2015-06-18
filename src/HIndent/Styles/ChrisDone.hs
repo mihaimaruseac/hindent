@@ -106,18 +106,14 @@ decl (TypeSig _ names ty') =
         collapseFaps (TyFun _ arg result) = arg : collapseFaps result
         collapseFaps e = [e]
         prettyTy ty =
-          do small <- isSmall' ty
-             if small
-                then pretty ty
+          do (fits,st) <- fitsOnOneLine (pretty ty)
+             if fits
+                then put st
                 else case collapseFaps ty of
                        [] -> pretty ty
                        tys ->
                          prefixedLined "-> "
                                        (map pretty tys)
-        isSmall' p =
-          do overflows <- isOverflow (pretty p)
-             oneLine <- isSingleLiner (pretty p)
-             return (not overflows && oneLine)
 decl e = prettyNoExt e
 
 -- | I want field updates to be dependent or newline.
@@ -279,9 +275,8 @@ exp (Tuple _ boxed exps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
                    Boxed -> "("))
-         (do single <- isSingleLiner p
-             underflow <- fmap not (isOverflow p)
-             if single && underflow
+         (do (fits,_) <- fitsOnOneLine p
+             if fits
                 then p
                 else prefixedLined ","
                                    (map pretty exps)
@@ -374,13 +369,12 @@ isSmall p =
      (_,st) <- sandbox p
      return (psLine st == line && psColumn st < smallColumnLimit,st)
 
--- | Is the given expression "small"? I.e. does it fit on one line and
--- under 'smallColumnLimit' columns.
+-- | Is the given expression "small"? I.e. does it fit under
+-- 'smallColumnLimit' columns.
 isSmallFitting :: MonadState (PrintState t) m
                => m a -> m (Bool,PrintState t)
 isSmallFitting p =
-  do line <- gets psLine
-     (_,st) <- sandbox p
+  do (_,st) <- sandbox p
      return (psColumn st < smallColumnLimit,st)
 
 -- | Is an expression flat?
@@ -402,26 +396,34 @@ isFlat (RightSection _ _ e) = isFlat e
 isFlat _ = False
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
-isOverflow :: Printer t a -> Printer t Bool
-isOverflow p =
-  do (_,st) <- sandbox p
-     columnLimit <- getColumnLimit
-     return (psColumn st > columnLimit)
-
--- | Does printing the given thing overflow column limit? (e.g. 80)
-isOverflowMax :: Printer t a -> Printer t Bool
-isOverflowMax p =
-  do (_,st) <- sandbox p
-     columnLimit <- getColumnLimit
-     return (psColumn st > columnLimit + 20)
-
--- | Is the given expression a single-liner when printed?
-isSingleLiner :: MonadState (PrintState t) m
-              => m a -> m Bool
-isSingleLiner p =
+fitsOnOneLine :: MonadState (PrintState s) m => m a -> m (Bool,PrintState s)
+fitsOnOneLine p =
   do line <- gets psLine
      (_,st) <- sandbox p
-     return (psLine st == line)
+     columnLimit <- getColumnLimit
+     return (psLine st == line && psColumn st < columnLimit,st)
+
+-- | Does printing the given thing overflow column limit? (e.g. 80)
+fitsInColumnLimit :: Printer t a -> Printer t (Bool,PrintState t)
+fitsInColumnLimit p =
+  do (_,st) <- sandbox p
+     columnLimit <- getColumnLimit
+     return (psColumn st < columnLimit,st)
+
+-- -- | Does printing the given thing overflow column limit? (e.g. 80)
+-- isOverflowMax :: Printer t a -> Printer t Bool
+-- isOverflowMax p =
+--   do (_,st) <- sandbox p
+--      columnLimit <- getColumnLimit
+--      return (psColumn st > columnLimit + 20)
+
+-- -- | Is the given expression a single-liner when printed?
+-- isSingleLiner :: MonadState (PrintState t) m
+--               => m a -> m Bool
+-- isSingleLiner p =
+--   do line <- gets psLine
+--      (_,st) <- sandbox p
+--      return (psLine st == line)
 
 --------------------------------------------------------------------------------
 -- Helpers
@@ -434,18 +436,15 @@ infixApp :: Exp NodeInfo
          -> Printer s ()
 infixApp e a op b indent =
   do let is = isFlat e
-     overflow <- isOverflow
-                   (depend (do prettyWithIndent a
-                               space
-                               pretty op
-                               space)
-                           (do prettyWithIndent b))
-     if is && not overflow
-        then do depend (do prettyWithIndent a
-                           space
-                           pretty op
-                           space)
-                       (do prettyWithIndent b)
+     (fits,st) <-
+       fitsInColumnLimit
+         (depend (do prettyWithIndent a
+                     space
+                     pretty op
+                     space)
+                 (do prettyWithIndent b))
+     if is && fits
+        then put st
         else do prettyWithIndent a
                 space
                 pretty op
@@ -458,7 +457,8 @@ infixApp e a op b indent =
                               (prettyWithIndent b)
   where prettyWithIndent e' =
           case e' of
-            (InfixApp _ a' op' b') -> infixApp e' a' op' b' indent
+            (InfixApp _ a' op' b') ->
+              infixApp e' a' op' b' indent
             _ -> pretty e'
 
 -- | Make the right hand side dependent if it's flat, otherwise
