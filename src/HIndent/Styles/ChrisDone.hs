@@ -21,6 +21,7 @@ import Language.Haskell.Exts.Annotated.Fixity
 import Language.Haskell.Exts.Annotated.Syntax
 import Language.Haskell.Exts.Parser (ParseResult(..))
 import Prelude hiding (exp)
+import Data.Monoid
 
 --------------------------------------------------------------------------------
 -- Style configuration
@@ -420,6 +421,31 @@ infixApp :: Exp NodeInfo
          -> Maybe Int64
          -> Printer s ()
 infixApp e a op b indent =
+  do (fits,st) <-
+       fitsOnOneLine
+         (spaced (map (\link ->
+                         case link of
+                           OpChainExp e -> pretty e
+                           OpChainLink qop -> pretty qop)
+                      (flattenOpChain e)))
+     if fits
+        then put st
+        else do prettyWithIndent a
+                space
+                pretty op
+                newline
+                case indent of
+                  Nothing -> prettyWithIndent b
+                  Just col ->
+                    do indentSpaces <- getIndentSpaces
+                       column (col + indentSpaces)
+                              (prettyWithIndent b)
+  where prettyWithIndent e' =
+          case e' of
+            (InfixApp _ a' op' b') ->
+              infixApp e' a' op' b' indent
+            _ -> pretty e'
+infixApp e a op b indent =
   do let is = isFlat e
      (fits,st) <-
        fitsInColumnLimit
@@ -445,6 +471,21 @@ infixApp e a op b indent =
             (InfixApp _ a' op' b') ->
               infixApp e' a' op' b' indent
             _ -> pretty e'
+
+-- | A link in a chain of operator applications.
+data OpChainLink l
+  = OpChainExp (Exp l)
+  | OpChainLink (QOp l)
+  deriving (Show)
+
+-- | Flatten a tree of InfixApp expressions into a chain of operator
+-- links.
+flattenOpChain :: Exp l -> [OpChainLink l]
+flattenOpChain (InfixApp l left op right) =
+  flattenOpChain left <>
+  [OpChainLink op] <>
+  flattenOpChain right
+flattenOpChain e = [OpChainExp e]
 
 -- | Make the right hand side dependent if it's flat, otherwise
 -- newline it.

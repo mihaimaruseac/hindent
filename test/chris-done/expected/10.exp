@@ -17,8 +17,7 @@ a =
 map (\x -> x)
     [1,2,3]
 
-forM_ lst $
-\x -> do putStrLn x
+forM_ lst $ \x -> do putStrLn x
 
 forM_ lst $ \x -> putStrLn x
 
