@@ -7,3 +7,7 @@
 4.3.8
 
 	* Fixed: bug in printing operators in statements.
+
+4.5.4
+	* Improvements to Tibell style.
+	* 6x speed up on rendering operators.
