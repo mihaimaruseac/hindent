@@ -11,3 +11,5 @@ tags
 src/main/Main
 src/main/TestGenerate
 .stack-work
+.cabal-sandbox/
+cabal.sandbox.config
