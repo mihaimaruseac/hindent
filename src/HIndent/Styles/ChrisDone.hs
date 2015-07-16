@@ -265,13 +265,17 @@ exp (App _ op a) =
         flatten f' as = (f',as)
 -- | Lambdas are dependent if they can be.
 exp (Lambda _ ps b) =
-  depend (write "\\")
+  depend (write "\\" >> maybeSpace)
          (do spaced (map pretty ps)
              dependOrNewline
                (write " -> ")
                b
                (indented 1 .
                 pretty))
+  where maybeSpace = case ps of
+                       (PBangPat {}):_ -> space
+                       (PIrrPat {}):_ -> space
+                       _ -> return ()
 exp (Tuple _ boxed exps) =
   depend (write (case boxed of
                    Unboxed -> "(#"

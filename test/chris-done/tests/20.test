@@ -1,0 +1,2 @@
+f = \ ~a -> undefined
+f = \ !a -> undefined
