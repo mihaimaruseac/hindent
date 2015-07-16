@@ -467,17 +467,15 @@ flattenOpChain e = [OpChainExp e]
 
 -- | Make the right hand side dependent if it's flat, otherwise
 -- newline it.
-dependOrNewline :: Printer t ()
-                -> Exp NodeInfo
-                -> (Exp NodeInfo -> Printer t ())
-                -> Printer t ()
+dependOrNewline
+  :: Printer t ()
+  -> Exp NodeInfo
+  -> (Exp NodeInfo -> Printer t ())
+  -> Printer t ()
 dependOrNewline left right f =
-  do if isFlat right
-        then renderDependent
-        else do (small,st) <- isSmall renderDependent
-                if small
-                   then put st
-                   else do left
-                           newline
-                           (f right)
-  where renderDependent = depend left (f right)
+  do (fits,st) <- fitsOnOneLine (depend left (f right))
+     if fits
+        then put st
+        else do left
+                newline
+                (f right)
