@@ -922,7 +922,9 @@ instance Pretty Asst where
            write " ~ "
            pretty b
       ParenA _ asst -> parens $ pretty asst
-      VarA _ var -> pretty var
+      AppA _ var types ->
+        spaced (pretty var :
+                map pretty types)
 
 instance Pretty BangType where
   prettyInternal x =
