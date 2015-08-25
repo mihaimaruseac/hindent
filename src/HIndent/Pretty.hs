@@ -574,8 +574,7 @@ instance Pretty Type where
         do pretty left
            write " == "
            pretty right
-      TyPromoted{} ->
-        error "FIXME: No implementation for TyPromoted."
+      ty@TyPromoted{} -> pretty' ty
       TySplice{} ->
         error "FIXME: No implementation for TySplice."
 
@@ -913,8 +912,7 @@ instance Pretty Asst where
       ClassA _ name types ->
         spaced (pretty name :
                 map pretty types)
-      InfixA{} ->
-        error "FIXME: No implementation for InfixA."
+      i@InfixA{} -> pretty' i
       IParam{} ->
         error "FIXME: No implementation for IParam."
       EqualP _ a b ->
@@ -1207,8 +1205,7 @@ instance Pretty Bracket where
         error "FIXME: No implementation for PatBracket."
       TypeBracket _ _ ->
         error "FIXME: No implementation for TypeBracket."
-      DeclBracket _ _ ->
-        error "FIXME: No implementation for DeclBracket."
+      d@(DeclBracket _ _) -> pretty' d
 
 instance Pretty IPBind where
   prettyInternal x =
