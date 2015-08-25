@@ -133,7 +133,7 @@ cppSplitBlocks inp =
   T.lines $ inp
   where
     cppLine :: Text -> Bool
-    cppLine src = any (`T.isPrefixOf` src) ["#if", "#end", "#else", "#define", "#undef"]
+    cppLine src = any (`T.isPrefixOf` src) ["#if", "#end", "#else", "#define", "#undef", "#elif"]
 
     classify :: Text -> CodeBlock
     classify text = if cppLine text
