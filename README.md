@@ -32,6 +32,8 @@ buffer:
 To enable it, add the following to your init file:
 
 ```lisp
+(add-to-list 'load-path "/path/to/hindent/elisp")
+(require 'hindent)
 (add-hook 'haskell-mode-hook #'hindent-mode)
 ```
 
