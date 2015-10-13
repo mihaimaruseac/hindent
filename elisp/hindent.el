@@ -30,6 +30,14 @@
   :type 'string
   :safe #'stringp)
 
+(defcustom hindent-line-length
+  nil
+  "Optionally override the line length of the formatting style."
+  :group 'haskell
+  :type '(choice (const :tag "From style" nil)
+                 (integer :tag "Override" 80))
+  :safe (lambda (val) (or (integerp val) (not val))))
+
 (defcustom hindent-process-path
   "hindent"
   "Location where the hindent executable is located."
@@ -60,6 +68,10 @@
                                               nil
                                               "--style"
                                               hindent-style)
+                                        (when hindent-line-length
+                                          (list "--line-length"
+                                                (number-to-string
+                                                 hindent-line-length)))
                                         (hindent-extra-arguments)))))
                 (cond
                  ((= ret 1)
