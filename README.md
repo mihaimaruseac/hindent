@@ -55,6 +55,12 @@ defaults to `fundamental` but can be configured by setting `g:hindent_style` to 
 Note that unlike in emacs you have to take care of selecting a sensible buffer region as input to
 hindent yourself. If that is too much trouble you can try [vim-textobj-haskell](https://github.com/gilligan/vim-textobj-haskell) which provides a text object for top level bindings.
 
+## Atom
+
+Basic support is provided through [atom/hindent.coffee](https://github.com/chrisdone/hindent/blob/master/atom/hindent.coffee),
+which adds hindent to atom menu with each available style. Mode should be installed as package into `.atom\packages\${PACKAGE_NAME}`,
+here is simple example of atom [package](https://github.com/Heather/atom-hindent).
+
 ## Contributing your own printer style
 
 This package comes with a basic fundamental pretty printer, which is
