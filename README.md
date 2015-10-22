@@ -9,13 +9,14 @@ executable. Currently a work in progress (see
 
 ## Install
 
-    $ cabal install hindent
-
-You might need to `cabal install happy` if haskell-src-exts complains.
+    $ stack build --copy-bins
 
 ## Usage
 
-    $ hindent
+    hindent is used in a pipeline style:
+
+    $ cat path/to/sourcefile.hs | hindent > outfile.hs
+
     hindent: arguments: --style [fundamental|chris-done|johan-tibell|gibiansky]
 
 ## Emacs
