@@ -136,8 +136,8 @@ expected to work."
    ;; Otherwise we just do our line-based hack.
    (t
     (save-excursion
-      (let ((start (or (flet
-                           ((jump ()
+      (let ((start (or (cl-letf
+                           (((symbol-function 'jump) #'(lambda ()
                                   (search-backward-regexp "^[^ \n]" nil t 1)
                                   (cond
                                    ((save-excursion (goto-char (line-beginning-position))
@@ -145,13 +145,13 @@ expected to work."
                                     (jump))
                                    (t (unless (or (looking-at "^-}$")
                                                   (looking-at "^{-$"))
-                                        (point))))))
+                                        (point)))))))
                          (goto-char (line-end-position))
                          (jump))
                        0))
             (end (progn (goto-char (1+ (point)))
-                        (or (flet
-                                ((jump ()
+                        (or (cl-letf
+                                (((symbol-function 'jump) #'(lambda ()
                                        (when (search-forward-regexp "[\n]+[^ \n]" nil t 1)
                                          (cond
                                           ((save-excursion (goto-char (line-beginning-position))
@@ -160,7 +160,7 @@ expected to work."
                                           (t (forward-char -1)
                                              (search-backward-regexp "[^\n ]" nil t)
                                              (forward-char)
-                                             (point))))))
+                                             (point)))))))
                               (jump))
                             (point-max)))))
         (cons start end))))))
