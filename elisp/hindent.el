@@ -4,7 +4,7 @@
 
 ;; Author: Chris Done <chrisdone@gmail.com>
 ;; URL: https://github.com/chrisdone/hindent
-;; Package-Requires: ((cl-lib "0.5"))
+;; Package-Requires: ((noflet "0.0.15"))
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 
 ;;; Code:
 
-(require 'cl-lib)
+(require 'noflet)
 
 (defcustom hindent-style
   "fundamental"
@@ -136,7 +136,7 @@ expected to work."
    ;; Otherwise we just do our line-based hack.
    (t
     (save-excursion
-      (let ((start (or (flet
+      (let ((start (or (noflet
                            ((jump ()
                                   (search-backward-regexp "^[^ \n]" nil t 1)
                                   (cond
@@ -150,7 +150,7 @@ expected to work."
                          (jump))
                        0))
             (end (progn (goto-char (1+ (point)))
-                        (or (flet
+                        (or (noflet
                                 ((jump ()
                                        (when (search-forward-regexp "[\n]+[^ \n]" nil t 1)
                                          (cond
