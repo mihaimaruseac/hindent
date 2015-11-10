@@ -136,7 +136,7 @@ printComments loc' ast = do
 
     printComment (Just $ srcInfoSpan $ nodeInfoSpan info) comment
   where info = ann ast
- 
+
 
 -- | Pretty print a comment.
 printComment :: MonadState (PrintState s) m => Maybe SrcSpan -> Comment -> m ()
@@ -517,7 +517,7 @@ instance Pretty Pat where
 prettyInfixOp :: MonadState (PrintState s) m => QName NodeInfo -> m ()
 prettyInfixOp x =
   case x of
-    Qual{} -> pretty' x
+    Qual{} -> do write "`"; pretty' x; write "`"
     UnQual _ n ->
       case n of
         Ident _ i -> string ("`" ++ i ++ "`")

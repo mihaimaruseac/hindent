@@ -1,3 +1,7 @@
+4.4.5
+
+	* Fix bug in infix patterns
+
 4.4.2
 
 	* Bunch of Gibiansky style fixes.
