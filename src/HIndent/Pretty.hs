@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
@@ -1193,9 +1194,19 @@ instance Pretty Module where
                             Just modHead -> (False,pretty modHead))
                         ,(null imps,inter newline (map pretty imps))
                         ,(null decls
-                         ,inter (do newline
-                                    newline)
-                                (map pretty decls))])
+                         ,interOf newline
+                                  (map (\case
+                                          r@TypeSig{} -> (1,pretty r)
+                                          r -> (2,pretty r))
+                                       decls))])
+        where interOf i ((c,p):ps) =
+                case ps of
+                  [] -> p
+                  _ ->
+                    do p
+                       replicateM_ c i
+                       interOf i ps
+              interOf _ [] = return ()
       XmlPage{} -> error "FIXME: No implementation for XmlPage."
       XmlHybrid{} -> error "FIXME: No implementation for XmlHybrid."
 
