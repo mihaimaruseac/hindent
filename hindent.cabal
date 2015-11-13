@@ -60,6 +60,7 @@ executable hindent
                    , haskell-src-exts >= 1.16
                    , applicative-quoters
                    , ghc-prim
+                   , directory
 
 executable hindent-generate-tests
   hs-source-dirs:    src/main

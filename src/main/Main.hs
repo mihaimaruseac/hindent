@@ -24,7 +24,9 @@ import           Descriptive.Options
 import           GHC.Tuple
 import           Language.Haskell.Exts.Annotated hiding (Style,style)
 import           Paths_hindent (version)
+import           System.Directory
 import           System.Environment
+import           System.IO
 import           Text.Read
 
 -- | Main entry point.
@@ -32,10 +34,20 @@ main :: IO ()
 main =
   do args <- getArgs
      case consume options (map T.pack args) of
-       Succeeded (style,exts) ->
-         T.interact
-           (either error T.toLazyText .
-            reformat style (Just exts))
+       Succeeded (style,exts,mfilepath) ->
+         case mfilepath of
+           Just filepath ->
+             do text <- T.readFile filepath
+                tmpDir <- getTemporaryDirectory
+                (fp,h) <- openTempFile tmpDir "hindent.hs"
+                T.hPutStrLn
+                  h
+                  (either error T.toLazyText (reformat style (Just exts) text))
+                hFlush h
+                hClose h
+                renameFile fp filepath
+           Nothing ->
+             T.interact (either error T.toLazyText . reformat style (Just exts))
        Failed (Wrap (Stopped Version) _) ->
          putStrLn ("hindent " ++ showVersion version)
        _ ->
@@ -47,10 +59,10 @@ data Stoppers = Version
 
 -- | Program options.
 options :: Monad m
-        => Consumer [Text] (Option Stoppers) m (Style,[Extension])
+        => Consumer [Text] (Option Stoppers) m (Style,[Extension],Maybe FilePath)
 options =
   ver *>
-  [i|(,) style exts|]
+  [i|(,,) style exts file|]
   where ver =
           stop (flag "version" "Print the version" Version)
         style =
@@ -73,6 +85,7 @@ options =
             Just len ->
               s {styleDefConfig =
                    (styleDefConfig s) {configMaxColumns = len}}
+        file = fmap (fmap T.unpack) (optional (anyString "[<filename>]"))
 
 --------------------------------------------------------------------------------
 -- Extensions stuff stolen from hlint
