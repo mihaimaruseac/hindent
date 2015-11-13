@@ -1181,18 +1181,23 @@ instance Pretty Module where
   prettyInternal x =
     case x of
       Module _ mayModHead pragmas imps decls ->
-        do case mayModHead of
-             Nothing -> return ()
-             Just modHead -> do
-               pretty modHead
-               unless (null pragmas && null imps && null decls) $ newline
-           inter newline (map pretty pragmas)
-           inter newline (map pretty imps)
-           inter newline (map pretty decls)
-      XmlPage{} ->
-        error "FIXME: No implementation for XmlPage."
-      XmlHybrid{} ->
-        error "FIXME: No implementation for XmlHybrid."
+        inter (do newline
+                  newline)
+              (mapMaybe (\(isNull,r) ->
+                           if isNull
+                              then Nothing
+                              else Just r)
+                        [(null pragmas,inter newline (map pretty pragmas))
+                        ,(case mayModHead of
+                            Nothing -> (True,return ())
+                            Just modHead -> (False,pretty modHead))
+                        ,(null imps,inter newline (map pretty imps))
+                        ,(null decls
+                         ,inter (do newline
+                                    newline)
+                                (map pretty decls))])
+      XmlPage{} -> error "FIXME: No implementation for XmlPage."
+      XmlHybrid{} -> error "FIXME: No implementation for XmlHybrid."
 
 instance Pretty Bracket where
   prettyInternal x =
