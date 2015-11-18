@@ -1,5 +1,5 @@
 name:                hindent
-version:             4.5.6
+version:             4.5.7
 synopsis:            Extensible Haskell pretty printer
 description:         Extensible Haskell pretty printer. Both a library and an executable.
                      .
@@ -43,7 +43,7 @@ library
                      HIndent.Styles.Gibiansky
   build-depends:     base >= 4.7 && <5
                    , data-default
-                   , haskell-src-exts == 1.16.*
+                   , haskell-src-exts >= 1.16
                    , monad-loops
                    , mtl
                    , text
@@ -78,7 +78,7 @@ test-suite hspec
   build-depends:     base >= 4 && <5
                    , hindent
                    , data-default
-                   , haskell-src-exts == 1.16.*
+                   , haskell-src-exts >= 1.16
                    , monad-loops
                    , mtl
                    , text
