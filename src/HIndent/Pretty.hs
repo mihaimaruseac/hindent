@@ -578,6 +578,8 @@ instance Pretty Type where
       ty@TyPromoted{} -> pretty' ty
       TySplice{} ->
         error "FIXME: No implementation for TySplice."
+      TyWildCard{} ->
+        error "FIXME: No implementation for TyWildCard."
 
 instance Pretty Exp where
   prettyInternal = exp
@@ -761,6 +763,8 @@ exp x@ParArrayFromThenTo{} = pretty' x
 exp x@ParArrayComp{} = pretty' x
 exp ParComp{} =
   error "FIXME: No implementation for ParComp."
+exp ExprHole{} =
+  error "FIXME: No implementation for ExprHole."
 
 instance Pretty Stmt where
   prettyInternal x =
@@ -916,12 +920,16 @@ instance Pretty Asst where
       i@InfixA{} -> pretty' i
       IParam{} ->
         error "FIXME: No implementation for IParam."
+      WildCardA{} ->
+        error "FIXME: No implementation for WildCardA."
       EqualP _ a b ->
         do pretty a
            write " ~ "
            pretty b
       ParenA _ asst -> parens $ pretty asst
-      VarA _ var -> pretty var
+      AppA _ var types ->
+        spaced (pretty var :
+                map pretty types)
 
 instance Pretty BangType where
   prettyInternal x =
