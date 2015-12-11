@@ -12,7 +12,6 @@ import           HIndent
 import           HIndent.Types
 
 import           Control.Applicative
-import           Control.Applicative.QQ.Idiom
 import           Data.List
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -62,18 +61,18 @@ options :: Monad m
         => Consumer [Text] (Option Stoppers) m (Style,[Extension],Maybe FilePath)
 options =
   ver *>
-  [i|(,,) style exts file|]
+  ((,,) <$> style <*> exts <*> file)
   where ver =
           stop (flag "version" "Print the version" Version)
         style =
-          [i|makeStyle (constant "--style" "Style to print with" () *>
-                        foldr1 (<|>)
-                               (map (\s ->
-                                       constant (styleName s)
-                                                (styleDescription s)
-                                                s)
-                                    styles))
-                       lineLen|]
+          makeStyle <$> (constant "--style" "Style to print with" () *>
+                         foldr1 (<|>)
+                                (map (\s ->
+                                        constant (styleName s)
+                                                 (styleDescription s)
+                                                 s)
+                                     styles))
+                       <*> lineLen
         exts =
           fmap getExtensions (many (prefix "X" "Language extension"))
         lineLen =

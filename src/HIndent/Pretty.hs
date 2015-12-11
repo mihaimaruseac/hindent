@@ -576,14 +576,20 @@ instance Pretty Type where
            write " == "
            pretty right
       ty@TyPromoted{} -> pretty' ty
-      TySplice{} ->
-        error "FIXME: No implementation for TySplice."
+      TySplice{} -> error "FIXME: No implementation for TySplice."
+      TyWildCard _ name ->
+        case name of
+          Nothing -> write "_"
+          Just n ->
+            do write "_"
+               pretty n
 
 instance Pretty Exp where
   prettyInternal = exp
 
 -- | Render an expression.
 exp :: MonadState (PrintState s) m => Exp NodeInfo -> m ()
+exp (ExprHole {}) = write "_"
 exp (InfixApp _ a op b) =
   depend (do pretty a
              space
@@ -910,18 +916,21 @@ instance Pretty Alt where
 instance Pretty Asst where
   prettyInternal x =
     case x of
-      ClassA _ name types ->
-        spaced (pretty name :
-                map pretty types)
+      ClassA _ name types -> spaced (pretty name : map pretty types)
       i@InfixA{} -> pretty' i
-      IParam{} ->
-        error "FIXME: No implementation for IParam."
+      IParam{} -> error "FIXME: No implementation for IParam."
       EqualP _ a b ->
         do pretty a
            write " ~ "
            pretty b
-      ParenA _ asst -> parens $ pretty asst
-      VarA _ var -> pretty var
+      ParenA _ asst -> parens (pretty asst)
+      AppA _ name tys -> spaced (pretty name : map pretty tys)
+      WildCardA _ name ->
+        case name of
+          Nothing -> write "_"
+          Just n ->
+            do write "_"
+               pretty n
 
 instance Pretty BangType where
   prettyInternal x =
