@@ -75,7 +75,7 @@ commentPreprocessor cs = do
   config <- gets psConfig
   col <- getColumn
   return $ go (fromIntegral col) config cs
-  
+
   where
    go currentColumn config = concatMap mergeGroup . groupComments Nothing []
     where
@@ -101,7 +101,7 @@ commentPreprocessor cs = do
           nextCommentStartLine = srcSpanStartLine $ commentSrcSpan $ head comments
           currentGroupAsList | null accum = []
                             | otherwise = [reverse accum]
-          nextLine' = 
+          nextLine' =
             case nextLine of
               Just x -> Just (x + 1)
               Nothing -> Just nextCommentStartLine
@@ -125,8 +125,8 @@ commentPreprocessor cs = do
       mergeGroup :: [Comment] -> [Comment]
       mergeGroup [] = error "Empty comment group"
       mergeGroup comments@[Comment True _ _] = comments
-      mergeGroup comments = 
-        let 
+      mergeGroup comments =
+        let
             firstSrcSpan = commentSrcSpan $ head comments
             firstLine = srcSpanStartLine firstSrcSpan
             firstCol = srcSpanStartColumn firstSrcSpan
@@ -260,6 +260,7 @@ pragmas (OptionsPragma _ mtool opt) = do
   forM_ mtool $ \tool -> do
     write "_"
     string $ prettyPrint tool
+  write " "
   string opt
   write "#-}"
 pragmas p = prettyNoExt p
@@ -297,7 +298,7 @@ imp ImportDecl{..} = do
             col <- getColumn
             len <- prettyColLength spec
             maxColumns <- configMaxColumns <$> gets psConfig
-            if col + len > maxColumns 
+            if col + len > maxColumns
               then newline
               else space
 
@@ -655,7 +656,7 @@ lambdaExpr (Lambda _ pats exp) = do
   if any isBefore $ nodeInfoComments $ ann exp
     then multi
     else attemptSingleLine (space >> pretty exp) multi
-      
+
   where multi = do
          newline
          indented indentSpaces $ pretty exp
@@ -703,7 +704,7 @@ writeCaseAlts alts = do
                   return $ prettyCase (Just maxPatLen)
                 else return $ prettyCase Nothing
 
-    case alts of 
+    case alts of
       [] -> return ()
       first:rest -> do
         printComments Before first
@@ -843,7 +844,7 @@ rhss (GuardedRhss _ rs) =
           if not manyStmts && lineBreakAfterRhs rhsLoc exp
             then newline >> indented indentSpaces (pretty exp)
             else space >> pretty exp
-        writeStmts = 
+        writeStmts =
           case stmts of
             x:xs -> do
               pretty x
@@ -852,7 +853,7 @@ rhss (GuardedRhss _ rs) =
 
     printComments Before a
     if manyStmts
-      then do 
+      then do
         depend (write "| ") writeStmts
         remainder
       else
@@ -998,7 +999,7 @@ onSeparateLines' pretty' vals = do
   let vals' = map (amap fixSpans) vals
       (first:rest) = vals'
 
-  
+
   pretty' first
   forM_ (zip vals' rest) $ \(prev, cur) -> do
     replicateM_ (max 1 $ lineDelta cur prev) newline
