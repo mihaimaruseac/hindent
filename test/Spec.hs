@@ -10,6 +10,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Builder as L
 
+import Language.Haskell.Exts.Extension
+
 import qualified HIndent
 
 styles :: [FilePath]
@@ -61,9 +63,12 @@ useTestFiles style test exp = do
 
 mkSpec :: HIndent.Style -> String -> String -> Spec
 mkSpec style input desired = it "works" $
-  case HIndent.reformat style Nothing (L.pack input) of
+  case HIndent.reformat style (Just exts) (L.pack input) of
     Left err      -> expectationFailure ("Error: " ++ err)
     Right builder -> L.unpack (L.toLazyText builder) `shouldBe` desired
+  where exts =
+          glasgowExts ++
+          map EnableExtension [TemplateHaskell,DataKinds, MultiWayIf]
 
 parsePieces :: String -> [String]
 parsePieces str = map (intercalate "\n" . map mkNewlines) pieces
