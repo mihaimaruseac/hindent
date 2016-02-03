@@ -149,7 +149,7 @@ commentPreprocessor cs = do
 breakCommentLines :: Int -> String -> [String]
 breakCommentLines maxLen str
   -- If there's no way to do this formatting, just give up
-  | any ((maxLen <) . length) (words str) = [str]
+  | any ((maxLen <=) . length) (words str) = [str]
 
   -- If we already have a line of the appropriate length, leave it alone. This allows us to format
   -- stuff ourselves in some cases.
