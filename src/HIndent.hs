@@ -15,6 +15,7 @@ module HIndent
   ,johanTibell
   ,fundamental
   ,gibiansky
+  ,cramer
   -- * Testing
   ,test
   ,testFile
@@ -26,6 +27,7 @@ module HIndent
 import           HIndent.Comments
 import           HIndent.Pretty
 import           HIndent.Styles.ChrisDone (chrisDone)
+import           HIndent.Styles.Cramer (cramer)
 import           HIndent.Styles.Fundamental (fundamental)
 import           HIndent.Styles.Gibiansky (gibiansky)
 import           HIndent.Styles.JohanTibell (johanTibell)
@@ -228,4 +230,4 @@ testAst x =
 -- | Styles list, useful for programmatically choosing.
 styles :: [Style]
 styles =
-  [fundamental,chrisDone,johanTibell,gibiansky]
+  [fundamental,chrisDone,johanTibell,gibiansky,cramer]
