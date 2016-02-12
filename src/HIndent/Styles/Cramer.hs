@@ -244,7 +244,7 @@ rhsExpr expr =
 guardedRhsExpr
   :: GuardedRhs NodeInfo -> Printer State ()
 guardedRhsExpr (GuardedRhs _ guards expr) =
-  depend (write " | ") $
+  depend (write "| ") $
   do inter (write ", ") $ map pretty guards
      rhsExpr expr
 
@@ -349,7 +349,7 @@ extDeriving (Deriving _ instHeads) =
 
 extRhs :: Extend Rhs
 extRhs (UnGuardedRhs _ expr) = rhsExpr expr
-extRhs (GuardedRhss _ [rhs]) = guardedRhsExpr rhs
+extRhs (GuardedRhss _ [rhs]) = space >> guardedRhsExpr rhs
 extRhs (GuardedRhss _ rhss) =
   forM_ rhss $
   \rhs ->

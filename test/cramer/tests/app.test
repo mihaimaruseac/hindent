@@ -1,0 +1,5 @@
+fun = map double ints
+
+double = (*) 2
+
+printAll = foldr (\a b -> do { putStrLn a; b }) (return ())

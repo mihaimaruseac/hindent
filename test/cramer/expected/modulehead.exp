@@ -1,0 +1,12 @@
+module Main where
+
+module Main ( ) where
+
+module Main ( main ) where
+
+module Main
+    ( main
+    , foo
+    , bar
+    , baz
+    ) where

@@ -1,0 +1,3 @@
+ints = 1 : 2 : 3 : 4 : []
+
+sum = left `mappend` right
