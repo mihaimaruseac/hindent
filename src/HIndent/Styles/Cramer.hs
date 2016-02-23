@@ -53,7 +53,8 @@ cramer =
            ,Extender extType
            ,Extender extPat
            ,Extender extExp
-           ,Extender extMatch]
+           ,Extender extMatch
+           ,Extender extFieldUpdate]
         ,styleDefConfig =
            defaultConfig {configMaxColumns = 80
                          ,configIndentSpaces = 4
@@ -282,6 +283,14 @@ listExpr :: Pretty ast
 listExpr [] = write "[]"
 listExpr xs = listAttemptSingleLine "[" "]" "," xs
 
+recordExpr
+  :: (Pretty ast,Pretty ast')
+  => ast NodeInfo -> [ast' NodeInfo] -> Printer State ()
+recordExpr expr updates =
+  do pretty expr
+     space
+     listAttemptSingleLine "{" "}" "," updates
+
 --------------------------------------------------------------------------------
 -- Extenders
 
@@ -356,6 +365,14 @@ extDecl other = prettyNoExt other
 extConDecl :: Extend ConDecl
 -- No extra space after empty constructor
 extConDecl (ConDecl _ name []) = pretty name
+-- Align record fields
+extConDecl (RecDecl _ name fields) =
+  do pretty name
+     space
+     case fields of
+       [] -> write "{ }"
+       [_] -> listAttemptSingleLine "{" "}" "," fields
+       _ -> listMultiLine "{" "}" "," fields
 extConDecl other = prettyNoExt other
 
 -- Derived instances separated by comma and space, no line breaking
@@ -456,6 +473,10 @@ extExp (Lambda _ pats expr) =
 extExp (Tuple _ boxed exprs) = tupleExpr boxed exprs
 -- List on a single line or one item per line with aligned brackets and comma
 extExp (List _ exprs) = listExpr exprs
+-- Record construction and update on a single line or one line per
+-- field with aligned braces and comma
+extExp (RecConstr _ qname updates) = recordExpr qname updates
+extExp (RecUpdate _ expr updates) = recordExpr expr updates
 -- Line break and indent after do
 extExp (Do _ stmts) =
   do write "do"
@@ -472,3 +493,11 @@ extMatch (Match _ name pats rhs mbinds) =
      pretty rhs
      maybeM_ mbinds whereBinds
 extMatch other = prettyNoExt other
+
+-- No line break after equal sign
+extFieldUpdate :: Extend FieldUpdate
+extFieldUpdate (FieldUpdate _ qname expr) =
+  do pretty qname
+     write " = "
+     pretty expr
+extFieldUpdate other = prettyNoExt other
