@@ -1267,6 +1267,12 @@ instance Pretty Literal where
     write "'"
     string rep
     write "'#"
+  -- We print the original notation (because HSE doesn't track Hex
+  -- vs binary vs decimal notation).
+  prettyInternal (Int _l _i originalString) =
+    string originalString
+  prettyInternal (Frac _l _r originalString) =
+    string originalString
   prettyInternal x = pretty' x
 
 instance Pretty Name where
