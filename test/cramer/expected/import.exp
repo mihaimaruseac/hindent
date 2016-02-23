@@ -8,5 +8,5 @@ import qualified Data.Text as T
 
 import           Prelude hiding ( map )
 
-import qualified Data.Text as T
+import qualified Data.Text       as T
 import qualified Data.ByteString as B
