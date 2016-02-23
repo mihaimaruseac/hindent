@@ -12,7 +12,6 @@ let expr = do
 in
     expr
 
-not =
-    let x = if True then False else True
-    in
-        x
+not = let x = if True then False else True
+      in
+          x
