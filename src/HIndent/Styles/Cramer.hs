@@ -311,6 +311,15 @@ ifExpr indent cond true false = attemptSingleLine single multi
         then' = write "then " >> pretty true
         else' = write "else " >> pretty false
 
+letExpr
+  :: Binds NodeInfo -> Printer State () -> Printer State ()
+letExpr binds expr =
+  align $
+  do depend (write "let ") $ pretty binds
+     newline
+     write "in"
+     expr
+
 --------------------------------------------------------------------------------
 -- Extenders
 
@@ -490,6 +499,9 @@ extExp (Lambda _ pats expr) =
         multi = newline >> indentFull (pretty expr)
 -- If-then-else on one line or newline and indent before then and else
 extExp (If _ cond true false) = ifExpr id cond true false
+-- Newline before in
+extExp (Let _ binds expr@Do{}) = letExpr binds $ space >> pretty expr
+extExp (Let _ binds expr) = letExpr binds $ newline >> indentFull (pretty expr)
 -- Tuples on a single line (no space inside parens but after comma) or
 -- one element per line with parens and comma aligned
 extExp (Tuple _ boxed exprs) = tupleExpr boxed exprs
