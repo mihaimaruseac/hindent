@@ -551,7 +551,7 @@ extDecl (TypeSig _ names ty) =
 -- Half-indent for where clause, half-indent binds
 extDecl (PatBind _ pat rhs mbinds) =
   do pretty pat
-     pretty rhs
+     withCaseContext False $ pretty rhs
      maybeM_ mbinds whereBinds
 extDecl other = prettyNoExt other
 
@@ -728,7 +728,7 @@ extMatch (Match _ name pats rhs mbinds) =
   do pretty name
      space
      spaced $ map pretty pats
-     pretty rhs
+     withCaseContext False $ pretty rhs
      maybeM_ mbinds whereBinds
 extMatch other = prettyNoExt other
 
