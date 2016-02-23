@@ -53,6 +53,7 @@ cramer =
            ,Extender extType
            ,Extender extPat
            ,Extender extExp
+           ,Extender extStmt
            ,Extender extMatch
            ,Extender extFieldUpdate]
         ,styleDefConfig =
@@ -291,6 +292,25 @@ recordExpr expr updates =
      space
      listAttemptSingleLine "{" "}" "," updates
 
+ifExpr :: (Printer State () -> Printer State ())
+       -> Exp NodeInfo
+       -> Exp NodeInfo
+       -> Exp NodeInfo
+       -> Printer State ()
+ifExpr indent cond true false = attemptSingleLine single multi
+  where single = spaced [if',then',else']
+        multi =
+          align $
+          do if'
+             indent $
+               do newline
+                  then'
+                  newline
+                  else'
+        if' = write "if " >> pretty cond
+        then' = write "then " >> pretty true
+        else' = write "else " >> pretty false
+
 --------------------------------------------------------------------------------
 -- Extenders
 
@@ -468,6 +488,8 @@ extExp (Lambda _ pats expr) =
        _ -> attemptSingleLine single multi
   where single = space >> pretty expr
         multi = newline >> indentFull (pretty expr)
+-- If-then-else on one line or newline and indent before then and else
+extExp (If _ cond true false) = ifExpr id cond true false
 -- Tuples on a single line (no space inside parens but after comma) or
 -- one element per line with parens and comma aligned
 extExp (Tuple _ boxed exprs) = tupleExpr boxed exprs
@@ -483,6 +505,10 @@ extExp (Do _ stmts) =
      newline
      indentFull . lined $ map pretty stmts
 extExp other = prettyNoExt other
+
+extStmt :: Extend Stmt
+extStmt (Qualifier _ (If _ cond true false)) = ifExpr indentFull cond true false
+extStmt other = prettyNoExt other
 
 extMatch :: Extend Match
 -- Indent where same as for top level decl
