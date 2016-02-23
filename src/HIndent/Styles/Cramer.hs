@@ -10,7 +10,7 @@ import Control.Monad (forM_, replicateM_, unless, when)
 import Control.Monad.State.Strict (MonadState, get, gets, put)
 
 import Data.List (intersperse, sortOn)
-import Data.Maybe (catMaybes, isJust)
+import Data.Maybe (catMaybes, isJust, mapMaybe)
 
 import Language.Haskell.Exts.Annotated.Syntax
 import Language.Haskell.Exts.SrcLoc
@@ -31,6 +31,7 @@ data State =
   State {cramerLineBreak :: LineBreak     -- ^ Current line breaking mode
         ,cramerLangPragmaLength :: Int    -- ^ Padding length for pragmas
         ,cramerModuleImportLength :: Int  -- ^ Padding length for module imports
+        ,cramerRecordFieldLength :: Int   -- ^ Padding length for record fields
         }
   deriving (Show)
 
@@ -46,7 +47,8 @@ cramer =
         ,styleInitialState =
            State {cramerLineBreak = Free
                  ,cramerLangPragmaLength = 0
-                 ,cramerModuleImportLength = 0}
+                 ,cramerModuleImportLength = 0
+                 ,cramerRecordFieldLength = 0}
         ,styleExtenders =
            [Extender extModule
            ,Extender extModulePragma
@@ -55,6 +57,7 @@ cramer =
            ,Extender extImportDecl
            ,Extender extDecl
            ,Extender extConDecl
+           ,Extender extFieldDecl
            ,Extender extDeriving
            ,Extender extRhs
            ,Extender extContext
@@ -368,6 +371,11 @@ letExpr binds expr =
      write "in"
      expr
 
+typeSig :: Type NodeInfo -> Printer State ()
+typeSig ty =
+  attemptSingleLineType (write ":: " >> pretty ty)
+                        (align $ write ":: " >> pretty ty)
+
 --------------------------------------------------------------------------------
 -- Extenders
 
@@ -469,8 +477,7 @@ extDecl decl@(DataDecl _ dataOrNew mcontext declHead constructors mderiv) =
 extDecl (TypeSig _ names ty) =
   do inter (write ", ") $ map pretty names
      space
-     attemptSingleLineType (write ":: " >> pretty ty)
-                           (align $ write ":: " >> pretty ty)
+     typeSig ty
 -- Half-indent for where clause, half-indent binds
 extDecl (PatBind _ pat rhs mbinds) =
   do pretty pat
@@ -483,13 +490,29 @@ extConDecl :: Extend ConDecl
 extConDecl (ConDecl _ name []) = pretty name
 -- Align record fields
 extConDecl (RecDecl _ name fields) =
-  do pretty name
+  do modifyState $ \s -> s {cramerRecordFieldLength = fieldLen}
+     pretty name
      space
      case fields of
        [] -> write "{ }"
        [_] -> listAttemptSingleLine "{" "}" "," fields
        _ -> listMultiLine "{" "}" "," fields
+  where fieldLen = maximum $ map (length . nameStr) fnames
+        fnames =
+          mapMaybe (\(FieldDecl _ ns _) ->
+                      case ns of
+                        [n] -> Just n
+                        _ -> Nothing)
+                   fields
 extConDecl other = prettyNoExt other
+
+extFieldDecl :: Extend FieldDecl
+extFieldDecl (FieldDecl _ [name] ty) =
+  do namelen <- gets (cramerRecordFieldLength . psUserState)
+     string $ padRight namelen $ nameStr name
+     space
+     typeSig ty
+extFieldDecl other = prettyNoExt other
 
 -- Derived instances separated by comma and space, no line breaking
 extDeriving :: Extend Deriving
