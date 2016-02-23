@@ -29,6 +29,7 @@ data LineBreak
 -- | Printer state.
 data State =
   State {cramerLineBreak :: LineBreak     -- ^ Current line breaking mode
+        ,cramerLangPragmaLength :: Int    -- ^ Padding length for pragmas
         ,cramerModuleImportLength :: Int  -- ^ Padding length for module imports
         }
   deriving (Show)
@@ -44,9 +45,11 @@ cramer =
         ,styleDescription = "Enno Cramer's style"
         ,styleInitialState =
            State {cramerLineBreak = Free
+                 ,cramerLangPragmaLength = 0
                  ,cramerModuleImportLength = 0}
         ,styleExtenders =
            [Extender extModule
+           ,Extender extModulePragma
            ,Extender extModuleHead
            ,Extender extExportSpecList
            ,Extender extImportDecl
@@ -71,9 +74,19 @@ cramer =
 --------------------------------------------------------------------------------
 -- Helper
 
+-- | Turn a Name into a String
+nameStr :: Name a -> String
+nameStr (Ident _ s) = s
+nameStr (Symbol _ s) = "(" ++ s ++ ")"
+
 -- | Extract the name as a String from a ModuleName
 moduleName :: ModuleName a -> String
 moduleName (ModuleName _ s) = s
+
+-- | Extract the names of a ModulePragma
+pragmaNames :: ModulePragma a -> [String]
+pragmaNames (LanguagePragma _ names) = map nameStr names
+pragmaNames _ = []
 
 -- | Return whether a data type has only empty constructors.
 isEnum :: Decl NodeInfo -> Bool
@@ -360,7 +373,8 @@ letExpr binds expr =
 
 extModule :: Extend Module
 extModule (Module _ mhead pragmas imports decls) =
-  do modifyState $ \s -> s {cramerModuleImportLength = modLen}
+  do modifyState $ \s -> s {cramerLangPragmaLength = pragLen
+                           ,cramerModuleImportLength = modLen}
      inter (newline >> newline) $
        catMaybes [unless' (null pragmas) $ preserveLineSpacing pragmas
                  ,pretty <$> mhead
@@ -372,7 +386,8 @@ extModule (Module _ mhead pragmas imports decls) =
                             newline
                             unless (skipNewline decl) newline
                      pretty (last decls)]
-  where modLen = maximum $ map (length . moduleName . importModule) imports
+  where pragLen = maximum $ map length $ concatMap pragmaNames pragmas
+        modLen = maximum $ map (length . moduleName . importModule) imports
         unless' cond expr =
           if not cond
              then Just expr
@@ -380,6 +395,17 @@ extModule (Module _ mhead pragmas imports decls) =
         skipNewline TypeSig{} = True
         skipNewline _ = False
 extModule other = prettyNoExt other
+
+-- Align closing braces of pragmas
+extModulePragma :: Extend ModulePragma
+extModulePragma (LanguagePragma _ names) =
+  do namelen <- gets (cramerLangPragmaLength . psUserState)
+     forM_ names $
+       \name ->
+         do write "{-# LANGUAGE "
+            string $ padRight namelen $ nameStr name
+            write " #-}"
+extModulePragma other = prettyNoExt other
 
 -- Empty or single item export list on one line, otherwise one item
 -- per line with parens and comma aligned
