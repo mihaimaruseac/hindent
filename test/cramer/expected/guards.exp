@@ -4,5 +4,5 @@ fib x
     | otherwise = fib (x - 1) + fib (x - 2)
 
 simple [] = True
-simple [e] | simple e = True
+simple [ e ] | simple e = True
 simple _ = False

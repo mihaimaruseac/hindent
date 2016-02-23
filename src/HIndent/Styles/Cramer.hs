@@ -277,6 +277,11 @@ tupleExpr boxed exprs = attemptSingleLine single multi
             Unboxed -> ("(#","#)")
             Boxed -> ("(",")")
 
+listExpr :: Pretty ast
+         => [ast NodeInfo] -> Printer State ()
+listExpr [] = write "[]"
+listExpr xs = listAttemptSingleLine "[" "]" "," xs
+
 --------------------------------------------------------------------------------
 -- Extenders
 
@@ -407,6 +412,8 @@ extPat (PInfixApp _ arg1 op arg2) =
      pretty arg2
 -- Tuple patterns on one line, with space after comma
 extPat (PTuple _ boxed pats) = withLineBreak Single $ tupleExpr boxed pats
+-- List patterns on one line, with space after comma
+extPat (PList _ pats) = withLineBreak Single $ listExpr pats
 extPat other = prettyNoExt other
 
 extExp :: Extend Exp
@@ -447,6 +454,8 @@ extExp (Lambda _ pats expr) =
 -- Tuples on a single line (no space inside parens but after comma) or
 -- one element per line with parens and comma aligned
 extExp (Tuple _ boxed exprs) = tupleExpr boxed exprs
+-- List on a single line or one item per line with aligned brackets and comma
+extExp (List _ exprs) = listExpr exprs
 -- Line break and indent after do
 extExp (Do _ stmts) =
   do write "do"
