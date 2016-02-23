@@ -56,6 +56,7 @@ cramer =
            ,Extender extExportSpecList
            ,Extender extImportDecl
            ,Extender extDecl
+           ,Extender extDeclHead
            ,Extender extConDecl
            ,Extender extFieldDecl
            ,Extender extDeriving
@@ -81,6 +82,11 @@ cramer =
 nameStr :: Name a -> String
 nameStr (Ident _ s) = s
 nameStr (Symbol _ s) = "(" ++ s ++ ")"
+
+-- | The difference between current column and indent level to force a
+-- line break in reduceIndent.
+maxDependOverhead :: Integral a => a
+maxDependOverhead = 20
 
 -- | Extract the name as a String from a ModuleName
 moduleName :: ModuleName a -> String
@@ -269,6 +275,31 @@ preserveLineSpacing asts@(first:rest) =
                 srcSpanStartLine . srcInfoSpan . nodeInfoSpan . ann $ cur
           in curLine - prevLine
 
+-- | `reduceIndent short long printer` produces either `short printer`
+-- or `newline >> indentFull (long printer)`, depending on whether the
+-- current column is sufficiently near to the current indentation depth.
+--
+-- The function is used to avoid overly big dependent indentation by
+-- heuristically breaking and non-dependently indenting.
+reduceIndent :: (Printer State () -> Printer State ())
+             -> (Printer State () -> Printer State ())
+             -> Printer State ()
+             -> Printer State ()
+reduceIndent short long printer =
+  do linebreak <- gets (cramerLineBreak . psUserState)
+     case linebreak of
+       Single -> single
+       Multi -> multi
+       Free ->
+         do curCol <- getColumn
+            curIndent <- gets psIndentLevel
+            indentSpaces <- gets (configIndentSpaces . psConfig)
+            if (curCol - curIndent - indentSpaces) < maxDependOverhead
+               then single
+               else multi
+  where single = short printer
+        multi = newline >> indentFull (long printer)
+
 --------------------------------------------------------------------------------
 -- Printer for reused syntactical constructs
 
@@ -292,7 +323,7 @@ rhsExpr expr =
      rhsSeparator
      attemptSingleLine single multi
   where single = space >> pretty expr
-        multi = newline >> indentFull (pretty expr)
+        multi = reduceIndent (\p -> space >> p) id (pretty expr)
 
 guardedRhsExpr
   :: GuardedRhs NodeInfo -> Printer State ()
@@ -499,17 +530,19 @@ extDecl decl@(DataDecl _ dataOrNew mcontext declHead constructors mderiv) =
      pretty dataOrNew
      space
      pretty declHead
+     write " ="
      if isEnum decl
         then attemptSingleLine single multi
         else multi
      maybeM_ mderiv $ \deriv -> indentFull $ newline >> pretty deriv
   where single =
-          do write " = "
+          do space
              inter (write " | ") $ map pretty constructors
         multi =
-          align $
-          do write " = "
-             inter (newline >> write " | ") $ map pretty constructors
+          reduceIndent
+            (depend space . indented (-2))
+            (\p -> write "  " >> p)
+            (inter (newline >> write "| ") $ map pretty constructors)
 -- Type signature either on a single line or split at arrows, aligned with '::'
 extDecl (TypeSig _ names ty) =
   do inter (write ", ") $ map pretty names
@@ -521,6 +554,14 @@ extDecl (PatBind _ pat rhs mbinds) =
      pretty rhs
      maybeM_ mbinds whereBinds
 extDecl other = prettyNoExt other
+
+-- Do not modify indent level
+extDeclHead :: Extend DeclHead
+extDeclHead (DHApp _ dhead var) =
+    do pretty dhead
+       space
+       pretty var
+extDeclHead other = prettyNoExt other
 
 extConDecl :: Extend ConDecl
 -- No extra space after empty constructor
