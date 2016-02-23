@@ -10,7 +10,7 @@ import Control.Monad (forM_, replicateM_, unless, when)
 import Control.Monad.State.Strict (MonadState, get, gets, put)
 
 import Data.List (intersperse, sortOn)
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, isJust)
 
 import Language.Haskell.Exts.Annotated.Syntax
 import Language.Haskell.Exts.SrcLoc
@@ -29,6 +29,7 @@ data LineBreak
 -- | Printer state.
 data State =
   State {cramerLineBreak :: LineBreak     -- ^ Current line breaking mode
+        ,cramerModuleImportLength :: Int  -- ^ Padding length for module imports
         }
   deriving (Show)
 
@@ -42,7 +43,8 @@ cramer =
         ,styleAuthor = "Enno Cramer"
         ,styleDescription = "Enno Cramer's style"
         ,styleInitialState =
-           State {cramerLineBreak = Free}
+           State {cramerLineBreak = Free
+                 ,cramerModuleImportLength = 0}
         ,styleExtenders =
            [Extender extModule
            ,Extender extModuleHead
@@ -69,6 +71,10 @@ cramer =
 --------------------------------------------------------------------------------
 -- Helper
 
+-- | Extract the name as a String from a ModuleName
+moduleName :: ModuleName a -> String
+moduleName (ModuleName _ s) = s
+
 -- | Return whether a data type has only empty constructors.
 isEnum :: Decl NodeInfo -> Bool
 isEnum (DataDecl _ (DataType _) Nothing (DHead _ _) constructors _) =
@@ -76,6 +82,11 @@ isEnum (DataDecl _ (DataType _) Nothing (DHead _ _) constructors _) =
   where isSimple (QualConDecl _ Nothing Nothing (ConDecl _ _ [])) = True
         isSimple _ = False
 isEnum _ = False
+
+-- | If the given String is smaller than the given length, pad on
+-- right with spaces until the length matches.
+padRight :: Int -> String -> String
+padRight l s = take (max l (length s)) (s ++ repeat ' ')
 
 -- | Specialized forM_ for Maybe.
 maybeM_ :: Monad m
@@ -349,7 +360,8 @@ letExpr binds expr =
 
 extModule :: Extend Module
 extModule (Module _ mhead pragmas imports decls) =
-  do inter (newline >> newline) $
+  do modifyState $ \s -> s {cramerModuleImportLength = modLen}
+     inter (newline >> newline) $
        catMaybes [unless' (null pragmas) $ preserveLineSpacing pragmas
                  ,pretty <$> mhead
                  ,unless' (null imports) $ preserveLineSpacing imports
@@ -360,7 +372,8 @@ extModule (Module _ mhead pragmas imports decls) =
                             newline
                             unless (skipNewline decl) newline
                      pretty (last decls)]
-  where unless' cond expr =
+  where modLen = maximum $ map (length . moduleName . importModule) imports
+        unless' cond expr =
           if not cond
              then Just expr
              else Nothing
@@ -394,7 +407,10 @@ extImportDecl ImportDecl{..} =
   do if importQualified
         then write "import qualified "
         else write "import           "
-     pretty importModule
+     namelen <- gets (cramerModuleImportLength . psUserState)
+     if isJust importAs || isJust importSpecs
+        then string $ padRight namelen $ moduleName importModule
+        else string $ moduleName importModule
      maybeM_ importAs $
        \name ->
          do write " as "
