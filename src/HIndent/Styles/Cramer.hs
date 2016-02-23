@@ -263,6 +263,20 @@ prettyInfixOp op =
         Symbol _ s -> string s
     Special _ s -> pretty s
 
+tupleExpr
+  :: Pretty ast
+  => Boxed -> [ast NodeInfo] -> Printer State ()
+tupleExpr boxed exprs = attemptSingleLine single multi
+  where single =
+          do string open
+             inter (write ", ") $ map pretty exprs
+             string close
+        multi = listMultiLine open close "," exprs
+        (open,close) =
+          case boxed of
+            Unboxed -> ("(#","#)")
+            Boxed -> ("(",")")
+
 --------------------------------------------------------------------------------
 -- Extenders
 
@@ -379,6 +393,8 @@ extType (TyFun _ from to) =
                         (pretty from >> newline >> write "-> " >> pretty to)
 -- Parentheses reset forced line breaking
 extType (TyParen _ ty) = withLineBreak Free $ parens $ pretty ty
+-- Tuple types on one line, with space after comma
+extType (TyTuple _ boxed tys) = withLineBreak Single $ tupleExpr boxed tys
 extType other = prettyNoExt other
 
 extPat :: Extend Pat
@@ -389,6 +405,8 @@ extPat (PInfixApp _ arg1 op arg2) =
      prettyInfixOp op
      space
      pretty arg2
+-- Tuple patterns on one line, with space after comma
+extPat (PTuple _ boxed pats) = withLineBreak Single $ tupleExpr boxed pats
 extPat other = prettyNoExt other
 
 extExp :: Extend Exp
@@ -426,6 +444,9 @@ extExp (Lambda _ pats expr) =
        _ -> attemptSingleLine single multi
   where single = space >> pretty expr
         multi = newline >> indentFull (pretty expr)
+-- Tuples on a single line (no space inside parens but after comma) or
+-- one element per line with parens and comma aligned
+extExp (Tuple _ boxed exprs) = tupleExpr boxed exprs
 -- Line break and indent after do
 extExp (Do _ stmts) =
   do write "do"
