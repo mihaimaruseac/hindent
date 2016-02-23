@@ -6,12 +6,14 @@
 
 module HIndent.Styles.Cramer (cramer) where
 
-import Control.Monad (forM_, unless, when)
+import Control.Monad (forM_, replicateM_, unless, when)
 import Control.Monad.State.Strict (MonadState, get, gets, put)
 
 import Data.List (intersperse, sortOn)
+import Data.Maybe (catMaybes)
 
 import Language.Haskell.Exts.Annotated.Syntax
+import Language.Haskell.Exts.SrcLoc
 import Language.Haskell.Exts (prettyPrint)
 
 import HIndent.Pretty hiding (inter, spaced)
@@ -42,7 +44,8 @@ cramer =
         ,styleInitialState =
            State {cramerLineBreak = Free}
         ,styleExtenders =
-           [Extender extModuleHead
+           [Extender extModule
+           ,Extender extModuleHead
            ,Extender extExportSpecList
            ,Extender extImportDecl
            ,Extender extDecl
@@ -55,6 +58,7 @@ cramer =
            ,Extender extExp
            ,Extender extStmt
            ,Extender extMatch
+           ,Extender extBinds
            ,Extender extFieldUpdate]
         ,styleDefConfig =
            defaultConfig {configMaxColumns = 80
@@ -218,6 +222,26 @@ listAutoWrap open close sep ps =
              limit <- gets (configMaxColumns . psConfig)
              return $ col < limit
 
+-- | Like `inter newline . map pretty`, but preserve empty lines
+-- between elements.
+preserveLineSpacing
+  :: (Pretty ast,Annotated ast)
+  => [ast NodeInfo] -> Printer State ()
+preserveLineSpacing [] = return ()
+preserveLineSpacing asts@(first:rest) =
+  do pretty first
+     forM_ (zip asts rest) $
+       \(prev,cur) ->
+         do replicateM_ (max 1 $ delta cur prev)
+                        newline
+            pretty cur
+  where delta cur prev =
+          let prevLine =
+                srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
+              curLine =
+                srcSpanStartLine . srcInfoSpan . nodeInfoSpan . ann $ cur
+          in curLine - prevLine
+
 --------------------------------------------------------------------------------
 -- Printer for reused syntactical constructs
 
@@ -322,6 +346,27 @@ letExpr binds expr =
 
 --------------------------------------------------------------------------------
 -- Extenders
+
+extModule :: Extend Module
+extModule (Module _ mhead pragmas imports decls) =
+  do inter (newline >> newline) $
+       catMaybes [unless' (null pragmas) $ preserveLineSpacing pragmas
+                 ,pretty <$> mhead
+                 ,unless' (null imports) $ preserveLineSpacing imports
+                 ,unless' (null decls) $
+                  do forM_ (init decls) $
+                       \decl ->
+                         do pretty decl
+                            newline
+                            unless (skipNewline decl) newline
+                     pretty (last decls)]
+  where unless' cond expr =
+          if not cond
+             then Just expr
+             else Nothing
+        skipNewline TypeSig{} = True
+        skipNewline _ = False
+extModule other = prettyNoExt other
 
 -- Empty or single item export list on one line, otherwise one item
 -- per line with parens and comma aligned
@@ -531,6 +576,11 @@ extMatch (Match _ name pats rhs mbinds) =
      pretty rhs
      maybeM_ mbinds whereBinds
 extMatch other = prettyNoExt other
+
+-- Preserve empty lines between bindings
+extBinds :: Extend Binds
+extBinds (BDecls _ decls) = preserveLineSpacing decls
+extBinds other = prettyNoExt other
 
 -- No line break after equal sign
 extFieldUpdate :: Extend FieldUpdate
