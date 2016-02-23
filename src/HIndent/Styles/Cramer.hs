@@ -481,6 +481,18 @@ extImportDecl ImportDecl{..} =
             listAutoWrap "(" ")" "," $ sortOn prettyPrint specs
 
 extDecl :: Extend Decl
+-- Fix whitespace before 'where' in class decl
+extDecl (ClassDecl _ mcontext declhead fundeps mdecls) =
+  do depend (write "class ") $
+       depend (maybeCtx mcontext) $
+         depend (pretty declhead) $
+           depend (unless (null fundeps) $
+               write " | " >> inter (write ", ") (map pretty fundeps)) $
+             when (isJust mdecls) $ write " where"
+     maybeM_ mdecls $
+       \decls ->
+         do newline
+            indentFull $ lined $ map pretty decls
 -- Align data constructors
 extDecl decl@(DataDecl _ dataOrNew mcontext declHead constructors mderiv) =
   do mapM_ pretty mcontext

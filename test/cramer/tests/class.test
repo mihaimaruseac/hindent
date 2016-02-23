@@ -1,0 +1,14 @@
+class Monoid a where
+  mempty :: a
+  mappend :: a -> a -> a
+
+class Applicative m => Monad m where
+  fail :: m a
+  return :: a -> m a
+  (>>=) :: a -> (a -> m b) -> m b
+
+class Fundep a b | a -> b where
+  wrap :: a -> b
+
+class (Constraint a, Constraint' b) => Complex a b | a -> b where
+  whatever :: a -> b
