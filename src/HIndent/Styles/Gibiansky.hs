@@ -4,7 +4,7 @@
 module HIndent.Styles.Gibiansky where
 
 import           Data.Foldable
-import           Control.Applicative ((<$>))
+-- import           Control.Applicative ((<$>))
 import           Data.Maybe
 import           Data.List (unfoldr, isPrefixOf)
 import           Control.Monad.Trans.Maybe
@@ -411,6 +411,18 @@ exprs exp@MultiIf{} = multiIfExpr exp
 exprs (RecUpdate _ exp updates) = recUpdateExpr updates (pretty exp) (map prettyCommentCallbacks updates)
 exprs (RecConstr _ qname updates) = recUpdateExpr updates (pretty qname) (map prettyCommentCallbacks updates)
 exprs (Tuple _ _ exps) = parens $ inter (write ", ") $ map pretty exps
+exprs (ListComp _ e qstmt) =
+  brackets (do space
+               pretty e
+               unless (null qstmt)
+                      (do newline
+                          indented (-1)
+                                   (write "|")
+                          prefixedLined ","
+                                        (map (\x -> do space
+                                                       pretty x
+                                                       space)
+                                             qstmt)))
 exprs exp = prettyNoExt exp
 
 multiIfExpr :: Exp NodeInfo -> Printer State ()

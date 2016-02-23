@@ -702,18 +702,13 @@ exp (EnumFromThenTo _ e t f) =
                                write " .. ")
                            (pretty f)))
 exp (ListComp _ e qstmt) =
-  brackets (depend (do pretty e
-                       unless (null qstmt)
-                              (write " |"))
-                   (do space
-                       prefixedLined
-                         ","
-                         (map (\(i,x) ->
-                                 depend (if i == 0
-                                            then return ()
-                                            else space)
-                                        (pretty x))
-                              (zip [0 :: Integer ..] qstmt))))
+  brackets (do pretty e
+               unless (null qstmt)
+                      (do newline
+                          indented (-1)
+                                   (write "|")
+                          prefixedLined ","
+                                        (map pretty qstmt)))
 exp (ExpTypeSig _ e t) =
   depend (do pretty e
              write " :: ")

@@ -257,6 +257,18 @@ exp (Let _ binds e) =
              newline
              indented (-4) (depend (write "in ")
                                    (pretty e)))
+exp (ListComp _ e qstmt) =
+  brackets (do space
+               pretty e
+               unless (null qstmt)
+                      (do newline
+                          indented (-1)
+                                   (write "|")
+                          prefixedLined ","
+                                        (map (\x -> do space
+                                                       pretty x
+                                                       space)
+                                             qstmt)))
 exp e = prettyNoExt e
 
 match :: Match NodeInfo -> Printer s ()

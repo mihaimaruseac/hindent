@@ -303,6 +303,27 @@ exp (List _ es) =
              let overflow = psColumn st > columnLimit
                  single = psLine st == line
              return (not overflow && single)
+exp (ListComp _ e qstmt) =
+  brackets (do pretty e
+               unless (null qstmt) (do (ok,st) <- sandbox oneLiner
+                                       if ok
+                                          then put st
+                                          else lined))
+  where oneLiner = do line <- gets psLine
+                      write "|"
+                      commas (map pretty qstmt)
+                      st <- get
+                      columnLimit <- getColumnLimit
+                      let overflow = psColumn st > columnLimit
+                          single = psLine st == line
+                      return (not overflow && single)
+        lined =
+          do newline
+             indented (-1)
+                      (write "|")
+             prefixedLined
+               ","
+               (map pretty qstmt)
 exp e = prettyNoExt e
 
 --------------------------------------------------------------------------------

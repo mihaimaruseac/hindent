@@ -704,6 +704,18 @@ extExp (Do _ stmts) =
   do write "do"
      newline
      indentFull . lined $ map pretty stmts
+extExp (ListComp _ e qstmt) =
+  brackets (do space
+               pretty e
+               unless (null qstmt)
+                      (do newline
+                          indented (-1)
+                                   (write "|")
+                          prefixedLined ","
+                                        (map (\x -> do space
+                                                       pretty x
+                                                       space)
+                                             qstmt)))
 extExp other = prettyNoExt other
 
 extStmt :: Extend Stmt
