@@ -5,3 +5,9 @@ module Main () where
 module Main (main) where
 
 module Main (main,foo,bar,baz) where
+
+module Main
+(-- * Main Program
+main,
+-- * Functions
+foo, bar, baz) where

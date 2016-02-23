@@ -430,10 +430,35 @@ extExportSpecList :: Extend ExportSpecList
 extExportSpecList (ExportSpecList _ exports) =
   case exports of
     [] -> write " ( )"
-    [e] -> write " ( " >> pretty e >> write " )"
-    _ ->
+    [e]
+      | not (hasComments e) -> write " ( " >> pretty e >> write " )"
+    (first:rest) ->
       do newline
-         indentFull $ listMultiLine "(" ")" "," exports
+         indentFull $
+           do write "( "
+              commentCol <- getColumn
+              align $ prettyExportSpec "" commentCol first
+              forM_ rest $
+                \export ->
+                  do newline
+                     prettyExportSpec ", " commentCol export
+              newline
+              write ")"
+  where hasComments = any (not . null . nodeInfoComments)
+        printCommentsSimple loc ast =
+          let info = ann ast
+              rawComments =
+                filter (\l -> comInfoLocation l == Just loc) $
+                nodeInfoComments info
+          in do preprocessor <- gets psCommentPreprocessor
+                comments <- preprocessor $ map comInfoComment rawComments
+                forM_ comments $
+                  printComment (Just $ srcInfoSpan $ nodeInfoSpan info)
+        prettyExportSpec prefix col spec =
+          do column col $ printCommentsSimple Before spec
+             string prefix
+             prettyNoExt spec
+             printCommentsSimple After spec
 
 -- Align import statements
 extImportDecl :: Extend ImportDecl
