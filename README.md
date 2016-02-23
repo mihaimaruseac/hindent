@@ -17,7 +17,7 @@ executable. Currently a work in progress (see
 
     $ cat path/to/sourcefile.hs | hindent > outfile.hs
 
-    hindent: arguments: --style [fundamental|chris-done|johan-tibell|gibiansky]
+    hindent: arguments: --style [fundamental|chris-done|johan-tibell|gibiansky|cramer]
 
 ## Emacs
 
@@ -211,6 +211,23 @@ foo = do
                       putStrLn "yay"
                       return 1) bill -- Etc
 
+  where
+    potato Cakes{} = 2 * x foo * bar / 5
+```
+
+### Enno Cramer
+
+``` haskell
+foo = do
+    print "OK, go"
+    foo (foo bar)
+        (if bar then bob else pif)
+        (case mu {- cool -} zot of
+             Just x -> return ()
+             Nothing -> do
+                 putStrLn "yay"
+                 return 1)
+        bill -- Etc
   where
     potato Cakes{} = 2 * x foo * bar / 5
 ```
