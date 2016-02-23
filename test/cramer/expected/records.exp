@@ -2,14 +2,21 @@ data Empty = Empty { }
 
 data Op = Op { getOp :: b -> a }
 
-data Point = Point { x :: Int
-                   , y :: Int
+data Point = Point { x     :: Int
+                   , y     :: Int
                    , label :: String
                    }
     deriving (Eq, Show)
 
 data Commented = Commented { singleField :: Int -- with a comment
                            }
+
+data LongTypeSig = LongTypeSig { field :: (IsString a, Monad m)
+                                       => (ByteString -> ByteString)
+                                       -> ByteString
+                                       -> a
+                                       -> m ()
+                               }
 
 origin = Point { x = 0, y = 0, label = "Origin" }
 

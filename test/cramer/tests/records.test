@@ -7,6 +7,8 @@ data Point = Point { x :: Int, y :: Int, label :: String } deriving (Eq, Show)
 data Commented = Commented { singleField :: Int -- with a comment
 }
 
+data LongTypeSig = LongTypeSig { field :: (IsString a, Monad m) => (ByteString -> ByteString) -> ByteString -> a -> m () }
+
 origin = Point { x = 0, y = 0, label = "Origin" }
 
 translate dx dy p = p { x = x p + dx, y = y p + dy }
