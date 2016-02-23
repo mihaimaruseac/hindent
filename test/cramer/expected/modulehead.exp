@@ -10,3 +10,12 @@ module Main
     , bar
     , baz
     ) where
+
+module Main
+    ( -- * Main Program
+      main
+      -- * Functions
+    , foo
+    , bar
+    , baz
+    ) where
