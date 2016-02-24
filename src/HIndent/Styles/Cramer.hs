@@ -566,6 +566,9 @@ extDeclHead other = prettyNoExt other
 extConDecl :: Extend ConDecl
 -- No extra space after empty constructor
 extConDecl (ConDecl _ name []) = pretty name
+extConDecl (ConDecl _ name tys) = attemptSingleLine single multi
+    where single = spaced $ pretty name : map pretty tys
+          multi = depend (pretty name >> space) $ lined $ map pretty tys
 -- Align record fields
 extConDecl (RecDecl _ name fields) =
   do modifyState $ \s -> s {cramerRecordFieldLength = fieldLen}
