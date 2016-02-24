@@ -419,6 +419,29 @@ letExpr binds expr =
      write "in"
      expr
 
+infixExpr :: Exp NodeInfo -> Printer State ()
+infixExpr (InfixApp _ arg1 op arg2) =
+  do pretty arg1
+     space
+     pretty op
+     -- No line break before do
+     case arg2 of
+       Do{} -> single
+       _ -> attemptSingleLine single multi
+  where single = space >> pretty arg2
+        multi = newline >> indentFull (pretty arg2)
+infixExpr _ = error "not an InfixApp"
+
+applicativeExpr :: Exp NodeInfo
+                -> [(QOp NodeInfo,Exp NodeInfo)]
+                -> Printer State ()
+applicativeExpr ctor args = attemptSingleLine single multi
+  where single = spaced (pretty ctor : map prettyArg args)
+        multi =
+          do pretty ctor
+             depend space $ inter newline $ map prettyArg args
+        prettyArg (op,arg) = pretty op >> space >> pretty arg
+
 typeSig :: Type NodeInfo -> Printer State ()
 typeSig ty =
   attemptSingleLineType (write ":: " >> pretty ty)
@@ -693,17 +716,26 @@ extExp expr@(App _ fun arg) = attemptSingleLine single multi
           in (f,copyComments After app y : args)
         collectArgs nonApp = (nonApp,[])
 -- Infix application on a single line or indented rhs
-extExp (InfixApp _ arg1 op arg2) =
-  do pretty arg1
-     space
-     pretty op
-     -- No line break before do
-     case arg2 of
-       Do{} -> single
-       _ -> attemptSingleLine single multi
-  where single = space >> pretty arg2
-        multi = newline >> indentFull (pretty arg2)
--- No line break before do
+extExp expr@InfixApp{} =
+  if all (isApplicativeOp . fst) opArgs && isFmap (fst $ head opArgs)
+     then applicativeExpr firstArg opArgs
+     else infixExpr expr
+  where (firstArg,opArgs) = collectOpExps expr
+        collectOpExps
+          :: Exp NodeInfo -> (Exp NodeInfo,[(QOp NodeInfo,Exp NodeInfo)])
+        collectOpExps app@(InfixApp _ left op right) =
+          let (ctorLeft,argsLeft) = collectOpExps left
+              (ctorRight,argsRight) = collectOpExps right
+          in (ctorLeft,argsLeft ++ [(op,copyComments After app ctorRight)] ++ argsRight)
+        collectOpExps e = (e,[])
+        isApplicativeOp :: QOp NodeInfo -> Bool
+        isApplicativeOp (QVarOp _ (UnQual _ (Symbol _ s))) =
+          head s == '<' && last s == '>'
+        isApplicativeOp _ = False
+        isFmap :: QOp NodeInfo -> Bool
+        isFmap (QVarOp _ (UnQual _ (Symbol _ "<$>"))) = True
+        isFmap _ = False
+-- No space after lambda
 extExp (Lambda _ pats expr) =
   do write "\\"
      maybeSpace
