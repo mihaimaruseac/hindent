@@ -105,6 +105,12 @@ isEnum (DataDecl _ (DataType _) Nothing (DHead _ _) constructors _) =
         isSimple _ = False
 isEnum _ = False
 
+-- | Return whether a data type has only zero or one constructor.
+isSingletonType :: Decl NodeInfo -> Bool
+isSingletonType (DataDecl _ _ Nothing (DHead _ _) [] _) = True
+isSingletonType (DataDecl _ _ Nothing (DHead _ _) [ _ ] _) = True
+isSingletonType _ = False
+
 -- | If the given String is smaller than the given length, pad on
 -- right with spaces until the length matches.
 padRight :: Int -> String -> String
@@ -531,7 +537,7 @@ extDecl decl@(DataDecl _ dataOrNew mcontext declHead constructors mderiv) =
      space
      pretty declHead
      write " ="
-     if isEnum decl
+     if isEnum decl || isSingletonType decl
         then attemptSingleLine single multi
         else multi
      maybeM_ mderiv $ \deriv -> indentFull $ newline >> pretty deriv
