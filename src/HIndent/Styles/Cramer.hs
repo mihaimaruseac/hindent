@@ -461,6 +461,15 @@ extModulePragma (LanguagePragma _ names) =
          do write "{-# LANGUAGE "
             string $ padRight namelen $ nameStr name
             write " #-}"
+-- Avoid increasing whitespace after OPTIONS string
+extModulePragma (OptionsPragma _ mtool opt) =
+  do write "{-# OPTIONS"
+     maybeM_ mtool $ \tool -> do write "_"
+                                 string $ prettyPrint tool
+     space
+     string $ trim opt
+     write " #-}"
+  where trim = reverse . dropWhile (== ' ') . reverse . dropWhile (== ' ')
 extModulePragma other = prettyNoExt other
 
 -- Empty or single item export list on one line, otherwise one item
