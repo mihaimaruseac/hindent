@@ -706,6 +706,7 @@ extExp (InfixApp _ arg1 op arg2) =
 -- No line break before do
 extExp (Lambda _ pats expr) =
   do write "\\"
+     maybeSpace
      spaced $ map pretty pats
      write " ->"
      -- No line break before do
@@ -714,6 +715,11 @@ extExp (Lambda _ pats expr) =
        _ -> attemptSingleLine single multi
   where single = space >> pretty expr
         multi = newline >> indentFull (pretty expr)
+        maybeSpace =
+          case pats of
+            PBangPat{}:_ -> space
+            PIrrPat{}:_ -> space
+            _ -> return ()
 -- If-then-else on one line or newline and indent before then and else
 extExp (If _ cond true false) = ifExpr id cond true false
 -- Newline before in
