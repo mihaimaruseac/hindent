@@ -716,6 +716,11 @@ extExp (ListComp _ e qstmt) =
                                                        pretty x
                                                        space)
                                              qstmt)))
+-- Type signatures like toplevel decl
+extExp (ExpTypeSig _ expr ty) =
+  do pretty expr
+     space
+     typeSig ty
 extExp other = prettyNoExt other
 
 extStmt :: Extend Stmt
