@@ -127,6 +127,14 @@ copyComments loc from to = amap updateComments to
         oldComments = filter (\l -> comInfoLocation l /= Just loc) $ nodeInfoComments $ ann to
         newComments = filter (\l -> comInfoLocation l == Just loc) $ nodeInfoComments $ ann from
 
+-- | Return the number of line breaks between AST nodes.
+lineDelta
+  :: (Annotated ast1,Annotated ast2)
+  => ast1 NodeInfo -> ast2 NodeInfo -> Int
+lineDelta prev next = nextLine - prevLine
+  where prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
+        nextLine = srcSpanStartLine . srcInfoSpan . nodeInfoSpan . ann $ next
+
 -- | Specialized forM_ for Maybe.
 maybeM_ :: Monad m
         => Maybe a -> (a -> m ()) -> m ()
@@ -282,15 +290,9 @@ preserveLineSpacing asts@(first:rest) =
   do pretty first
      forM_ (zip asts rest) $
        \(prev,cur) ->
-         do replicateM_ (max 1 $ delta cur prev)
+         do replicateM_ (max 1 $ lineDelta prev cur)
                         newline
             pretty cur
-  where delta cur prev =
-          let prevLine =
-                srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
-              curLine =
-                srcSpanStartLine . srcInfoSpan . nodeInfoSpan . ann $ cur
-          in curLine - prevLine
 
 -- | `reduceIndent short long printer` produces either `short printer`
 -- or `newline >> indentFull (long printer)`, depending on whether the
@@ -420,16 +422,34 @@ letExpr binds expr =
      expr
 
 infixExpr :: Exp NodeInfo -> Printer State ()
-infixExpr (InfixApp _ arg1 op arg2) =
-  do pretty arg1
-     space
-     pretty op
-     -- No line break before do
-     case arg2 of
-       Do{} -> single
-       _ -> attemptSingleLine single multi
-  where single = space >> pretty arg2
-        multi = newline >> indentFull (pretty arg2)
+-- No line break before do
+infixExpr (InfixApp _ arg1 op arg2@Do{}) =
+  spaced [pretty arg1,pretty op,pretty arg2]
+-- Try to preserve existing line break before and after infix ops
+infixExpr (InfixApp _ arg1 op arg2)
+  | deltaBefore /= 0 && deltaAfter /= 0 =
+    align $ inter newline [pretty arg1,pretty op,pretty arg2]
+  | deltaBefore /= 0 || deltaAfter /= 0 =
+    pretty arg1 >>
+    spaceOrIndent
+      deltaBefore
+      (pretty op >>
+       spaceOrIndent deltaAfter
+                     (pretty arg2))
+  | otherwise = attemptSingleLine single multi
+  where single = spaced [pretty arg1,pretty op,pretty arg2]
+        multi =
+          do pretty arg1
+             space
+             pretty op
+             newline
+             indentFull $ pretty arg2
+        spaceOrIndent delta p =
+          if delta > 0
+             then newline >> indentFull p
+             else space >> p
+        deltaBefore = lineDelta arg1 op
+        deltaAfter = lineDelta op arg2
 infixExpr _ = error "not an InfixApp"
 
 applicativeExpr :: Exp NodeInfo
