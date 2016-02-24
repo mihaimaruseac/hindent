@@ -116,6 +116,17 @@ isSingletonType _ = False
 padRight :: Int -> String -> String
 padRight l s = take (max l (length s)) (s ++ repeat ' ')
 
+-- | Copy comments marked After from one AST node to another.
+copyComments :: (Annotated ast1,Annotated ast2)
+             => ComInfoLocation
+             -> ast1 NodeInfo
+             -> ast2 NodeInfo
+             -> ast2 NodeInfo
+copyComments loc from to = amap updateComments to
+  where updateComments info = info { nodeInfoComments = oldComments ++ newComments }
+        oldComments = filter (\l -> comInfoLocation l /= Just loc) $ nodeInfoComments $ ann to
+        newComments = filter (\l -> comInfoLocation l == Just loc) $ nodeInfoComments $ ann from
+
 -- | Specialized forM_ for Maybe.
 maybeM_ :: Monad m
         => Maybe a -> (a -> m ()) -> m ()
@@ -668,9 +679,9 @@ extExp expr@(App _ fun arg) = attemptSingleLine single multi
         (fun',args') = collectArgs expr
         collectArgs
           :: Exp NodeInfo -> (Exp NodeInfo,[Exp NodeInfo])
-        collectArgs (App _ g y) =
+        collectArgs app@(App _ g y) =
           let (f,args) = collectArgs g
-          in (f,y : args)
+          in (f,copyComments After app y : args)
         collectArgs nonApp = (nonApp,[])
 -- Infix application on a single line or indented rhs
 extExp (InfixApp _ arg1 op arg2) =

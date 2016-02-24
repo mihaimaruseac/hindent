@@ -6,3 +6,6 @@ printAll = foldr (\a b -> do
                       putStrLn a
                       b)
                  (return ())
+
+commented = foo bar -- first arg
+                baz -- second arg
