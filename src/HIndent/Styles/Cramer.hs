@@ -105,10 +105,35 @@ isEnum (DataDecl _ (DataType _) Nothing (DHead _ _) constructors _) =
         isSimple _ = False
 isEnum _ = False
 
+-- | Return whether a data type has only zero or one constructor.
+isSingletonType :: Decl NodeInfo -> Bool
+isSingletonType (DataDecl _ _ Nothing (DHead _ _) [] _) = True
+isSingletonType (DataDecl _ _ Nothing (DHead _ _) [ _ ] _) = True
+isSingletonType _ = False
+
 -- | If the given String is smaller than the given length, pad on
 -- right with spaces until the length matches.
 padRight :: Int -> String -> String
 padRight l s = take (max l (length s)) (s ++ repeat ' ')
+
+-- | Copy comments marked After from one AST node to another.
+copyComments :: (Annotated ast1,Annotated ast2)
+             => ComInfoLocation
+             -> ast1 NodeInfo
+             -> ast2 NodeInfo
+             -> ast2 NodeInfo
+copyComments loc from to = amap updateComments to
+  where updateComments info = info { nodeInfoComments = oldComments ++ newComments }
+        oldComments = filter (\l -> comInfoLocation l /= Just loc) $ nodeInfoComments $ ann to
+        newComments = filter (\l -> comInfoLocation l == Just loc) $ nodeInfoComments $ ann from
+
+-- | Return the number of line breaks between AST nodes.
+lineDelta
+  :: (Annotated ast1,Annotated ast2)
+  => ast1 NodeInfo -> ast2 NodeInfo -> Int
+lineDelta prev next = nextLine - prevLine
+  where prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
+        nextLine = srcSpanStartLine . srcInfoSpan . nodeInfoSpan . ann $ next
 
 -- | Specialized forM_ for Maybe.
 maybeM_ :: Monad m
@@ -265,15 +290,9 @@ preserveLineSpacing asts@(first:rest) =
   do pretty first
      forM_ (zip asts rest) $
        \(prev,cur) ->
-         do replicateM_ (max 1 $ delta cur prev)
+         do replicateM_ (max 1 $ lineDelta prev cur)
                         newline
             pretty cur
-  where delta cur prev =
-          let prevLine =
-                srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
-              curLine =
-                srcSpanStartLine . srcInfoSpan . nodeInfoSpan . ann $ cur
-          in curLine - prevLine
 
 -- | `reduceIndent short long printer` produces either `short printer`
 -- or `newline >> indentFull (long printer)`, depending on whether the
@@ -402,6 +421,47 @@ letExpr binds expr =
      write "in"
      expr
 
+infixExpr :: Exp NodeInfo -> Printer State ()
+-- No line break before do
+infixExpr (InfixApp _ arg1 op arg2@Do{}) =
+  spaced [pretty arg1,pretty op,pretty arg2]
+-- Try to preserve existing line break before and after infix ops
+infixExpr (InfixApp _ arg1 op arg2)
+  | deltaBefore /= 0 && deltaAfter /= 0 =
+    align $ inter newline [pretty arg1,pretty op,pretty arg2]
+  | deltaBefore /= 0 || deltaAfter /= 0 =
+    pretty arg1 >>
+    spaceOrIndent
+      deltaBefore
+      (pretty op >>
+       spaceOrIndent deltaAfter
+                     (pretty arg2))
+  | otherwise = attemptSingleLine single multi
+  where single = spaced [pretty arg1,pretty op,pretty arg2]
+        multi =
+          do pretty arg1
+             space
+             pretty op
+             newline
+             indentFull $ pretty arg2
+        spaceOrIndent delta p =
+          if delta > 0
+             then newline >> indentFull p
+             else space >> p
+        deltaBefore = lineDelta arg1 op
+        deltaAfter = lineDelta op arg2
+infixExpr _ = error "not an InfixApp"
+
+applicativeExpr :: Exp NodeInfo
+                -> [(QOp NodeInfo,Exp NodeInfo)]
+                -> Printer State ()
+applicativeExpr ctor args = attemptSingleLine single multi
+  where single = spaced (pretty ctor : map prettyArg args)
+        multi =
+          do pretty ctor
+             depend space $ inter newline $ map prettyArg args
+        prettyArg (op,arg) = pretty op >> space >> pretty arg
+
 typeSig :: Type NodeInfo -> Printer State ()
 typeSig ty =
   attemptSingleLineType (write ":: " >> pretty ty)
@@ -444,6 +504,15 @@ extModulePragma (LanguagePragma _ names) =
          do write "{-# LANGUAGE "
             string $ padRight namelen $ nameStr name
             write " #-}"
+-- Avoid increasing whitespace after OPTIONS string
+extModulePragma (OptionsPragma _ mtool opt) =
+  do write "{-# OPTIONS"
+     maybeM_ mtool $ \tool -> do write "_"
+                                 string $ prettyPrint tool
+     space
+     string $ trim opt
+     write " #-}"
+  where trim = reverse . dropWhile (== ' ') . reverse . dropWhile (== ' ')
 extModulePragma other = prettyNoExt other
 
 -- Empty or single item export list on one line, otherwise one item
@@ -531,7 +600,7 @@ extDecl decl@(DataDecl _ dataOrNew mcontext declHead constructors mderiv) =
      space
      pretty declHead
      write " ="
-     if isEnum decl
+     if isEnum decl || isSingletonType decl
         then attemptSingleLine single multi
         else multi
      maybeM_ mderiv $ \deriv -> indentFull $ newline >> pretty deriv
@@ -551,7 +620,7 @@ extDecl (TypeSig _ names ty) =
 -- Half-indent for where clause, half-indent binds
 extDecl (PatBind _ pat rhs mbinds) =
   do pretty pat
-     pretty rhs
+     withCaseContext False $ pretty rhs
      maybeM_ mbinds whereBinds
 extDecl other = prettyNoExt other
 
@@ -566,6 +635,9 @@ extDeclHead other = prettyNoExt other
 extConDecl :: Extend ConDecl
 -- No extra space after empty constructor
 extConDecl (ConDecl _ name []) = pretty name
+extConDecl (ConDecl _ name tys) = attemptSingleLine single multi
+    where single = spaced $ pretty name : map pretty tys
+          multi = depend (pretty name >> space) $ lined $ map pretty tys
 -- Align record fields
 extConDecl (RecDecl _ name fields) =
   do modifyState $ \s -> s {cramerRecordFieldLength = fieldLen}
@@ -659,24 +731,34 @@ extExp expr@(App _ fun arg) = attemptSingleLine single multi
         (fun',args') = collectArgs expr
         collectArgs
           :: Exp NodeInfo -> (Exp NodeInfo,[Exp NodeInfo])
-        collectArgs (App _ g y) =
+        collectArgs app@(App _ g y) =
           let (f,args) = collectArgs g
-          in (f,y : args)
+          in (f,copyComments After app y : args)
         collectArgs nonApp = (nonApp,[])
 -- Infix application on a single line or indented rhs
-extExp (InfixApp _ arg1 op arg2) =
-  do pretty arg1
-     space
-     pretty op
-     -- No line break before do
-     case arg2 of
-       Do{} -> single
-       _ -> attemptSingleLine single multi
-  where single = space >> pretty arg2
-        multi = newline >> indentFull (pretty arg2)
--- No line break before do
+extExp expr@InfixApp{} =
+  if all (isApplicativeOp . fst) opArgs && isFmap (fst $ head opArgs)
+     then applicativeExpr firstArg opArgs
+     else infixExpr expr
+  where (firstArg,opArgs) = collectOpExps expr
+        collectOpExps
+          :: Exp NodeInfo -> (Exp NodeInfo,[(QOp NodeInfo,Exp NodeInfo)])
+        collectOpExps app@(InfixApp _ left op right) =
+          let (ctorLeft,argsLeft) = collectOpExps left
+              (ctorRight,argsRight) = collectOpExps right
+          in (ctorLeft,argsLeft ++ [(op,copyComments After app ctorRight)] ++ argsRight)
+        collectOpExps e = (e,[])
+        isApplicativeOp :: QOp NodeInfo -> Bool
+        isApplicativeOp (QVarOp _ (UnQual _ (Symbol _ s))) =
+          head s == '<' && last s == '>'
+        isApplicativeOp _ = False
+        isFmap :: QOp NodeInfo -> Bool
+        isFmap (QVarOp _ (UnQual _ (Symbol _ "<$>"))) = True
+        isFmap _ = False
+-- No space after lambda
 extExp (Lambda _ pats expr) =
   do write "\\"
+     maybeSpace
      spaced $ map pretty pats
      write " ->"
      -- No line break before do
@@ -685,6 +767,11 @@ extExp (Lambda _ pats expr) =
        _ -> attemptSingleLine single multi
   where single = space >> pretty expr
         multi = newline >> indentFull (pretty expr)
+        maybeSpace =
+          case pats of
+            PBangPat{}:_ -> space
+            PIrrPat{}:_ -> space
+            _ -> return ()
 -- If-then-else on one line or newline and indent before then and else
 extExp (If _ cond true false) = ifExpr id cond true false
 -- Newline before in
@@ -716,6 +803,11 @@ extExp (ListComp _ e qstmt) =
                                                        pretty x
                                                        space)
                                              qstmt)))
+-- Type signatures like toplevel decl
+extExp (ExpTypeSig _ expr ty) =
+  do pretty expr
+     space
+     typeSig ty
 extExp other = prettyNoExt other
 
 extStmt :: Extend Stmt
@@ -728,7 +820,7 @@ extMatch (Match _ name pats rhs mbinds) =
   do pretty name
      space
      spaced $ map pretty pats
-     pretty rhs
+     withCaseContext False $ pretty rhs
      maybeM_ mbinds whereBinds
 extMatch other = prettyNoExt other
 
