@@ -86,6 +86,15 @@ types e = prettyNoExt e
 --     -> IO ()
 --
 decl :: Decl NodeInfo -> Printer s ()
+decl (TypeDecl _ head ty) =
+  do write "type "
+     pretty head
+     write " = "
+     (fits,st) <- fitsOnOneLine (pretty ty)
+     if fits
+        then put st
+        else do newline
+                indented 2 (pretty ty)
 decl (TypeSig _ names ty') =
   do (fitting,st) <- isSmallFitting dependent
      if fitting
