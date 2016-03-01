@@ -51,7 +51,8 @@ chrisDone =
            ,Extender rhs
            ,Extender contextualGuardedRhs
            ,Extender stmt
-           ,Extender decl]
+           ,Extender decl
+           ,Extender types]
         ,styleDefConfig =
            defaultConfig {configMaxColumns = 80
                          ,configIndentSpaces = 2}
@@ -59,6 +60,22 @@ chrisDone =
 
 --------------------------------------------------------------------------------
 -- Extenders
+
+types :: Type NodeInfo -> Printer s ()
+types (TyTuple _ boxed tys) =
+        depend (write (case boxed of
+                         Unboxed -> "(#"
+                         Boxed -> "("))
+               (do (fits,_) <- fitsOnOneLine p
+                   if fits
+                      then p
+                      else prefixedLined ","
+                                         (map pretty tys)
+                   write (case boxed of
+                            Unboxed -> "#)"
+                            Boxed -> ")"))
+        where p = commas (map pretty tys)
+types e = prettyNoExt e
 
 -- | Pretty print type signatures like
 --
