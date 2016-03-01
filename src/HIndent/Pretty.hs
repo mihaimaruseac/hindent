@@ -573,7 +573,7 @@ instance Pretty Type where
            pretty right
       TyEquals _ left right ->
         do pretty left
-           write " == "
+           write " ~ "
            pretty right
       ty@TyPromoted{} -> pretty' ty
       TySplice{} -> error "FIXME: No implementation for TySplice."
