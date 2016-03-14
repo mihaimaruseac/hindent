@@ -486,6 +486,29 @@ typeSig ty =
   attemptSingleLineType (write ":: " >> pretty ty)
                         (align $ write ":: " >> pretty ty)
 
+typeInfixExpr
+  :: Type NodeInfo -> Printer State ()
+-- As HIndent does not know about operator precedence, preserve
+-- existing line breaks, but do not add new ones.
+typeInfixExpr (TyInfix _ arg1 op arg2)
+  | deltaBefore /= 0 && deltaAfter /= 0 =
+    align $ inter newline [pretty arg1,prettyInfixOp op,pretty arg2]
+  | deltaBefore /= 0 || deltaAfter /= 0 =
+    pretty arg1 >>
+    spaceOrIndent
+      deltaBefore
+      (prettyInfixOp op >>
+       spaceOrIndent deltaAfter
+                     (pretty arg2))
+  | otherwise = spaced [pretty arg1,prettyInfixOp op,pretty arg2]
+  where spaceOrIndent delta p =
+          if delta > 0
+             then newline >> indentFull p
+             else space >> p
+        deltaBefore = lineDelta arg1 op
+        deltaAfter = lineDelta op arg2
+typeInfixExpr _ = error "not a TyInfix"
+
 --------------------------------------------------------------------------------
 -- Extenders
 
@@ -597,6 +620,12 @@ extImportDecl ImportDecl{..} =
             listAutoWrap "(" ")" "," $ sortOn prettyPrint specs
 
 extDecl :: Extend Decl
+-- No dependent indentation for type decls
+extDecl (TypeDecl _ declhead ty) =
+  do write "type "
+     pretty declhead
+     write " = "
+     indentFull $ pretty ty
 -- Fix whitespace before 'where' in class decl
 extDecl (ClassDecl _ mcontext declhead fundeps mdecls) =
   do depend (write "class ") $
@@ -725,6 +754,8 @@ extType (TyFun _ from to) =
 extType (TyParen _ ty) = withLineBreak Free $ parens $ pretty ty
 -- Tuple types on one line, with space after comma
 extType (TyTuple _ boxed tys) = withLineBreak Single $ tupleExpr boxed tys
+-- Infix application
+extType expr@TyInfix{} = typeInfixExpr expr
 extType other = prettyNoExt other
 
 extPat :: Extend Pat
