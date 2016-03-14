@@ -840,7 +840,7 @@ extExp (RecUpdate _ expr updates) = recordExpr expr updates
 extExp (Do _ stmts) =
   do write "do"
      newline
-     indentFull . lined $ map pretty stmts
+     indentFull $ preserveLineSpacing stmts
 extExp (ListComp _ e qstmt) =
   brackets (do space
                pretty e
