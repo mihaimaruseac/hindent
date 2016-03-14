@@ -13,6 +13,7 @@ import Data.List (intersperse, sortOn)
 import Data.Maybe (catMaybes, isJust, mapMaybe)
 
 import Language.Haskell.Exts.Annotated.Syntax
+import Language.Haskell.Exts.Comments
 import Language.Haskell.Exts.SrcLoc
 import Language.Haskell.Exts (prettyPrint)
 
@@ -78,6 +79,10 @@ cramer =
 --------------------------------------------------------------------------------
 -- Helper
 
+-- | Return an ast node's SrcSpan.
+nodeSrcSpan :: Annotated a => a NodeInfo -> SrcSpan
+nodeSrcSpan = srcInfoSpan . nodeInfoSpan . ann
+
 -- | Turn a Name into a String
 nameStr :: Name a -> String
 nameStr (Ident _ s) = s
@@ -116,6 +121,10 @@ isSingletonType _ = False
 padRight :: Int -> String -> String
 padRight l s = take (max l (length s)) (s ++ repeat ' ')
 
+-- | Return comments with matching location.
+filterComments :: Annotated a => (Maybe ComInfoLocation -> Bool) -> a NodeInfo -> [ComInfo]
+filterComments f = filter (f . comInfoLocation) . nodeInfoComments . ann
+
 -- | Copy comments marked After from one AST node to another.
 copyComments :: (Annotated ast1,Annotated ast2)
              => ComInfoLocation
@@ -124,16 +133,26 @@ copyComments :: (Annotated ast1,Annotated ast2)
              -> ast2 NodeInfo
 copyComments loc from to = amap updateComments to
   where updateComments info = info { nodeInfoComments = oldComments ++ newComments }
-        oldComments = filter (\l -> comInfoLocation l /= Just loc) $ nodeInfoComments $ ann to
-        newComments = filter (\l -> comInfoLocation l == Just loc) $ nodeInfoComments $ ann from
+        oldComments = filterComments (/= Just loc) to
+        newComments = filterComments (== Just loc) from
 
 -- | Return the number of line breaks between AST nodes.
 lineDelta
   :: (Annotated ast1,Annotated ast2)
   => ast1 NodeInfo -> ast2 NodeInfo -> Int
 lineDelta prev next = nextLine - prevLine
-  where prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
-        nextLine = srcSpanStartLine . srcInfoSpan . nodeInfoSpan . ann $ next
+  where prevLine = maximum (prevNodeLine : prevCommentLines)
+        nextLine = minimum (nextNodeLine : nextCommentLines)
+        prevNodeLine = srcSpanEndLine . nodeSrcSpan $ prev
+        nextNodeLine = srcSpanStartLine . nodeSrcSpan $ next
+        prevCommentLines =
+          map (srcSpanEndLine . commentSrcSpan) $
+          filterComments (== Just After) prev
+        nextCommentLines =
+          map (srcSpanStartLine . commentSrcSpan) $
+          filterComments (== Just Before) next
+        commentSrcSpan = annComment . comInfoComment
+        annComment (Comment _ sp _) = sp
 
 -- | Specialized forM_ for Maybe.
 maybeM_ :: Monad m
@@ -546,14 +565,11 @@ extExportSpecList (ExportSpecList _ exports) =
               write ")"
   where hasComments = any (not . null . nodeInfoComments)
         printCommentsSimple loc ast =
-          let info = ann ast
-              rawComments =
-                filter (\l -> comInfoLocation l == Just loc) $
-                nodeInfoComments info
+          let rawComments = filterComments (== Just loc) ast
           in do preprocessor <- gets psCommentPreprocessor
                 comments <- preprocessor $ map comInfoComment rawComments
                 forM_ comments $
-                  printComment (Just $ srcInfoSpan $ nodeInfoSpan info)
+                  printComment (Just $ nodeSrcSpan ast)
         prettyExportSpec prefix col spec =
           do column col $ printCommentsSimple Before spec
              string prefix
