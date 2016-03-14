@@ -8,3 +8,5 @@ mktime :: Int -- hours
        -> Int -- minutes
        -> Int -- seconds
        -> Time
+
+transform :: forall a. St -> State St a -> EitherT ServantErr IO a

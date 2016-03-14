@@ -13,6 +13,7 @@ import Data.List (intersperse, sortOn)
 import Data.Maybe (catMaybes, isJust, mapMaybe)
 
 import Language.Haskell.Exts.Annotated.Syntax
+import Language.Haskell.Exts.Comments
 import Language.Haskell.Exts.SrcLoc
 import Language.Haskell.Exts (prettyPrint)
 
@@ -78,6 +79,10 @@ cramer =
 --------------------------------------------------------------------------------
 -- Helper
 
+-- | Return an ast node's SrcSpan.
+nodeSrcSpan :: Annotated a => a NodeInfo -> SrcSpan
+nodeSrcSpan = srcInfoSpan . nodeInfoSpan . ann
+
 -- | Turn a Name into a String
 nameStr :: Name a -> String
 nameStr (Ident _ s) = s
@@ -116,6 +121,10 @@ isSingletonType _ = False
 padRight :: Int -> String -> String
 padRight l s = take (max l (length s)) (s ++ repeat ' ')
 
+-- | Return comments with matching location.
+filterComments :: Annotated a => (Maybe ComInfoLocation -> Bool) -> a NodeInfo -> [ComInfo]
+filterComments f = filter (f . comInfoLocation) . nodeInfoComments . ann
+
 -- | Copy comments marked After from one AST node to another.
 copyComments :: (Annotated ast1,Annotated ast2)
              => ComInfoLocation
@@ -124,16 +133,26 @@ copyComments :: (Annotated ast1,Annotated ast2)
              -> ast2 NodeInfo
 copyComments loc from to = amap updateComments to
   where updateComments info = info { nodeInfoComments = oldComments ++ newComments }
-        oldComments = filter (\l -> comInfoLocation l /= Just loc) $ nodeInfoComments $ ann to
-        newComments = filter (\l -> comInfoLocation l == Just loc) $ nodeInfoComments $ ann from
+        oldComments = filterComments (/= Just loc) to
+        newComments = filterComments (== Just loc) from
 
 -- | Return the number of line breaks between AST nodes.
 lineDelta
   :: (Annotated ast1,Annotated ast2)
   => ast1 NodeInfo -> ast2 NodeInfo -> Int
 lineDelta prev next = nextLine - prevLine
-  where prevLine = srcSpanEndLine . srcInfoSpan . nodeInfoSpan . ann $ prev
-        nextLine = srcSpanStartLine . srcInfoSpan . nodeInfoSpan . ann $ next
+  where prevLine = maximum (prevNodeLine : prevCommentLines)
+        nextLine = minimum (nextNodeLine : nextCommentLines)
+        prevNodeLine = srcSpanEndLine . nodeSrcSpan $ prev
+        nextNodeLine = srcSpanStartLine . nodeSrcSpan $ next
+        prevCommentLines =
+          map (srcSpanEndLine . commentSrcSpan) $
+          filterComments (== Just After) prev
+        nextCommentLines =
+          map (srcSpanStartLine . commentSrcSpan) $
+          filterComments (== Just Before) next
+        commentSrcSpan = annComment . comInfoComment
+        annComment (Comment _ sp _) = sp
 
 -- | Specialized forM_ for Maybe.
 maybeM_ :: Monad m
@@ -467,6 +486,29 @@ typeSig ty =
   attemptSingleLineType (write ":: " >> pretty ty)
                         (align $ write ":: " >> pretty ty)
 
+typeInfixExpr
+  :: Type NodeInfo -> Printer State ()
+-- As HIndent does not know about operator precedence, preserve
+-- existing line breaks, but do not add new ones.
+typeInfixExpr (TyInfix _ arg1 op arg2)
+  | deltaBefore /= 0 && deltaAfter /= 0 =
+    align $ inter newline [pretty arg1,prettyInfixOp op,pretty arg2]
+  | deltaBefore /= 0 || deltaAfter /= 0 =
+    pretty arg1 >>
+    spaceOrIndent
+      deltaBefore
+      (prettyInfixOp op >>
+       spaceOrIndent deltaAfter
+                     (pretty arg2))
+  | otherwise = spaced [pretty arg1,prettyInfixOp op,pretty arg2]
+  where spaceOrIndent delta p =
+          if delta > 0
+             then newline >> indentFull p
+             else space >> p
+        deltaBefore = lineDelta arg1 op
+        deltaAfter = lineDelta op arg2
+typeInfixExpr _ = error "not a TyInfix"
+
 --------------------------------------------------------------------------------
 -- Extenders
 
@@ -546,14 +588,11 @@ extExportSpecList (ExportSpecList _ exports) =
               write ")"
   where hasComments = any (not . null . nodeInfoComments)
         printCommentsSimple loc ast =
-          let info = ann ast
-              rawComments =
-                filter (\l -> comInfoLocation l == Just loc) $
-                nodeInfoComments info
+          let rawComments = filterComments (== Just loc) ast
           in do preprocessor <- gets psCommentPreprocessor
                 comments <- preprocessor $ map comInfoComment rawComments
                 forM_ comments $
-                  printComment (Just $ srcInfoSpan $ nodeInfoSpan info)
+                  printComment (Just $ nodeSrcSpan ast)
         prettyExportSpec prefix col spec =
           do column col $ printCommentsSimple Before spec
              string prefix
@@ -581,6 +620,12 @@ extImportDecl ImportDecl{..} =
             listAutoWrap "(" ")" "," $ sortOn prettyPrint specs
 
 extDecl :: Extend Decl
+-- No dependent indentation for type decls
+extDecl (TypeDecl _ declhead ty) =
+  do write "type "
+     pretty declhead
+     write " = "
+     indentFull $ pretty ty
 -- Fix whitespace before 'where' in class decl
 extDecl (ClassDecl _ mcontext declhead fundeps mdecls) =
   do depend (write "class ") $
@@ -687,17 +732,20 @@ extContext (CxTuple _ ctxs) = parens $ inter (write ", ") $ map pretty ctxs
 extContext other = prettyNoExt other
 
 extType :: Extend Type
-extType (TyForall _ mforall mcontext ty) =
-  do maybeM_ mforall $
-       \vars ->
-         do write "forall "
-            spaced $ map pretty vars
-            write ". "
-     maybeM_ mcontext $
-       \contexts ->
-         attemptSingleLineType
-           (pretty contexts >> write " => " >> pretty ty)
-           (pretty contexts >> newline >> write "=> " >> pretty ty)
+extType (TyForall _ mforall mcontext ty) = attemptSingleLine single multi
+  where single =
+          do maybeM_ mforall $ \vars -> prettyForall vars >> space
+             maybeM_ mcontext $ \context -> pretty context >> write " => "
+             pretty ty
+        multi =
+          do maybeM_ mforall $ \vars -> prettyForall vars >> newline
+             maybeM_ mcontext $
+               \context -> pretty context >> newline >> write "=> "
+             pretty ty
+        prettyForall vars =
+          do write "forall "
+             spaced $ map pretty vars
+             write "."
 -- Type signature should line break at each arrow if necessary
 extType (TyFun _ from to) =
   attemptSingleLineType (pretty from >> write " -> " >> pretty to)
@@ -705,7 +753,9 @@ extType (TyFun _ from to) =
 -- Parentheses reset forced line breaking
 extType (TyParen _ ty) = withLineBreak Free $ parens $ pretty ty
 -- Tuple types on one line, with space after comma
-extType (TyTuple _ boxed tys) = withLineBreak Single $ tupleExpr boxed tys
+extType (TyTuple _ boxed tys) = withLineBreak Free $ tupleExpr boxed tys
+-- Infix application
+extType expr@TyInfix{} = typeInfixExpr expr
 extType other = prettyNoExt other
 
 extPat :: Extend Pat
@@ -790,7 +840,7 @@ extExp (RecUpdate _ expr updates) = recordExpr expr updates
 extExp (Do _ stmts) =
   do write "do"
      newline
-     indentFull . lined $ map pretty stmts
+     indentFull $ preserveLineSpacing stmts
 extExp (ListComp _ e qstmt) =
   brackets (do space
                pretty e
