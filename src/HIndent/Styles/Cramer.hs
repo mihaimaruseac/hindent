@@ -753,7 +753,7 @@ extType (TyFun _ from to) =
 -- Parentheses reset forced line breaking
 extType (TyParen _ ty) = withLineBreak Free $ parens $ pretty ty
 -- Tuple types on one line, with space after comma
-extType (TyTuple _ boxed tys) = withLineBreak Single $ tupleExpr boxed tys
+extType (TyTuple _ boxed tys) = withLineBreak Free $ tupleExpr boxed tys
 -- Infix application
 extType expr@TyInfix{} = typeInfixExpr expr
 extType other = prettyNoExt other
