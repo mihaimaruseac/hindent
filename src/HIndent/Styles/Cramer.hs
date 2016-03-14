@@ -687,17 +687,20 @@ extContext (CxTuple _ ctxs) = parens $ inter (write ", ") $ map pretty ctxs
 extContext other = prettyNoExt other
 
 extType :: Extend Type
-extType (TyForall _ mforall mcontext ty) =
-  do maybeM_ mforall $
-       \vars ->
-         do write "forall "
-            spaced $ map pretty vars
-            write ". "
-     maybeM_ mcontext $
-       \contexts ->
-         attemptSingleLineType
-           (pretty contexts >> write " => " >> pretty ty)
-           (pretty contexts >> newline >> write "=> " >> pretty ty)
+extType (TyForall _ mforall mcontext ty) = attemptSingleLine single multi
+  where single =
+          do maybeM_ mforall $ \vars -> prettyForall vars >> space
+             maybeM_ mcontext $ \context -> pretty context >> write " => "
+             pretty ty
+        multi =
+          do maybeM_ mforall $ \vars -> prettyForall vars >> newline
+             maybeM_ mcontext $
+               \context -> pretty context >> newline >> write "=> "
+             pretty ty
+        prettyForall vars =
+          do write "forall "
+             spaced $ map pretty vars
+             write "."
 -- Type signature should line break at each arrow if necessary
 extType (TyFun _ from to) =
   attemptSingleLineType (pretty from >> write " -> " >> pretty to)
