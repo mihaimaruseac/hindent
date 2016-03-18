@@ -284,7 +284,7 @@ depend maker dependent =
      maker
      st <- get
      col <- gets psColumn
-     if state' /= st
+     if psLine state' /= psLine st || psColumn state' /= psColumn st
         then column col dependent
         else dependent
 
@@ -296,7 +296,7 @@ dependBind maker dependent =
      v <- maker
      st <- get
      col <- gets psColumn
-     if state' /= st
+     if psLine state' /= psLine st || psColumn state' /= psColumn st
         then column col (dependent v)
         else (dependent v)
 
