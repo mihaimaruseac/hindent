@@ -43,6 +43,7 @@ library
                      HIndent.Styles.Gibiansky
                      HIndent.Styles.Cramer
   build-depends:     base >= 4.7 && <5
+                   , containers
                    , data-default
                    , haskell-src-exts >= 1.17
                    , monad-loops

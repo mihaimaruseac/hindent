@@ -54,10 +54,6 @@ data PrintState s =
              ,psCommentPreprocessor :: forall m. MonadState (PrintState s) m => [Comment] -> m [Comment] -- ^ Preprocessor applied to comments on an AST before printing.
              }
 
-instance Eq (PrintState s) where
-  PrintState ilevel out newline col line _ _ _ eolc inc _pm _ == PrintState ilevel' out' newline' col' line' _ _ _ eolc' inc' _pm' _ =
-    (ilevel,out,newline,col,line,eolc, inc) == (ilevel',out',newline',col',line',eolc', inc')
-
 -- | A printer extender. Takes as argument the user state that the
 -- printer was run with, and the current node to print. Use
 -- 'prettyNoExt' to fallback to the built-in printer.

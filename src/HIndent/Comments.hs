@@ -5,106 +5,114 @@
 
 module HIndent.Comments where
 
+import Control.Applicative ((<|>))
+import Control.Arrow (first, second)
 import Control.Monad.State.Strict
 import Data.Data
-import Data.Function
+import qualified Data.Map.Strict as M
 import Data.Traversable
 import HIndent.Types
 import Language.Haskell.Exts.Annotated hiding (Style,prettyPrint,Pretty,style,parse)
 
+-- Order by start of span, larger spans before smaller spans.
+newtype OrderByStart =
+  OrderByStart SrcSpan
+  deriving (Eq)
+
+instance Ord OrderByStart where
+  compare (OrderByStart l) (OrderByStart r) =
+    compare (srcSpanStartLine l)
+            (srcSpanStartLine r) `mappend`
+    compare (srcSpanStartColumn l)
+            (srcSpanStartColumn r) `mappend`
+    compare (srcSpanEndLine r)
+            (srcSpanEndLine l) `mappend`
+    compare (srcSpanEndColumn r)
+            (srcSpanEndColumn l)
+
+-- Order by end of span, smaller spans before larger spans.
+newtype OrderByEnd =
+  OrderByEnd SrcSpan
+  deriving (Eq)
+
+instance Ord OrderByEnd where
+  compare (OrderByEnd l) (OrderByEnd r) =
+    compare (srcSpanEndLine l)
+            (srcSpanEndLine r) `mappend`
+    compare (srcSpanEndColumn l)
+            (srcSpanEndColumn r) `mappend`
+    compare (srcSpanStartLine r)
+            (srcSpanStartLine l) `mappend`
+    compare (srcSpanStartColumn r)
+            (srcSpanStartColumn l)
+
 -- | Annotate the AST with comments.
-annotateComments :: forall ast. (Data (ast NodeInfo),Traversable ast,Annotated ast)
+annotateComments :: forall ast. (Data (ast NodeInfo),Traversable ast,Annotated ast,Show (ast NodeInfo))
                  => ast SrcSpanInfo -> [Comment] -> ([ComInfo],ast NodeInfo)
 annotateComments src comments =
-  let
-      -- Make sure to process comments top to bottom.
-      reversed = reverse comments
+  evalState (do _ <- traverse assignComment comments
+                cis <- gets fst
+                ast <- traverse transferComments src
+                return (cis,ast))
+            ([],nodeinfos)
+  where
+    nodeinfos :: M.Map SrcSpanInfo NodeInfo
+    nodeinfos = foldr (\ssi -> M.insert ssi (NodeInfo ssi [])) M.empty src
 
-      -- Replace source spans with node infos in the AST.
-      src' = fmap (\n -> NodeInfo n []) src
+    -- Assign a single comment to the right AST node
+    assignComment :: Comment -> State ([ComInfo],M.Map SrcSpanInfo NodeInfo) ()
+    assignComment comment@(Comment _ cspan _) =
+      -- Find the biggest AST node directly in front of this comment.
+      case nodeBefore comment of
+        -- Comments before any AST node are handled separately.
+        Nothing -> modify $ first $ (:) (ComInfo comment Nothing)
 
-      -- Add all comments to the ast.
-      (cominfos, src'') = foldr processComment ([], src') reversed
+        Just ssi ->
+          -- Comments on the same line as the AST node belong to this node.
+          if sameline (srcInfoSpan ssi) cspan
+             then insertComment After ssi
+             else do nodeinfo <- gets ((M.! ssi) . snd)
+                     case nodeinfo of
+                       -- We've already collected comments for this
+                       -- node and this comment is a continuation.
+                       NodeInfo _ ((ComInfo c' _):_)
+                         | aligned c' comment -> insertComment After ssi
 
-  in -- Reverse order of comments at each node.
-    (cominfos, fmap (\(NodeInfo n cs) -> NodeInfo n $ reverse cs) src'')
+                       -- The comment does not belong to this node.
+                       -- If there is a node following this comment,
+                       -- assign it to that node, else keep it here,
+                       -- anyway.
+                       _ ->
+                         case nodeAfter comment of
+                           Nothing -> insertComment After ssi
+                           Just ssi' -> insertComment Before ssi'
+      where
+        sameline :: SrcSpan -> SrcSpan -> Bool
+        sameline before after = srcSpanEndLine before == srcSpanStartLine after
 
-  where processComment :: Comment
-                       -> ([ComInfo],ast NodeInfo)
-                       -> ([ComInfo],ast NodeInfo)
-        -- Add in a single comment to the ast.
-        processComment c@(Comment _ cspan _) (cs,ast) =
-          -- Try to find the node after which this comment lies.
-          case execState (traverse (collect After c) ast) Nothing of
-            -- When no node is found, the comment is on its own line.
-            Nothing -> (ComInfo c Nothing : cs, ast)
+        aligned :: Comment -> Comment -> Bool
+        aligned (Comment _ before _) (Comment _ after _) =
+          srcSpanEndLine before == srcSpanStartLine after - 1 &&
+          srcSpanStartColumn before == srcSpanStartColumn after
 
-            -- We found the node that this comment follows.
-            -- Check whether the node is on the same line.
-            Just (NodeInfo l coms)
-              -- If it's on a different line than the node, but the node has an
-              -- EOL comment, and the EOL comment and this comment are aligned,
-              -- attach this comment to the preceding node.
-              | ownLine && alignedWithPrevious -> insertedBefore
+        insertComment :: ComInfoLocation -> SrcSpanInfo -> State ([ComInfo],M.Map SrcSpanInfo NodeInfo) ()
+        insertComment l ssi = modify $ second $ M.adjust (addComment (ComInfo comment (Just l))) ssi
 
-              -- If it's on a different line than the node, look for the following node to attach it to.
-              | ownLine ->
-                  case execState (traverse (collect Before c) ast) Nothing of
-                    -- If we don't find a node after the comment, leave it with the previous node.
-                    Nothing   -> insertedBefore
-                    Just (NodeInfo node _) ->
-                      (cs, evalState (traverse (insert node (ComInfo c $ Just Before)) ast) False)
+        addComment :: ComInfo -> NodeInfo -> NodeInfo
+        addComment x (NodeInfo s xs) = NodeInfo s (x : xs)
 
-              -- If it's on the same line, insert this comment into that node.
-              | otherwise -> insertedBefore
-              where
-                ownLine = srcSpanStartLine cspan /= srcSpanEndLine (srcInfoSpan l)
-                insertedBefore = (cs, evalState (traverse (insert l (ComInfo c $ Just After)) ast) False)
-                alignedWithPrevious
-                  | null coms = False
-                  | otherwise = case last coms of
-                      -- Require single line comment after the node.
-                      ComInfo (Comment False prevSpan _) (Just After) ->
-                        srcSpanStartLine prevSpan == srcSpanStartLine cspan - 1 &&
-                        srcSpanStartColumn prevSpan == srcSpanStartColumn cspan
-                      _       -> False
+    -- Transfer collected comments into the AST.
+    transferComments :: SrcSpanInfo -> State ([ComInfo],M.Map SrcSpanInfo NodeInfo) NodeInfo
+    transferComments ssi =
+      do ni <- gets ((M.! ssi) . snd)
+         -- Sometimes, there are multiple AST nodes with the same
+         -- SrcSpan.  Make sure we assign comments to only one of
+         -- them.
+         modify $ second $ M.adjust (\(NodeInfo s _) -> NodeInfo s []) ssi
+         return ni { nodeInfoComments = reverse $ nodeInfoComments ni }
 
-        -- For a comment, check whether the comment is after the node.
-        -- If it is, store it in the state; otherwise do nothing.
-        -- The location specifies where the comment should lie relative to the node.
-        collect :: ComInfoLocation -> Comment -> NodeInfo -> State (Maybe NodeInfo) NodeInfo
-        collect loc' c ni@(NodeInfo newL _) =
-          do when (commentLocated loc' ni c)
-                  (modify (maybe (Just ni)
-                                 (\oldni@(NodeInfo oldL _) ->
-                                    Just (if (spanTest loc' `on` srcInfoSpan) oldL newL
-                                             then ni
-                                             else oldni))))
-             return ni
+    nodeBefore (Comment _ ss _) = fmap snd $ (OrderByEnd ss) `M.lookupLT` spansByEnd
+    nodeAfter (Comment _ ss _) = fmap snd $ (OrderByStart ss) `M.lookupGT` spansByStart
 
-        -- Insert the comment into the ast. Find the right node and add it to the
-        -- comments of that node. Do nothing afterwards.
-        insert :: SrcSpanInfo -> ComInfo -> NodeInfo -> State Bool NodeInfo
-        insert al c ni@(NodeInfo bl cs) =
-          do done <- get
-             if not done && al == bl
-                then do put True
-                        return (ni {nodeInfoComments = c : cs})
-                else return ni
-
--- | Is the comment after the node?
-commentLocated :: ComInfoLocation -> NodeInfo -> Comment -> Bool
-commentLocated loc' (NodeInfo (SrcSpanInfo n _) _) (Comment _ c _) =
-  spanTest loc' n c
-
--- | For @After@, does the first span end before the second starts?
--- For @Before@, does the first span start after the second ends?
-spanTest :: ComInfoLocation -> SrcSpan -> SrcSpan -> Bool
-spanTest loc' first second =
-  (srcSpanStartLine after > srcSpanEndLine before) ||
-  ((srcSpanStartLine after == srcSpanEndLine before) &&
-   (srcSpanStartColumn after > srcSpanEndColumn before))
-  where (before,after) =
-          case loc' of
-            After -> (first,second)
-            Before -> (second,first)
+    spansByStart = foldr (\ssi -> M.insert (OrderByStart $ srcInfoSpan ssi) ssi) M.empty src
+    spansByEnd = foldr (\ssi -> M.insert (OrderByEnd $ srcInfoSpan ssi) ssi) M.empty src
