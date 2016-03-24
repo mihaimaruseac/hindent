@@ -346,6 +346,23 @@ reduceIndent short long printer =
   where single = short printer
         multi = newline >> indentFull (long printer)
 
+-- | Either simply precede the given printer with a space, or with
+-- indent the the printer after a newline, depending on the available
+-- space.
+spaceOrIndent :: Printer State () -> Printer State ()
+spaceOrIndent = reduceIndent (\p -> space >> p) id
+
+-- | Special casing for `do` blocks and leading comments
+inlineExpr :: (Printer State () -> Printer State ()) -> Exp NodeInfo -> Printer State ()
+inlineExpr _ expr
+  | not (null (filterComments (== (Just Before)) expr)) =
+    do newline
+       indentFull $ pretty expr
+inlineExpr _ expr@Do{} =
+  do space
+     pretty expr
+inlineExpr fmt expr = fmt (pretty expr)
+
 --------------------------------------------------------------------------------
 -- Printer for reused syntactical constructs
 
@@ -358,25 +375,10 @@ whereBinds binds =
           indentHalf $ pretty binds
 
 rhsExpr :: Exp NodeInfo -> Printer State ()
--- Line break and indent if the RHS expression has a leading comment
-rhsExpr expr
-  | hasComments (== (Just Before)) expr =
-    do space
-       rhsSeparator
-       newline
-       indentFull $ pretty expr
--- No line break before do
-rhsExpr expr@Do{} =
-  do space
-     rhsSeparator
-     space
-     pretty expr
 rhsExpr expr =
   do space
      rhsSeparator
-     attemptSingleLine single multi
-  where single = space >> pretty expr
-        multi = reduceIndent (\p -> space >> p) id (pretty expr)
+     inlineExpr spaceOrIndent expr
 
 guardedRhsExpr
   :: GuardedRhs NodeInfo -> Printer State ()
@@ -446,14 +448,13 @@ ifExpr indent cond true false = attemptSingleLine single multi
         then' = write "then " >> pretty true
         else' = write "else " >> pretty false
 
-letExpr
-  :: Binds NodeInfo -> Printer State () -> Printer State ()
+letExpr :: Binds NodeInfo -> Exp NodeInfo -> Printer State ()
 letExpr binds expr =
   align $
   do depend (write "let ") $ pretty binds
      newline
      write "in"
-     expr
+     inlineExpr (\p -> newline >> indentFull p) expr
 
 infixExpr :: Exp NodeInfo -> Printer State ()
 -- No line break before do
@@ -465,11 +466,11 @@ infixExpr (InfixApp _ arg1 op arg2)
     align $ inter newline [pretty arg1,pretty op,pretty arg2]
   | deltaBefore /= 0 || deltaAfter /= 0 =
     pretty arg1 >>
-    spaceOrIndent
+    preserveLinebreak
       deltaBefore
       (pretty op >>
-       spaceOrIndent deltaAfter
-                     (pretty arg2))
+       preserveLinebreak deltaAfter
+                         (pretty arg2))
   | otherwise = attemptSingleLine single multi
   where single = spaced [pretty arg1,pretty op,pretty arg2]
         multi =
@@ -478,7 +479,7 @@ infixExpr (InfixApp _ arg1 op arg2)
              pretty op
              newline
              indentFull $ pretty arg2
-        spaceOrIndent delta p =
+        preserveLinebreak delta p =
           if delta > 0
              then newline >> indentFull p
              else space >> p
@@ -510,13 +511,13 @@ typeInfixExpr (TyInfix _ arg1 op arg2)
     align $ inter newline [pretty arg1,prettyInfixOp op,pretty arg2]
   | deltaBefore /= 0 || deltaAfter /= 0 =
     pretty arg1 >>
-    spaceOrIndent
+    preserveLinebreak
       deltaBefore
       (prettyInfixOp op >>
-       spaceOrIndent deltaAfter
-                     (pretty arg2))
+       preserveLinebreak deltaAfter
+                         (pretty arg2))
   | otherwise = spaced [pretty arg1,prettyInfixOp op,pretty arg2]
-  where spaceOrIndent delta p =
+  where preserveLinebreak delta p =
           if delta > 0
              then newline >> indentFull p
              else space >> p
@@ -825,13 +826,8 @@ extExp (Lambda _ pats expr) =
      maybeSpace
      spaced $ map pretty pats
      write " ->"
-     -- No line break before do
-     case expr of
-       Do{} -> single
-       _ -> attemptSingleLine single multi
-  where single = space >> pretty expr
-        multi = newline >> indentFull (pretty expr)
-        maybeSpace =
+     inlineExpr (\p -> attemptSingleLine (space >> p) (spaceOrIndent p)) expr
+  where maybeSpace =
           case pats of
             PBangPat{}:_ -> space
             PIrrPat{}:_ -> space
@@ -839,8 +835,7 @@ extExp (Lambda _ pats expr) =
 -- If-then-else on one line or newline and indent before then and else
 extExp (If _ cond true false) = ifExpr id cond true false
 -- Newline before in
-extExp (Let _ binds expr@Do{}) = letExpr binds $ space >> pretty expr
-extExp (Let _ binds expr) = letExpr binds $ newline >> indentFull (pretty expr)
+extExp (Let _ binds expr) = letExpr binds expr
 -- Tuples on a single line (no space inside parens but after comma) or
 -- one element per line with parens and comma aligned
 extExp (Tuple _ boxed exprs) = tupleExpr boxed exprs
