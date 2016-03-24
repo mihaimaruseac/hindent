@@ -183,9 +183,13 @@ indentHalf p = getIndentSpaces >>= flip indented p . (`div` 2)
 align :: MonadState (PrintState s) m
       => m a -> m a
 align p =
-  do col <- getColumn
-     indent <- gets psIndentLevel
-     column (max col indent) p
+  do st <- get
+     let col =
+           if psEolComment st
+              then psIndentLevel st
+              else max (psColumn st)
+                       (psIndentLevel st)
+     column col p
 
 -- | Update the line breaking mode and restore afterwards.
 withLineBreak
