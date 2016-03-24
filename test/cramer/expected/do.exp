@@ -9,3 +9,8 @@ main = repeatedly $
     getline >>=
         \s -> do
             putStrLn s
+
+main =
+    -- comment
+    do
+        getLine >>= putStrLn

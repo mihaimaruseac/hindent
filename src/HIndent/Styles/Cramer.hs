@@ -125,6 +125,10 @@ padRight l s = take (max l (length s)) (s ++ repeat ' ')
 filterComments :: Annotated a => (Maybe ComInfoLocation -> Bool) -> a NodeInfo -> [ComInfo]
 filterComments f = filter (f . comInfoLocation) . nodeInfoComments . ann
 
+-- | Return whether an AST node has matching comments.
+hasComments :: Annotated a => (Maybe ComInfoLocation -> Bool) -> a NodeInfo -> Bool
+hasComments f = not . null . filterComments f
+
 -- | Copy comments marked After from one AST node to another.
 copyComments :: (Annotated ast1,Annotated ast2)
              => ComInfoLocation
@@ -354,6 +358,13 @@ whereBinds binds =
           indentHalf $ pretty binds
 
 rhsExpr :: Exp NodeInfo -> Printer State ()
+-- Line break and indent if the RHS expression has a leading comment
+rhsExpr expr
+  | hasComments (== (Just Before)) expr =
+    do space
+       rhsSeparator
+       newline
+       indentFull $ pretty expr
 -- No line break before do
 rhsExpr expr@Do{} =
   do space
@@ -577,7 +588,7 @@ extExportSpecList (ExportSpecList _ exports) =
   case exports of
     [] -> write " ( )"
     [e]
-      | not (hasComments e) -> write " ( " >> pretty e >> write " )"
+      | not (hasComments (const True) e) -> write " ( " >> pretty e >> write " )"
     (first:rest) ->
       do newline
          indentFull $
@@ -590,8 +601,7 @@ extExportSpecList (ExportSpecList _ exports) =
                      prettyExportSpec ", " commentCol export
               newline
               write ")"
-  where hasComments = any (not . null . nodeInfoComments)
-        printCommentsSimple loc ast =
+  where printCommentsSimple loc ast =
           let rawComments = filterComments (== Just loc) ast
           in do preprocessor <- gets psCommentPreprocessor
                 comments <- preprocessor $ map comInfoComment rawComments
