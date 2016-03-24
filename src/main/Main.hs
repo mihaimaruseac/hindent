@@ -108,19 +108,3 @@ readExtension x =
   case classifyExtension x of
     UnknownExtension _ -> Nothing
     x' -> Just x'
-
--- | Default extensions.
-defaultExtensions :: [Extension]
-defaultExtensions =
-  [e | e@EnableExtension{} <- knownExtensions] \\
-  map EnableExtension badExtensions
-
--- | Extensions which steal too much syntax.
-badExtensions :: [KnownExtension]
-badExtensions =
-    [Arrows -- steals proc
-    ,TransformListComp -- steals the group keyword
-    ,XmlSyntax, RegularPatterns -- steals a-b
-    ,UnboxedTuples -- breaks (#) lens operator
-    -- ,QuasiQuotes -- breaks [x| ...], making whitespace free list comps break
-    ]

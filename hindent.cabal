@@ -85,3 +85,17 @@ test-suite hspec
                    , text
                    , hspec
                    , directory
+
+benchmark hindent-bench
+  type: exitcode-stdio-1.0
+  hs-source-dirs:    src/main
+  ghc-options:       -Wall -O2 -rtsopts
+  main-is:           Benchmark.hs
+  build-depends:     base >= 4 && < 5
+                   , hindent
+                   , text
+                   , haskell-src-exts
+                   , ghc-prim
+                   , directory
+                   , criterion
+                   , deepseq

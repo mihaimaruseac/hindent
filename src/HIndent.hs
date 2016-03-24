@@ -21,6 +21,7 @@ module HIndent
   ,testFile
   ,testAll
   ,testAst
+  ,defaultExtensions
   )
   where
 
@@ -33,9 +34,13 @@ import           HIndent.Styles.Gibiansky (gibiansky)
 import           HIndent.Styles.JohanTibell (johanTibell)
 import           HIndent.Types
 
+import           Control.Applicative ((<$>))
 import           Control.Monad.State.Strict
 import           Control.Monad.Trans.Maybe
+import           Data.Function (on)
 import           Data.Functor.Identity
+import           Data.List
+import           Data.List (groupBy, intersperse)
 import           Data.Maybe (fromMaybe)
 import           Data.Monoid
 import qualified Data.Text.IO as ST
@@ -45,9 +50,6 @@ import           Data.Text.Lazy.Builder (Builder)
 import qualified Data.Text.Lazy.Builder as T
 import qualified Data.Text.Lazy.IO as T
 import           Language.Haskell.Exts.Annotated hiding (Style, prettyPrint, Pretty, style, parse)
-import           Data.Function (on)
-import           Data.List (groupBy, intersperse)
-import           Control.Applicative ((<$>))
 
 data CodeBlock = HaskellSource Text
                | CPPDirectives Text
@@ -231,3 +233,19 @@ testAst x =
 styles :: [Style]
 styles =
   [fundamental,chrisDone,johanTibell,gibiansky,cramer]
+
+-- | Default extensions.
+defaultExtensions :: [Extension]
+defaultExtensions =
+  [e | e@EnableExtension{} <- knownExtensions] \\
+  map EnableExtension badExtensions
+
+-- | Extensions which steal too much syntax.
+badExtensions :: [KnownExtension]
+badExtensions =
+    [Arrows -- steals proc
+    ,TransformListComp -- steals the group keyword
+    ,XmlSyntax, RegularPatterns -- steals a-b
+    ,UnboxedTuples -- breaks (#) lens operator
+    -- ,QuasiQuotes -- breaks [x| ...], making whitespace free list comps break
+    ]
