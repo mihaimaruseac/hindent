@@ -112,8 +112,8 @@ isEnum _ = False
 
 -- | Return whether a data type has only zero or one constructor.
 isSingletonType :: Decl NodeInfo -> Bool
-isSingletonType (DataDecl _ _ Nothing (DHead _ _) [] _) = True
-isSingletonType (DataDecl _ _ Nothing (DHead _ _) [ _ ] _) = True
+isSingletonType (DataDecl _ _ _ _ [] _) = True
+isSingletonType (DataDecl _ _ _ _ [ _ ] _) = True
 isSingletonType _ = False
 
 -- | If the given String is smaller than the given length, pad on
@@ -124,6 +124,10 @@ padRight l s = take (max l (length s)) (s ++ repeat ' ')
 -- | Return comments with matching location.
 filterComments :: Annotated a => (Maybe ComInfoLocation -> Bool) -> a NodeInfo -> [ComInfo]
 filterComments f = filter (f . comInfoLocation) . nodeInfoComments . ann
+
+-- | Return whether an AST node has matching comments.
+hasComments :: Annotated a => (Maybe ComInfoLocation -> Bool) -> a NodeInfo -> Bool
+hasComments f = not . null . filterComments f
 
 -- | Copy comments marked After from one AST node to another.
 copyComments :: (Annotated ast1,Annotated ast2)
@@ -183,9 +187,13 @@ indentHalf p = getIndentSpaces >>= flip indented p . (`div` 2)
 align :: MonadState (PrintState s) m
       => m a -> m a
 align p =
-  do col <- getColumn
-     indent <- gets psIndentLevel
-     column (max col indent) p
+  do st <- get
+     let col =
+           if psEolComment st
+              then psIndentLevel st
+              else max (psColumn st)
+                       (psIndentLevel st)
+     column col p
 
 -- | Update the line breaking mode and restore afterwards.
 withLineBreak
@@ -338,6 +346,23 @@ reduceIndent short long printer =
   where single = short printer
         multi = newline >> indentFull (long printer)
 
+-- | Either simply precede the given printer with a space, or with
+-- indent the the printer after a newline, depending on the available
+-- space.
+spaceOrIndent :: Printer State () -> Printer State ()
+spaceOrIndent = reduceIndent (\p -> space >> p) id
+
+-- | Special casing for `do` blocks and leading comments
+inlineExpr :: (Printer State () -> Printer State ()) -> Exp NodeInfo -> Printer State ()
+inlineExpr _ expr
+  | not (null (filterComments (== (Just Before)) expr)) =
+    do newline
+       indentFull $ pretty expr
+inlineExpr _ expr@Do{} =
+  do space
+     pretty expr
+inlineExpr fmt expr = fmt (pretty expr)
+
 --------------------------------------------------------------------------------
 -- Printer for reused syntactical constructs
 
@@ -350,18 +375,10 @@ whereBinds binds =
           indentHalf $ pretty binds
 
 rhsExpr :: Exp NodeInfo -> Printer State ()
--- No line break before do
-rhsExpr expr@Do{} =
-  do space
-     rhsSeparator
-     space
-     pretty expr
 rhsExpr expr =
   do space
      rhsSeparator
-     attemptSingleLine single multi
-  where single = space >> pretty expr
-        multi = reduceIndent (\p -> space >> p) id (pretty expr)
+     inlineExpr spaceOrIndent expr
 
 guardedRhsExpr
   :: GuardedRhs NodeInfo -> Printer State ()
@@ -431,14 +448,13 @@ ifExpr indent cond true false = attemptSingleLine single multi
         then' = write "then " >> pretty true
         else' = write "else " >> pretty false
 
-letExpr
-  :: Binds NodeInfo -> Printer State () -> Printer State ()
+letExpr :: Binds NodeInfo -> Exp NodeInfo -> Printer State ()
 letExpr binds expr =
   align $
   do depend (write "let ") $ pretty binds
      newline
      write "in"
-     expr
+     inlineExpr (\p -> newline >> indentFull p) expr
 
 infixExpr :: Exp NodeInfo -> Printer State ()
 -- No line break before do
@@ -450,11 +466,11 @@ infixExpr (InfixApp _ arg1 op arg2)
     align $ inter newline [pretty arg1,pretty op,pretty arg2]
   | deltaBefore /= 0 || deltaAfter /= 0 =
     pretty arg1 >>
-    spaceOrIndent
+    preserveLinebreak
       deltaBefore
       (pretty op >>
-       spaceOrIndent deltaAfter
-                     (pretty arg2))
+       preserveLinebreak deltaAfter
+                         (pretty arg2))
   | otherwise = attemptSingleLine single multi
   where single = spaced [pretty arg1,pretty op,pretty arg2]
         multi =
@@ -463,7 +479,7 @@ infixExpr (InfixApp _ arg1 op arg2)
              pretty op
              newline
              indentFull $ pretty arg2
-        spaceOrIndent delta p =
+        preserveLinebreak delta p =
           if delta > 0
              then newline >> indentFull p
              else space >> p
@@ -495,13 +511,13 @@ typeInfixExpr (TyInfix _ arg1 op arg2)
     align $ inter newline [pretty arg1,prettyInfixOp op,pretty arg2]
   | deltaBefore /= 0 || deltaAfter /= 0 =
     pretty arg1 >>
-    spaceOrIndent
+    preserveLinebreak
       deltaBefore
       (prettyInfixOp op >>
-       spaceOrIndent deltaAfter
-                     (pretty arg2))
+       preserveLinebreak deltaAfter
+                         (pretty arg2))
   | otherwise = spaced [pretty arg1,prettyInfixOp op,pretty arg2]
-  where spaceOrIndent delta p =
+  where preserveLinebreak delta p =
           if delta > 0
              then newline >> indentFull p
              else space >> p
@@ -573,7 +589,7 @@ extExportSpecList (ExportSpecList _ exports) =
   case exports of
     [] -> write " ( )"
     [e]
-      | not (hasComments e) -> write " ( " >> pretty e >> write " )"
+      | not (hasComments (const True) e) -> write " ( " >> pretty e >> write " )"
     (first:rest) ->
       do newline
          indentFull $
@@ -586,8 +602,7 @@ extExportSpecList (ExportSpecList _ exports) =
                      prettyExportSpec ", " commentCol export
               newline
               write ")"
-  where hasComments = any (not . null . nodeInfoComments)
-        printCommentsSimple loc ast =
+  where printCommentsSimple loc ast =
           let rawComments = filterComments (== Just loc) ast
           in do preprocessor <- gets psCommentPreprocessor
                 comments <- preprocessor $ map comInfoComment rawComments
@@ -637,7 +652,7 @@ extDecl (ClassDecl _ mcontext declhead fundeps mdecls) =
      maybeM_ mdecls $
        \decls ->
          do newline
-            indentFull $ lined $ map pretty decls
+            indentFull $ preserveLineSpacing decls
 -- Align data constructors
 extDecl decl@(DataDecl _ dataOrNew mcontext declHead constructors mderiv) =
   do mapM_ pretty mcontext
@@ -662,6 +677,8 @@ extDecl (TypeSig _ names ty) =
   do inter (write ", ") $ map pretty names
      space
      typeSig ty
+-- Preserve empty lines between function matches
+extDecl (FunBind  _ matches) = preserveLineSpacing matches
 -- Half-indent for where clause, half-indent binds
 extDecl (PatBind _ pat rhs mbinds) =
   do pretty pat
@@ -811,13 +828,8 @@ extExp (Lambda _ pats expr) =
      maybeSpace
      spaced $ map pretty pats
      write " ->"
-     -- No line break before do
-     case expr of
-       Do{} -> single
-       _ -> attemptSingleLine single multi
-  where single = space >> pretty expr
-        multi = newline >> indentFull (pretty expr)
-        maybeSpace =
+     inlineExpr (\p -> attemptSingleLine (space >> p) (spaceOrIndent p)) expr
+  where maybeSpace =
           case pats of
             PBangPat{}:_ -> space
             PIrrPat{}:_ -> space
@@ -825,8 +837,7 @@ extExp (Lambda _ pats expr) =
 -- If-then-else on one line or newline and indent before then and else
 extExp (If _ cond true false) = ifExpr id cond true false
 -- Newline before in
-extExp (Let _ binds expr@Do{}) = letExpr binds $ space >> pretty expr
-extExp (Let _ binds expr) = letExpr binds $ newline >> indentFull (pretty expr)
+extExp (Let _ binds expr) = letExpr binds expr
 -- Tuples on a single line (no space inside parens but after comma) or
 -- one element per line with parens and comma aligned
 extExp (Tuple _ boxed exprs) = tupleExpr boxed exprs
@@ -836,6 +847,13 @@ extExp (List _ exprs) = listExpr exprs
 -- field with aligned braces and comma
 extExp (RecConstr _ qname updates) = recordExpr qname updates
 extExp (RecUpdate _ expr updates) = recordExpr expr updates
+-- Full indentation for case alts and preserve empty lines between alts
+extExp (Case _ expr alts) =
+  do write "case "
+     pretty expr
+     write " of"
+     newline
+     withCaseContext True $ indentFull $ preserveLineSpacing alts
 -- Line break and indent after do
 extExp (Do _ stmts) =
   do write "do"
