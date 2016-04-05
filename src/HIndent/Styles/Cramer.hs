@@ -112,8 +112,8 @@ isEnum _ = False
 
 -- | Return whether a data type has only zero or one constructor.
 isSingletonType :: Decl NodeInfo -> Bool
-isSingletonType (DataDecl _ _ Nothing (DHead _ _) [] _) = True
-isSingletonType (DataDecl _ _ Nothing (DHead _ _) [ _ ] _) = True
+isSingletonType (DataDecl _ _ _ _ [] _) = True
+isSingletonType (DataDecl _ _ _ _ [ _ ] _) = True
 isSingletonType _ = False
 
 -- | If the given String is smaller than the given length, pad on
