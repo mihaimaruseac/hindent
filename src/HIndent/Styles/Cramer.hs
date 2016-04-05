@@ -652,7 +652,7 @@ extDecl (ClassDecl _ mcontext declhead fundeps mdecls) =
      maybeM_ mdecls $
        \decls ->
          do newline
-            indentFull $ lined $ map pretty decls
+            indentFull $ preserveLineSpacing decls
 -- Align data constructors
 extDecl decl@(DataDecl _ dataOrNew mcontext declHead constructors mderiv) =
   do mapM_ pretty mcontext
@@ -677,6 +677,8 @@ extDecl (TypeSig _ names ty) =
   do inter (write ", ") $ map pretty names
      space
      typeSig ty
+-- Preserve empty lines between function matches
+extDecl (FunBind  _ matches) = preserveLineSpacing matches
 -- Half-indent for where clause, half-indent binds
 extDecl (PatBind _ pat rhs mbinds) =
   do pretty pat
@@ -845,6 +847,13 @@ extExp (List _ exprs) = listExpr exprs
 -- field with aligned braces and comma
 extExp (RecConstr _ qname updates) = recordExpr qname updates
 extExp (RecUpdate _ expr updates) = recordExpr expr updates
+-- Full indentation for case alts and preserve empty lines between alts
+extExp (Case _ expr alts) =
+  do write "case "
+     pretty expr
+     write " of"
+     newline
+     withCaseContext True $ indentFull $ preserveLineSpacing alts
 -- Line break and indent after do
 extExp (Do _ stmts) =
   do write "do"
