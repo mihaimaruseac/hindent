@@ -260,8 +260,19 @@ getLineNum = gets psLine
 -- | Output a newline.
 newline :: Printer s ()
 newline =
-  do write "\n"
-     modify (\s -> s {psNewline = True})
+  do state <- get
+     let clearEmpty = configClearEmptyLines (psConfig state)
+         indent =
+           if psNewline state && not clearEmpty
+              then fromIntegral (psIndentLevel state)
+              else 0
+         out = T.justifyRight (indent + 1) ' ' "\n"
+     modify (\s ->
+               s {psOutput = psOutput state <> T.fromText out
+                 ,psNewline = True
+                 ,psEolComment = False
+                 ,psLine = psLine state + 1
+                 ,psColumn = 0})
 
 -- | Set the context to a case context, where RHS is printed with -> .
 withCaseContext :: Bool -> Printer s a -> Printer s a
@@ -345,33 +356,21 @@ int = write . decimal
 write :: Builder -> Printer s ()
 write x =
   do eol <- gets psEolComment
-     when (eol && x /= "\n") newline
-     state <- get
-     let clearEmpty =
-           configClearEmptyLines (psConfig state)
-         writingNewline = x == "\n"
-         out =
-           if psNewline state &&
-              not (clearEmpty && writingNewline)
-              then T.fromText
-                     (T.replicate (fromIntegral (psIndentLevel state))
-                                  " ") <>
-                   x
-              else x
-         out' = T.toLazyText out
-     modify (\s ->
-               s {psOutput = psOutput state <> out
-                 ,psNewline = False
-                 ,psEolComment = False
-                 ,psLine = psLine state + additionalLines
-                 ,psColumn =
-                    if additionalLines > 0
-                       then LT.length (LT.concat (take 1 (reverse srclines)))
-                       else psColumn state + LT.length out'})
-  where x' = T.toLazyText x
-        srclines = LT.lines x'
-        additionalLines =
-          LT.length (LT.filter (== '\n') x')
+     when eol newline
+     write' $ T.toLazyText x
+  where write' x' =
+          do state <- get
+             let indent = fromIntegral (psIndentLevel state)
+                 out =
+                   if psNewline state
+                      then LT.replicate indent " " `LT.append` x'
+                      else x'
+             modify (\s ->
+                       s {psOutput = psOutput state <> T.fromLazyText out
+                         ,psNewline = False
+                         ,psEolComment = False
+                         ,psColumn =
+                            psColumn state + fromIntegral (LT.length out)})
 
 -- | Write a string.
 string :: String -> Printer s ()
