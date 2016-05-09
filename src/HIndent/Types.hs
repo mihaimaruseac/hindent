@@ -9,6 +9,7 @@
 
 module HIndent.Types
   (Printer(..)
+  ,execPrinter
   ,PrintState(..)
   ,Extender(..)
   ,Style(..)
@@ -21,7 +22,7 @@ module HIndent.Types
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.State.Strict (MonadState(..),StateT)
+import Control.Monad.State.Strict (MonadState(..),StateT,execStateT)
 import Control.Monad.Trans.Maybe
 import Data.Data
 import Data.Default
@@ -37,6 +38,9 @@ import Language.Haskell.Exts.SrcLoc
 newtype Printer s a =
   Printer {runPrinter :: StateT (PrintState s) (MaybeT Identity) a}
   deriving (Applicative,Monad,Functor,MonadState (PrintState s),MonadPlus,Alternative)
+
+execPrinter :: Printer s a -> PrintState s -> Maybe (PrintState s)
+execPrinter m s = runIdentity $ runMaybeT $ execStateT (runPrinter m) s
 
 -- | The state of the pretty printer.
 data PrintState s =
