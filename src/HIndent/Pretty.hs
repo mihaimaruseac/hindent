@@ -14,6 +14,7 @@ module HIndent.Pretty
     Pretty
   , pretty
   , prettyNoExt
+  , cut
   -- * User state
   ,getState
   ,putState
@@ -64,7 +65,9 @@ module HIndent.Pretty
 import           HIndent.Types
 
 import           Language.Haskell.Exts.Comments
+import           Control.Applicative (empty)
 import           Control.Monad.State.Strict hiding (state)
+import           Control.Monad.Search (cost')
 import           Data.Int
 import           Data.List
 import           Data.Maybe
@@ -112,6 +115,16 @@ pretty a =
 prettyNoExt :: Pretty ast
             => ast NodeInfo -> Printer s ()
 prettyNoExt = prettyInternal
+
+-- | Try only the first (i.e. locally best) solution to the given
+-- pretty printer.  Use this function to improve performance whenever
+-- the formatting of an AST node has no effect on the penalty of any
+-- following AST node, such as top-level declarations or case
+-- branches.
+cut :: Printer s () -> Printer s ()
+cut p =
+  do s <- get
+     maybe empty (\(c,s') -> cost' c >> put s') $ execPrinter p s
 
 -- | Print comments of a node.
 printComments :: Pretty ast

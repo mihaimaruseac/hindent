@@ -185,7 +185,8 @@ runPrinterStyle
 runPrinterStyle mode' (Style _name _author _desc st extenders config preprocessor) m =
   maybe (error "Printer failed with mzero call.")
         psOutput
-        (execPrinter
+        (snd <$>
+         execPrinter
            m
            (PrintState 0 mempty False 0 1 st extenders config False False mode' preprocessor))
 

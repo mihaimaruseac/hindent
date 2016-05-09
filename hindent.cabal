@@ -47,6 +47,7 @@ library
                    , data-default
                    , haskell-src-exts >= 1.17
                    , monad-loops
+                   , monad-dijkstra
                    , mtl
                    , text
                    , transformers
