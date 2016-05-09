@@ -215,6 +215,15 @@ withLineBreak lb p =
      modifyState $ \s -> s {cramerLineBreak = old}
      return result
 
+-- | Relax the line breaking mode and restore afterwards.  In
+-- multi-line mode, switch to free line breaking, otherwise keep line
+-- breaking mode.
+withLineBreakRelaxed
+  :: Printer State a -> Printer State a
+withLineBreakRelaxed p =
+  do old <- gets (cramerLineBreak . psUserState)
+     withLineBreak (if old == Multi then Free else old) p
+
 -- | Use the first printer if it fits on a single line within the
 -- column limit, otherwise use the second.
 attemptSingleLine
@@ -744,9 +753,9 @@ extType (TyFun _ from to) =
   attemptSingleLineType (pretty from >> write " -> " >> pretty to)
                         (pretty from >> newline >> write "-> " >> pretty to)
 -- Parentheses reset forced line breaking
-extType (TyParen _ ty) = withLineBreak Free $ parens $ pretty ty
+extType (TyParen _ ty) = withLineBreakRelaxed $ parens $ pretty ty
 -- Tuple types on one line, with space after comma
-extType (TyTuple _ boxed tys) = withLineBreak Free $ tupleExpr boxed tys
+extType (TyTuple _ boxed tys) = withLineBreakRelaxed $ tupleExpr boxed tys
 -- Infix application
 extType expr@TyInfix{} = typeInfixExpr expr
 extType other = prettyNoExt other
