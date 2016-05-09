@@ -182,13 +182,12 @@ prettyPrint mode' style m comments =
 -- | Pretty print the given printable thing.
 runPrinterStyle
   :: ParseMode -> Style -> (forall s. Printer s ()) -> Builder
-runPrinterStyle mode' (Style _name _author _desc st extenders config preprocessor) m =
+runPrinterStyle mode' (Style _name _author _desc st extenders config preprocessor penalty) m =
   maybe (error "Printer failed with mzero call.")
         psOutput
-        (snd <$>
-         execPrinter
+        (snd <$> execPrinter
            m
-           (PrintState 0 mempty False 0 1 st extenders config False False mode' preprocessor))
+           (PrintState 0 mempty False 0 1 st extenders config False False mode' preprocessor penalty))
 
 -- | Parse mode, includes all extensions, doesn't assume any fixities.
 parseMode :: ParseMode

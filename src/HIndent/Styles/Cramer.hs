@@ -74,7 +74,8 @@ cramer =
            defaultConfig {configMaxColumns = 80
                          ,configIndentSpaces = 4
                          ,configClearEmptyLines = True}
-        ,styleCommentPreprocessor = return}
+        ,styleCommentPreprocessor = return
+        ,styleLinePenalty = defaultLinePenalty}
 
 --------------------------------------------------------------------------------
 -- Helper

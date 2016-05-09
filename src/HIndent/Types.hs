@@ -9,6 +9,7 @@
 
 module HIndent.Types
   (Penalty(..)
+  ,defaultLinePenalty
   ,Printer(..)
   ,execPrinter
   ,PrintState(..)
@@ -23,7 +24,7 @@ module HIndent.Types
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.State.Strict (MonadState(..),StateT,execStateT)
+import Control.Monad.State.Strict (MonadState(..),StateT,execStateT,gets)
 import Control.Monad.Search (MonadSearch,Search,runSearch)
 import Data.Data
 import Data.Default
@@ -41,6 +42,14 @@ newtype Penalty = Penalty Int
 instance Monoid Penalty where
     mempty = 0
     mappend = (+)
+
+defaultLinePenalty :: Bool -> Int64 -> Printer s Penalty
+defaultLinePenalty eol col =
+  do maxCol <- gets (configMaxColumns . psConfig)
+     return $ linebreakPenalty + overfullPenalty (col - maxCol)
+  where
+    linebreakPenalty = if eol then 1 else 0
+    overfullPenalty n = if n > 0 then 10 else 0
 
 -- | A pretty printing monad.
 newtype Printer s a =
@@ -64,6 +73,7 @@ data PrintState s =
              ,psInsideCase :: !Bool -- ^ Whether we're in a case statement, used for Rhs printing.
              ,psParseMode :: !ParseMode -- ^ Mode used to parse the original AST.
              ,psCommentPreprocessor :: forall t. [Comment] -> Printer t [Comment] -- ^ Preprocessor applied to comments on an AST before printing.
+             ,psLinePenalty :: Bool -> Int64 -> Printer s Penalty
              }
 
 -- | A printer extender. Takes as argument the user state that the
@@ -82,6 +92,7 @@ data Style =
                   ,styleExtenders :: ![Extender s] -- ^ Extenders to the printer.
                   ,styleDefConfig :: !Config -- ^ Default config to use for this style.
                   ,styleCommentPreprocessor :: forall t. [Comment] -> Printer t [Comment] -- ^ Preprocessor to use for comments.
+                  ,styleLinePenalty :: Bool -> Int64 -> Printer s Penalty
                   }
 
 -- | Configurations shared among the different styles. Styles may pay

@@ -67,7 +67,7 @@ import           HIndent.Types
 import           Language.Haskell.Exts.Comments
 import           Control.Applicative (empty)
 import           Control.Monad.State.Strict hiding (state)
-import           Control.Monad.Search (cost')
+import           Control.Monad.Search (cost,cost')
 import           Data.Int
 import           Data.List
 import           Data.Maybe
@@ -267,6 +267,8 @@ newline =
               then fromIntegral (psIndentLevel state)
               else 0
          out = T.justifyRight (indent + 1) ' ' "\n"
+     penalty <- psLinePenalty state True (psColumn state)
+     when (penalty /= mempty) $ cost penalty mempty
      modify (\s ->
                s {psOutput = psOutput state <> T.fromText out
                  ,psNewline = True
@@ -365,12 +367,14 @@ write x =
                    if psNewline state
                       then LT.replicate indent " " `LT.append` x'
                       else x'
+                 newCol = psColumn state + fromIntegral (LT.length out)
+             penalty <- psLinePenalty state False newCol
+             when (penalty /= mempty) $ cost mempty penalty
              modify (\s ->
                        s {psOutput = psOutput state <> T.fromLazyText out
                          ,psNewline = False
                          ,psEolComment = False
-                         ,psColumn =
-                            psColumn state + fromIntegral (LT.length out)})
+                         ,psColumn = newCol})
 
 -- | Write a string.
 string :: String -> Printer s ()

@@ -57,7 +57,8 @@ johanTibell =
         ,styleDefConfig =
            defaultConfig {configMaxColumns = 80
                          ,configIndentSpaces = 4}
-        ,styleCommentPreprocessor = return}
+        ,styleCommentPreprocessor = return
+        ,styleLinePenalty = defaultLinePenalty}
 
 --------------------------------------------------------------------------------
 -- Extenders

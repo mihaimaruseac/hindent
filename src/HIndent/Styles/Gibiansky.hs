@@ -58,6 +58,7 @@ gibiansky = Style { styleName = "gibiansky"
                                                    , configClearEmptyLines = True
                                                    }
                   , styleCommentPreprocessor = commentPreprocessor
+                  , styleLinePenalty = defaultLinePenalty
                   }
 
 -- Field accessor for Comment.
