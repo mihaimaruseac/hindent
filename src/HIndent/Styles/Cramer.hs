@@ -7,7 +7,7 @@
 module HIndent.Styles.Cramer (cramer) where
 
 import Control.Monad (forM_, replicateM_, unless, when)
-import Control.Monad.State.Strict (MonadState, get, gets, put)
+import Control.Monad.State.Strict (get, gets, put)
 
 import Data.List (intersperse, sortOn)
 import Data.Maybe (catMaybes, isJust, mapMaybe)
@@ -159,33 +159,27 @@ lineDelta prev next = nextLine - prevLine
         annComment (Comment _ sp _) = sp
 
 -- | Specialized forM_ for Maybe.
-maybeM_ :: Monad m
-        => Maybe a -> (a -> m ()) -> m ()
+maybeM_ :: Maybe a -> (a -> Printer s ()) -> Printer s ()
 maybeM_ = forM_
 
 -- | Simplified HIndent.Pretty.inter that does not modify the indent level.
-inter :: MonadState (PrintState s) m
-      => m () -> [m ()] -> m ()
+inter :: Printer s () -> [Printer s ()] -> Printer s ()
 inter sep = sequence_ . intersperse sep
 
 -- | Simplified HIndent.Pretty.spaced that does not modify the indent level.
-spaced :: MonadState (PrintState s) m
-       => [m ()] -> m ()
+spaced :: [Printer s ()] -> Printer s ()
 spaced = inter space
 
 -- | Indent one level.
-indentFull :: MonadState (PrintState s) m
-           => m a -> m a
+indentFull :: Printer s a -> Printer s a
 indentFull p = getIndentSpaces >>= flip indented p
 
 -- | Indent a half level.
-indentHalf :: MonadState (PrintState s) m
-           => m a -> m a
+indentHalf :: Printer s a -> Printer s a
 indentHalf p = getIndentSpaces >>= flip indented p . (`div` 2)
 
 -- | Set indentation level to current column.
-align :: MonadState (PrintState s) m
-      => m a -> m a
+align :: Printer s a -> Printer s a
 align p =
   do st <- get
      let col =
@@ -388,8 +382,7 @@ guardedRhsExpr (GuardedRhs _ guards expr) =
      rhsExpr expr
 
 -- | Pretty print a name for being an infix operator.
-prettyInfixOp :: MonadState (PrintState s) m
-              => QName NodeInfo -> m ()
+prettyInfixOp :: QName NodeInfo -> Printer s ()
 prettyInfixOp op =
   case op of
     Qual{} ->

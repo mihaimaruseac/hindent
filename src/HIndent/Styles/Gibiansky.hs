@@ -70,7 +70,7 @@ commentContent (Comment _ _ content) = content
 commentSrcSpan :: Comment -> SrcSpan
 commentSrcSpan (Comment _ srcSpan _) = srcSpan
 
-commentPreprocessor :: MonadState (PrintState s) m => [Comment] -> m [Comment]
+commentPreprocessor :: [Comment] -> Printer s [Comment]
 commentPreprocessor cs = do
   config <- gets psConfig
   col <- getColumn
@@ -777,7 +777,7 @@ writeCaseAlts alts = do
         newline
         indented indentSpaces $ depend (write "where ") (pretty binds)
 
-prettyCommentCallbacks :: (Pretty ast,MonadState (PrintState s) m) => ast NodeInfo -> (ComInfoLocation -> m ()) -> m ()
+prettyCommentCallbacks :: Pretty ast => ast NodeInfo -> (ComInfoLocation -> Printer s ()) -> Printer s ()
 prettyCommentCallbacks a f =
   do st <- get
      case st of
