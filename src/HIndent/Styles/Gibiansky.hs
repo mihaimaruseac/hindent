@@ -7,8 +7,6 @@ import           Data.Foldable
 -- import           Control.Applicative ((<$>))
 import           Data.Maybe
 import           Data.List (unfoldr, isPrefixOf)
-import           Control.Monad.Trans.Maybe
-import           Data.Functor.Identity
 import           Control.Monad.State.Strict hiding (state, State, forM_, sequence_)
 import           Data.Typeable
 
@@ -786,12 +784,7 @@ prettyCommentCallbacks a f =
            printComments Before a
            f Before
            depend
-             (case listToMaybe (mapMaybe (makePrinter s) es) of
-                Just (Printer m) ->
-                  modify (\s' ->
-                            fromMaybe s'
-                                      (runIdentity (runMaybeT (execStateT m s'))))
-                Nothing -> prettyNoExt a)
+             (fromMaybe (prettyNoExt a) $ listToMaybe (mapMaybe (makePrinter s) es))
              (f After >> printComments After a)
   where makePrinter _ (Extender f) =
           case cast a of

@@ -61,8 +61,6 @@ module HIndent.Pretty
   )
   where
 
-import           Control.Monad.Trans.Maybe
-import           Data.Functor.Identity
 import           HIndent.Types
 
 import           Language.Haskell.Exts.Comments
@@ -100,12 +98,7 @@ pretty a =
          do
            printComments Before a
            depend
-             (case listToMaybe (mapMaybe (makePrinter s) es) of
-                Just (Printer m) ->
-                  modify (\s' ->
-                            fromMaybe s'
-                                      (runIdentity (runMaybeT (execStateT m s'))))
-                Nothing -> prettyNoExt a)
+             (fromMaybe (prettyNoExt a) $ listToMaybe (mapMaybe (makePrinter s) es))
              (printComments After a)
   where makePrinter _ (Extender f) =
           case cast a of
