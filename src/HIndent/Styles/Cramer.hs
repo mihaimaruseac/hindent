@@ -6,9 +6,11 @@
 
 module HIndent.Styles.Cramer (cramer) where
 
+import Control.Applicative ((<|>), empty)
 import Control.Monad (forM_, replicateM_, unless, when)
-import Control.Monad.State.Strict (get, gets, put)
+import Control.Monad.State.Strict (get, gets)
 
+import Data.Int (Int64)
 import Data.List (intersperse, sortOn)
 import Data.Maybe (catMaybes, isJust, mapMaybe)
 
@@ -75,10 +77,28 @@ cramer =
                          ,configIndentSpaces = 4
                          ,configClearEmptyLines = True}
         ,styleCommentPreprocessor = return
-        ,styleLinePenalty = defaultLinePenalty}
+        ,styleLinePenalty = linePenalty}
 
 --------------------------------------------------------------------------------
 -- Helper
+
+-- | Compute line penalty
+linePenalty
+  :: Bool -> Int64 -> Printer State Penalty
+linePenalty eol col =
+  do state <- get
+     let linebreak = cramerLineBreak (psUserState state)
+         maxcol = configMaxColumns (psConfig state)
+     when (linebreak == Single && (eol || col > maxcol)) empty
+     return $ linebreakPenalty + overfullPenalty (col - maxcol)
+  where linebreakPenalty =
+          if eol
+             then 1
+             else 0
+        overfullPenalty n =
+          if n > 0
+             then 10 + fromIntegral (n `div` 2)
+             else 0
 
 -- | Return an ast node's SrcSpan.
 nodeSrcSpan :: Annotated a => a NodeInfo -> SrcSpan
@@ -88,11 +108,6 @@ nodeSrcSpan = srcInfoSpan . nodeInfoSpan . ann
 nameStr :: Name a -> String
 nameStr (Ident _ s) = s
 nameStr (Symbol _ s) = "(" ++ s ++ ")"
-
--- | The difference between current column and indent level to force a
--- line break in reduceIndent.
-maxDependOverhead :: Integral a => a
-maxDependOverhead = 20
 
 -- | Extract the name as a String from a ModuleName
 moduleName :: ModuleName a -> String
@@ -205,19 +220,11 @@ withLineBreak lb p =
 attemptSingleLine
   :: Printer State a -> Printer State a -> Printer State a
 attemptSingleLine single multi =
-  do prevState <- get
-     case cramerLineBreak . psUserState $ prevState of
+  do linebreak <- gets (cramerLineBreak . psUserState)
+     case linebreak of
        Single -> single
        Multi -> multi
-       Free ->
-         do result <- withLineBreak Single single
-            col <- getColumn
-            row <- getLineNum
-            if row == psLine prevState &&
-               col <= configMaxColumns (psConfig prevState)
-               then return result
-               else do put prevState
-                       multi
+       Free -> withLineBreak Single single <|> multi
 
 -- | Same as attemptSingleLine, but execute the second printer in Multi
 -- mode.  Used in type signatures to force either a single line or
@@ -260,9 +267,10 @@ listMultiLine open close sep xs =
   align $
   do string open
      space
-     inter (newline >> string sep >> space) $ map pretty xs
-     newline
-     string close
+     inter (newline >> string sep >> space) $ map (cut . pretty) xs
+     unless (close == "") $
+       do newline
+          string close
 
 -- | Format a list-like structure on a single line, if possible, or
 -- each element on a line by itself.
@@ -309,43 +317,18 @@ preserveLineSpacing
   => [ast NodeInfo] -> Printer State ()
 preserveLineSpacing [] = return ()
 preserveLineSpacing asts@(first:rest) =
-  do pretty first
+  do cut $ pretty first
      forM_ (zip asts rest) $
        \(prev,cur) ->
          do replicateM_ (max 1 $ lineDelta prev cur)
                         newline
-            pretty cur
-
--- | `reduceIndent short long printer` produces either `short printer`
--- or `newline >> indentFull (long printer)`, depending on whether the
--- current column is sufficiently near to the current indentation depth.
---
--- The function is used to avoid overly big dependent indentation by
--- heuristically breaking and non-dependently indenting.
-reduceIndent :: (Printer State () -> Printer State ())
-             -> (Printer State () -> Printer State ())
-             -> Printer State ()
-             -> Printer State ()
-reduceIndent short long printer =
-  do linebreak <- gets (cramerLineBreak . psUserState)
-     case linebreak of
-       Single -> single
-       Multi -> multi
-       Free ->
-         do curCol <- getColumn
-            curIndent <- gets psIndentLevel
-            indentSpaces <- gets (configIndentSpaces . psConfig)
-            if (curCol - curIndent - indentSpaces) < maxDependOverhead
-               then single
-               else multi
-  where single = short printer
-        multi = newline >> indentFull (long printer)
+            cut $ pretty cur
 
 -- | Either simply precede the given printer with a space, or with
 -- indent the the printer after a newline, depending on the available
 -- space.
 spaceOrIndent :: Printer State () -> Printer State ()
-spaceOrIndent = reduceIndent (\p -> space >> p) id
+spaceOrIndent p = (space >> p) <|> (newline >> indentFull p)
 
 -- | Special casing for `do` blocks and leading comments
 inlineExpr :: (Printer State () -> Printer State ()) -> Exp NodeInfo -> Printer State ()
@@ -438,9 +421,9 @@ ifExpr indent cond true false = attemptSingleLine single multi
                   then'
                   newline
                   else'
-        if' = write "if " >> pretty cond
-        then' = write "then " >> pretty true
-        else' = write "else " >> pretty false
+        if' = cut $ write "if " >> pretty cond
+        then' = cut $ write "then " >> pretty true
+        else' = cut $ write "else " >> pretty false
 
 letExpr :: Binds NodeInfo -> Exp NodeInfo -> Printer State ()
 letExpr binds expr =
@@ -465,15 +448,12 @@ infixExpr (InfixApp _ arg1 op arg2)
       (pretty op >>
        preserveLinebreak deltaAfter
                          (pretty arg2))
-  | otherwise = attemptSingleLine single multi
-  where single = spaced [pretty arg1,pretty op,pretty arg2]
-        multi =
-          do pretty arg1
-             space
-             pretty op
-             newline
-             indentFull $ pretty arg2
-        preserveLinebreak delta p =
+  | otherwise =
+    do pretty arg1
+       space
+       pretty op
+       spaceOrIndent (pretty arg2)
+  where preserveLinebreak delta p =
           if delta > 0
              then newline >> indentFull p
              else space >> p
@@ -487,9 +467,9 @@ applicativeExpr :: Exp NodeInfo
 applicativeExpr ctor args = attemptSingleLine single multi
   where single = spaced (pretty ctor : map prettyArg args)
         multi =
-          do pretty ctor
+          do cut $ pretty ctor
              depend space $ inter newline $ map prettyArg args
-        prettyArg (op,arg) = pretty op >> space >> pretty arg
+        prettyArg (op,arg) = cut $ pretty op >> space >> pretty arg
 
 typeSig :: Type NodeInfo -> Printer State ()
 typeSig ty =
@@ -528,15 +508,15 @@ extModule (Module _ mhead pragmas imports decls) =
                            ,cramerModuleImportLength = modLen}
      inter (newline >> newline) $
        catMaybes [unless' (null pragmas) $ preserveLineSpacing pragmas
-                 ,pretty <$> mhead
+                 ,cut . pretty <$> mhead
                  ,unless' (null imports) $ preserveLineSpacing imports
                  ,unless' (null decls) $
                   do forM_ (init decls) $
                        \decl ->
-                         do pretty decl
+                         do cut $ pretty decl
                             newline
                             unless (skipNewline decl) newline
-                     pretty (last decls)]
+                     cut $ pretty (last decls)]
   where pragLen = maximum $ map length $ concatMap pragmaNames pragmas
         modLen = maximum $ map (length . moduleName . importModule) imports
         unless' cond expr =
@@ -653,19 +633,21 @@ extDecl decl@(DataDecl _ dataOrNew mcontext declHead constructors mderiv) =
      pretty dataOrNew
      space
      pretty declHead
-     write " ="
+     space
      if isEnum decl || isSingletonType decl
         then attemptSingleLine single multi
         else multi
      maybeM_ mderiv $ \deriv -> indentFull $ newline >> pretty deriv
   where single =
-          do space
+          do write "= "
              inter (write " | ") $ map pretty constructors
-        multi =
-          reduceIndent
-            (depend space . indented (-2))
-            (\p -> write "  " >> p)
-            (inter (newline >> write "| ") $ map pretty constructors)
+        multi = multi1 <|> multi2
+        multi1 = listMultiLine "=" "" "|" constructors
+        multi2 = do write "="
+                    newline
+                    indentFull $ (if isSingletonType decl
+                                  then mapM_ (cut . pretty) constructors
+                                  else listMultiLine " " "" "|" constructors)
 -- Type signature either on a single line or split at arrows, aligned with '::'
 extDecl (TypeSig _ names ty) =
   do inter (write ", ") $ map pretty names
@@ -676,7 +658,7 @@ extDecl (FunBind  _ matches) = preserveLineSpacing matches
 -- Half-indent for where clause, half-indent binds
 extDecl (PatBind _ pat rhs mbinds) =
   do pretty pat
-     withCaseContext False $ pretty rhs
+     cut $ withCaseContext False $ pretty rhs
      maybeM_ mbinds whereBinds
 extDecl other = prettyNoExt other
 
@@ -822,7 +804,7 @@ extExp (Lambda _ pats expr) =
      maybeSpace
      spaced $ map pretty pats
      write " ->"
-     inlineExpr (\p -> attemptSingleLine (space >> p) (spaceOrIndent p)) expr
+     inlineExpr spaceOrIndent expr
   where maybeSpace =
           case pats of
             PBangPat{}:_ -> space
@@ -844,7 +826,7 @@ extExp (RecUpdate _ expr updates) = recordExpr expr updates
 -- Full indentation for case alts and preserve empty lines between alts
 extExp (Case _ expr alts) =
   do write "case "
-     pretty expr
+     cut $ pretty expr
      write " of"
      newline
      withCaseContext True $ indentFull $ preserveLineSpacing alts
@@ -882,7 +864,7 @@ extMatch (Match _ name pats rhs mbinds) =
   do pretty name
      space
      spaced $ map pretty pats
-     withCaseContext False $ pretty rhs
+     cut $ withCaseContext False $ pretty rhs
      maybeM_ mbinds whereBinds
 extMatch other = prettyNoExt other
 

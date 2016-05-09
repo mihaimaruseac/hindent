@@ -1,0 +1,50 @@
+runSearchT m = catMaybes <$> evalStateT go state
+  where
+    step num prio cand = do
+        case path' of
+            Free (Cost c e p) ->
+                let newCost = candCost `mappend` c
+                    newPriority = newCost `mappend` e
+                in do
+                    updateQueue $
+                        PSQ.insert num
+                                   newPriority
+                                   cand { candCost = newCost, candPath = p }
+                    return Nothing
+
+foo . bar . baz . quux . quuz . quuuuuz . lorem . ipsum .
+    dolor . sit . amet . consectetur . adipiscing . elit . sed . doo . eiusmod .
+        tempor . incididunt . ut . labore . et . dolore . magna . aliqua
+
+randomId = do
+    bytes <- replicateM 8 (randomIO :: IO Word8)
+    return $ concatMap (\n -> map (intToDigit . fromIntegral)
+                                  [ (n `shiftR` 4) .&. 0x0f
+                                  , (n `shiftR` 0) .&. 0x0f
+                                  ])
+                       bytes
+
+data DocumentType =
+    DocumentType { docId                 :: Maybe Word32
+                 , docDoctype            :: Maybe Text
+                 , docElements           :: Map.Map CodepageReference Text
+                 , docAttributeStarts    :: Map.Map CodepageReference ( Text
+                                                                      , Text
+                                                                      )
+                 , docAttributeValues    :: Map.Map CodepageReference Text
+                 , docRevElements        :: Map.Map ByteString CodepageReference
+                 , docRevAttributeStarts :: Trie.Trie CodepageReference
+                 , docRevAttributeValues :: Trie.Trie CodepageReference
+                 }
+
+instance Serial m a => Serial m (AuthenticatedData a) where
+    series =
+        AuthenticatedData <$> pure example
+                          <~> elements [ Nothing, Just example ]
+                          <~> elements [ [], [ example ] ]
+                          <~> pure example
+                          <~> elements [ Nothing, Just example ]
+                          <~> series
+                          <~> elements [ Nothing, Just [], Just [ example ] ]
+                          <~> pure example
+                          <~> elements [ Nothing, Just [], Just [ example ] ]
