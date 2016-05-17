@@ -17,6 +17,7 @@ homepage: http://www.github.com/chrisdone/hindent
 bug-reports: https://github.com/chrisdone/hindent/issues
 data-files:          elisp/hindent.el vim/hindent.vim
 extra-source-files:  README.md
+                     benchmarks/BigDeclarations.hs
                      test/chris-done/expected/*.exp
                      test/chris-done/tests/*.test
                      test/gibiansky/expected/*.exp
