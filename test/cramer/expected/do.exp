@@ -5,10 +5,8 @@ main = do
 main = repeatedly $ do
     getLine >>= putStrLn
 
-main = repeatedly $
-    getline >>=
-        \s -> do
-            putStrLn s
+main = repeatedly $ getline >>= \s -> do
+    putStrLn s
 
 main =
     -- comment

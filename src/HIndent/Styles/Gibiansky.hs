@@ -7,8 +7,6 @@ import           Data.Foldable
 -- import           Control.Applicative ((<$>))
 import           Data.Maybe
 import           Data.List (unfoldr, isPrefixOf)
-import           Control.Monad.Trans.Maybe
-import           Data.Functor.Identity
 import           Control.Monad.State.Strict hiding (state, State, forM_, sequence_)
 import           Data.Typeable
 
@@ -60,6 +58,7 @@ gibiansky = Style { styleName = "gibiansky"
                                                    , configClearEmptyLines = True
                                                    }
                   , styleCommentPreprocessor = commentPreprocessor
+                  , styleLinePenalty = defaultLinePenalty
                   }
 
 -- Field accessor for Comment.
@@ -70,7 +69,7 @@ commentContent (Comment _ _ content) = content
 commentSrcSpan :: Comment -> SrcSpan
 commentSrcSpan (Comment _ srcSpan _) = srcSpan
 
-commentPreprocessor :: MonadState (PrintState s) m => [Comment] -> m [Comment]
+commentPreprocessor :: [Comment] -> Printer s [Comment]
 commentPreprocessor cs = do
   config <- gets psConfig
   col <- getColumn
@@ -777,7 +776,7 @@ writeCaseAlts alts = do
         newline
         indented indentSpaces $ depend (write "where ") (pretty binds)
 
-prettyCommentCallbacks :: (Pretty ast,MonadState (PrintState s) m) => ast NodeInfo -> (ComInfoLocation -> m ()) -> m ()
+prettyCommentCallbacks :: Pretty ast => ast NodeInfo -> (ComInfoLocation -> Printer s ()) -> Printer s ()
 prettyCommentCallbacks a f =
   do st <- get
      case st of
@@ -786,12 +785,7 @@ prettyCommentCallbacks a f =
            printComments Before a
            f Before
            depend
-             (case listToMaybe (mapMaybe (makePrinter s) es) of
-                Just (Printer m) ->
-                  modify (\s' ->
-                            fromMaybe s'
-                                      (runIdentity (runMaybeT (execStateT m s'))))
-                Nothing -> prettyNoExt a)
+             (fromMaybe (prettyNoExt a) $ listToMaybe (mapMaybe (makePrinter s) es))
              (f After >> printComments After a)
   where makePrinter _ (Extender f) =
           case cast a of

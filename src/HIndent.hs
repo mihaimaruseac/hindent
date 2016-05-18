@@ -36,9 +36,7 @@ import           HIndent.Types
 
 import           Control.Applicative ((<$>))
 import           Control.Monad.State.Strict
-import           Control.Monad.Trans.Maybe
 import           Data.Function (on)
-import           Data.Functor.Identity
 import           Data.List
 import           Data.List (groupBy, intersperse)
 import           Data.Maybe (fromMaybe)
@@ -182,14 +180,14 @@ prettyPrint mode' style m comments =
                       pretty ast))
 
 -- | Pretty print the given printable thing.
-runPrinterStyle :: ParseMode -> Style -> (forall s. Printer s ()) -> Builder
-runPrinterStyle mode' (Style _name _author _desc st extenders config preprocessor) m =
+runPrinterStyle
+  :: ParseMode -> Style -> (forall s. Printer s ()) -> Builder
+runPrinterStyle mode' (Style _name _author _desc st extenders config preprocessor penalty) m =
   maybe (error "Printer failed with mzero call.")
         psOutput
-        (runIdentity
-           (runMaybeT (execStateT
-                         (runPrinter m)
-                         (PrintState 0 mempty False 0 1 st extenders config False False mode' preprocessor))))
+        (snd <$> execPrinter
+           m
+           (PrintState 0 mempty False 0 1 st extenders config False False mode' preprocessor penalty))
 
 -- | Parse mode, includes all extensions, doesn't assume any fixities.
 parseMode :: ParseMode

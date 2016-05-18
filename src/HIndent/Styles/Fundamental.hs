@@ -22,4 +22,5 @@ fundamental =
         ,styleInitialState = State
         ,styleExtenders = []
         ,styleDefConfig = def
-        ,styleCommentPreprocessor = return}
+        ,styleCommentPreprocessor = return
+        ,styleLinePenalty = defaultLinePenalty}

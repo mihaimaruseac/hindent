@@ -4,6 +4,10 @@ sort :: Ord a => [a] -> [a]
 
 long :: (IsString a, Monad m) => ByteString -> ByteString -> ByteString -> ByteString -> ByteString -> a -> m ()
 
+mkEncoderData :: DocumentType -> (Text -> Except String ByteString) -> EncoderData
+
+codepageReference :: (ParserState -> Word8) -> AP.Parser Word8 -> Parser CodepageReference
+
 mktime :: Int -- hours
        -> Int -- minutes
        -> Int -- seconds

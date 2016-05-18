@@ -8,7 +8,10 @@
 -- | All types.
 
 module HIndent.Types
-  (Printer(..)
+  (Penalty(..)
+  ,defaultLinePenalty
+  ,Printer(..)
+  ,execPrinter
   ,PrintState(..)
   ,Extender(..)
   ,Style(..)
@@ -21,22 +24,40 @@ module HIndent.Types
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.State.Strict (MonadState(..),StateT)
-import Control.Monad.Trans.Maybe
+import Control.Monad.State.Strict (MonadState(..),StateT,execStateT,gets)
+import Control.Monad.Search (MonadSearch,Search,runSearch)
 import Data.Data
 import Data.Default
-import Data.Functor.Identity
 import Data.Int (Int64)
+import Data.Maybe (listToMaybe)
 import Data.Text (Text)
 import Data.Text.Lazy.Builder (Builder)
 import Language.Haskell.Exts.Comments
 import Language.Haskell.Exts.Parser
 import Language.Haskell.Exts.SrcLoc
 
+newtype Penalty = Penalty Int
+  deriving (Eq,Ord,Num,Show)
+
+instance Monoid Penalty where
+    mempty = 0
+    mappend = (+)
+
+defaultLinePenalty :: Bool -> Int64 -> Printer s Penalty
+defaultLinePenalty eol col =
+  do maxCol <- gets (configMaxColumns . psConfig)
+     return $ linebreakPenalty + overfullPenalty (col - maxCol)
+  where
+    linebreakPenalty = if eol then 1 else 0
+    overfullPenalty n = if n > 0 then 10 else 0
+
 -- | A pretty printing monad.
 newtype Printer s a =
-  Printer {runPrinter :: StateT (PrintState s) (MaybeT Identity) a}
-  deriving (Applicative,Monad,Functor,MonadState (PrintState s),MonadPlus,Alternative)
+  Printer {runPrinter :: StateT (PrintState s) (Search Penalty) a}
+  deriving (Applicative,Monad,Functor,MonadState (PrintState s),MonadSearch Penalty,MonadPlus,Alternative)
+
+execPrinter :: Printer s a -> PrintState s -> Maybe (Penalty, PrintState s)
+execPrinter m s = listToMaybe . runSearch $ execStateT (runPrinter m) s
 
 -- | The state of the pretty printer.
 data PrintState s =
@@ -51,7 +72,8 @@ data PrintState s =
              ,psEolComment :: !Bool -- ^ An end of line comment has just been outputted.
              ,psInsideCase :: !Bool -- ^ Whether we're in a case statement, used for Rhs printing.
              ,psParseMode :: !ParseMode -- ^ Mode used to parse the original AST.
-             ,psCommentPreprocessor :: forall m. MonadState (PrintState s) m => [Comment] -> m [Comment] -- ^ Preprocessor applied to comments on an AST before printing.
+             ,psCommentPreprocessor :: forall t. [Comment] -> Printer t [Comment] -- ^ Preprocessor applied to comments on an AST before printing.
+             ,psLinePenalty :: Bool -> Int64 -> Printer s Penalty
              }
 
 -- | A printer extender. Takes as argument the user state that the
@@ -69,7 +91,8 @@ data Style =
                   ,styleInitialState :: !s -- ^ User state, if needed.
                   ,styleExtenders :: ![Extender s] -- ^ Extenders to the printer.
                   ,styleDefConfig :: !Config -- ^ Default config to use for this style.
-                  ,styleCommentPreprocessor :: forall s' m. MonadState (PrintState s') m => [Comment] -> m [Comment] -- ^ Preprocessor to use for comments.
+                  ,styleCommentPreprocessor :: forall t. [Comment] -> Printer t [Comment] -- ^ Preprocessor to use for comments.
+                  ,styleLinePenalty :: Bool -> Int64 -> Printer s Penalty
                   }
 
 -- | Configurations shared among the different styles. Styles may pay
