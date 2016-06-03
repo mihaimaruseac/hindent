@@ -24,7 +24,6 @@ import Control.Monad
 import Control.Monad.State.Strict (MonadState(..),StateT)
 import Control.Monad.Trans.Maybe
 import Data.Data
-import Data.Default
 import Data.Functor.Identity
 import Data.Int (Int64)
 import Data.Text (Text)
@@ -80,15 +79,12 @@ data Config =
          ,configClearEmptyLines :: !Bool  -- ^ Remove spaces on lines that are otherwise empty?
          }
 
-instance Default Config where
-  def =
-    Config {configMaxColumns = 80
-           ,configIndentSpaces = 2
-           ,configClearEmptyLines = False}
-
 -- | Default style configuration.
 defaultConfig :: Config
-defaultConfig = def
+defaultConfig =
+  Config {configMaxColumns = 80
+         ,configIndentSpaces = 2
+         ,configClearEmptyLines = False}
 
 -- | Information for each node in the AST.
 data NodeInfo =

@@ -44,7 +44,6 @@ library
                      HIndent.Styles.Cramer
   build-depends:     base >= 4.7 && <5
                    , containers
-                   , data-default
                    , haskell-src-exts >= 1.17
                    , monad-loops
                    , mtl
@@ -78,7 +77,6 @@ test-suite hspec
   main-is: Spec.hs
   build-depends:     base >= 4 && <5
                    , hindent
-                   , data-default
                    , haskell-src-exts
                    , monad-loops
                    , mtl
