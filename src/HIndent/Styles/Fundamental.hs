@@ -7,8 +7,6 @@ module HIndent.Styles.Fundamental where
 
 import HIndent.Types
 
-import Data.Default
-
 
 -- | Empty state.
 data State = State
@@ -21,5 +19,5 @@ fundamental =
         ,styleDescription = "This style adds no extensions to the built-in printer."
         ,styleInitialState = State
         ,styleExtenders = []
-        ,styleDefConfig = def
+        ,styleDefConfig = defaultConfig
         ,styleCommentPreprocessor = return}
