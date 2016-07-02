@@ -49,9 +49,14 @@ called `.dir-locals.el` in the project root directory like this:
 
 ## Vim
 
-Basic support is provided through [vim/hindent.vim](https://github.com/chrisdone/hindent/blob/master/vim/hindent.vim),
-which sets hindent as the formatter used by `gq` for haskell files. The formatting style
-defaults to `fundamental` but can be configured by setting `g:hindent_style` to the desired style.
+The `'formatprg'` option lets you use an external program (like hindent) to
+format your text. Put the following line into ~/.vim/ftplugin/haskell.vim
+to set this option for Haskell files:
+
+    setlocal formatprg=hindent\ --style\ chris-done
+
+Then you can format with hindent using `gq`. Read `:help gq` and `help
+'formatprg'` for more details.
 
 Note that unlike in emacs you have to take care of selecting a sensible buffer region as input to
 hindent yourself. If that is too much trouble you can try [vim-textobj-haskell](https://github.com/gilligan/vim-textobj-haskell) which provides a text object for top level bindings.
