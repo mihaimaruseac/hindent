@@ -1283,7 +1283,18 @@ instance Pretty TyVarBind where
   prettyInternal = pretty'
 
 instance Pretty ModuleHead where
-  prettyInternal = pretty'
+  prettyInternal (ModuleHead _ name mwarnings mexports) =
+    do write "module "
+       pretty name
+       maybe (return ()) pretty mwarnings
+       maybe (return ())
+             (\exports ->
+                do newline
+                   indented 2 (pretty exports)
+                   newline
+                   space)
+             mexports
+       write " where"
 
 instance Pretty ModulePragma where
   prettyInternal = pretty'
@@ -1305,7 +1316,9 @@ instance Pretty WarningText where
   prettyInternal = pretty'
 
 instance Pretty ExportSpecList where
-  prettyInternal = pretty'
+  prettyInternal (ExportSpecList _ es) =
+    parens (prefixedLined ","
+                          (map pretty es))
 
 instance Pretty ExportSpec where
   prettyInternal = pretty'
