@@ -15,7 +15,7 @@ build-type:          Simple
 cabal-version:       >=1.8
 homepage: http://www.github.com/chrisdone/hindent
 bug-reports: https://github.com/chrisdone/hindent/issues
-data-files:          elisp/hindent.el vim/hindent.vim
+data-files:          elisp/hindent.el
 extra-source-files:  README.md
                      benchmarks/BigDeclarations.hs
                      test/chris-done/expected/*.exp
