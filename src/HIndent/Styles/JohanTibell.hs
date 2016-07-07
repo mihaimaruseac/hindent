@@ -171,6 +171,21 @@ guardedRhs (GuardedRhs _ stmts e) =
 
 -- | Expression customizations.
 exp :: Exp NodeInfo -> Printer s ()
+-- | Do after lambda should swing.
+exp (Lambda _ pats (Do l stmts)) =
+  do
+     (fits,st) <-
+       fitsOnOneLine
+         (do write "\\"
+             spaced (map pretty pats)
+             write " -> "
+             pretty (Do l stmts))
+     if fits
+        then put st
+        else swing (do write "\\"
+                       spaced (map pretty pats)
+                       write " -> do")
+                   (lined (map pretty stmts))
 -- | Space out tuples.
 exp (Tuple _ boxed exps) =
   depend (write (case boxed of
