@@ -26,7 +26,7 @@ module HIndent.Pretty
   , int
   , string
   -- * Common node types
-  , maybeCtx
+  , withCtx
   , printComment
   , printComments
   , withCaseContext
@@ -399,13 +399,16 @@ nullBinds :: Binds NodeInfo -> Bool
 nullBinds (BDecls _ x) = null x
 nullBinds (IPBinds _ x) = null x
 
--- | Maybe render a class context.
-maybeCtx :: MonadState (PrintState s) m => Maybe (Context NodeInfo) -> m ()
-maybeCtx =
-  maybe (return ())
-        (\p ->
-           pretty p >>
-           write " => ")
+-- | Render a type with a context, or not.
+withCtx :: (MonadState (PrintState s) m
+           ,Pretty ast)
+        => Maybe (ast NodeInfo) -> m b -> m b
+withCtx Nothing m = m
+withCtx (Just ctx) m =
+  do pretty ctx
+     write " =>"
+     newline
+     m
 
 -- | Maybe render an overlap definition.
 maybeOverlap :: MonadState (PrintState s) m => Maybe (Overlap NodeInfo) -> m ()
@@ -536,8 +539,7 @@ instance Pretty Type where
                     do write "forall "
                        spaced (map pretty ts)
                        write ". ")
-               (depend (maybeCtx ctx)
-                       (pretty ty))
+               (withCtx ctx (pretty ty))
       TyFun _ a b ->
         depend (do pretty a
                    write " -> ")
@@ -829,14 +831,14 @@ decl (FunBind _ matches) =
   lined (map pretty matches)
 decl (ClassDecl _ ctx dhead fundeps decls) =
   do depend (write "class ")
-            (depend (maybeCtx ctx)
-                    (depend (do pretty dhead
-                                space)
-                            (depend (unless (null fundeps)
-                                            (do write " | "
-                                                commas (map pretty fundeps)))
-                                    (unless (null (fromMaybe [] decls))
-                                            (write " where")))))
+            (withCtx ctx
+                     (depend (do pretty dhead
+                                 space)
+                             (depend (unless (null fundeps)
+                                             (do write " | "
+                                                 commas (map pretty fundeps)))
+                                     (unless (null (fromMaybe [] decls))
+                                             (write " where")))))
      unless (null (fromMaybe [] decls))
             (do newline
                 indentSpaces <- getIndentSpaces
@@ -852,12 +854,12 @@ decl TypeFamDecl{} =
 decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
   do depend (do pretty dataornew
                 space)
-            (depend (maybeCtx ctx)
-                    (do pretty dhead
-                        case condecls of
-                          [] -> return ()
-                          [x] -> singleCons x
-                          xs -> multiCons xs))
+            (withCtx ctx
+                     (do pretty dhead
+                         case condecls of
+                           [] -> return ()
+                           [x] -> singleCons x
+                           xs -> multiCons xs))
      indentSpaces <- getIndentSpaces
      case mderivs of
        Nothing -> return ()
@@ -946,14 +948,13 @@ instance Pretty ClassDecl where
       ClsDecl _ d -> pretty d
       ClsDataFam _ ctx h mkind ->
         depend (write "data ")
-               (depend (maybeCtx ctx)
-                       (do pretty h
-                           (case mkind of
-                              Nothing ->
-                                return ()
-                              Just kind ->
-                                do write " :: "
-                                   pretty kind)))
+               (withCtx ctx
+                        (do pretty h
+                            (case mkind of
+                               Nothing -> return ()
+                               Just kind ->
+                                 do write " :: "
+                                    pretty kind)))
       ClsTyFam _ h mkind ->
         depend (write "type ")
                (depend (pretty h)
@@ -1084,7 +1085,7 @@ instance Pretty QualConDecl where
                        (do write "forall "
                            spaced (map pretty (fromMaybe [] tyvars))
                            write ". "))
-               (depend (maybeCtx ctx)
+               (withCtx ctx
                        (pretty d))
 
 instance Pretty Rhs where
@@ -1117,9 +1118,7 @@ instance Pretty InstRule where
     do case mvarbinds of
          Nothing -> return ()
          Just xs -> spaced (map pretty xs)
-       depend (maybeCtx mctx)
-              (pretty ihead)
-
+       withCtx mctx (pretty ihead)
 
 instance Pretty InstHead where
   prettyInternal x =

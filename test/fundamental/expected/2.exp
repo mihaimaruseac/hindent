@@ -2,9 +2,12 @@ fun :: a -> b
 
 fun :: a -> f b -> g c d
 
-fun :: Class a => a -> b -> c
+fun :: Class a =>
+       a -> b -> c
 
-fun :: (Class a,Class b) => a -> b -> c
+fun :: (Class a
+       ,Class b) =>
+       a -> b -> c
 
 fun :: a -> b -> c
 
@@ -17,6 +20,10 @@ fun :: a -> b -- ^ Hello
 
 fun :: a -> b -> c -- ^ Hello
 
-fun :: (Class a,Class b) => a -> b -> c -- ^ Hello
+fun :: (Class a
+       ,Class b) =>
+       a -> b -> c -- ^ Hello
 
-fun :: (Class a,Class b) => a -> b -> c -- ^ Hello
+fun :: (Class a
+       ,Class b) =>
+       a -> b -> c -- ^ Hello

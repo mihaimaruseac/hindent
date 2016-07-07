@@ -644,11 +644,13 @@ extDecl (TypeDecl _ declhead ty) =
 -- Fix whitespace before 'where' in class decl
 extDecl (ClassDecl _ mcontext declhead fundeps mdecls) =
   do depend (write "class ") $
-       depend (maybeCtx mcontext) $
-         depend (pretty declhead) $
-           depend (unless (null fundeps) $
-               write " | " >> inter (write ", ") (map pretty fundeps)) $
-             when (isJust mdecls) $ write " where"
+       withCtx mcontext $
+       depend (pretty declhead) $
+       depend (unless (null fundeps) $
+               write " | " >>
+               inter (write ", ")
+                     (map pretty fundeps)) $
+       when (isJust mdecls) $ write " where"
      maybeM_ mdecls $
        \decls ->
          do newline

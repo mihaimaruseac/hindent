@@ -947,7 +947,7 @@ decls (ClassDecl _ ctx dhead fundeps mayDecls) = do
 
   -- Header
   depend (write "class ") $
-    depend (maybeCtx ctx) $
+    withCtx ctx $
       depend (pretty dhead >> space) $
         depend (unless (null fundeps) (write " | " >> commas (map pretty fundeps))) $
           unless noDecls (write "where")
