@@ -441,7 +441,8 @@ instance Pretty Context where
     case ctx of
       CxSingle _ a -> pretty a
       CxTuple _ as ->
-        parens (commas (map pretty as))
+        parens (prefixedLined ","
+                              (map pretty as))
       CxEmpty _ -> parens (return ())
 
 instance Pretty Pat where
