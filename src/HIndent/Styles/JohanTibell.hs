@@ -292,8 +292,14 @@ match (InfixMatch _ pat1 name pats rhs' mbinds) =
 
 -- | Format contexts with spaces and commas between class constraints.
 context :: Context NodeInfo -> Printer s ()
-context (CxTuple _ asserts) =
-  parens $ inter (comma >> space) $ map pretty asserts
+context ctx@(CxTuple _ asserts) =
+  do (fits,st) <-
+       fitsOnOneLine
+         (parens (inter (comma >> space)
+                        (map pretty asserts)))
+     if fits
+        then put st
+        else prettyNoExt ctx
 context ctx = prettyNoExt ctx
 
 unboxParens :: MonadState (PrintState s) m => m a -> m a
