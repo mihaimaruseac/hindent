@@ -1,3 +1,6 @@
+4.6.4
+	* Copy/delete file instead of renaming
+
 4.4.6
 	* Fix whole module printer
 	* Accept a filename to reformat
