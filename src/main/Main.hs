@@ -27,6 +27,9 @@ import           System.Directory
 import           System.Environment
 import           System.IO
 import           Text.Read
+import           Control.Exception
+import           GHC.IO.Exception
+import           Foreign.C.Error
 
 -- | Main entry point.
 main :: IO ()
@@ -44,7 +47,10 @@ main =
                   (either error T.toLazyText (reformat style (Just exts) text))
                 hFlush h
                 hClose h
-                renameFile fp filepath
+                let exdev e = if ioe_errno e == Just ((\(Errno a) -> a) eXDEV)
+                                  then copyFile fp filepath >> removeFile fp
+                                  else throw e
+                renameFile fp filepath `catch` exdev
            Nothing ->
              T.interact (either error T.toLazyText . reformat style (Just exts))
        Failed (Wrap (Stopped Version) _) ->
