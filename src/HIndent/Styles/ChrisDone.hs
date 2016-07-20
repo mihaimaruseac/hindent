@@ -201,11 +201,13 @@ guardedrhs (GuardedRhs _ stmts e) =
                          do space
                             pretty p)
                       stmts)
-               dependOrNewline
-                 (write " = ")
-                 e
-                 (indented 1 .
-                  pretty))
+               let rhs =
+                     do write " = "
+                        pretty e
+               (fits,st) <- fitsOnOneLine rhs
+               if fits
+                  then put st
+                  else indented (-2) rhs)
 
 -- | I want guarded alts be dependent or newline.
 guardedalt :: GuardedRhs NodeInfo -> Printer t ()
