@@ -12,7 +12,7 @@ import Data.Data
 import qualified Data.Map.Strict as M
 import Data.Traversable
 import HIndent.Types
-import Language.Haskell.Exts.Annotated hiding (Style,prettyPrint,Pretty,style,parse)
+import Language.Haskell.Exts hiding (Style,prettyPrint,Pretty,style,parse)
 
 -- Order by start of span, larger spans before smaller spans.
 newtype OrderByStart =

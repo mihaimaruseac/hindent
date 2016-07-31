@@ -16,9 +16,9 @@ import Control.Monad.Loops
 import Control.Monad.State.Class
 import Data.Int
 import Data.Maybe
-import Language.Haskell.Exts.Annotated (parseExpWithComments)
-import Language.Haskell.Exts.Annotated.Fixity
-import Language.Haskell.Exts.Annotated.Syntax
+import Language.Haskell.Exts (parseExpWithComments)
+import Language.Haskell.Exts.Fixity
+import Language.Haskell.Exts.Syntax
 import Language.Haskell.Exts.Parser (ParseResult(..))
 import Prelude hiding (exp)
 import Data.Monoid

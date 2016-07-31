@@ -15,7 +15,7 @@ import           Data.Typeable
 import           HIndent.Pretty
 import           HIndent.Types
 
-import           Language.Haskell.Exts.Annotated.Syntax
+import           Language.Haskell.Exts.Syntax
 import           Language.Haskell.Exts.SrcLoc
 import           Language.Haskell.Exts.Pretty (prettyPrint)
 import           Language.Haskell.Exts.Comments
