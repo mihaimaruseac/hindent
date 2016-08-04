@@ -894,7 +894,13 @@ instance Pretty Deriving where
   prettyInternal (Deriving _ heads) =
     do write "deriving"
        space
-       parens (commas (map pretty heads))
+       let heads' =
+             if length heads == 1
+                then map stripParens heads
+                else heads
+       parens (commas (map pretty heads'))
+    where stripParens (IParen _ iRule) = stripParens iRule
+          stripParens x = x
 
 instance Pretty Alt where
   prettyInternal x =
