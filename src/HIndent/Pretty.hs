@@ -522,7 +522,10 @@ instance Pretty Pat where
 prettyInfixOp :: MonadState (PrintState s) m => QName NodeInfo -> m ()
 prettyInfixOp x =
   case x of
-    Qual{} -> do write "`"; pretty' x; write "`"
+    Qual _ mn n ->
+      case n of
+        Ident _ i -> do write "`"; pretty mn; write "."; string i; write "`";
+        Symbol _ s -> do pretty mn; write "."; string s;
     UnQual _ n ->
       case n of
         Ident _ i -> string ("`" ++ i ++ "`")
