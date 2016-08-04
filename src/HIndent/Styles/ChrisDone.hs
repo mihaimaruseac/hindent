@@ -48,10 +48,12 @@ chrisDone =
         ,styleExtenders =
            [Extender exp
            ,Extender fieldupdate
+           ,Extender fieldpattern
            ,Extender rhs
            ,Extender contextualGuardedRhs
            ,Extender stmt
            ,Extender decl
+           ,Extender match
            ,Extender types]
         ,styleDefConfig =
            defaultConfig {configMaxColumns = 80
@@ -143,6 +145,38 @@ decl (TypeSig _ names ty') =
                                        (map pretty tys)
 decl e = prettyNoExt e
 
+-- | Patterns of function declarations
+match :: Match NodeInfo -> Printer t ()
+match (Match _ name pats rhs mbinds) =
+  do orig <- gets psIndentLevel
+     dependBind
+       (do (short,st) <- isShort name
+           put st
+           space
+           return short)
+       (\headIsShort ->
+          do let flats = map isFlatPat pats
+                 flatish =
+                   length (filter not flats) <
+                   2
+             if (headIsShort && flatish) ||
+                all id flats
+                then do ((singleLiner,overflow),st) <- sandboxNonOverflowing pats
+                        if singleLiner && not overflow
+                           then put st
+                           else multi orig pats headIsShort
+                else multi orig pats headIsShort)
+     withCaseContext False (pretty rhs)
+     case mbinds of
+       Nothing -> return ()
+       Just binds ->
+         do newline
+            indentSpaces <- getIndentSpaces
+            indented indentSpaces
+                     (depend (write "where ")
+                             (pretty binds))
+match e = prettyNoExt e
+
 -- | I want field updates to be dependent or newline.
 fieldupdate :: FieldUpdate NodeInfo -> Printer t ()
 fieldupdate e =
@@ -154,6 +188,19 @@ fieldupdate e =
         e'
         pretty
     _ -> prettyNoExt e
+
+-- | Record field pattern, handled the same as record field updates
+fieldpattern :: PatField NodeInfo -> Printer t ()
+fieldpattern e =
+  case e of
+    PFieldPat _ n e' ->
+      dependOrNewline
+        (do pretty n
+            write " = ")
+        e'
+        pretty
+    _ -> prettyNoExt e
+
 
 -- | Right-hand sides are dependent.
 rhs :: Rhs NodeInfo -> Printer t ()
@@ -271,7 +318,7 @@ exp (App _ op a) =
            space
            return short)
        (\headIsShort ->
-          do let flats = map isFlat args
+          do let flats = map isFlatExp args
                  flatish =
                    length (filter not flats) <
                    2
@@ -429,23 +476,34 @@ isSmallFitting p =
   do (_,st) <- sandbox p
      return (psColumn st < smallColumnLimit,st)
 
+isFlatPat :: Pat NodeInfo -> Bool
+isFlatPat (PApp _ _ b) = all isFlatPat b
+  where isName (PVar{}) = True
+        isName _ = False
+isFlatPat (PAsPat _ _ b) = isFlatPat b
+isFlatPat (PInfixApp _ a _ b) = isFlatPat a && isFlatPat b
+isFlatPat (PList _ []) = True
+isFlatPat PVar{} = True
+isFlatPat PLit{} = True
+isFlatPat _ = False
+
 -- | Is an expression flat?
-isFlat :: Exp NodeInfo -> Bool
-isFlat (Lambda _ _ e) = isFlat e
-isFlat (App _ a b) = isName a && isName b
+isFlatExp :: Exp NodeInfo -> Bool
+isFlatExp (Lambda _ _ e) = isFlatExp e
+isFlatExp (App _ a b) = isName a && isName b
   where isName (Var{}) = True
         isName _ = False
-isFlat (InfixApp _ a _ b) = isFlat a && isFlat b
-isFlat (NegApp _ a) = isFlat a
-isFlat VarQuote{} = True
-isFlat TypQuote{} = True
-isFlat (List _ []) = True
-isFlat Var{} = True
-isFlat Lit{} = True
-isFlat Con{} = True
-isFlat (LeftSection _ e _) = isFlat e
-isFlat (RightSection _ _ e) = isFlat e
-isFlat _ = False
+isFlatExp (InfixApp _ a _ b) = isFlatExp a && isFlatExp b
+isFlatExp (NegApp _ a) = isFlatExp a
+isFlatExp VarQuote{} = True
+isFlatExp TypQuote{} = True
+isFlatExp (List _ []) = True
+isFlatExp Var{} = True
+isFlatExp Lit{} = True
+isFlatExp Con{} = True
+isFlatExp (LeftSection _ e _) = isFlatExp e
+isFlatExp (RightSection _ _ e) = isFlatExp e
+isFlatExp _ = False
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
 fitsOnOneLine :: MonadState (PrintState s) m => m a -> m (Bool,PrintState s)
@@ -515,9 +573,10 @@ flattenOpChain e = [OpChainExp e]
 -- | Make the right hand side dependent if it's flat, otherwise
 -- newline it.
 dependOrNewline
-  :: Printer t ()
-  -> Exp NodeInfo
-  -> (Exp NodeInfo -> Printer t ())
+  :: Pretty ast
+  => Printer t ()
+  -> ast NodeInfo
+  -> (ast NodeInfo -> Printer t ())
   -> Printer t ()
 dependOrNewline left right f =
   do (fits,st) <- fitsOnOneLine (depend left (f right))
