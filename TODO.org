@@ -1,6 +1,0 @@
-* TODO Make skeleton test suite
-* DONE Implement comments
-  CLOSED: [2014-08-30 Sat 15:25]
-  CLOCK: [2014-08-30 Sat 15:25]--[2014-08-30 Sat 15:25] =>  0:00
-* DONE Finish Pretty instance for Exp
-  CLOSED: [2014-08-28 Thu 14:31]
