@@ -1,23 +1,17 @@
-
 # hindent [![Hackage](https://img.shields.io/hackage/v/hindent.svg?style=flat)](https://hackage.haskell.org/package/hindent) [![Build Status](https://travis-ci.org/chrisdone/hindent.png)](https://travis-ci.org/chrisdone/hindent)
 
 Extensible Haskell pretty printer. Both a library and an
-executable. Currently a work in progress (see
-[FIXME items](https://github.com/chrisdone/hindent/blob/master/src/HIndent/Pretty.hs)).
-
-[Documentation](http://chrisdone.github.io/hindent/)
+executable.
 
 ## Install
 
-    $ stack build --copy-bins
+    $ stack install
 
 ## Usage
 
     hindent is used in a pipeline style:
 
     $ cat path/to/sourcefile.hs | hindent > outfile.hs
-
-    hindent: arguments: --style [fundamental|chris-done|johan-tibell|gibiansky|cramer]
 
 ## Emacs
 
@@ -38,22 +32,13 @@ To enable it, add the following to your init file:
 (add-hook 'haskell-mode-hook #'hindent-mode)
 ```
 
-By default it uses the style called `fundamental`, if you want to use
-another, `johan-tibell`, run `M-x customize-variable
-hindent-style`. If you want to configure per-project, make a file
-called `.dir-locals.el` in the project root directory like this:
-
-``` lisp
-((nil . ((hindent-style . "johan-tibell"))))
-```
-
 ## Vim
 
 The `'formatprg'` option lets you use an external program (like hindent) to
 format your text. Put the following line into ~/.vim/ftplugin/haskell.vim
 to set this option for Haskell files:
 
-    setlocal formatprg=hindent\ --style\ chris-done
+    setlocal formatprg=hindent
 
 Then you can format with hindent using `gq`. Read `:help gq` and `help
 'formatprg'` for more details.
@@ -63,176 +48,5 @@ hindent yourself. If that is too much trouble you can try [vim-textobj-haskell](
 
 ## Atom
 
-Basic support is provided through [atom/hindent.coffee](https://github.com/chrisdone/hindent/blob/master/atom/hindent.coffee),
-which adds hindent to atom menu with each available style. Mode should be installed as package into `.atom\packages\${PACKAGE_NAME}`,
+Basic support is provided through [atom/hindent.coffee](https://github.com/chrisdone/hindent/blob/master/atom/hindent.coffee). Mode should be installed as package into `.atom\packages\${PACKAGE_NAME}`,
 here is simple example of atom [package](https://github.com/Heather/atom-hindent).
-
-## Contributing your own printer style
-
-This package comes with a basic fundamental pretty printer, which is
-probably not desirable to use.
-
-It comes with other styles implemented on top of this fundamental
-printer, in the modules in `HIndent.Styles.*`.
-
-Make a module `HIndent.Styles.YourName` in which to place the printer.
-
-To define your own, see
-[HIndent.Styles.Fundamental](https://github.com/chrisdone/hindent/blob/master/src/HIndent/Styles/Fundamental.hs)
-for a starting point. This module defines a blank style, adds no
-additional extensions. Customizations are specified via the
-`styleExtenders` property. See
-[HIndent.Styles.ChrisDone](https://github.com/chrisdone/hindent/blob/master/src/HIndent/Styles/ChrisDone.hs)
-for an example of a non-trivial style.
-
-Useful combinators can be found in
-[HIndent.Pretty](https://github.com/chrisdone/hindent/blob/master/src/HIndent/Pretty.hs)
-for defining printers. When you want to use a fundamental printer, use
-`prettyNoExt` instead of `pretty`. Comments will still be inserted by
-`prettyNoExt`.
-
-If you want to contribute it to the package, add it to the list of
-styles in
-[HIndent](https://github.com/chrisdone/hindent/blob/master/src/HIndent.hs)
-and export it, and open a pull request. Use
-[the Erlang git commit guide](https://github.com/erlang/otp/wiki/Writing-good-commit-messages)
-for your commits.
-
-## Remaining issues
-
-* Add test suite.
-* Flesh out more obscure parts of the AST.
-* Improve comment re-insertion.
-* Possibly: Support formatting whole modules.
-* Implement some operator-specific layouts: e.g.
-
-        Foo <$> foo
-            <*> bar
-            <*> mu
-
-## Example
-
-Input code:
-
-``` haskell
-foo = do print "OK, go"; foo (foo bar) -- Yep.
-          (if bar then bob else pif) (case mu {- cool -} zot of
-            Just x -> return (); Nothing -> do putStrLn "yay"; return 1) bill -- Etc
-  where potato Cakes {} = 2 * x foo * bar / 5
-```
-
-### Fundamental
-
-This is an intentionally very dumb style that demands extension.
-
-``` haskell
-foo =
-  do print
-       "OK, go"
-     foo
-       (foo
-          bar)
-       (if bar
-           then bob
-           else pif)
-       (case mu {- cool -}
-               zot of
-          Just x ->
-            return
-              ()
-          Nothing ->
-            do putStrLn
-                 "yay"
-               return
-                 1)
-       bill -- Etc
-  where potato Cakes{} =
-          2 * x
-                foo * bar / 5
-```
-
-### Johan Tibell
-
-Documented in
-[the style guide](https://github.com/tibbe/haskell-style-guide).
-This printer style uses some simple heuristics in deciding when to go
-to a new line or not, and custom handling of do, if, case alts, rhs,
-etc.
-
-``` haskell
-foo = do
-    print "OK, go"
-    foo
-        (foo bar)
-        (if bar
-             then bob
-             else pif)
-        (case mu {- cool -} zot of
-             Just x ->
-                 return ()
-             Nothing -> do
-                 putStrLn "yay"
-                 return 1)
-        bill -- Etc
-  where
-    potato Cakes{} =
-        2 * x foo * bar / 5
-```
-
-### Chris Done
-
-My style is documented in
-[the style guide](https://github.com/chrisdone/haskell-style-guide).
-This printer style uses some simple heuristics in deciding when to go
-to a new line or not.
-
-``` haskell
-foo =
-  do print "OK, go"
-     foo (foo bar)
-         (if bar
-             then bob
-             else pif)
-         (case mu {- cool -} zot of
-            Just x -> return ()
-            Nothing ->
-              do putStrLn "yay"
-                 return 1)
-         bill -- Etc
-  where potato Cakes{} = 2 * x foo * bar / 5
-```
-
-### Andrew Gibiansky
-
-``` haskell
-foo = do
-  print "OK, go"
-  foo (foo bar) -- Yep.
-   (if bar
-       then bob
-       else pif) (case mu {- cool -} zot of
-                    Just x -> return ()
-                    Nothing -> do
-                      putStrLn "yay"
-                      return 1) bill -- Etc
-
-  where
-    potato Cakes{} = 2 * x foo * bar / 5
-```
-
-### Enno Cramer
-
-``` haskell
-foo = do
-    print "OK, go"
-    foo (foo bar)
-        (if bar then bob else pif)
-        (case mu {- cool -} zot of
-             Just x -> return ()
-             Nothing -> do
-                 putStrLn "yay"
-                 return 1)
-        bill -- Etc
-  where
-    potato Cakes{} = 2 * x foo * bar / 5
-```
