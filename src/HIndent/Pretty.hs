@@ -71,6 +71,7 @@ import           Control.Monad.State.Strict hiding (state)
 import           Data.Int
 import           Data.List
 import           Data.Maybe
+import           Data.Foldable (traverse_)
 import           Data.Monoid hiding (Alt)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -79,8 +80,8 @@ import           Data.Text.Lazy.Builder (Builder)
 import qualified Data.Text.Lazy.Builder as T
 import           Data.Text.Lazy.Builder.Int
 import           Data.Typeable
-import qualified Language.Haskell.Exts.Annotated as P
-import           Language.Haskell.Exts.Annotated.Syntax
+import qualified Language.Haskell.Exts as P
+import           Language.Haskell.Exts.Syntax
 import           Language.Haskell.Exts.SrcLoc
 import           Prelude hiding (exp)
 
@@ -584,8 +585,9 @@ instance Pretty Type where
         parens (do pretty ty
                    write " :: "
                    pretty k)
-      TyBang _ bangty right ->
-        do pretty bangty
+      TyBang _ bangty unpackty right ->
+        do pretty unpackty
+           pretty bangty
            pretty right
       TyEquals _ left right ->
         do pretty left
@@ -943,7 +945,13 @@ instance Pretty BangType where
   prettyInternal x =
     case x of
       BangedTy _ -> write "!"
-      UnpackedTy _ -> write "{-# UNPACK #-} !"
+      LazyTy _ -> write "~"
+      NoStrictAnnot _ -> pure ()
+
+instance Pretty Unpackedness where
+  prettyInternal (Unpack _) = write "{-# UNPACK -#}"
+  prettyInternal (NoUnpack _) = write "{-# NOUNPACK -#}"
+  prettyInternal (NoUnpackPragma _) = pure ()
 
 instance Pretty Binds where
   prettyInternal x =
@@ -964,15 +972,12 @@ instance Pretty ClassDecl where
                                Just kind ->
                                  do write " :: "
                                     pretty kind)))
-      ClsTyFam _ h mkind ->
+      ClsTyFam _ h mkind minj ->
         depend (write "type ")
                (depend (pretty h)
-                       (case mkind of
-                          Nothing -> return ()
-                          Just kind ->
-                            do write " :: "
-                               pretty kind))
-      ClsTyDef _ this that ->
+                       (depend (traverse_ (\kind -> write " :: " >> pretty kind) mkind)
+                               (traverse_ pretty minj)))
+      ClsTyDef _ (TypeEqn _ this that) ->
         do write "type "
            pretty this
            write " = "
@@ -1029,6 +1034,9 @@ instance Pretty GuardedRhs where
                                stmts))
            swing (write " " >> rhsSeparator >> write " ")
                  (pretty e)
+
+instance Pretty InjectivityInfo where
+  prettyInternal x = pretty' x
 
 instance Pretty InstDecl where
   prettyInternal i =
@@ -1250,6 +1258,10 @@ instance Pretty FunDep where
 instance Pretty Kind where
   prettyInternal = pretty'
 
+instance Pretty ResultSig where
+  prettyInternal (KindSig _ kind) = pretty kind
+  prettyInternal (TyVarSig _ tyVarBind) = pretty tyVarBind
+
 instance Pretty Literal where
   prettyInternal (String _ _ rep) = do
     write "\""
@@ -1318,7 +1330,10 @@ instance Pretty ImportSpec where
   prettyInternal = pretty'
 
 instance Pretty WarningText where
-  prettyInternal = pretty'
+  prettyInternal (DeprText _ s) =
+    write "{-# DEPRECATED " >> string s >> write " #-}"
+  prettyInternal (WarnText _ s) =
+    write "{-# WARNING " >> string s >> write " #-}"
 
 instance Pretty ExportSpecList where
   prettyInternal (ExportSpecList _ es) =

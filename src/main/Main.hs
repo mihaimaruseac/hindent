@@ -21,7 +21,7 @@ import           Data.Version (showVersion)
 import           Descriptive
 import           Descriptive.Options
 import           GHC.Tuple
-import           Language.Haskell.Exts.Annotated hiding (Style,style)
+import           Language.Haskell.Exts hiding (Style,style)
 import           Paths_hindent (version)
 import           System.Directory
 import           System.Environment

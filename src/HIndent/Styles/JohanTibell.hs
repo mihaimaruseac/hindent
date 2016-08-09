@@ -21,7 +21,7 @@ import Data.Maybe
 import HIndent.Pretty
 import HIndent.Styles.ChrisDone (infixApp)
 import HIndent.Types
-import Language.Haskell.Exts.Annotated.Syntax
+import Language.Haskell.Exts.Syntax
 import Prelude hiding (exp)
 
 --------------------------------------------------------------------------------

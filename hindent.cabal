@@ -45,7 +45,7 @@ library
                      HIndent.Styles.Cramer
   build-depends:     base >= 4.7 && <5
                    , containers
-                   , haskell-src-exts >= 1.17
+                   , haskell-src-exts >= 1.18
                    , monad-loops
                    , mtl
                    , text

@@ -49,7 +49,7 @@ import qualified Data.Text.Lazy as T hiding (singleton)
 import           Data.Text.Lazy.Builder (Builder)
 import qualified Data.Text.Lazy.Builder as T
 import qualified Data.Text.Lazy.IO as T
-import           Language.Haskell.Exts.Annotated hiding (Style, prettyPrint, Pretty, style, parse)
+import           Language.Haskell.Exts hiding (Style, prettyPrint, Pretty, style, parse)
 
 data CodeBlock = HaskellSource Text
                | CPPDirectives Text

@@ -12,7 +12,7 @@ import Control.Monad.State.Strict (MonadState, get, gets, put)
 import Data.List (intersperse, sortOn)
 import Data.Maybe (catMaybes, isJust, mapMaybe)
 
-import Language.Haskell.Exts.Annotated.Syntax
+import Language.Haskell.Exts.Syntax
 import Language.Haskell.Exts.Comments
 import Language.Haskell.Exts.SrcLoc
 import Language.Haskell.Exts (prettyPrint)
