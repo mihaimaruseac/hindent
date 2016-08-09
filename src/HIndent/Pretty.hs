@@ -43,6 +43,7 @@ module HIndent.Pretty
   , braces
   -- * Indentation
   , indented
+  , indentedBlock
   , column
   , getColumn
   , getLineNum
@@ -192,6 +193,11 @@ indented i p =
      m <- p
      modify (\s -> s {psIndentLevel = level})
      return m
+
+indentedBlock :: MonadState (PrintState s) m => m a -> m a
+indentedBlock p =
+  do indentSpaces <- getIndentSpaces
+     indented indentSpaces p
 
 -- | Print all the printers separated by spaces.
 spaced :: MonadState (PrintState s) m => [m ()] -> m ()
@@ -645,8 +651,7 @@ exp (Case _ e alts) =
             (do pretty e
                 write " of")
      newline
-     indentSpaces <- getIndentSpaces
-     indented indentSpaces (lined (map (withCaseContext True . pretty) alts))
+     indentedBlock (lined (map (withCaseContext True . pretty) alts))
 exp (Do _ stmts) =
   depend (write "do ")
          (lined (map pretty stmts))
@@ -682,17 +687,15 @@ exp (RightSection _ e op) =
                      space)
                  (pretty op))
 exp (RecConstr _ n fs) =
-  do indentSpaces <- getIndentSpaces
-     depend (do pretty n
-                space)
-            (braces (prefixedLined ","
-                                   (map (indented indentSpaces . pretty) fs)))
+  depend (do pretty n
+             space)
+         (braces (prefixedLined ","
+                                (map (indentedBlock . pretty) fs)))
 exp (RecUpdate _ n fs) =
-  do indentSpaces <- getIndentSpaces
-     depend (do pretty n
-                space)
-            (braces (prefixedLined ","
-                                   (map (indented indentSpaces . pretty) fs)))
+  depend (do pretty n
+             space)
+         (braces (prefixedLined ","
+                                (map (indentedBlock . pretty) fs)))
 exp (EnumFrom _ e) =
   brackets (do pretty e
                write " ..")
@@ -738,9 +741,8 @@ exp (QuasiQuote _ n s) =
                        write "|"))
 exp (LCase _ alts) =
   do write "\\case"
-     indentSpaces <- getIndentSpaces
      newline
-     indented indentSpaces (lined (map (withCaseContext True . pretty) alts))
+     indentedBlock (lined (map (withCaseContext True . pretty) alts))
 exp (MultiIf _ alts) =
   withCaseContext
     True
@@ -810,24 +812,21 @@ decl :: MonadState (PrintState s) m => Decl NodeInfo -> m ()
 decl (PatBind _ pat rhs mbinds) =
   do pretty pat
      withCaseContext False (pretty rhs)
-     indentSpaces <- getIndentSpaces
      case mbinds of
        Nothing -> return ()
        Just binds ->
          do newline
-            indented indentSpaces
-                     (depend (write "where ")
-                             (pretty binds))
+            indentedBlock (depend (write "where ")
+                                  (pretty binds))
 decl (InstDecl _ moverlap dhead decls) =
-  do indentSpaces <- getIndentSpaces
-     depend (write "instance ")
+  do depend (write "instance ")
             (depend (maybeOverlap moverlap)
                     (depend (pretty dhead)
                             (unless (null (fromMaybe [] decls))
                                     (write " where"))))
      unless (null (fromMaybe [] decls))
             (do newline
-                indented indentSpaces (lined (map pretty (fromMaybe [] decls))))
+                indentedBlock (lined (map pretty (fromMaybe [] decls))))
 decl (SpliceDecl _ e) = pretty e
 decl (TypeSig _ names ty) =
   depend (do inter (write ", ")
@@ -848,8 +847,7 @@ decl (ClassDecl _ ctx dhead fundeps decls) =
                                              (write " where")))))
      unless (null (fromMaybe [] decls))
             (do newline
-                indentSpaces <- getIndentSpaces
-                indented indentSpaces (lined (map pretty (fromMaybe [] decls))))
+                indentedBlock (lined (map pretty (fromMaybe [] decls))))
 decl (TypeDecl _ typehead typ) =
   depend (write "type ")
          (depend (pretty typehead)
@@ -919,10 +917,8 @@ instance Pretty Alt where
              Nothing -> return ()
              Just binds ->
                do newline
-                  indentSpaces <- getIndentSpaces
-                  indented indentSpaces
-                           (depend (write "where ")
-                                   (pretty binds))
+                  indentedBlock (depend (write "where ")
+                                (pretty binds))
 
 instance Pretty Asst where
   prettyInternal x =
@@ -1057,10 +1053,8 @@ instance Pretty Match where
              Nothing -> return ()
              Just binds ->
                do newline
-                  indentSpaces <- getIndentSpaces
-                  indented indentSpaces
-                           (depend (write "where ")
-                                   (pretty binds))
+                  indentedBlock (depend (write "where ")
+                                        (pretty binds))
       InfixMatch _ pat1 name pats rhs mbinds ->
         do depend (do pretty pat1
                       space
@@ -1075,10 +1069,8 @@ instance Pretty Match where
              Nothing -> return ()
              Just binds ->
                do newline
-                  indentSpaces <- getIndentSpaces
-                  indented indentSpaces
-                           (depend (write "where ")
-                                   (pretty binds))
+                  indentedBlock (depend (write "where ")
+                                        (pretty binds))
 
 instance Pretty PatField where
   prettyInternal x =
