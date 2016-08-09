@@ -1,8 +1,0 @@
-test x
-  | x == 0 = 0
-  | otherwise =
-      let foo y
-            | y == 0 = 0 -- comment one
-            | y == 0 = 1 -- comment two
-            | otherwise = 2  -- comment three
-      in bar x

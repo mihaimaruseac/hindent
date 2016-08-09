@@ -18,8 +18,8 @@ import Control.Monad.State.Class
 import Data.Foldable (forM_)
 import Data.Int
 import Data.Maybe
+import Data.Monoid
 import HIndent.Pretty
-import HIndent.Styles.ChrisDone (infixApp)
 import HIndent.Types
 import Language.Haskell.Exts.Syntax
 import Prelude hiding (exp)
@@ -537,3 +537,50 @@ bindingGroup binds =
               (do write "where"
                   newline
                   indented 2 (pretty binds))
+
+infixApp :: Exp NodeInfo
+         -> Exp NodeInfo
+         -> QOp NodeInfo
+         -> Exp NodeInfo
+         -> Maybe Int64
+         -> Printer s ()
+infixApp e a op b indent =
+  do (fits,st) <-
+       fitsOnOneLine
+         (spaced (map (\link ->
+                         case link of
+                           OpChainExp e' -> pretty e'
+                           OpChainLink qop -> pretty qop)
+                      (flattenOpChain e)))
+     if fits
+        then put st
+        else do prettyWithIndent a
+                space
+                pretty op
+                newline
+                case indent of
+                  Nothing -> prettyWithIndent b
+                  Just col ->
+                    do indentSpaces <- getIndentSpaces
+                       column (col + indentSpaces)
+                              (prettyWithIndent b)
+  where prettyWithIndent e' =
+          case e' of
+            (InfixApp _ a' op' b') ->
+              infixApp e' a' op' b' indent
+            _ -> pretty e'
+
+-- | A link in a chain of operator applications.
+data OpChainLink l
+  = OpChainExp (Exp l)
+  | OpChainLink (QOp l)
+  deriving (Show)
+
+-- | Flatten a tree of InfixApp expressions into a chain of operator
+-- links.
+flattenOpChain :: Exp l -> [OpChainLink l]
+flattenOpChain (InfixApp _ left op right) =
+  flattenOpChain left <>
+  [OpChainLink op] <>
+  flattenOpChain right
+flattenOpChain e = [OpChainExp e]

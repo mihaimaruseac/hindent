@@ -1,2 +1,0 @@
-a :: forall b. Typeable b => b
-a = 3

@@ -1,4 +1,0 @@
-a = do
-  a <- b
-
-  print a

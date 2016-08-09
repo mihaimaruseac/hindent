@@ -71,14 +71,7 @@ options =
   where ver =
           stop (flag "version" "Print the version" Version)
         style =
-          makeStyle <$> (constant "--style" "Style to print with" () *>
-                         foldr1 (<|>)
-                                (map (\s ->
-                                        constant (styleName s)
-                                                 (styleDescription s)
-                                                 s)
-                                     styles))
-                       <*> lineLen
+          makeStyle johanTibell <$> lineLen
         exts =
           fmap getExtensions (many (prefix "X" "Language extension"))
         lineLen =

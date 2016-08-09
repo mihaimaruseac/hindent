@@ -1,7 +1,0 @@
-type X = '[]
-
-type X = '[Int]
-
-type X = '[Int, String]
-
-a :: (A ∈ B w) => IO w

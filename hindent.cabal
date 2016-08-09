@@ -38,11 +38,7 @@ library
                      HIndent.Types
                      HIndent.Pretty
                      HIndent.Comments
-                     HIndent.Styles.Fundamental
-                     HIndent.Styles.ChrisDone
                      HIndent.Styles.JohanTibell
-                     HIndent.Styles.Gibiansky
-                     HIndent.Styles.Cramer
   build-depends:     base >= 4.7 && <5
                    , containers
                    , haskell-src-exts >= 1.18

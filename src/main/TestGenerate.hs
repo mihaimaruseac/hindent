@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module Main(main) where
 
 import Control.Monad
@@ -50,7 +51,7 @@ generateTests from to = do
     writeFile dstFilename contents
 
   where
-    findStyle style = find ((== style). HIndent.styleName) HIndent.styles
+    findStyle style = find ((== style). HIndent.styleName) [HIndent.johanTibell]
     tests style = "test/" ++ style ++ "/" ++ testDir ++ "/"
     expected style = "test/" ++ style ++ "/" ++ expectedDir ++ "/"
     expectedFilename filename = take (length filename - 4) filename ++ "exp"

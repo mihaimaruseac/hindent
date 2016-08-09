@@ -1,7 +1,0 @@
-veryLongExpression = veryLong . veryLong . veryLong .veryLong . veryLong . veryLong .veryLong . veryLong . veryLong .veryLong . veryLong . veryLong
-
-veryLongExpression = veryLong . veryLong . veryLong .veryLong . veryLong . veryLong .veryLong . veryLong . veryLong .veryLong . veryLong . veryLong + 3
-
-veryLongExpression = veryLong . veryLong + veryLong .veryLong + veryLong . veryLong +veryLong . veryLong + veryLong .veryLong + veryLong . veryLong + 3
-
-veryLongExpression = veryLong .?! veryLong +?! veryLong .?!veryLong +?! veryLong .?! veryLong +?!veryLong .?! veryLong +?! veryLong .?!veryLong +?! veryLong .?! veryLong +?! 3

@@ -1,4 +1,0 @@
-f a =
-  let foo = bar -- retained comment
-      baz = qux -- the test is to ensure this comment is not dropped
-  in dog

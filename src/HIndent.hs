@@ -10,12 +10,7 @@ module HIndent
   ,parseMode
   -- * Style
   ,Style(..)
-  ,styles
-  ,chrisDone
   ,johanTibell
-  ,fundamental
-  ,gibiansky
-  ,cramer
   -- * Testing
   ,test
   ,testFile
@@ -27,10 +22,6 @@ module HIndent
 
 import           HIndent.Comments
 import           HIndent.Pretty
-import           HIndent.Styles.ChrisDone (chrisDone)
-import           HIndent.Styles.Cramer (cramer)
-import           HIndent.Styles.Fundamental (fundamental)
-import           HIndent.Styles.Gibiansky (gibiansky)
 import           HIndent.Styles.JohanTibell (johanTibell)
 import           HIndent.Types
 
@@ -232,7 +223,7 @@ testAst x =
 -- | Styles list, useful for programmatically choosing.
 styles :: [Style]
 styles =
-  [fundamental,chrisDone,johanTibell,gibiansky,cramer]
+  [johanTibell]
 
 -- | Default extensions.
 defaultExtensions :: [Extension]

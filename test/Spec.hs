@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module Main (main) where
 
 import           Control.Monad
@@ -15,7 +16,7 @@ import Language.Haskell.Exts.Extension
 import qualified HIndent
 
 styles :: [FilePath]
-styles = ["fundamental", "gibiansky", "chris-done", "johan-tibell", "cramer"]
+styles = ["johan-tibell"]
 
 testDir, expectedDir :: String
 testDir = "tests"
@@ -26,7 +27,7 @@ main = forM_ styles testStyle
 
 testStyle :: FilePath -> IO ()
 testStyle style = do
-  let Just theStyle = find ((== T.pack style) . HIndent.styleName) HIndent.styles
+  let Just theStyle = find ((== T.pack style) . HIndent.styleName) [HIndent.johanTibell]
   testFilenames <- filter (not . isPrefixOf ".") <$> getDirectoryContents tests
   let expFiles = map ((expected ++) . expectedFilename) testFilenames
       testFiles = map (tests ++) testFilenames

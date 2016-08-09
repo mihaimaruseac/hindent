@@ -1,7 +1,0 @@
-fib x | x == 1 = 1
- | x == 2 = 1
- | otherwise = fib (x - 1) + fib (x - 2)
-
-simple [] = True
-simple [e] | simple e = True
-simple _ = False

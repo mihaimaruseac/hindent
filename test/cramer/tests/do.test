@@ -1,9 +1,0 @@
-main = do { name <- getLine; putStrLn $ "Hello " ++ name ++ "!" }
-
-main = repeatedly $ do { getLine >>= putStrLn }
-
-main = repeatedly $ getline >>= \s -> do { putStrLn s }
-
-main =
-  -- comment
-  do { getLine >>= putStrLn }
