@@ -484,8 +484,12 @@ instance Pretty Pat where
         brackets (commas (map pretty ps))
       PParen _ e -> parens (pretty e)
       PRec _ qname fields ->
-        depend (pretty qname)
-               (braces (commas (map pretty fields)))
+        do indentSpaces <- getIndentSpaces
+           depend (do pretty qname
+                      space)
+                  (braces (prefixedLined ","
+                                         (map (indented indentSpaces . pretty) fields)))
+
       PAsPat _ n p ->
         depend (do pretty n
                    write "@")
