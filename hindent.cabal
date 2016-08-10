@@ -18,12 +18,6 @@ bug-reports: https://github.com/chrisdone/hindent/issues
 data-files:          elisp/hindent.el
 extra-source-files:  README.md
                      benchmarks/BigDeclarations.hs
-                     test/chris-done/expected/*.exp
-                     test/chris-done/tests/*.test
-                     test/gibiansky/expected/*.exp
-                     test/gibiansky/tests/*.test
-                     test/fundamental/expected/*.exp
-                     test/fundamental/tests/*.test
                      test/johan-tibell/expected/*.exp
                      test/johan-tibell/tests/*.test
 
