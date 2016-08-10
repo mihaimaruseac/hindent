@@ -33,57 +33,82 @@ import           Foreign.C.Error
 
 -- | Main entry point.
 main :: IO ()
-main =
-  do args <- getArgs
-     case consume options (map T.pack args) of
-       Succeeded (style,exts,mfilepath) ->
-         case mfilepath of
-           Just filepath ->
-             do text <- T.readFile filepath
-                tmpDir <- getTemporaryDirectory
-                (fp,h) <- openTempFile tmpDir "hindent.hs"
-                T.hPutStrLn
-                  h
-                  (either error T.toLazyText (reformat style (Just exts) text))
-                hFlush h
-                hClose h
-                let exdev e = if ioe_errno e == Just ((\(Errno a) -> a) eXDEV)
-                                  then copyFile fp filepath >> removeFile fp
-                                  else throw e
-                renameFile fp filepath `catch` exdev
-           Nothing ->
-             T.interact (either error T.toLazyText . reformat style (Just exts))
-       Failed (Wrap (Stopped Version) _) ->
-         putStrLn ("hindent " ++ showVersion version)
-       _ ->
-         error (T.unpack (textDescription (describe options [])))
+main = do
+    args <- getArgs
+    case consume options (map T.pack args) of
+        Succeeded (style,exts,mfilepath) ->
+            case mfilepath of
+                Just filepath -> do
+                    text <- T.readFile filepath
+                    tmpDir <- getTemporaryDirectory
+                    (fp,h) <- openTempFile tmpDir "hindent.hs"
+                    T.hPutStrLn
+                        h
+                        (either
+                             error
+                             T.toLazyText
+                             (reformat style (Just exts) text))
+                    hFlush h
+                    hClose h
+                    let exdev e =
+                            if ioe_errno e ==
+                               Just
+                                   ((\(Errno a) ->
+                                          a)
+                                        eXDEV)
+                                then copyFile fp filepath >> removeFile fp
+                                else throw e
+                    renameFile fp filepath `catch` exdev
+                Nothing ->
+                    T.interact
+                        (either error T.toLazyText . reformat style (Just exts))
+        Failed (Wrap (Stopped Version) _) ->
+            putStrLn ("hindent " ++ showVersion version)
+        Failed (Wrap (Stopped Help) _) -> putStrLn help
+        _ -> error help
+  where
+
+help =
+    "hindent " ++
+    T.unpack (textDescription (describe options [])) ++
+    "\nVersion " ++ showVersion version ++ "\n" ++
+    "The --style option is now ignored, but preserved for backwards-compatibility.\n" ++
+    "Johan Tibell is the default and only style."
 
 -- | Options that stop the argument parser.
-data Stoppers = Version
+data Stoppers = Version | Help
   deriving (Show)
 
 -- | Program options.
 options :: Monad m
         => Consumer [Text] (Option Stoppers) m (Style,[Extension],Maybe FilePath)
-options =
-  ver *>
-  ((,,) <$> style <*> exts <*> file)
-  where ver =
-          stop (flag "version" "Print the version" Version)
-        style =
-          makeStyle johanTibell <$> lineLen
-        exts =
-          fmap getExtensions (many (prefix "X" "Language extension"))
-        lineLen =
-          fmap (>>= (readMaybe . T.unpack))
-               (optional (arg "line-length" "Desired length of lines"))
-        makeStyle s mlen =
-          case mlen of
+options = ver *> ((,,) <$> style <*> exts <*> file)
+  where
+    ver = stop (flag "version" "Print the version" Version) *>
+          stop (flag "help" "Show help" Help)
+    style =
+        makeStyle <$>
+        fmap
+            (const johanTibell)
+            (optional
+                 (constant "--style" "Style to print with" () *>
+                  anyString "STYLE")) <*>
+        lineLen
+    exts = fmap getExtensions (many (prefix "X" "Language extension"))
+    lineLen =
+        fmap
+            (>>= (readMaybe . T.unpack))
+            (optional (arg "line-length" "Desired length of lines"))
+    makeStyle s mlen =
+        case mlen of
             Nothing -> s
             Just len ->
-              s {styleDefConfig =
-                   (styleDefConfig s) {configMaxColumns = len}}
-        file = fmap (fmap T.unpack) (optional (anyString "[<filename>]"))
+                s
+                { styleDefConfig = (styleDefConfig s)
+                  { configMaxColumns = len
+                  }
+                }
+    file = fmap (fmap T.unpack) (optional (anyString "[<filename>]"))
 
 --------------------------------------------------------------------------------
 -- Extensions stuff stolen from hlint
