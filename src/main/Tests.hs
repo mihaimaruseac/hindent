@@ -3,4 +3,5 @@ module Main (main) where
 import qualified HIndent
 
 main :: IO ()
-main = return ()
+main = do tests <- readFile "tests.hs"
+          undefined

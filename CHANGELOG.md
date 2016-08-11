@@ -2,9 +2,11 @@
 	* Drop support for styles
 
 4.6.4
+
 	* Copy/delete file instead of renaming
 
 4.4.6
+
 	* Fix whole module printer
 	* Accept a filename to reformat
 
@@ -23,5 +25,6 @@
 	* Fixed: bug in printing operators in statements.
 
 4.5.4
+
 	* Improvements to Tibell style.
 	* 6x speed up on rendering operators.

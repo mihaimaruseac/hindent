@@ -1,9 +1,0 @@
-fun
-    :: (Class a, Class b)
-    => a -> b -> c
-
-fun :: (a, b, c) -> (a, b)
-
-fun
-    :: (Class a, Class b)
-    => a -> (# d, e #) -> c

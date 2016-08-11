@@ -5,12 +5,10 @@
 
 module HIndent.Comments where
 
-import Control.Applicative ((<|>))
 import Control.Arrow (first, second)
 import Control.Monad.State.Strict
 import Data.Data
 import qualified Data.Map.Strict as M
-import Data.Traversable
 import HIndent.Types
 import Language.Haskell.Exts hiding (Style,prettyPrint,Pretty,style,parse)
 

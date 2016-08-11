@@ -6,21 +6,21 @@ description:         Extensible Haskell pretty printer. Both a library and an ex
                      See the Github page for usage\/explanation: <https://github.com/chrisdone/hindent>
 license:             BSD3
 stability:           Unstable
-license-file:        LICENSE
+license-file:        LICENSE.md
 author:              Chris Done, Andrew Gibiansky, Tobias Pflug, Pierre Radermecker
 maintainer:          chrisdone@gmail.com
-copyright:           2014 Chris Done
+copyright:           2014 Chris Done, 2015 Andrew Gibiansky
 category:            Development
 build-type:          Simple
 cabal-version:       >=1.8
 homepage: http://www.github.com/chrisdone/hindent
 bug-reports: https://github.com/chrisdone/hindent/issues
 data-files:          elisp/hindent.el
-extra-source-files:  README.md
-                     CHANGELOG
-                     benchmarks/BigDeclarations.hs
-                     test/johan-tibell/expected/*.exp
-                     test/johan-tibell/tests/*.test
+extra-source-files:
+ README.md
+ CHANGELOG.md
+ BENCHMARK.md
+ TEST.md
 
 source-repository head
     type:           git
@@ -33,14 +33,16 @@ library
                      HIndent.Types
                      HIndent.Pretty
                      HIndent.Comments
-                     HIndent.Styles.JohanTibell
   build-depends:     base >= 4.7 && <5
                    , containers
                    , haskell-src-exts >= 1.18
                    , monad-loops
                    , mtl
-                   , text
+                   , bytestring
+                   , utf8-string
                    , transformers
+                   , exceptions
+                   , text
 
 executable hindent
   hs-source-dirs:    src/main
@@ -48,44 +50,45 @@ executable hindent
   main-is:           Main.hs
   build-depends:     base >= 4 && < 5
                    , hindent
-                   , text
+                   , bytestring
+                   , utf8-string
                    , descriptive >= 0.7 && < 0.10
                    , haskell-src-exts
                    , ghc-prim
                    , directory
-
-executable hindent-generate-tests
-  hs-source-dirs:    src/main
-  ghc-options:       -Wall -O2
-  main-is:           TestGenerate.hs
-  build-depends:     base >= 4 && < 5
-                   , hindent
                    , text
-                   , directory
 
-test-suite hspec
+test-suite hindent-test
   type: exitcode-stdio-1.0
-  hs-source-dirs: test
-  main-is: Spec.hs
+  hs-source-dirs: src/main/
+  main-is: Test.hs
+  other-modules: Markdone
   build-depends:     base >= 4 && <5
                    , hindent
                    , haskell-src-exts
                    , monad-loops
                    , mtl
-                   , text
+                   , bytestring
+                   , utf8-string
                    , hspec
                    , directory
+                   , deepseq
+                   , exceptions
+                   , utf8-string
 
 benchmark hindent-bench
   type: exitcode-stdio-1.0
   hs-source-dirs:    src/main
   ghc-options:       -Wall -O2 -rtsopts
   main-is:           Benchmark.hs
+  other-modules: Markdone
   build-depends:     base >= 4 && < 5
                    , hindent
-                   , text
+                   , bytestring
+                   , utf8-string
                    , haskell-src-exts
                    , ghc-prim
                    , directory
                    , criterion
                    , deepseq
+                   , exceptions

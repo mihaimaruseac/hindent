@@ -1,6 +1,0 @@
-strToMonth :: String -> Int
-strToMonth month = 
-    case month of
-        "Jan" -> 1
-        "Feb" -> 2
-        _ -> error $ "Unknown month " ++ month

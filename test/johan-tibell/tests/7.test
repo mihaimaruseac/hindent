@@ -1,3 +1,0 @@
-g x = let x = 1 in x
-  where
-    foo = let y = 2; z = 3 in y

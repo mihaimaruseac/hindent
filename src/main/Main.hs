@@ -1,3 +1,4 @@
+{-# LANGUAGE Unsafe #-}
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
@@ -10,17 +11,15 @@ module Main where
 
 import           HIndent
 import           HIndent.Types
-
+import qualified Data.ByteString as S
+import qualified Data.ByteString.Builder as S
+import qualified Data.ByteString.Lazy.Char8 as L8
 import           Control.Applicative
-import           Data.List
 import           Data.Text (Text)
 import qualified Data.Text as T
-import qualified Data.Text.Lazy.Builder as T
-import qualified Data.Text.Lazy.IO as T
 import           Data.Version (showVersion)
 import           Descriptive
 import           Descriptive.Options
-import           GHC.Tuple
 import           Language.Haskell.Exts hiding (Style,style)
 import           Paths_hindent (version)
 import           System.Directory
@@ -39,15 +38,14 @@ main = do
         Succeeded (style,exts,mfilepath) ->
             case mfilepath of
                 Just filepath -> do
-                    text <- T.readFile filepath
+                    text <- S.readFile filepath
                     tmpDir <- getTemporaryDirectory
                     (fp,h) <- openTempFile tmpDir "hindent.hs"
-                    T.hPutStrLn
-                        h
-                        (either
-                             error
-                             T.toLazyText
-                             (reformat style (Just exts) text))
+                    L8.putStrLn
+                                   (either
+                                        error
+                                        S.toLazyByteString
+                                        (reformat style (Just exts) text))
                     hFlush h
                     hClose h
                     let exdev e =
@@ -60,14 +58,15 @@ main = do
                                 else throw e
                     renameFile fp filepath `catch` exdev
                 Nothing ->
-                    T.interact
-                        (either error T.toLazyText . reformat style (Just exts))
+                    L8.interact
+                           (either error S.toLazyByteString . reformat style (Just exts) . L8.toStrict)
         Failed (Wrap (Stopped Version) _) ->
             putStrLn ("hindent " ++ showVersion version)
         Failed (Wrap (Stopped Help) _) -> putStrLn help
         _ -> error help
   where
 
+help :: [Char]
 help =
     "hindent " ++
     T.unpack (textDescription (describe options [])) ++
@@ -81,15 +80,16 @@ data Stoppers = Version | Help
 
 -- | Program options.
 options :: Monad m
-        => Consumer [Text] (Option Stoppers) m (Style,[Extension],Maybe FilePath)
+        => Consumer [Text] (Option Stoppers) m (Config,[Extension],Maybe FilePath)
 options = ver *> ((,,) <$> style <*> exts <*> file)
   where
-    ver = stop (flag "version" "Print the version" Version) *>
-          stop (flag "help" "Show help" Help)
+    ver =
+        stop (flag "version" "Print the version" Version) *>
+        stop (flag "help" "Show help" Help)
     style =
         makeStyle <$>
         fmap
-            (const johanTibell)
+            (const defaultConfig)
             (optional
                  (constant "--style" "Style to print with" () *>
                   anyString "STYLE")) <*>
@@ -104,31 +104,6 @@ options = ver *> ((,,) <$> style <*> exts <*> file)
             Nothing -> s
             Just len ->
                 s
-                { styleDefConfig = (styleDefConfig s)
-                  { configMaxColumns = len
-                  }
+                { configMaxColumns = len
                 }
     file = fmap (fmap T.unpack) (optional (anyString "[<filename>]"))
-
---------------------------------------------------------------------------------
--- Extensions stuff stolen from hlint
-
--- | Consume an extensions list from arguments.
-getExtensions :: [Text] -> [Extension]
-getExtensions = foldl f defaultExtensions . map T.unpack
-  where f _ "Haskell98" = []
-        f a ('N':'o':x)
-          | Just x' <- readExtension x =
-            delete x' a
-        f a x
-          | Just x' <- readExtension x =
-            x' :
-            delete x' a
-        f _ x = error $ "Unknown extension: " ++ x
-
--- | Parse an extension.
-readExtension :: String -> Maybe Extension
-readExtension x =
-  case classifyExtension x of
-    UnknownExtension _ -> Nothing
-    x' -> Just x'
