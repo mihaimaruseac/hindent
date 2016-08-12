@@ -17,6 +17,7 @@ homepage: http://www.github.com/chrisdone/hindent
 bug-reports: https://github.com/chrisdone/hindent/issues
 data-files:          elisp/hindent.el
 extra-source-files:  README.md
+                     CHANGELOG
                      benchmarks/BigDeclarations.hs
                      test/johan-tibell/expected/*.exp
                      test/johan-tibell/tests/*.test
