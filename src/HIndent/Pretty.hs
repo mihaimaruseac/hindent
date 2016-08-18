@@ -776,6 +776,7 @@ exp x@ParArrayFromThenTo{} = pretty' x
 exp x@ParArrayComp{} = pretty' x
 exp ParComp{} =
   error "FIXME: No implementation for ParComp."
+exp (OverloadedLabel _ label) = string ('#' : label)
 
 instance Pretty Stmt where
   prettyInternal x =
