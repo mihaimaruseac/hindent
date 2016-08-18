@@ -19,12 +19,10 @@ main =
     [env setupEnv
          (\ ~bigDecls ->
              bgroup "Main"
-                    [bgroup "BigDeclarations"
-                            [bench ("HIndent.reformat: " ++
-                                    show (styleName style))
+                    [bench "HIndent.reformat big declarations: "
                                    (nf (either error T.toLazyText .
-                                        reformat style (Just defaultExtensions))
-                                       bigDecls)|style <- styles]])]
+                                        reformat johanTibell (Just defaultExtensions))
+                                       bigDecls)])]
 
 -- | Setup the environment for the benchmarks.
 setupEnv :: IO Text
