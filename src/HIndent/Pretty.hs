@@ -947,12 +947,12 @@ instance Pretty BangType where
     case x of
       BangedTy _ -> write "!"
       LazyTy _ -> write "~"
-      NoStrictAnnot _ -> pure ()
+      NoStrictAnnot _ -> return ()
 
 instance Pretty Unpackedness where
   prettyInternal (Unpack _) = write "{-# UNPACK -#}"
   prettyInternal (NoUnpack _) = write "{-# NOUNPACK -#}"
-  prettyInternal (NoUnpackPragma _) = pure ()
+  prettyInternal (NoUnpackPragma _) = return ()
 
 instance Pretty Binds where
   prettyInternal x =
