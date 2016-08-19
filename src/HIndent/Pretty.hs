@@ -71,7 +71,6 @@ import           Control.Monad.State.Strict hiding (state)
 import           Data.Int
 import           Data.List
 import           Data.Maybe
-import           Data.Foldable (traverse_)
 import           Data.Monoid hiding (Alt)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -976,8 +975,8 @@ instance Pretty ClassDecl where
       ClsTyFam _ h mkind minj ->
         depend (write "type ")
                (depend (pretty h)
-                       (depend (traverse_ (\kind -> write " :: " >> pretty kind) mkind)
-                               (traverse_ pretty minj)))
+                       (depend (mapM_ (\kind -> write " :: " >> pretty kind) mkind)
+                               (mapM_ pretty minj)))
       ClsTyDef _ (TypeEqn _ this that) ->
         do write "type "
            pretty this
