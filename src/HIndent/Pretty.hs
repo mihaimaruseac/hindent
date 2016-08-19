@@ -972,11 +972,11 @@ instance Pretty ClassDecl where
                                Just kind ->
                                  do write " :: "
                                     pretty kind)))
-      ClsTyFam _ h mkind minj ->
+      ClsTyFam _ h bindings mkind ->
         depend (write "type ")
                (depend (pretty h)
                        (depend (mapM_ (\kind -> write " :: " >> pretty kind) mkind)
-                               (mapM_ pretty minj)))
+                               (mapM_ pretty bindings)))
       ClsTyDef _ (TypeEqn _ this that) ->
         do write "type "
            pretty this
