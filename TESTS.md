@@ -133,7 +133,6 @@ fun :: (a, b, c) -> (a, b)
 Where clause
 
 ``` haskell
-sayHello :: IO ()
 sayHello = do
   name <- getLine
   putStrLn $ greeting name
@@ -144,7 +143,6 @@ sayHello = do
 Guards and pattern guards
 
 ``` haskell
-f :: Int
 f x
   | x <- Just x
   , x <- Just x =
@@ -153,6 +151,18 @@ f x
   | otherwise = do e
   where
     x = y
+```
+
+Multi-way if
+
+``` haskell
+x =
+  if | x <- Just x,
+       x <- Just x ->
+       case x of
+         Just x -> e
+         Nothing -> p
+     | otherwise -> e
 ```
 
 Case inside a `where` and `do`

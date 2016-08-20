@@ -704,11 +704,27 @@ exp (LCase _ alts) =
 exp (MultiIf _ alts) =
   withCaseContext
     True
-    (depend (write "if ")
-            (lined (map (\p ->
-                           do write "| "
-                              pretty p)
-                        alts)))
+    (depend
+       (write "if ")
+       (lined
+          (map
+             (\p -> do
+                write "| "
+                prettyG p)
+             alts)))
+  where
+    prettyG (GuardedRhs _ stmts e) = do
+      indented
+        1
+        (do (lined (map
+                         (\(i,p) -> do
+                            unless (i == 1)
+                                   space
+                            pretty p
+                            unless (i == length stmts)
+                                   (write ","))
+                         (zip [1..] stmts))))
+      swing (write " " >> rhsSeparator) (pretty e)
 exp (Lit _ lit) = prettyInternal lit
 exp x@XTag{} = pretty' x
 exp x@XETag{} = pretty' x
@@ -958,17 +974,7 @@ instance Pretty FieldUpdate where
 instance Pretty GuardedRhs where
   prettyInternal  =
     guardedRhs
-    {-case x of
-      GuardedRhs _ stmts e ->
-        do indented 1
-                    (do prefixedLined
-                          ","
-                          (map (\p ->
-                                  do space
-                                     pretty p)
-                               stmts))
-           swing (write " " >> rhsSeparator >> write " ")
-                 (pretty e)-}
+    
 
 instance Pretty InjectivityInfo where
   prettyInternal x = pretty' x
@@ -1709,3 +1715,4 @@ flattenOpChain (InfixApp _ left op right) =
   [OpChainLink op] <>
   flattenOpChain right
 flattenOpChain e = [OpChainExp e]
+
