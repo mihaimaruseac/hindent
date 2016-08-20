@@ -13,6 +13,8 @@ Module header
 
 ``` haskell
 module X where
+
+x = 1
 ```
 
 Exports
@@ -191,6 +193,83 @@ g x =
       let y = 2
           z = 3
       in y
+```
+
+Lists
+
+``` haskell
+exceptions = [InvalidStatusCode, MissingContentHeader, InternalServerError]
+
+exceptions =
+  [ InvalidStatusCode
+  , MissingContentHeader
+  , InternalServerError
+  , InvalidStatusCode
+  , MissingContentHeader
+  , InternalServerError]
+```
+
+# Johan Tibell compatibility checks
+
+Basic example from Tibbe's style
+
+``` haskell
+sayHello :: IO ()
+sayHello = do
+  name <- getLine
+  putStrLn $ greeting name
+  where
+    greeting name = "Hello, " ++ name ++ "!"
+
+filter :: (a -> Bool) -> [a] -> [a]
+filter _ [] = []
+filter p (x:xs)
+  | p x = x : filter p xs
+  | otherwise = filter p xs
+```
+
+Data declarations
+
+``` haskell
+data Tree a
+  = Branch !a
+           !(Tree a)
+           !(Tree a)
+  | Leaf
+
+data HttpException
+  = InvalidStatusCode Int
+  | MissingContentHeader
+
+data Person = Person
+  { firstName :: !String -- ^ First name
+  , lastName :: !String -- ^ Last name
+  , age :: !Int -- ^ Age
+  }
+
+data Person = Person
+  { firstName :: !String -- ^ First name
+  , lastName :: !String -- ^ Last name
+  , age :: !Int -- ^ Age
+  } deriving (Eq,Show)
+```
+
+Hanging lambdas
+
+``` haskell
+bar :: IO ()
+bar =
+  forM_ [1, 2, 3] $
+  \n -> do
+    putStrLn "Here comes a number!"
+    print n
+
+foo :: IO ()
+foo =
+  alloca 10 $
+  \a ->
+     alloca 20 $
+     \b -> cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
 ```
 
 # Behaviour checks

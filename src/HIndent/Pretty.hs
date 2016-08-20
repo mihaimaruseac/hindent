@@ -862,7 +862,7 @@ decl x = pretty' x
 
 instance Pretty Deriving where
   prettyInternal (Deriving _ heads) =
-    do write "deriving"
+    do write " deriving"
        space
        let heads' =
              if length heads == 1
@@ -974,7 +974,7 @@ instance Pretty FieldUpdate where
 instance Pretty GuardedRhs where
   prettyInternal  =
     guardedRhs
-    
+
 
 instance Pretty InjectivityInfo where
   prettyInternal x = pretty' x
@@ -1599,13 +1599,13 @@ conDecl (RecDecl _ name fields) =
 conDecl x = case x of
               ConDecl _ name bangty ->
                 depend (do pretty name
-                           space)
+                           unless (null bangty) space)
                        (lined (map pretty bangty))
               InfixConDecl l a f b ->
                 pretty (ConDecl l f [a,b])
               RecDecl _ name fields ->
                 depend (do pretty name
-                           write " ")
+                           space)
                        (do depend (write "{")
                                   (prefixedLined ","
                                                  (map pretty fields))
@@ -1624,7 +1624,7 @@ recDecl (RecDecl _ name fields) =
                        (prefixedLined ","
                                       (map (depend space . pretty) fields))
                 newline
-                write "} ")
+                write "}")
 recDecl r = prettyNoExt r
 
 recUpdateExpr :: Printer () -> [FieldUpdate NodeInfo] -> Printer ()
@@ -1715,4 +1715,3 @@ flattenOpChain (InfixApp _ left op right) =
   [OpChainLink op] <>
   flattenOpChain right
 flattenOpChain e = [OpChainExp e]
-
