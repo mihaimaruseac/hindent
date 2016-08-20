@@ -1,3 +1,8 @@
+5.0.1:
+    * Re-implement using bytestring instead of text
+    * Made compatible with GHC 7.8 through to GHC 8.0
+    * Added test suite and benchmarks in TESTS.md and BENCHMARKS.md
+
 5.0.0:
 	* Drop support for styles
 
