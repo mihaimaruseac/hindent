@@ -49,7 +49,7 @@ data CodeBlock = HaskellSource ByteString
 -- | Format the given source.
 reformat :: Config -> Maybe [Extension] -> ByteString -> Either String Builder
 reformat config mexts x =
-  mconcat . intersperse "\n" <$> mapM processBlock (cppSplitBlocks x)
+  fmap (mconcat . intersperse "\n") (mapM processBlock (cppSplitBlocks x))
   where
     processBlock :: CodeBlock -> Either String Builder
     processBlock (CPPDirectives text) = Right $ S.byteString text

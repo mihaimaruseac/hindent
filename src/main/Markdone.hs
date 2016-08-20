@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase #-}
@@ -61,7 +62,7 @@ tokenize = map token . S8.lines
                else PlainLine line
 
 -- | Parse into a forest.
-parse :: MonadThrow m => [Token] -> m [Markdone]
+parse :: (Functor m,MonadThrow m) => [Token] -> m [Markdone]
 parse = go (0 :: Int)
   where
     go level =

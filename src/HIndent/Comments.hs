@@ -5,12 +5,16 @@
 
 module HIndent.Comments where
 
-import Control.Arrow (first, second)
-import Control.Monad.State.Strict
-import Data.Data
+import           Control.Arrow (first, second)
+import           Control.Monad.State.Strict
+import           Data.Data
+import qualified Data.Foldable
 import qualified Data.Map.Strict as M
-import HIndent.Types
-import Language.Haskell.Exts hiding (Style,prettyPrint,Pretty,style,parse)
+import           Data.Monoid
+import           Data.Traversable
+import           HIndent.Types
+import           Language.Haskell.Exts hiding (Style,prettyPrint,Pretty,style,parse)
+import           Prelude
 
 -- Order by start of span, larger spans before smaller spans.
 newtype OrderByStart =
@@ -55,7 +59,7 @@ annotateComments src comments =
             ([],nodeinfos)
   where
     nodeinfos :: M.Map SrcSpanInfo NodeInfo
-    nodeinfos = foldr (\ssi -> M.insert ssi (NodeInfo ssi [])) M.empty src
+    nodeinfos = Data.Foldable.foldr (\ssi -> M.insert ssi (NodeInfo ssi [])) M.empty src
 
     -- Assign a single comment to the right AST node
     assignComment :: Comment -> State ([ComInfo],M.Map SrcSpanInfo NodeInfo) ()
@@ -112,5 +116,5 @@ annotateComments src comments =
     nodeBefore (Comment _ ss _) = fmap snd $ (OrderByEnd ss) `M.lookupLT` spansByEnd
     nodeAfter (Comment _ ss _) = fmap snd $ (OrderByStart ss) `M.lookupGT` spansByStart
 
-    spansByStart = foldr (\ssi -> M.insert (OrderByStart $ srcInfoSpan ssi) ssi) M.empty src
-    spansByEnd = foldr (\ssi -> M.insert (OrderByEnd $ srcInfoSpan ssi) ssi) M.empty src
+    spansByStart = Data.Foldable.foldr (\ssi -> M.insert (OrderByStart $ srcInfoSpan ssi) ssi) M.empty src
+    spansByEnd = Data.Foldable.foldr (\ssi -> M.insert (OrderByEnd $ srcInfoSpan ssi) ssi) M.empty src

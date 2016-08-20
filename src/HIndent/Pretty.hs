@@ -60,11 +60,12 @@ module HIndent.Pretty
 
 import           Control.Monad.State.Strict hiding (state)
 import qualified Data.ByteString.Builder as S
+import qualified Data.Foldable
 import           Data.Foldable (traverse_)
 import           Data.Int
 import           Data.List
 import           Data.Maybe
-import           Data.Monoid hiding (Alt)
+import           Data.Monoid ((<>))
 import           Data.Typeable
 import           HIndent.Types
 import qualified Language.Haskell.Exts as P
@@ -390,7 +391,7 @@ swing a b =
         then put st
         else do newline
                 indentSpaces <- getIndentSpaces
-                column (orig + indentSpaces) b
+                _ <- column (orig + indentSpaces) b
                 return ()
 
 -- | Swing the second printer below and indented with respect to the first by
@@ -502,22 +503,85 @@ instance Pretty Type where
     typ
 
 instance Pretty Exp where
-  prettyInternal = exp'
+  prettyInternal = exp
 
 -- | Render an expression.
 exp :: Exp NodeInfo -> Printer ()
-exp (OverloadedLabel _ _) = error "FIXME: No implementation for OverloadedLabel"
-exp (TypeApp _ _) = error "FIXME: No implementation for TypeApp"
-exp (ExprHole {}) = write "_"
-exp (InfixApp _ a op b) =
-  depend (do pretty a
-             space
-             pretty op
-             space)
-         (do pretty b)
+-- | Do after lambda should swing.
+exp (Lambda _ pats (Do l stmts)) =
+  do
+     (fits,st) <-
+       fitsOnOneLine
+         (do write "\\"
+             spaced (map pretty pats)
+             write " -> "
+             pretty (Do l stmts))
+     if fits
+        then put st
+        else swing (do write "\\"
+                       spaced (map pretty pats)
+                       write " -> do")
+                    (lined (map pretty stmts))
+-- | Space out tuples.
+exp (Tuple _ boxed exps) =
+  depend (write (case boxed of
+                   Unboxed -> "(#"
+                   Boxed -> "("))
+         (do single <- isSingleLiner p
+             underflow <- fmap not (isOverflow p)
+             if single && underflow
+                then p
+                else prefixedLined ","
+                                   (map (depend space . pretty) exps)
+             write (case boxed of
+                      Unboxed -> "#)"
+                      Boxed -> ")"))
+  where p = inter (write ", ") (map pretty exps)
+-- | Space out tuples.
+exp (TupleSection _ boxed mexps) =
+  depend (write (case boxed of
+                   Unboxed -> "(#"
+                   Boxed -> "("))
+         (do inter (write ", ") (map (maybe (return ()) pretty) mexps)
+             write (case boxed of
+                      Unboxed -> "#)"
+                      Boxed -> ")"))
+-- | Infix apps, same algorithm as ChrisDone at the moment.
+exp e@(InfixApp _ a op b) =
+  infixApp e a op b Nothing
+-- | If bodies are indented 4 spaces. Handle also do-notation.
+exp (If _ if' then' else') =
+  do depend (write "if ")
+            (pretty if')
+     newline
+     indentSpaces <- getIndentSpaces
+     indented indentSpaces
+              (do branch "then " then'
+                  newline
+                  branch "else " else')
+     -- Special handling for do.
+  where branch str e =
+          case e of
+            Do _ stmts ->
+              do write str
+                 write "do"
+                 newline
+                 indentSpaces <- getIndentSpaces
+                 indented indentSpaces (lined (map pretty stmts))
+            _ ->
+              depend (write str)
+                     (pretty e)
+-- | App algorithm similar to ChrisDone algorithm, but with no
+-- parent-child alignment.
 exp (App _ op a) =
-  swing (do pretty f)
-         (lined (map pretty args))
+  do (fits,st) <-
+       fitsOnOneLine (spaced (map pretty (f : args)))
+     if fits
+        then put st
+        else do pretty f
+                newline
+                spaces <- getIndentSpaces
+                indented spaces (lined (map pretty args))
   where (f,args) = flatten op [a]
         flatten :: Exp NodeInfo
                 -> [Exp NodeInfo]
@@ -525,33 +589,55 @@ exp (App _ op a) =
         flatten (App _ f' a') b =
           flatten f' (a' : b)
         flatten f' as = (f',as)
+-- | Space out commas in list.
+exp (List _ es) =
+  do single <- isSingleLiner p
+     underflow <- fmap not (isOverflow p)
+     if single && underflow
+        then p
+        else brackets (prefixedLined ","
+                                     (map (depend space . pretty) es))
+  where p =
+          brackets (inter (write ", ")
+                          (map pretty es))
+exp (RecUpdate _ exp' updates) = recUpdateExpr (pretty exp') updates
+exp (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
+exp (Let _ binds e) =
+  depend (write "let ")
+         (do pretty binds
+             newline
+             indented (-4) (depend (write "in ")
+                                   (pretty e)))
+exp (ListComp _ e qstmt) =
+  brackets (do space
+               pretty e
+               unless (null qstmt)
+                      (do newline
+                          indented (-1)
+                                   (write "|")
+                          prefixedLined ","
+                                        (map (\x -> do space
+                                                       pretty x
+                                                       space)
+                                             qstmt)))
+exp (TypeApp _ _) = error "FIXME: No implementation for TypeApp"
+exp (ExprHole {}) = write "_"
 exp (NegApp _ e) =
   depend (write "-")
          (pretty e)
 exp (Lambda _ ps e) =
-  depend (write "\\")
-         (do spaced (map (\(i,x) -> do case (i,x) of
-                                         (0,PIrrPat{}) -> space
-                                         (0,PBangPat{}) -> space
-                                         _ -> return ()
-                                       pretty x) (zip [0..] ps))
-             swing (write " ->")
-                    (pretty e))
-exp (Let _ binds e) =
-  do depend (write "let ")
-            (pretty binds)
-     newline
-     depend (write "in ")
-            (pretty e)
-exp (If _ p t e) =
-  do depend (write "if ")
-            (do pretty p
-                newline
-                depend (write "then ")
-                       (pretty t)
-                newline
-                depend (write "else ")
-                       (pretty e))
+  depend
+    (write "\\")
+    (do spaced
+          (map
+             (\(i,x) -> do
+                case (i, x) of
+                  (0,PIrrPat {}) -> space
+                  (0,PBangPat {}) -> space
+                  _ -> return ()
+                pretty x)
+             (zip [0 :: Int ..] ps))
+        swing (write " ->") (pretty e))
 exp (Paren _ e) = parens (pretty e)
 exp (Case _ e alts) =
   do depend (write "case ")
@@ -565,26 +651,6 @@ exp (Do _ stmts) =
 exp (MDo _ stmts) =
   depend (write "mdo ")
          (lined (map pretty stmts))
-exp (Tuple _ boxed exps) =
-  depend (write (case boxed of
-                   Unboxed -> "(#"
-                   Boxed -> "("))
-         (do prefixedLined ","
-                           (map pretty exps)
-             write (case boxed of
-                      Unboxed -> "#)"
-                      Boxed -> ")"))
-exp (TupleSection _ boxed mexps) =
-  depend (write (case boxed of
-                   Unboxed -> "(#"
-                   Boxed -> "("))
-         (do commas (map (maybe (return ()) pretty) mexps)
-             write (case boxed of
-                      Unboxed -> "#)"
-                      Boxed -> ")"))
-exp (List _ es) =
-  brackets (prefixedLined ","
-                          (map pretty es))
 exp (LeftSection _ e op) =
   parens (depend (do pretty e
                      space)
@@ -593,11 +659,6 @@ exp (RightSection _ e op) =
   parens (depend (do pretty e
                      space)
                  (pretty op))
-exp (RecUpdate _ n fs) =
-  depend (do pretty n
-             space)
-         (braces (prefixedLined ","
-                                (map (indentedBlock . pretty) fs)))
 exp (EnumFrom _ e) =
   brackets (do pretty e
                write " ..")
@@ -616,14 +677,6 @@ exp (EnumFromThenTo _ e t f) =
                    (depend (do pretty t
                                write " .. ")
                            (pretty f)))
-exp (ListComp _ e qstmt) =
-  brackets (do pretty e
-               unless (null qstmt)
-                      (do newline
-                          indented (-1)
-                                   (write "|")
-                          prefixedLined ","
-                                        (map pretty qstmt)))
 exp (ExpTypeSig _ e t) =
   depend (do pretty e
              write " :: ")
@@ -1329,130 +1382,13 @@ guardedRhs (GuardedRhs _ stmts e) =
                  (pretty e)
 
 
--- | Expression customizations.
-exp' :: Exp NodeInfo -> Printer ()
--- | Do after lambda should swing.
-exp' (Lambda _ pats (Do l stmts)) =
-  do
-     (fits,st) <-
-       fitsOnOneLine
-         (do write "\\"
-             spaced (map pretty pats)
-             write " -> "
-             pretty (Do l stmts))
-     if fits
-        then put st
-        else swing (do write "\\"
-                       spaced (map pretty pats)
-                       write " -> do")
-                    (lined (map pretty stmts))
--- | Space out tuples.
-exp' (Tuple _ boxed exps) =
-  depend (write (case boxed of
-                   Unboxed -> "(#"
-                   Boxed -> "("))
-         (do single <- isSingleLiner p
-             underflow <- fmap not (isOverflow p)
-             if single && underflow
-                then p
-                else prefixedLined ","
-                                   (map (depend space . pretty) exps)
-             write (case boxed of
-                      Unboxed -> "#)"
-                      Boxed -> ")"))
-  where p = inter (write ", ") (map pretty exps)
--- | Space out tuples.
-exp' (TupleSection _ boxed mexps) =
-  depend (write (case boxed of
-                   Unboxed -> "(#"
-                   Boxed -> "("))
-         (do inter (write ", ") (map (maybe (return ()) pretty) mexps)
-             write (case boxed of
-                      Unboxed -> "#)"
-                      Boxed -> ")"))
--- | Infix apps, same algorithm as ChrisDone at the moment.
-exp' e@(InfixApp _ a op b) =
-  infixApp e a op b Nothing
--- | If bodies are indented 4 spaces. Handle also do-notation.
-exp' (If _ if' then' else') =
-  do depend (write "if ")
-            (pretty if')
-     newline
-     indentSpaces <- getIndentSpaces
-     indented indentSpaces
-              (do branch "then " then'
-                  newline
-                  branch "else " else')
-     -- Special handling for do.
-  where branch str e =
-          case e of
-            Do _ stmts ->
-              do write str
-                 write "do"
-                 newline
-                 indentSpaces <- getIndentSpaces
-                 indented indentSpaces (lined (map pretty stmts))
-            _ ->
-              depend (write str)
-                     (pretty e)
--- | App algorithm similar to ChrisDone algorithm, but with no
--- parent-child alignment.
-exp' (App _ op a) =
-  do (fits,st) <-
-       fitsOnOneLine (spaced (map pretty (f : args)))
-     if fits
-        then put st
-        else do pretty f
-                newline
-                spaces <- getIndentSpaces
-                indented spaces (lined (map pretty args))
-  where (f,args) = flatten op [a]
-        flatten :: Exp NodeInfo
-                -> [Exp NodeInfo]
-                -> (Exp NodeInfo,[Exp NodeInfo])
-        flatten (App _ f' a') b =
-          flatten f' (a' : b)
-        flatten f' as = (f',as)
--- | Space out commas in list.
-exp' (List _ es) =
-  do single <- isSingleLiner p
-     underflow <- fmap not (isOverflow p)
-     if single && underflow
-        then p
-        else brackets (prefixedLined ","
-                                     (map (depend space . pretty) es))
-  where p =
-          brackets (inter (write ", ")
-                          (map pretty es))
-exp' (RecUpdate _ exp'' updates) = recUpdateExpr (pretty exp'') updates
-exp' (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
-exp' (Let _ binds e) =
-  depend (write "let ")
-         (do pretty binds
-             newline
-             indented (-4) (depend (write "in ")
-                                   (pretty e)))
-exp' (ListComp _ e qstmt) =
-  brackets (do space
-               pretty e
-               unless (null qstmt)
-                      (do newline
-                          indented (-1)
-                                   (write "|")
-                          prefixedLined ","
-                                        (map (\x -> do space
-                                                       pretty x
-                                                       space)
-                                             qstmt)))
-exp' e = exp e
-
 match :: Match NodeInfo -> Printer ()
 match (Match _ name pats rhs' mbinds) =
   do depend (do pretty name
                 space)
             (spaced (map pretty pats))
      withCaseContext False (pretty rhs')
-     forM_ mbinds bindingGroup
+     Data.Foldable.forM_ mbinds bindingGroup
 match (InfixMatch _ pat1 name pats rhs' mbinds) =
   do depend (do pretty pat1
                 space
@@ -1463,7 +1399,7 @@ match (InfixMatch _ pat1 name pats rhs' mbinds) =
             (do space
                 spaced (map pretty pats))
      withCaseContext False (pretty rhs')
-     forM_ mbinds bindingGroup
+     Data.Foldable.forM_ mbinds bindingGroup
 
 -- | Format contexts with spaces and commas between class constraints.
 context :: Context NodeInfo -> Printer ()
@@ -1608,7 +1544,7 @@ decl' (PatBind _ pat rhs' mbinds) =
   withCaseContext False $
     do pretty pat
        pretty rhs'
-       forM_ mbinds bindingGroup
+       Data.Foldable.forM_ mbinds bindingGroup
 
 -- | Handle records specially for a prettier display (see guide).
 decl' (DataDecl _ dataornew ctx dhead condecls@[_] mderivs)
@@ -1682,15 +1618,14 @@ recUpdateExpr :: Printer () -> [FieldUpdate NodeInfo] -> Printer ()
 recUpdateExpr expWriter updates = do
     expWriter
     newline
-    indentSpaces <- getIndentSpaces
-    mapM
+    mapM_
       (\(i,x) -> do
          if i == 0
            then write "{ "
            else write ", "
          pretty x
          newline)
-      (zip [0 ..] updates)
+      (zip [0::Int ..] updates)
     write "}"
 
 --------------------------------------------------------------------------------

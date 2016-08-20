@@ -3,3 +3,4 @@ packages:
 - '.'
 extra-deps:
 - haskell-src-exts-1.18.2
+- descriptive-0.9.4
