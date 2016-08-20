@@ -19,8 +19,8 @@ data-files:          elisp/hindent.el
 extra-source-files:
  README.md
  CHANGELOG.md
- BENCHMARK.md
- TEST.md
+ BENCHMARKS.md
+ TESTS.md
 
 source-repository head
     type:           git
