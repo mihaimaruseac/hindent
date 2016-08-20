@@ -527,10 +527,9 @@ exp (Tuple _ boxed exps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
                    Boxed -> "("))
-         (do single <- isSingleLiner p
-             underflow <- fmap not (isOverflow p)
-             if single && underflow
-                then p
+         (do (fits,st) <- fitsOnOneLine p
+             if fits
+                then put st
                 else prefixedLined ","
                                    (map (depend space . pretty) exps)
              write (case boxed of
@@ -591,10 +590,9 @@ exp (App _ op a) =
         flatten f' as = (f',as)
 -- | Space out commas in list.
 exp (List _ es) =
-  do single <- isSingleLiner p
-     underflow <- fmap not (isOverflow p)
-     if single && underflow
-        then p
+  do (fits,st) <- fitsOnOneLine p
+     if fits
+        then put st
         else brackets (prefixedLined ","
                                      (map (depend space . pretty) es))
   where p =
@@ -1497,7 +1495,7 @@ decl' :: Decl NodeInfo -> Printer ()
 --     -> IO ()
 --
 decl' (TypeSig _ names ty') =
-  do small <- isSmall (declTy ty')
+  do (small,_) <- fitsOnOneLine (declTy ty')
      if small
         then depend (do inter (write ", ")
                               (map pretty names)
@@ -1532,9 +1530,9 @@ decl' (TypeSig _ names ty') =
         collapseFaps (TyFun _ arg result) = arg : collapseFaps result
         collapseFaps e = [e]
         prettyTy ty =
-          do small <- isSmall (pretty ty)
+          do (small,st) <- fitsOnOneLine (pretty ty)
              if small
-                then pretty ty
+                then put st
                 else case collapseFaps ty of
                        [] -> pretty ty
                        tys ->
@@ -1637,33 +1635,12 @@ isRecord (QualConDecl _ _ _ RecDecl{}) = True
 isRecord _ = False
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
-isOverflow :: MonadState (PrintState) m => m a -> m Bool
-isOverflow p =
-  do (_,st) <- sandbox p
-     columnLimit <- getColumnLimit
-     return (psColumn st > columnLimit)
-
--- | Does printing the given thing overflow column limit? (e.g. 80)
 fitsOnOneLine :: MonadState (PrintState) m => m a -> m (Bool,PrintState)
 fitsOnOneLine p =
   do line <- gets psLine
      (_,st) <- sandbox p
      columnLimit <- getColumnLimit
      return (psLine st == line && psColumn st < columnLimit,st)
-
--- | Is the given expression a single-liner when printed?
-isSingleLiner :: MonadState (PrintState) m
-              => m a -> m Bool
-isSingleLiner p =
-  do line <- gets psLine
-     (_,st) <- sandbox p
-     return (psLine st == line)
-
-isSmall :: MonadState PrintState m => m a -> m Bool
-isSmall p =
-  do overflows <- isOverflow p
-     oneLine <- isSingleLiner p
-     return (not overflows && oneLine)
 
 bindingGroup :: Binds NodeInfo -> Printer ()
 bindingGroup binds =
