@@ -1266,7 +1266,7 @@ instance Pretty ExportSpecList where
                           (map pretty es))
 
 instance Pretty ExportSpec where
-  prettyInternal = pretty'
+  prettyInternal x = string " " >> pretty' x
 
 -- Do statements need to handle infix expression indentation specially because
 -- do x *
