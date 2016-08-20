@@ -108,8 +108,7 @@ Operators
 
 ``` haskell
 x =
-  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
-  Just thisissolong <*>
+  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*> Just thisissolong <*>
   Just stilllonger
 ```
 
@@ -195,4 +194,62 @@ Unicode
 Empty module
 
 ``` haskell
+```
+
+# Complex input
+
+A complex, slow-to-print decl
+
+``` haskell
+quasiQuotes =
+  [ ( ''[]
+    , \(typeVariable:_) _automaticPrinter ->
+         (let presentVar = varE (presentVarName typeVariable)
+          in lamE
+               [varP (presentVarName typeVariable)]
+               [|(let typeString = "[" ++ fst $(presentVar) ++ "]"
+                  in ( typeString
+                     , \xs ->
+                          case fst $(presentVar) of
+                            "GHC.Types.Char" ->
+                              ChoicePresentation
+                                "String"
+                                [ ( "String"
+                                  , StringPresentation
+                                      "String"
+                                      (concatMap
+                                         getCh
+                                         (map (snd $(presentVar)) xs)))
+                                , ( "List of characters"
+                                  , ListPresentation
+                                      typeString
+                                      (map (snd $(presentVar)) xs))]
+                              where getCh (CharPresentation "GHC.Types.Char" ch) =
+                                      ch
+                                    getCh (ChoicePresentation _ ((_,CharPresentation _ ch):_)) =
+                                      ch
+                                    getCh _ = ""
+                            _ ->
+                              ListPresentation
+                                typeString
+                                (map (snd $(presentVar)) xs)))|]))]
+```
+
+Random snippet from hindent itself
+
+``` haskell
+exp' (App _ op a) = do
+  (fits,st) <- fitsOnOneLine (spaced (map pretty (f : args)))
+  if fits
+    then put st
+    else do
+      pretty f
+      newline
+      spaces <- getIndentSpaces
+      indented spaces (lined (map pretty args))
+  where
+    (f,args) = flatten op [a]
+    flatten :: Exp NodeInfo -> [Exp NodeInfo] -> (Exp NodeInfo, [Exp NodeInfo])
+    flatten (App _ f' a') b = flatten f' (a' : b)
+    flatten f' as = (f', as)
 ```

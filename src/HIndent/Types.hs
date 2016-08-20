@@ -45,6 +45,7 @@ data PrintState =
              ,psEolComment :: !Bool -- ^ An end of line comment has just been outputted.
              ,psInsideCase :: !Bool -- ^ Whether we're in a case statement, used for Rhs printing.
              ,psParseMode :: !ParseMode -- ^ Mode used to parse the original AST.
+             ,psHardLimit :: !Bool -- ^ Bail out if we exceed current column.
              }
 
 -- | Configurations shared among the different styles. Styles may pay

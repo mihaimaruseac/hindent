@@ -197,7 +197,8 @@ runPrinterStyle config mode' m =
                             config
                             False
                             False
-                            mode'))))
+                            mode'
+                            False))))
 
 -- | Parse mode, includes all extensions, doesn't assume any fixities.
 parseMode :: ParseMode

@@ -58,6 +58,7 @@ module HIndent.Pretty
   )
   where
 
+import           Control.Applicative
 import           Control.Monad.State.Strict hiding (state)
 import qualified Data.ByteString.Builder as S
 import qualified Data.Foldable
@@ -112,7 +113,7 @@ printComments loc' ast = do
   where info = ann ast
 
 -- | Pretty print a comment.
-printComment :: MonadState (PrintState) m => Maybe SrcSpan -> Comment -> m ()
+printComment :: Maybe SrcSpan -> Comment -> Printer ()
 printComment mayNodespan (Comment inline cspan str) =
   do -- Insert proper amount of space before comment.
      -- This maintains alignment. This cannot force comments
@@ -137,15 +138,15 @@ printComment mayNodespan (Comment inline cspan str) =
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
-pretty' :: (Pretty ast,P.Pretty (ast SrcSpanInfo),MonadState (PrintState) m)
-        => ast NodeInfo -> m ()
+pretty' :: (Pretty ast,P.Pretty (ast SrcSpanInfo))
+        => ast NodeInfo -> Printer ()
 pretty' = write . P.prettyPrint . fmap nodeInfoSpan
 
 --------------------------------------------------------------------------------
 -- * Combinators
 
 -- | Increase indentation level by n spaces for the given printer.
-indented :: MonadState (PrintState) m => Int64 -> m a -> m a
+indented :: Int64 -> Printer a -> Printer a
 indented i p =
   do level <- gets psIndentLevel
      modify (\s -> s {psIndentLevel = level + i})
@@ -153,21 +154,21 @@ indented i p =
      modify (\s -> s {psIndentLevel = level})
      return m
 
-indentedBlock :: MonadState (PrintState) m => m a -> m a
+indentedBlock :: Printer a -> Printer a
 indentedBlock p =
   do indentSpaces <- getIndentSpaces
      indented indentSpaces p
 
 -- | Print all the printers separated by spaces.
-spaced :: MonadState (PrintState) m => [m ()] -> m ()
+spaced :: [Printer ()] -> Printer ()
 spaced = inter space
 
 -- | Print all the printers separated by commas.
-commas :: MonadState (PrintState) m => [m ()] -> m ()
+commas :: [Printer ()] -> Printer ()
 commas = inter comma
 
 -- | Print all the printers separated by sep.
-inter :: MonadState (PrintState) m => m () -> [m ()] -> m ()
+inter :: Printer () -> [Printer ()] -> Printer ()
 inter sep ps =
   foldr (\(i,p) next ->
            depend (do p
@@ -179,12 +180,12 @@ inter sep ps =
         (zip [1 ..] ps)
 
 -- | Print all the printers separated by newlines.
-lined :: MonadState (PrintState) m => [m ()] -> m ()
+lined :: [Printer ()] -> Printer ()
 lined ps = sequence_ (intersperse newline ps)
 
 -- | Print all the printers separated newlines and optionally a line
 -- prefix.
-prefixedLined :: MonadState (PrintState) m => String -> [m ()] -> m ()
+prefixedLined :: String -> [Printer ()] -> Printer ()
 prefixedLined pref ps' =
   case ps' of
     [] -> return ()
@@ -200,7 +201,7 @@ prefixedLined pref ps' =
 
 -- | Set the (newline-) indent level to the given column for the given
 -- printer.
-column :: MonadState (PrintState) m => Int64 -> m a -> m a
+column :: Int64 -> Printer a -> Printer a
 column i p =
   do level <- gets psIndentLevel
      modify (\s -> s {psIndentLevel = i})
@@ -209,22 +210,21 @@ column i p =
      return m
 
 -- | Get the current indent level.
-getColumn :: MonadState (PrintState) m => m Int64
+getColumn :: Printer Int64
 getColumn = gets psColumn
 
 -- | Get the current line number.
-getLineNum :: MonadState (PrintState) m => m Int64
+getLineNum :: Printer Int64
 getLineNum = gets psLine
 
 -- | Output a newline.
-newline :: MonadState (PrintState) m => m ()
+newline :: Printer ()
 newline =
   do write "\n"
      modify (\s -> s {psNewline = True})
 
 -- | Set the context to a case context, where RHS is printed with -> .
-withCaseContext :: MonadState (PrintState) m
-                => Bool -> m a -> m a
+withCaseContext :: Bool -> Printer a -> Printer a
 withCaseContext bool pr =
   do original <- gets psInsideCase
      modify (\s -> s {psInsideCase = bool})
@@ -233,8 +233,7 @@ withCaseContext bool pr =
      return result
 
 -- | Get the current RHS separator, either = or -> .
-rhsSeparator :: MonadState (PrintState) m
-             => m ()
+rhsSeparator :: Printer ()
 rhsSeparator =
   do inCase <- gets psInsideCase
      if inCase
@@ -243,7 +242,7 @@ rhsSeparator =
 
 -- | Make the latter's indentation depend upon the end column of the
 -- former.
-depend :: MonadState (PrintState) m => m () -> m b -> m b
+depend :: Printer () -> Printer b -> Printer b
 depend maker dependent =
   do state' <- get
      maker
@@ -255,7 +254,7 @@ depend maker dependent =
 
 -- | Make the latter's indentation depend upon the end column of the
 -- former.
-dependBind :: MonadState (PrintState) m => m a -> (a -> m b) -> m b
+dependBind :: Printer a -> (a -> Printer b) -> Printer b
 dependBind maker dependent =
   do state' <- get
      v <- maker
@@ -266,7 +265,7 @@ dependBind maker dependent =
         else (dependent v)
 
 -- | Wrap in parens.
-parens :: MonadState (PrintState) m => m a -> m a
+parens :: Printer a -> Printer a
 parens p =
   depend (write "(")
          (do v <- p
@@ -274,7 +273,7 @@ parens p =
              return v)
 
 -- | Wrap in braces.
-braces :: MonadState (PrintState) m => m a -> m a
+braces :: Printer a -> Printer a
 braces p =
   depend (write "{")
          (do v <- p
@@ -282,7 +281,7 @@ braces p =
              return v)
 
 -- | Wrap in brackets.
-brackets :: MonadState (PrintState) m => m a -> m a
+brackets :: Printer a -> Printer a
 brackets p =
   depend (write "[")
          (do v <- p
@@ -290,24 +289,31 @@ brackets p =
              return v)
 
 -- | Write a space.
-space :: MonadState (PrintState) m => m ()
+space :: Printer ()
 space = write " "
 
 -- | Write a comma.
-comma :: MonadState (PrintState) m => m ()
+comma :: Printer ()
 comma = write ","
 
 -- | Write an integral.
-int :: (MonadState (PrintState) m)
-    => Integer -> m ()
+int :: Integer -> Printer ()
 int = write . show
 
 -- | Write out a string, updating the current position information.
-write :: MonadState (PrintState) m => String -> m ()
+write :: String -> Printer ()
 write x =
   do eol <- gets psEolComment
-     when (eol && x /= "\n") newline
+     hardFail <- gets psHardLimit
+     let addingNewline = eol && x /= "\n"
      state <- get
+     when
+       hardFail
+       (guard
+          (not addingNewline &&
+           additionalLines == 0 &&
+           (psColumn state < configMaxColumns (psConfig state))))
+     when addingNewline newline
      let clearEmpty =
            configClearEmptyLines (psConfig state)
          writingNewline = x == "\n"
@@ -333,23 +339,22 @@ write x =
           length (filter (== '\n') x)
 
 -- | Write a string.
-string :: MonadState (PrintState) m => String -> m ()
+string :: String -> Printer ()
 string = write
 
 -- | Indent spaces, e.g. 2.
-getIndentSpaces :: MonadState (PrintState) m => m Int64
+getIndentSpaces :: Printer Int64
 getIndentSpaces =
   gets (configIndentSpaces . psConfig)
 
 -- | Column limit, e.g. 80
-getColumnLimit :: MonadState (PrintState) m => m Int64
+getColumnLimit :: Printer Int64
 getColumnLimit =
   gets (configMaxColumns . psConfig)
 
 -- | Play with a printer and then restore the state to what it was
 -- before.
-sandbox :: MonadState s m
-        => m a -> m (a,s)
+sandbox :: Printer a -> Printer (a,PrintState)
 sandbox p =
   do orig <- get
      a <- p
@@ -385,14 +390,14 @@ swing :: Printer () -> Printer b -> Printer ()
 swing a b =
   do orig <- gets psIndentLevel
      a
-     (fits,st) <- fitsOnOneLine (do space
-                                    b)
-     if fits
-        then put st
-        else do newline
-                indentSpaces <- getIndentSpaces
-                _ <- column (orig + indentSpaces) b
-                return ()
+     mst <- fitsOnOneLine (do space
+                              b)
+     case mst of
+       Just st -> put st
+       Nothing -> do newline
+                     indentSpaces <- getIndentSpaces
+                     _ <- column (orig + indentSpaces) b
+                     return ()
 
 -- | Swing the second printer below and indented with respect to the first by
 -- the specified amount.
@@ -510,28 +515,28 @@ exp :: Exp NodeInfo -> Printer ()
 -- | Do after lambda should swing.
 exp (Lambda _ pats (Do l stmts)) =
   do
-     (fits,st) <-
-       fitsOnOneLine
-         (do write "\\"
-             spaced (map pretty pats)
-             write " -> "
-             pretty (Do l stmts))
-     if fits
-        then put st
-        else swing (do write "\\"
-                       spaced (map pretty pats)
-                       write " -> do")
-                    (lined (map pretty stmts))
+     mst <-
+          fitsOnOneLine
+            (do write "\\"
+                spaced (map pretty pats)
+                write " -> "
+                pretty (Do l stmts))
+     case mst of
+       Nothing -> swing (do write "\\"
+                            spaced (map pretty pats)
+                            write " -> do")
+                         (lined (map pretty stmts))
+       Just st -> put st
 -- | Space out tuples.
 exp (Tuple _ boxed exps) =
   depend (write (case boxed of
                    Unboxed -> "(#"
                    Boxed -> "("))
-         (do (fits,st) <- fitsOnOneLine p
-             if fits
-                then put st
-                else prefixedLined ","
-                                   (map (depend space . pretty) exps)
+         (do mst <- fitsOnOneLine p
+             case mst of
+               Nothing -> prefixedLined ","
+                                        (map (depend space . pretty) exps)
+               Just st -> put st
              write (case boxed of
                       Unboxed -> "#)"
                       Boxed -> ")"))
@@ -573,14 +578,14 @@ exp (If _ if' then' else') =
 -- | App algorithm similar to ChrisDone algorithm, but with no
 -- parent-child alignment.
 exp (App _ op a) =
-  do (fits,st) <-
-       fitsOnOneLine (spaced (map pretty (f : args)))
-     if fits
-        then put st
-        else do pretty f
-                newline
-                spaces <- getIndentSpaces
-                indented spaces (lined (map pretty args))
+  do mst <-
+          fitsOnOneLine (spaced (map pretty (f : args)))
+     case mst of
+       Nothing -> do pretty f
+                     newline
+                     spaces <- getIndentSpaces
+                     indented spaces (lined (map pretty args))
+       Just st -> put st
   where (f,args) = flatten op [a]
         flatten :: Exp NodeInfo
                 -> [Exp NodeInfo]
@@ -590,11 +595,11 @@ exp (App _ op a) =
         flatten f' as = (f',as)
 -- | Space out commas in list.
 exp (List _ es) =
-  do (fits,st) <- fitsOnOneLine p
-     if fits
-        then put st
-        else brackets (prefixedLined ","
-                                     (map (depend space . pretty) es))
+  do mst <- fitsOnOneLine p
+     case mst of
+       Nothing -> brackets (prefixedLined ","
+                                          (map (depend space . pretty) es))
+       Just st -> put st
   where p =
           brackets (inter (write ", ")
                           (map pretty es))
@@ -1299,12 +1304,12 @@ dependOrNewline :: Printer ()
                 -> (Exp NodeInfo -> Printer ())
                 -> Printer ()
 dependOrNewline left right f =
-  do (fits,st) <- fitsOnOneLine renderDependent
-     if fits
-        then put st
-        else do left
-                newline
-                (f right)
+  do msg <- fitsOnOneLine renderDependent
+     case msg of
+       Nothing -> do left
+                     newline
+                     (f right)
+       Just st -> put st
   where renderDependent = depend left (f right)
 
 -- | Handle do and case specially and also space out guards more.
@@ -1319,16 +1324,16 @@ rhs (UnGuardedRhs _ (Do _ dos)) =
              (write "do")
              (lined (map pretty dos))
 rhs (UnGuardedRhs _ e) =
-  do (fits,st) <-
-       fitsOnOneLine
-         (do write " "
-             rhsSeparator
-             write " "
-             pretty e)
-     if fits
-        then put st
-        else swing (write " " >> rhsSeparator)
-                    (pretty e)
+  do msg <-
+          fitsOnOneLine
+            (do write " "
+                rhsSeparator
+                write " "
+                pretty e)
+     case msg of
+       Nothing -> (swing (write " " >> rhsSeparator)
+                          (pretty e))
+       Just st -> put st
 rhs (GuardedRhss _ gas) =
   do newline
      indented 2
@@ -1353,32 +1358,35 @@ guardedRhs (GuardedRhs _ stmts (Do _ dos)) =
      write (if inCase then " -> " else " = ")
      swing (write "do")
             (lined (map pretty dos))
-guardedRhs (GuardedRhs _ stmts e) =
-  do (fits,st) <-
-       fitsOnOneLine
-         (indented 1
-                   (do prefixedLined
-                         ","
-                         (map (\p ->
-                                 do space
-                                    pretty p)
-                              stmts)))
-     put st
-     if fits
-        then do (fits',st') <-
-                  fitsOnOneLine
-                    (do write " "
-                        rhsSeparator
-                        write " "
-                        pretty e)
-                if fits'
-                   then put st'
-                   else swingIt
-        else swingIt
-  where swingIt =
-          swing (write " " >> rhsSeparator)
-                 (pretty e)
-
+guardedRhs (GuardedRhs _ stmts e) = do
+    mst <- fitsOnOneLine printStmts
+    case mst of
+      Just st -> do
+        put st
+        mst' <-
+          fitsOnOneLine
+            (do write " "
+                rhsSeparator
+                write " "
+                pretty e)
+        case mst' of
+          Just st' -> put st'
+          Nothing -> swingIt
+      Nothing -> do
+        printStmts
+        swingIt
+  where
+    printStmts =
+      indented
+        1
+        (do prefixedLined
+              ","
+              (map
+                 (\p -> do
+                    space
+                    pretty p)
+                 stmts))
+    swingIt = swing (write " " >> rhsSeparator) (pretty e)
 
 match :: Match NodeInfo -> Printer ()
 match (Match _ name pats rhs' mbinds) =
@@ -1402,13 +1410,13 @@ match (InfixMatch _ pat1 name pats rhs' mbinds) =
 -- | Format contexts with spaces and commas between class constraints.
 context :: Context NodeInfo -> Printer ()
 context ctx@(CxTuple _ asserts) =
-  do (fits,st) <-
-       fitsOnOneLine
-         (parens (inter (comma >> space)
-                        (map pretty asserts)))
-     if fits
-        then put st
-        else prettyNoExt ctx
+  do mst <-
+          fitsOnOneLine
+            (parens (inter (comma >> space)
+                           (map pretty asserts)))
+     case mst of
+       Nothing -> prettyNoExt ctx
+       Just st -> put st
 context ctx = case ctx of
                 CxSingle _ a -> pretty a
                 CxTuple _ as ->
@@ -1416,7 +1424,7 @@ context ctx = case ctx of
                                         (map pretty as))
                 CxEmpty _ -> parens (return ())
 
-unboxParens :: MonadState (PrintState) m => m a -> m a
+unboxParens :: Printer a -> Printer a
 unboxParens p =
   depend (write "(# ")
          (do v <- p
@@ -1495,19 +1503,20 @@ decl' :: Decl NodeInfo -> Printer ()
 --     -> IO ()
 --
 decl' (TypeSig _ names ty') =
-  do (small,_) <- fitsOnOneLine (declTy ty')
-     if small
-        then depend (do inter (write ", ")
-                              (map pretty names)
-                        write " :: ")
-                    (declTy ty')
-        else do inter (write ", ")
-                      (map pretty names)
-                newline
-                indentSpaces <- getIndentSpaces
-                indented indentSpaces
-                         (depend (write ":: ")
-                                 (declTy ty'))
+  do mst <- fitsOnOneLine (declTy ty')
+     case mst of
+       Just{} -> depend (do inter (write ", ")
+                                  (map pretty names)
+                            write " :: ")
+                          (declTy ty')
+       Nothing -> do inter (write ", ")
+                           (map pretty names)
+                     newline
+                     indentSpaces <- getIndentSpaces
+                     indented indentSpaces
+                              (depend (write ":: ")
+                                      (declTy ty'))
+
   where declTy dty =
           case dty of
             TyForall _ mbinds mctx ty ->
@@ -1530,14 +1539,14 @@ decl' (TypeSig _ names ty') =
         collapseFaps (TyFun _ arg result) = arg : collapseFaps result
         collapseFaps e = [e]
         prettyTy ty =
-          do (small,st) <- fitsOnOneLine (pretty ty)
-             if small
-                then put st
-                else case collapseFaps ty of
-                       [] -> pretty ty
-                       tys ->
-                         prefixedLined "-> "
-                                       (map pretty tys)
+          do mst <- fitsOnOneLine (pretty ty)
+             case mst of
+               Nothing -> case collapseFaps ty of
+                            [] -> pretty ty
+                            tys ->
+                              prefixedLined "-> "
+                                            (map pretty tys)
+               Just st -> put st
 decl' (PatBind _ pat rhs' mbinds) =
   withCaseContext False $
     do pretty pat
@@ -1635,12 +1644,16 @@ isRecord (QualConDecl _ _ _ RecDecl{}) = True
 isRecord _ = False
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
-fitsOnOneLine :: MonadState (PrintState) m => m a -> m (Bool,PrintState)
+fitsOnOneLine :: Printer a -> Printer (Maybe PrintState)
 fitsOnOneLine p =
-  do line <- gets psLine
-     (_,st) <- sandbox p
-     columnLimit <- getColumnLimit
-     return (psLine st == line && psColumn st < columnLimit,st)
+  do st <- get
+     put st { psHardLimit = True}
+     ok <- fmap (const True) p <|> return False
+     st' <- get
+     put st
+     return (if ok
+                then Just st' { psHardLimit = psHardLimit st }
+                else Nothing)
 
 bindingGroup :: Binds NodeInfo -> Printer ()
 bindingGroup binds =
@@ -1657,25 +1670,25 @@ infixApp :: Exp NodeInfo
          -> Maybe Int64
          -> Printer ()
 infixApp e a op b indent =
-  do (fits,st) <-
-       fitsOnOneLine
-         (spaced (map (\link ->
-                         case link of
-                           OpChainExp e' -> pretty e'
-                           OpChainLink qop -> pretty qop)
-                      (flattenOpChain e)))
-     if fits
-        then put st
-        else do prettyWithIndent a
-                space
-                pretty op
-                newline
-                case indent of
-                  Nothing -> prettyWithIndent b
-                  Just col ->
-                    do indentSpaces <- getIndentSpaces
-                       column (col + indentSpaces)
-                              (prettyWithIndent b)
+  do msg <-
+          fitsOnOneLine
+            (spaced (map (\link ->
+                            case link of
+                              OpChainExp e' -> pretty e'
+                              OpChainLink qop -> pretty qop)
+                         (flattenOpChain e)))
+     case msg of
+       Nothing -> do prettyWithIndent a
+                     space
+                     pretty op
+                     newline
+                     case indent of
+                       Nothing -> prettyWithIndent b
+                       Just col ->
+                         do indentSpaces <- getIndentSpaces
+                            column (col + indentSpaces)
+                                   (prettyWithIndent b)
+       Just st -> put st
   where prettyWithIndent e' =
           case e' of
             (InfixApp _ a' op' b') ->
