@@ -1,6 +1,6 @@
 # hindent [![Hackage](https://img.shields.io/hackage/v/hindent.svg?style=flat)](https://hackage.haskell.org/package/hindent) [![Build Status](https://travis-ci.org/chrisdone/hindent.png)](https://travis-ci.org/chrisdone/hindent)
 
-Extensible Haskell pretty printer. Both a library and an
+Haskell pretty printer. Both a library and an
 executable.
 
 ## Install
