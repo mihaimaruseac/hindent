@@ -19,10 +19,10 @@ Exports
 
 ``` haskell
 module X
-  (x
-  ,y
-  ,Z
-  ,P(x, z))
+  ( x
+  , y
+  , Z
+  , P(x, z))
   where
 ```
 
