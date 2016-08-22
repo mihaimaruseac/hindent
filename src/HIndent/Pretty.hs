@@ -306,6 +306,7 @@ write x =
   do eol <- gets psEolComment
      hardFail <- gets psHardLimit
      let addingNewline = eol && x /= "\n"
+     when addingNewline newline
      state <- get
      when
        hardFail
@@ -313,7 +314,6 @@ write x =
           (not addingNewline &&
            additionalLines == 0 &&
            (psColumn state < configMaxColumns (psConfig state))))
-     when addingNewline newline
      let clearEmpty =
            configClearEmptyLines (psConfig state)
          writingNewline = x == "\n"
