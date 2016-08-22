@@ -54,13 +54,15 @@ type EventSource a = (AddHandler a, a -> IO ())
 Lazy patterns in a lambda
 
 ``` haskell
-f = \ ~a -> undefined -- \~a yields parse error on input ‘\~’
+f = \ ~a -> undefined
+ -- \~a yields parse error on input ‘\~’
 ```
 
 Bang patterns in a lambda
 
 ``` haskell
-f = \ !a -> undefined -- \!a yields parse error on input ‘\!’
+f = \ !a -> undefined
+ -- \!a yields parse error on input ‘\!’
 ```
 
 List comprehensions
@@ -272,12 +274,96 @@ foo =
      \b -> cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
 ```
 
+# Comments
+
+Comments within a declaration
+
+``` haskell
+bob -- after bob
+ =
+  foo -- next to foo
+  -- line after foo
+    (bar
+       foo -- next to bar foo
+       bar -- next to bar
+     ) -- next to the end paren of (bar)
+    -- line after (bar)
+    mu -- next to mu
+    -- line after mu
+    -- another line after mu
+    zot -- next to zot
+    -- line after zot
+    (case casey -- after casey
+           of
+       Just -- after Just
+        -> do
+         justice -- after justice
+          *
+           foo
+             (blah * blah + z + 2 / 4 + a - -- before a line break
+              2 * -- inside this mess
+              z /
+              2 /
+              2 /
+              aooooo /
+              aaaaa -- bob comment
+              ) +
+           (sdfsdfsd fsdfsdf) -- blah comment
+         putStrLn "")
+    [1, 2, 3]
+    [ 1 -- foo
+    , ( 2 -- bar
+      , 2.5 -- mu
+       )
+    , 3]
+
+foo = 1 -- after foo
+```
+
+Haddock comments
+
+``` haskell
+-- | Module comment.
+module X where
+
+-- | Main doc.
+main :: IO ()
+main = return ()
+
+data X
+  = X -- ^ X is for xylophone.
+  | Y -- ^ Y is for why did I eat that pizza.
+
+data X = X
+  { field1 :: Int -- ^ Field1 is the first field.
+  , field11 :: Char
+    -- ^ This field comment is on its own line.
+  , field2 :: Int -- ^ Field2 is the second field.
+  , field3 :: Char -- ^ This is a long comment which starts next to
+    -- the field but continues onto the next line, it aligns exactly
+    -- with the field name.
+  , field4 :: Char
+    -- ^ This is a long comment which starts on the following line
+    -- from from the field, lines continue at the sme column.
+  }
+```
+
+Comments around regular declarations
+
+``` haskell
+-- This is some random comment.
+-- | Main entry point.
+main = putStrLn "Hello, World!"
+ -- This is another random comment.
+```
+
 # Behaviour checks
 
 Unicode
 
 ``` haskell
-α = γ * "ω" -- υ
+α = γ * "ω"
+ -- υ
 ```
 
 Empty module

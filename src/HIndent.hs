@@ -13,6 +13,7 @@ module HIndent
   ,test
   ,testFile
   ,testAst
+  ,testFileAst
   ,defaultExtensions
   ,getExtensions
   )
@@ -30,14 +31,14 @@ import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.UTF8 as UTF8
 import qualified Data.ByteString.Unsafe as S
-import           Data.Function (on)
+import           Data.Either
+import           Data.Function
 import           Data.Functor.Identity
 import           Data.List
 import           Data.Maybe
 import           Data.Monoid
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           HIndent.Comments
 import           HIndent.Pretty
 import           HIndent.Types
 import           Language.Haskell.Exts hiding (Style, prettyPrint, Pretty, style, parse)
@@ -62,7 +63,7 @@ reformat config mexts x =
           fmap (S.lazyByteString .
           addPrefix prefix .
           S.toLazyByteString)
-          (prettyPrint config mode' m comments)
+          (prettyPrint config m comments)
         ParseFailed _ e -> Left e
 
     unlines' = S.concat . intersperse "\n"
@@ -160,45 +161,38 @@ cppSplitBlocks inp =
 
 -- | Print the module.
 prettyPrint :: Config
-            -> ParseMode
             -> Module SrcSpanInfo
             -> [Comment]
             -> Either a Builder
-prettyPrint config mode' m comments =
-  let (cs,ast) =
-        annotateComments (fromMaybe m $ applyFixities baseFixities m) comments
-      csComments = map comInfoComment cs
-  in Right (runPrinterStyle
-               config
-               mode'
-
-               -- For the time being, assume that all "free-floating" comments come at the beginning.
-               -- If they were not at the beginning, they would be after some ast node.
-               -- Thus, print them before going for the ast.
-               (do mapM_ (printComment Nothing) (reverse csComments)
-                   pretty ast))
+prettyPrint config m comments =
+  let ast =
+        evalState
+          (collectAllComments
+             (fromMaybe m (applyFixities baseFixities m)))
+          comments
+  in Right (runPrinterStyle config (pretty ast))
 
 -- | Pretty print the given printable thing.
-runPrinterStyle :: Config -> ParseMode -> Printer () -> Builder
-runPrinterStyle config mode' m =
-    maybe
-        (error "Printer failed with mzero call.")
-        psOutput
-        (runIdentity
-             (runMaybeT
-                  (execStateT
-                       (runPrinter m)
-                       (PrintState
-                            0
-                            mempty
-                            False
-                            0
-                            1
-                            config
-                            False
-                            False
-                            mode'
-                            False))))
+runPrinterStyle :: Config -> Printer () -> Builder
+runPrinterStyle config m =
+  maybe
+    (error "Printer failed with mzero call.")
+    psOutput
+    (runIdentity
+       (runMaybeT
+          (execStateT
+             (runPrinter m)
+             (PrintState
+              { psIndentLevel = 0
+              , psOutput = mempty
+              , psNewline = False
+              , psColumn = 0
+              , psLine = 1
+              , psConfig = config
+              , psInsideCase = False
+              , psHardLimit = False
+              , psEolComment = False
+              }))))
 
 -- | Parse mode, includes all extensions, doesn't assume any fixities.
 parseMode :: ParseMode
@@ -210,9 +204,14 @@ parseMode =
         isDisabledExtention (DisableExtension _) = False
         isDisabledExtention _ = True
 
+
 -- | Test the given file.
 testFile :: FilePath -> IO ()
 testFile fp  = S.readFile fp >>= test
+
+-- | Test the given file.
+testFileAst :: FilePath -> IO ()
+testFileAst fp  = S.readFile fp >>= print . testAst
 
 -- | Test with the given style, prints to stdout.
 test :: ByteString -> IO ()
@@ -221,10 +220,17 @@ test =
   reformat defaultConfig Nothing
 
 -- | Parse the source and annotate it with comments, yielding the resulting AST.
-testAst :: ByteString -> Either String ([ComInfo], Module NodeInfo)
+testAst :: ByteString -> Either String (Module NodeInfo)
 testAst x =
   case parseModuleWithComments parseMode (UTF8.toString x) of
-    ParseOk (m,comments) -> Right (annotateComments m comments)
+    ParseOk (m,comments) ->
+      Right
+        (let ast =
+               evalState
+                 (collectAllComments
+                    (fromMaybe m (applyFixities baseFixities m)))
+                 comments
+         in ast)
     ParseFailed _ e -> Left e
 
 -- | Default extensions.
@@ -269,6 +275,109 @@ getExtensions = foldl f defaultExtensions . map T.unpack
 -- | Parse an extension.
 readExtension :: String -> Maybe Extension
 readExtension x =
-  case classifyExtension x of
+  case classifyExtension x -- Foo
+       of
     UnknownExtension _ -> Nothing
     x' -> Just x'
+
+--------------------------------------------------------------------------------
+-- Comments
+
+-- | Traverse the structure backwards.
+traverseInOrder
+  :: (Monad m, Traversable t)
+  => (b -> b -> Ordering) -> (b -> m b) -> t b -> m (t b)
+traverseInOrder cmp f ast = do
+  indexed <-
+    fmap (zip [0 :: Integer ..] . reverse) (execStateT (traverse (modify . (:)) ast) [])
+  let sorted = sortBy (\(_,x) (_,y) -> cmp x y) indexed
+  results <-
+    mapM
+      (\(i,m) -> do
+         v <- f m
+         return (i, v))
+      sorted
+  evalStateT
+    (traverse
+       (const
+          (do i <- gets head
+              modify tail
+              case lookup i results of
+                Nothing -> error "traverseInOrder"
+                Just x -> return x))
+       ast)
+    [0 ..]
+
+-- | Collect all comments in the module by traversing the tree. Read
+-- this from bottom to top.
+collectAllComments :: Module SrcSpanInfo -> State [Comment] (Module NodeInfo)
+collectAllComments =
+  traverseBackwards
+  -- Finally, collect backwards comments which come after each node.
+    (collectCommentsBy
+       (<>)
+       CommentAfterLine
+       (\nodeSpan commentSpan ->
+           fst (srcSpanStart commentSpan) >= fst (srcSpanEnd nodeSpan))) <=<
+  traverse
+  -- Collect forwards comments which start at the end line of a node.
+    (collectCommentsBy
+       (<>)
+       CommentSameLine
+       (\nodeSpan commentSpan ->
+           fst (srcSpanStart commentSpan) == fst (srcSpanEnd nodeSpan))) <=<
+  traverseBackwards
+  -- Collect backwards comments which are on the same line as a node.
+    (collectCommentsBy
+       (<>)
+       CommentSameLine
+       (\nodeSpan commentSpan ->
+           fst (srcSpanStart commentSpan) == fst (srcSpanStart nodeSpan) &&
+           fst (srcSpanStart commentSpan) == fst (srcSpanEnd nodeSpan))) <=<
+  traverse
+  -- First, collect forwards comments for declarations which both
+  -- start on column 1 and occur before the declaration.
+    (collectCommentsBy
+       (<>)
+       CommentBeforeLine
+       (\nodeSpan commentSpan ->
+           (snd (srcSpanStart nodeSpan) == 1 &&
+            snd (srcSpanStart commentSpan) == 1) &&
+           fst (srcSpanStart commentSpan) < fst (srcSpanStart nodeSpan))) .
+  fmap nodify
+  where
+    nodify s = NodeInfo s mempty
+    -- Sort the comments by their end position.
+    traverseBackwards =
+      traverseInOrder
+        (\x y -> on (flip compare) (srcSpanEnd . srcInfoSpan . nodeInfoSpan) x y)
+ 
+-- | Collect comments by satisfying the given predicate, to collect a
+-- comment means to remove it from the pool of available comments in
+-- the State. This allows for a multiple pass approach.
+collectCommentsBy
+  :: ([NodeComment] -> [NodeComment] -> [NodeComment])
+  -> (String -> NodeComment)
+  -> (SrcSpan -> SrcSpan -> Bool)
+  -> NodeInfo
+  -> State [Comment] NodeInfo
+collectCommentsBy append cons predicate nodeInfo@(NodeInfo (SrcSpanInfo nodeSpan _) _) = do
+  comments <- get
+  let (others,mine) =
+        partitionEithers
+          (map
+             (\comment@(Comment _ commentSpan commentString) ->
+                 if predicate nodeSpan (setFilename commentString commentSpan)
+                   then Right (cons commentString)
+                   else Left comment)
+             comments)
+  put others
+  return
+    (nodeInfo
+     { nodeInfoComments = append (nodeInfoComments nodeInfo) mine
+     })
+  where
+    setFilename cs sp =
+      sp
+      { srcSpanFilename = cs
+      }

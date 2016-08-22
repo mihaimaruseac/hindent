@@ -9,53 +9,7 @@
 -- | Pretty printing.
 
 module HIndent.Pretty
-  (
-  -- * Printing
-    Pretty
-  , pretty
-  , prettyNoExt
-  -- * Insertion
-  , write
-  , newline
-  , space
-  , comma
-  , int
-  , string
-  -- * Common node types
-  , withCtx
-  , printComment
-  , printComments
-  , withCaseContext
-  , rhsSeparator
-  -- * Interspersing
-  , inter
-  , spaced
-  , lined
-  , prefixedLined
-  , commas
-  -- * Wrapping
-  , parens
-  , brackets
-  , braces
-  -- * Indentation
-  , indented
-  , indentedBlock
-  , column
-  , getColumn
-  , getLineNum
-  , depend
-  , dependBind
-  , swing
-  , swingBy
-  , getIndentSpaces
-  , getColumnLimit
-  -- * Predicates
-  , nullBinds
-  -- * Sandboxing
-  , sandbox
-  -- * Fallback
-  , pretty'
-  )
+  (pretty)
   where
 
 import           Control.Applicative
@@ -70,7 +24,6 @@ import           Data.Monoid ((<>))
 import           Data.Typeable
 import           HIndent.Types
 import qualified Language.Haskell.Exts as P
-import           Language.Haskell.Exts.Comments
 import           Language.Haskell.Exts.SrcLoc
 import           Language.Haskell.Exts.Syntax
 import           Prelude hiding (exp)
@@ -82,59 +35,41 @@ import           Prelude hiding (exp)
 class (Annotated ast,Typeable ast) => Pretty ast where
   prettyInternal :: ast NodeInfo -> Printer ()
 
--- | Pretty print using extenders.
-pretty :: (Pretty ast)
+-- | Pretty print including comments.
+pretty :: (Pretty ast,Show (ast NodeInfo))
        => ast NodeInfo -> Printer ()
 pretty a = do
-    printComments Before a
-    depend (prettyNoExt a) (printComments After a)
-
--- | Run the basic printer for the given node without calling an
--- extension hook for this node, but do allow extender hooks in child
--- nodes. Also auto-inserts comments.
-prettyNoExt :: (Pretty ast)
-            => ast NodeInfo -> Printer ()
-prettyNoExt = prettyInternal
-
--- | Print comments of a node.
-printComments :: (Pretty ast)
-              => ComInfoLocation -> ast NodeInfo -> Printer ()
-printComments loc' ast = do
-  let correctLocation comment = comInfoLocation comment == Just loc'
-      commentsWithLocation = filter correctLocation (nodeInfoComments info)
-  comments <- return $ map comInfoComment commentsWithLocation
-
-  forM_ comments $ \comment -> do
-    -- Preceeding comments must have a newline before them.
-    hasNewline <- gets psNewline
-    when (not hasNewline && loc' == Before) newline
-
-    printComment (Just $ srcInfoSpan $ nodeInfoSpan info) comment
-  where info = ann ast
-
--- | Pretty print a comment.
-printComment :: Maybe SrcSpan -> Comment -> Printer ()
-printComment mayNodespan (Comment inline cspan str) =
-  do -- Insert proper amount of space before comment.
-     -- This maintains alignment. This cannot force comments
-     -- to go before the left-most possible indent (specified by depends).
-     case mayNodespan of
-       Just nodespan ->
-         do let neededSpaces = srcSpanStartColumn cspan -
-                               max 1 (srcSpanEndColumn nodespan)
-            replicateM_ neededSpaces space
-       Nothing -> return ()
-
-     if inline
-        then do write "{-"
-                string str
-                write "-}"
-                when (1 == srcSpanStartColumn cspan) $
-                  modify (\s -> s {psEolComment = True})
-        else do write "--"
-                string str
-                modify (\s ->
-                          s {psEolComment = True})
+  mapM_
+    (\c' -> do
+       case c' of
+         CommentBeforeLine c -> do
+           write ("--" ++ c)
+           newline
+         _ -> return ())
+    comments
+  prettyInternal a
+  mapM_
+    (\(i,c') -> do
+       case c' of
+         CommentSameLine c -> do
+           write (" --" ++ c)
+           modify
+             (\s ->
+                 s
+                 { psEolComment = True
+                 })
+         CommentAfterLine c -> do
+           when (i == 0) newline
+           write ("--" ++ c)
+           modify
+             (\s ->
+                 s
+                 { psEolComment = True
+                 })
+         _ -> return ())
+    (zip [0 :: Int ..] comments)
+  where
+    comments = nodeInfoComments (ann a)
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
@@ -209,14 +144,6 @@ column i p =
      modify (\s -> s {psIndentLevel = level})
      return m
 
--- | Get the current indent level.
-getColumn :: Printer Int64
-getColumn = gets psColumn
-
--- | Get the current line number.
-getLineNum :: Printer Int64
-getLineNum = gets psLine
-
 -- | Output a newline.
 newline :: Printer ()
 newline =
@@ -251,18 +178,6 @@ depend maker dependent =
      if psLine state' /= psLine st || psColumn state' /= psColumn st
         then column col dependent
         else dependent
-
--- | Make the latter's indentation depend upon the end column of the
--- former.
-dependBind :: Printer a -> (a -> Printer b) -> Printer b
-dependBind maker dependent =
-  do state' <- get
-     v <- maker
-     st <- get
-     col <- gets psColumn
-     if psLine state' /= psLine st || psColumn state' /= psColumn st
-        then column col (dependent v)
-        else (dependent v)
 
 -- | Wrap in parens.
 parens :: Printer a -> Printer a
@@ -311,16 +226,12 @@ write x =
      when
        hardFail
        (guard
-          (not addingNewline &&
-           additionalLines == 0 &&
+          (additionalLines == 0 &&
            (psColumn state < configMaxColumns (psConfig state))))
-     let clearEmpty =
-           configClearEmptyLines (psConfig state)
-         writingNewline = x == "\n"
+     let writingNewline = x == "\n"
          out :: String
          out =
-           if psNewline state &&
-              not (clearEmpty && writingNewline)
+           if psNewline state && not writingNewline
               then (replicate (fromIntegral (psIndentLevel state))
                                ' ') <>
                    x
@@ -328,8 +239,8 @@ write x =
      modify (\s ->
                s {psOutput = psOutput state <> S.stringUtf8 out
                  ,psNewline = False
-                 ,psEolComment = False
                  ,psLine = psLine state + fromIntegral additionalLines
+                 ,psEolComment= False
                  ,psColumn =
                     if additionalLines > 0
                        then fromIntegral (length (concat (take 1 (reverse srclines))))
@@ -347,11 +258,6 @@ getIndentSpaces :: Printer Int64
 getIndentSpaces =
   gets (configIndentSpaces . psConfig)
 
--- | Column limit, e.g. 80
-getColumnLimit :: Printer Int64
-getColumnLimit =
-  gets (configMaxColumns . psConfig)
-
 -- | Play with a printer and then restore the state to what it was
 -- before.
 sandbox :: Printer a -> Printer (a,PrintState)
@@ -362,13 +268,8 @@ sandbox p =
      put orig
      return (a,new)
 
--- | No binds?
-nullBinds :: Binds NodeInfo -> Bool
-nullBinds (BDecls _ x) = null x
-nullBinds (IPBinds _ x) = null x
-
 -- | Render a type with a context, or not.
-withCtx :: (Pretty ast)
+withCtx :: (Pretty ast,Show (ast NodeInfo))
         => Maybe (ast NodeInfo) -> Printer b -> Printer b
 withCtx Nothing m = m
 withCtx (Just ctx) m =
@@ -575,24 +476,26 @@ exp (If _ if' then' else') =
             _ ->
               depend (write str)
                      (pretty e)
--- | App algorithm similar to ChrisDone algorithm, but with no
--- parent-child alignment.
-exp (App _ op a) =
-  do mst <-
-          fitsOnOneLine (spaced (map pretty (f : args)))
-     case mst of
-       Nothing -> do pretty f
-                     newline
-                     spaces <- getIndentSpaces
-                     indented spaces (lined (map pretty args))
-       Just st -> put st
-  where (f,args) = flatten op [a]
-        flatten :: Exp NodeInfo
-                -> [Exp NodeInfo]
-                -> (Exp NodeInfo,[Exp NodeInfo])
-        flatten (App _ f' a') b =
-          flatten f' (a' : b)
-        flatten f' as = (f',as)
+-- | Render on one line, or otherwise render the op with the arguments
+-- listed line by line.
+exp (App _ op arg) = do
+  let flattened = flatten op ++ [arg]
+  mst <- fitsOnOneLine (spaced (map pretty flattened))
+  case mst of
+    Nothing -> do
+      let (f:args) = flattened
+      pretty f
+      newline
+      spaces <- getIndentSpaces
+      indented spaces (lined (map pretty args))
+    Just st -> put st
+  where
+    flatten (App label' op' arg') = flatten op' ++ [amap (addComments label') arg']
+    flatten x = [x]
+    addComments n1 n2 =
+      n2
+      { nodeInfoComments = nub (nodeInfoComments n2 ++ nodeInfoComments n1)
+      }
 -- | Space out commas in list.
 exp (List _ es) =
   do mst <- fitsOnOneLine p
@@ -726,14 +629,19 @@ exp (MultiIf _ alts) =
                          (zip [1..] stmts))))
       swing (write " " >> rhsSeparator) (pretty e)
 exp (Lit _ lit) = prettyInternal lit
+exp (Var _ q) = case q of
+                  Special _ Cons{} -> parens (pretty q)
+                  _ -> pretty q
+exp (IPVar _ q) = pretty q
+exp (Con _ q) = case q of
+                  Special _ Cons{} -> parens (pretty q)
+                  _ -> pretty q
+
 exp x@XTag{} = pretty' x
 exp x@XETag{} = pretty' x
 exp x@XPcdata{} = pretty' x
 exp x@XExpTag{} = pretty' x
 exp x@XChildTag{} = pretty' x
-exp x@Var{} = pretty' x
-exp x@IPVar{} = pretty' x
-exp x@Con{} = pretty' x
 exp x@CorePragma{} = pretty' x
 exp x@SCCPragma{} = pretty' x
 exp x@GenPragma{} = pretty' x
@@ -749,6 +657,9 @@ exp x@ParArrayComp{} = pretty' x
 exp ParComp{} =
   error "FIXME: No implementation for ParComp."
 exp (OverloadedLabel _ label) = string ('#' : label)
+
+instance Pretty IPName where
+ prettyInternal = pretty'
 
 instance Pretty Stmt where
   prettyInternal =
@@ -975,7 +886,6 @@ instance Pretty GuardedRhs where
   prettyInternal  =
     guardedRhs
 
-
 instance Pretty InjectivityInfo where
   prettyInternal x = pretty' x
 
@@ -1097,23 +1007,6 @@ instance Pretty DeclHead where
                (do space
                    pretty var)
 
-instance Pretty SpecialCon where
-  prettyInternal s =
-    case s of
-      UnitCon _ -> write "()"
-      ListCon _ -> write "[]"
-      FunCon _ -> write "->"
-      TupleCon _ Boxed i ->
-        string ("(" ++
-                replicate (i - 1) ',' ++
-                ")")
-      TupleCon _ Unboxed i ->
-        string ("(#" ++
-                replicate (i - 1) ',' ++
-                "#)")
-      Cons _ -> write ":"
-      UnboxedSingleCon _ -> write "(##)"
-
 instance Pretty Overlap where
   prettyInternal (Overlap _) = write "{-# OVERLAP #-}"
   prettyInternal (NoOverlap _) = write "{-# NO_OVERLAP #-}"
@@ -1130,23 +1023,24 @@ instance Pretty Module where
   prettyInternal x =
     case x of
       Module _ mayModHead pragmas imps decls ->
-        inter (do newline
-                  newline)
-              (mapMaybe (\(isNull,r) ->
-                           if isNull
-                              then Nothing
-                              else Just r)
-                        [(null pragmas,inter newline (map pretty pragmas))
-                        ,(case mayModHead of
-                            Nothing -> (True,return ())
-                            Just modHead -> (False,pretty modHead))
-                        ,(null imps,inter newline (map pretty imps))
-                        ,(null decls
-                         ,interOf newline
-                                  (map (\case
-                                          r@TypeSig{} -> (1,pretty r)
-                                          r -> (2,pretty r))
-                                       decls))])
+        do inter (do newline
+                     newline)
+                 (mapMaybe (\(isNull,r) ->
+                              if isNull
+                                 then Nothing
+                                 else Just r)
+                           [(null pragmas,inter newline (map pretty pragmas))
+                           ,(case mayModHead of
+                               Nothing -> (True,return ())
+                               Just modHead -> (False,pretty modHead))
+                           ,(null imps,inter newline (map pretty imps))
+                           ,(null decls
+                            ,interOf newline
+                                     (map (\case
+                                             r@TypeSig{} -> (1,pretty r)
+                                             r -> (2,pretty r))
+                                          decls))])
+           newline
         where interOf i ((c,p):ps) =
                 case ps of
                   [] -> p
@@ -1219,10 +1113,34 @@ instance Pretty Literal where
   prettyInternal x = pretty' x
 
 instance Pretty Name where
-  prettyInternal = pretty'
+  prettyInternal = pretty' -- Var
 
 instance Pretty QName where
-  prettyInternal = pretty'
+  prettyInternal =
+    \case
+      Qual _ m n -> do
+        pretty m
+        write "."
+        pretty n
+      UnQual _ n -> pretty n
+      Special _ c -> pretty c
+
+instance Pretty SpecialCon where
+  prettyInternal s =
+    case s of
+      UnitCon _ -> write "()"
+      ListCon _ -> write "[]"
+      FunCon _ -> write "->"
+      TupleCon _ Boxed i ->
+        string ("(" ++
+                replicate (i - 1) ',' ++
+                ")")
+      TupleCon _ Unboxed i ->
+        string ("(#" ++
+                replicate (i - 1) ',' ++
+                "#)")
+      Cons _ -> write ":"
+      UnboxedSingleCon _ -> write "(##)"
 
 instance Pretty QOp where
   prettyInternal = pretty'
@@ -1329,17 +1247,16 @@ rhs (UnGuardedRhs _ (Do _ dos)) =
      swingBy indentation
              (write "do")
              (lined (map pretty dos))
-rhs (UnGuardedRhs _ e) =
-  do msg <-
-          fitsOnOneLine
-            (do write " "
-                rhsSeparator
-                write " "
-                pretty e)
-     case msg of
-       Nothing -> (swing (write " " >> rhsSeparator)
-                          (pretty e))
-       Just st -> put st
+rhs (UnGuardedRhs _ e) = do
+  msg <-
+    fitsOnOneLine
+      (do write " "
+          rhsSeparator
+          write " "
+          pretty e)
+  case msg of
+    Nothing -> swing (write " " >> rhsSeparator) (pretty e)
+    Just st -> put st
 rhs (GuardedRhss _ gas) =
   do newline
      indented 2
@@ -1421,7 +1338,7 @@ context ctx@(CxTuple _ asserts) =
             (parens (inter (comma >> space)
                            (map pretty asserts)))
      case mst of
-       Nothing -> prettyNoExt ctx
+       Nothing -> prettyInternal ctx
        Just st -> put st
 context ctx = case ctx of
                 CxSingle _ a -> pretty a
@@ -1625,7 +1542,7 @@ recDecl (RecDecl _ name fields) =
                                       (map (depend space . pretty) fields))
                 newline
                 write "}")
-recDecl r = prettyNoExt r
+recDecl r = prettyInternal r
 
 recUpdateExpr :: Printer () -> [FieldUpdate NodeInfo] -> Printer ()
 recUpdateExpr expWriter updates = do

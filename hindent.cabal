@@ -32,7 +32,6 @@ library
   exposed-modules:   HIndent
                      HIndent.Types
                      HIndent.Pretty
-                     HIndent.Comments
   build-depends:     base >= 4.7 && <5
                    , containers
                    , haskell-src-exts >= 1.18
@@ -75,6 +74,7 @@ test-suite hindent-test
                    , deepseq
                    , exceptions
                    , utf8-string
+                   , Diff
 
 benchmark hindent-bench
   type: exitcode-stdio-1.0
