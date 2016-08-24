@@ -39,7 +39,7 @@ import           Data.Maybe
 import           Data.Monoid
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           Data.Traversable
+import           Data.Traversable hiding (mapM)
 import           HIndent.Pretty
 import           HIndent.Types
 import           Language.Haskell.Exts hiding (Style, prettyPrint, Pretty, style, parse)
@@ -287,7 +287,7 @@ readExtension x =
 
 -- | Traverse the structure backwards.
 traverseInOrder
-  :: (Monad m, Traversable t)
+  :: (Monad m, Traversable t, Functor m)
   => (b -> b -> Ordering) -> (b -> m b) -> t b -> m (t b)
 traverseInOrder cmp f ast = do
   indexed <-
