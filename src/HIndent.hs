@@ -39,9 +39,11 @@ import           Data.Maybe
 import           Data.Monoid
 import           Data.Text (Text)
 import qualified Data.Text as T
+import           Data.Traversable
 import           HIndent.Pretty
 import           HIndent.Types
 import           Language.Haskell.Exts hiding (Style, prettyPrint, Pretty, style, parse)
+import           Prelude
 
 data CodeBlock = HaskellSource ByteString
                | CPPDirectives ByteString
