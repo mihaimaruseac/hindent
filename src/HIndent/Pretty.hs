@@ -1261,7 +1261,8 @@ rhs (UnGuardedRhs _ e) = do
     Just st -> put st
 rhs (GuardedRhss _ gas) =
   do newline
-     indented 2
+     n <- getIndentSpaces
+     indented n
               (lined (map (\p ->
                              do write "|"
                                 pretty p)

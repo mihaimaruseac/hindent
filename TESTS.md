@@ -148,11 +148,11 @@ Guards and pattern guards
 
 ``` haskell
 f x
-  | x <- Just x
-  , x <- Just x =
-      case x of
-          Just x -> e
-  | otherwise = do e
+    | x <- Just x
+    , x <- Just x =
+        case x of
+            Just x -> e
+    | otherwise = do e
   where
     x = y
 ```
@@ -226,8 +226,8 @@ sayHello = do
 filter :: (a -> Bool) -> [a] -> [a]
 filter _ [] = []
 filter p (x:xs)
-  | p x = x : filter p xs
-  | otherwise = filter p xs
+    | p x = x : filter p xs
+    | otherwise = filter p xs
 ```
 
 Data declarations
