@@ -22,8 +22,8 @@ import Control.Monad.State.Strict (MonadState(..),StateT)
 import Control.Monad.Trans.Maybe
 import Data.ByteString.Builder
 import Data.Functor.Identity
-import Language.Haskell.Exts.SrcLoc
 import Data.Int (Int64)
+import Language.Haskell.Exts.SrcLoc
 
 -- | A pretty printing monad.
 newtype Printer a =

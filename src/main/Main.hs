@@ -9,26 +9,27 @@
 
 module Main where
 
-import           HIndent
-import           HIndent.Types
+import           Control.Applicative
+import           Control.Exception
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Builder as S
 import qualified Data.ByteString.Lazy.Char8 as L8
-import           Control.Applicative
+import           Data.Maybe
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Version (showVersion)
 import           Descriptive
 import           Descriptive.Options
+import           Foreign.C.Error
+import           GHC.IO.Exception
+import           HIndent
+import           HIndent.Types
 import           Language.Haskell.Exts hiding (Style,style)
 import           Paths_hindent (version)
 import           System.Directory
 import           System.Environment
 import           System.IO
 import           Text.Read
-import           Control.Exception
-import           GHC.IO.Exception
-import           Foreign.C.Error
 
 -- | Main entry point.
 main :: IO ()
@@ -93,17 +94,19 @@ options = ver *> ((,,) <$> style <*> exts <*> file)
             (optional
                  (constant "--style" "Style to print with" () *>
                   anyString "STYLE")) <*>
-        lineLen
+        lineLen <*> tabsize
     exts = fmap getExtensions (many (prefix "X" "Language extension"))
+    tabsize =
+        fmap
+            (>>= (readMaybe . T.unpack))
+            (optional (arg "tab-size" "Tab size, default: 4"))
     lineLen =
         fmap
             (>>= (readMaybe . T.unpack))
             (optional (arg "line-length" "Desired length of lines"))
-    makeStyle s mlen =
-        case mlen of
-            Nothing -> s
-            Just len ->
-                s
-                { configMaxColumns = len
-                }
+    makeStyle s mlen tabs =
+        s
+        { configMaxColumns = fromMaybe (configMaxColumns s) mlen
+        , configIndentSpaces = fromMaybe (configIndentSpaces s) tabs
+        }
     file = fmap (fmap T.unpack) (optional (anyString "[<filename>]"))
