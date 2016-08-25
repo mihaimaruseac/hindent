@@ -362,6 +362,20 @@ main = putStrLn "Hello, World!"
  -- This is another random comment.
 ```
 
+## Regression tests
+
+cocreature removed from declaration issue
+
+``` haskell
+-- https://github.com/chrisdone/hindent/issues/186
+trans One e n =
+    M.singleton
+        (Query Unmarked (Mark NonExistent)) -- The goal of this is to fail always
+        (emptyImage
+         { notPresent = S.singleton (TransitionResult Two (Just A) n)
+         })
+```
+
 # Behaviour checks
 
 Unicode
