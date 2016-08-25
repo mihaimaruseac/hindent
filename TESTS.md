@@ -248,12 +248,17 @@ data Person = Person
   , lastName :: !String -- ^ Last name
   , age :: !Int -- ^ Age
   }
+```
 
+Spaces between deriving classes
+
+``` haskell
+-- From https://github.com/chrisdone/hindent/issues/167
 data Person = Person
   { firstName :: !String -- ^ First name
   , lastName :: !String -- ^ Last name
   , age :: !Int -- ^ Age
-  } deriving (Eq,Show)
+  } deriving (Eq, Show)
 ```
 
 Hanging lambdas
@@ -401,7 +406,7 @@ quasiQuotes =
                                       (map (snd $(presentVar)) xs))]
                               where getCh (CharPresentation "GHC.Types.Char" ch) =
                                       ch
-                                    getCh (ChoicePresentation _ ((_,CharPresentation _ ch):_)) =
+                                    getCh (ChoicePresentation _ ((_, CharPresentation _ ch):_)) =
                                       ch
                                     getCh _ = ""
                             _ ->
@@ -414,7 +419,7 @@ Random snippet from hindent itself
 
 ``` haskell
 exp' (App _ op a) = do
-  (fits,st) <- fitsOnOneLine (spaced (map pretty (f : args)))
+  (fits, st) <- fitsOnOneLine (spaced (map pretty (f : args)))
   if fits
     then put st
     else do
@@ -423,7 +428,7 @@ exp' (App _ op a) = do
       spaces <- getIndentSpaces
       indented spaces (lined (map pretty args))
   where
-    (f,args) = flatten op [a]
+    (f, args) = flatten op [a]
     flatten :: Exp NodeInfo -> [Exp NodeInfo] -> (Exp NodeInfo, [Exp NodeInfo])
     flatten (App _ f' a') b = flatten f' (a' : b)
     flatten f' as = (f', as)

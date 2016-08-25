@@ -100,19 +100,21 @@ spaced = inter space
 
 -- | Print all the printers separated by commas.
 commas :: [Printer ()] -> Printer ()
-commas = inter comma
+commas = inter (do comma; space)
 
 -- | Print all the printers separated by sep.
 inter :: Printer () -> [Printer ()] -> Printer ()
 inter sep ps =
-  foldr (\(i,p) next ->
-           depend (do p
-                      if i < length ps
-                         then sep
-                         else return ())
-                  next)
-        (return ())
-        (zip [1 ..] ps)
+  foldr
+    (\(i,p) next ->
+        depend
+          (do p
+              if i < length ps
+                then sep
+                else return ())
+          next)
+    (return ())
+    (zip [1 ..] ps)
 
 -- | Print all the printers separated by newlines.
 lined :: [Printer ()] -> Printer ()
