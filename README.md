@@ -12,9 +12,20 @@ Haskell pretty printer
 
 ## Usage
 
-    hindent is used in a pipeline style:
+hindent is used in a pipeline style
 
     $ cat path/to/sourcefile.hs | hindent
+
+Configure tab size with `--tab-size`:
+
+    $ echo 'example = case x of Just p -> foo bar' | hindent --tab-size 2; echo
+    example =
+      case x of
+        Just p -> foo bar
+    $ echo 'example = case x of Just p -> foo bar' | hindent --tab-size 4; echo
+    example =
+        case x of
+            Just p -> foo bar
 
 ## Emacs
 
