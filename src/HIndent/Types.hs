@@ -63,7 +63,7 @@ data Config =
 defaultConfig :: Config
 defaultConfig =
   Config {configMaxColumns = 80
-         ,configIndentSpaces = 2}
+         ,configIndentSpaces = 4}
 
 data NodeComment
   = CommentSameLine String
