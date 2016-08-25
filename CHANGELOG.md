@@ -1,3 +1,8 @@
+5.1.0:
+   * Rewrote comment association, more reliable
+   * Added --tab-size flag for indentation spaces
+   * Fixed some miscellaneous bugs
+
 5.0.1:
     * Re-implement using bytestring instead of text
     * Made compatible with GHC 7.8 through to GHC 8.0
