@@ -12,6 +12,12 @@ Haskell pretty printer
 
 ## Usage
 
+    bash-3.2$ hindent --help
+    hindent --version --help --style STYLE --line-length <...> --tab-size <...> [-X<...>]* [<FILENAME>]
+    Version 5.0.1
+    The --style option is now ignored, but preserved for backwards-compatibility.
+    Johan Tibell is the default and only style.
+
 hindent is used in a pipeline style
 
     $ cat path/to/sourcefile.hs | hindent
