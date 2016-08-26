@@ -72,6 +72,7 @@ help =
     "hindent " ++
     T.unpack (textDescription (describe options [])) ++
     "\nVersion " ++ showVersion version ++ "\n" ++
+    "-X to pass extensions e.g. -XMagicHash etc.\n" ++
     "The --style option is now ignored, but preserved for backwards-compatibility.\n" ++
     "Johan Tibell is the default and only style."
 
