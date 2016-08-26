@@ -1,3 +1,11 @@
+5.1.1:
+   * Preserve spaces between groups of imports (fixes #200)
+   * Support shebangs (closes #208)
+   * Output filename for parse errors (fixes #179)
+   * Input with newline ends with newline (closes #211)
+   * Document -X (closes #212)
+   * Fix explicit forall in instances (closes #218)
+
 5.1.0:
    * Rewrote comment association, more reliable
    * Added --tab-size flag for indentation spaces
