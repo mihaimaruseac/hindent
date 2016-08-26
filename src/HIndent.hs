@@ -118,7 +118,7 @@ reformat config mexts =
             Nothing -> parseMode
     preserveTrailingNewline f x =
         if S8.null x || S8.all isSpace x
-            then pure mempty
+            then return mempty
             else if hasTrailingLine x || configTrailingNewline config
                      then fmap
                               (\x' ->
