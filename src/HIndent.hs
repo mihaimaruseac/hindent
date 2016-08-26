@@ -31,6 +31,7 @@ import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.UTF8 as UTF8
 import qualified Data.ByteString.Unsafe as S
+import           Data.Char
 import           Data.Either
 import           Data.Function
 import           Data.Functor.Identity
@@ -51,67 +52,85 @@ data CodeBlock = HaskellSource ByteString
 
 -- | Format the given source.
 reformat :: Config -> Maybe [Extension] -> ByteString -> Either String Builder
-reformat config mexts x =
-  fmap (mconcat . intersperse "\n") (mapM processBlock (cppSplitBlocks x))
+reformat config mexts =
+    preserveTrailingNewline
+        (fmap (mconcat . intersperse "\n") . mapM processBlock . cppSplitBlocks)
   where
     processBlock :: CodeBlock -> Either String Builder
     processBlock (CPPDirectives text) = Right $ S.byteString text
     processBlock (HaskellSource text) =
-      let ls = S8.lines text
-          prefix = findPrefix ls
-          code = unlines' (map (stripPrefix prefix) ls)
-      in case parseModuleWithComments mode' (UTF8.toString code) of
-        ParseOk (m, comments) ->
-          fmap (S.lazyByteString .
-          addPrefix prefix .
-          S.toLazyByteString)
-          (prettyPrint config m comments)
-        ParseFailed _ e -> Left e
-
+        let ls = S8.lines text
+            prefix = findPrefix ls
+            code = unlines' (map (stripPrefix prefix) ls)
+        in case parseModuleWithComments mode' (UTF8.toString code) of
+               ParseOk (m, comments) ->
+                   fmap
+                       (S.lazyByteString . addPrefix prefix . S.toLazyByteString)
+                       (prettyPrint config m comments)
+               ParseFailed _ e -> Left e
     unlines' = S.concat . intersperse "\n"
     unlines'' = L.concat . intersperse "\n"
-
     addPrefix :: ByteString -> L8.ByteString -> L8.ByteString
     addPrefix prefix = unlines'' . map (L8.fromStrict prefix <>) . L8.lines
-
     stripPrefix :: ByteString -> ByteString -> ByteString
     stripPrefix prefix line =
-      if S.null (S8.dropWhile (== '\n') line)
-      then line
-      else fromMaybe (error "Missing expected prefix") . s8_stripPrefix prefix $ line
-
+        if S.null (S8.dropWhile (== '\n') line)
+            then line
+            else fromMaybe (error "Missing expected prefix") . s8_stripPrefix prefix $
+                 line
     findPrefix :: [ByteString] -> ByteString
     findPrefix = takePrefix False . findSmallestPrefix . dropNewlines
-
     dropNewlines :: [ByteString] -> [ByteString]
     dropNewlines = filter (not . S.null . S8.dropWhile (== '\n'))
-
     takePrefix :: Bool -> ByteString -> ByteString
     takePrefix bracketUsed txt =
-      case S8.uncons txt of
-        Nothing -> ""
-        Just ('>', txt') -> if not bracketUsed
-                              then S8.cons '>' (takePrefix True txt')
-                              else ""
-        Just (c, txt') -> if c == ' ' || c == '\t'
-                            then S8.cons c (takePrefix bracketUsed txt')
-                            else ""
-
-
+        case S8.uncons txt of
+            Nothing -> ""
+            Just ('>', txt') ->
+                if not bracketUsed
+                    then S8.cons '>' (takePrefix True txt')
+                    else ""
+            Just (c, txt') ->
+                if c == ' ' || c == '\t'
+                    then S8.cons c (takePrefix bracketUsed txt')
+                    else ""
     findSmallestPrefix :: [ByteString] -> ByteString
     findSmallestPrefix [] = ""
     findSmallestPrefix ("":_) = ""
     findSmallestPrefix (p:ps) =
-      let first = S8.head p
-          startsWithChar c x  = S8.length x > 0 && S8.head x == c
-      in if all (startsWithChar first) ps
-           then S8.cons first (findSmallestPrefix (S.tail p : map S.tail ps))
-           else ""
-
+        let first = S8.head p
+            startsWithChar c x = S8.length x > 0 && S8.head x == c
+        in if all (startsWithChar first) ps
+               then S8.cons
+                        first
+                        (findSmallestPrefix (S.tail p : map S.tail ps))
+               else ""
     mode' =
-      case mexts of
-        Just exts -> parseMode { extensions = exts }
-        Nothing   -> parseMode
+        case mexts of
+            Just exts ->
+                parseMode
+                { extensions = exts
+                }
+            Nothing -> parseMode
+    preserveTrailingNewline f x =
+        if S8.null x || S8.all isSpace x
+            then pure mempty
+            else if hasTrailingLine x || configTrailingNewline config
+                     then fmap
+                              (\x' ->
+                                    if hasTrailingLine
+                                           (L.toStrict (S.toLazyByteString x'))
+                                        then x'
+                                        else x' <> "\n")
+                              (f x)
+                     else f x
+
+-- | Does the strict bytestring have a trailing newline?
+hasTrailingLine :: ByteString -> Bool
+hasTrailingLine xs =
+    if S8.null xs
+        then False
+        else S8.last xs == '\n'
 
 -- | Break a Haskell code string into chunks, using CPP as a delimiter.
 -- Lines that start with '#if', '#end', or '#else' are their own chunks, and

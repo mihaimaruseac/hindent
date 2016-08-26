@@ -95,7 +95,9 @@ options = ver *> ((,,) <$> style <*> exts <*> file)
             (optional
                  (constant "--style" "Style to print with" () *>
                   anyString "STYLE")) <*>
-        lineLen <*> tabsize
+        lineLen <*>
+        tabsize <*>
+        trailingNewline
     exts = fmap getExtensions (many (prefix "X" "Language extension"))
     tabsize =
         fmap
@@ -105,9 +107,13 @@ options = ver *> ((,,) <$> style <*> exts <*> file)
         fmap
             (>>= (readMaybe . T.unpack))
             (optional (arg "line-length" "Desired length of lines"))
-    makeStyle s mlen tabs =
+    trailingNewline =
+        optional
+            (constant "--no-force-newline" "Don't force a trailing newline" False)
+    makeStyle s mlen tabs trailing =
         s
         { configMaxColumns = fromMaybe (configMaxColumns s) mlen
         , configIndentSpaces = fromMaybe (configIndentSpaces s) tabs
+        , configTrailingNewline = fromMaybe (configTrailingNewline s) trailing
         }
     file = fmap (fmap T.unpack) (optional (anyString "[<filename>]"))

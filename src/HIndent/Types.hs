@@ -54,16 +54,20 @@ data PrintState = PrintState
 
 -- | Configurations shared among the different styles. Styles may pay
 -- attention to or completely disregard this configuration.
-data Config =
-  Config {configMaxColumns :: !Int64 -- ^ Maximum columns to fit code into ideally.
-         ,configIndentSpaces :: !Int64 -- ^ How many spaces to indent?
-         }
+data Config = Config
+    { configMaxColumns :: !Int64 -- ^ Maximum columns to fit code into ideally.
+    , configIndentSpaces :: !Int64 -- ^ How many spaces to indent?
+    , configTrailingNewline :: !Bool -- ^ End with a newline.
+    }
 
 -- | Default style configuration.
 defaultConfig :: Config
 defaultConfig =
-  Config {configMaxColumns = 80
-         ,configIndentSpaces = 4}
+    Config
+    { configMaxColumns = 80
+    , configIndentSpaces = 4
+    , configTrailingNewline = True
+    }
 
 data NodeComment
   = CommentSameLine String
