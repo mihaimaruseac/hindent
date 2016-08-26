@@ -48,7 +48,7 @@ tokenize :: ByteString -> [Token]
 tokenize = map token . S8.lines
   where
     token line =
-      if S8.isPrefixOf "#" line
+      if S8.isPrefixOf "#" line && not (S8.isPrefixOf "#!" line)
         then let (hashes,title) = S8.span (== '#') line
              in Heading (S8.length hashes) (S8.dropWhile isSpace title)
         else if S8.isPrefixOf "```" line

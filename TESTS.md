@@ -401,6 +401,15 @@ instance forall x. Show x =>
          C x
 ```
 
+tfausak support shebangs #208
+
+``` haskell
+#!/usr/bin/env stack
+-- stack runghc
+main = pure ()
+-- https://github.com/chrisdone/hindent/issues/208
+```
+
 # Behaviour checks
 
 Unicode

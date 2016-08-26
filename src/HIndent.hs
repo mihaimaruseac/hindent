@@ -46,9 +46,12 @@ import           HIndent.Types
 import           Language.Haskell.Exts hiding (Style, prettyPrint, Pretty, style, parse)
 import           Prelude
 
-data CodeBlock = HaskellSource ByteString
-               | CPPDirectives ByteString
-  deriving (Show, Eq)
+-- | A block of code.
+data CodeBlock
+    = Shebang ByteString
+    | HaskellSource ByteString
+    | CPPDirectives ByteString
+     deriving (Show, Eq)
 
 -- | Format the given source.
 reformat :: Config -> Maybe [Extension] -> ByteString -> Either String Builder
@@ -57,6 +60,7 @@ reformat config mexts =
         (fmap (mconcat . intersperse "\n") . mapM processBlock . cppSplitBlocks)
   where
     processBlock :: CodeBlock -> Either String Builder
+    processBlock (Shebang text) = Right $ S.byteString text
     processBlock (CPPDirectives text) = Right $ S.byteString text
     processBlock (HaskellSource text) =
         let ls = S8.lines text
@@ -159,9 +163,11 @@ cppSplitBlocks inp =
         ["#if", "#end", "#else", "#define", "#undef", "#elif"]
     classify :: ByteString -> CodeBlock
     classify text =
-      if cppLine text
-        then CPPDirectives text
-        else HaskellSource text
+      if S8.isPrefixOf "#!" text
+         then Shebang text
+         else if cppLine text
+                then CPPDirectives text
+                else HaskellSource text
     -- Hack to work around some parser issues in haskell-src-exts: Some pragmas
     -- need to have a newline following them in order to parse properly, so we include
     -- the trailing newline in the code block if it existed.
