@@ -1037,7 +1037,7 @@ instance Pretty Module where
                            ,(case mayModHead of
                                Nothing -> (True,return ())
                                Just modHead -> (False,pretty modHead))
-                           ,(null imps,inter newline (map pretty imps))
+                           ,(null imps,formatImports imps)
                            ,(null decls
                             ,interOf newline
                                      (map (\case
@@ -1055,6 +1055,24 @@ instance Pretty Module where
               interOf _ [] = return ()
       XmlPage{} -> error "FIXME: No implementation for XmlPage."
       XmlHybrid{} -> error "FIXME: No implementation for XmlHybrid."
+
+-- | Format imports, preserving empty newlines between them.
+formatImports :: [ImportDecl NodeInfo] -> Printer ()
+formatImports imps =
+    mapM_ formatImport (zip [1 ..] (zip (Nothing : map Just imps) imps))
+  where
+    formatImport (i, (mprev, current)) = do
+        when (difference > 1) newline
+        pretty current
+        unless (i == length imps) newline
+      where
+        difference =
+            case mprev of
+                Nothing -> 0
+                Just prev ->
+                    fst
+                        (srcSpanStart (srcInfoSpan (nodeInfoSpan (ann current)))) -
+                    fst (srcSpanStart (srcInfoSpan (nodeInfoSpan (ann prev))))
 
 instance Pretty Bracket where
   prettyInternal x =

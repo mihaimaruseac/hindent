@@ -410,6 +410,34 @@ main = pure ()
 -- https://github.com/chrisdone/hindent/issues/208
 ```
 
+joe9 preserve newlines between import groups
+
+``` haskell
+-- https://github.com/chrisdone/hindent/issues/200
+import Data.List
+import Data.Maybe
+
+import MyProject
+import FooBar
+
+import GHC.Monad
+
+-- blah
+import Hello
+
+import CommentAfter -- Comment here shouldn't affect newlines
+import HelloWorld
+
+import CommentAfter -- Comment here shouldn't affect newlines
+
+import HelloWorld
+
+-- Comment here shouldn't affect newlines
+import CommentAfter
+
+import HelloWorld
+```
+
 # Behaviour checks
 
 Unicode
