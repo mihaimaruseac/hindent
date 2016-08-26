@@ -44,7 +44,7 @@ toSpec = go
                   (("-- " <>) . L8.pack)
                   L.toLazyByteString
                   (reformat
-                     HIndent.Types.defaultConfig
+                     HIndent.Types.defaultConfig {configTrailingNewline = False}
                      (Just defaultExtensions)
                      code))
                (L.fromStrict code))

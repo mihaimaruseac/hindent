@@ -36,36 +36,36 @@ main :: IO ()
 main = do
     args <- getArgs
     case consume options (map T.pack args) of
-        Succeeded (style,exts,mfilepath) ->
+        Succeeded (style, exts, mfilepath) ->
             case mfilepath of
                 Just filepath -> do
                     text <- S.readFile filepath
                     tmpDir <- getTemporaryDirectory
-                    (fp,h) <- openTempFile tmpDir "hindent.hs"
-                    L8.putStrLn
-                                   (either
-                                        error
-                                        S.toLazyByteString
-                                        (reformat style (Just exts) text))
-                    hFlush h
-                    hClose h
-                    let exdev e =
-                            if ioe_errno e ==
-                               Just
-                                   ((\(Errno a) ->
-                                          a)
-                                        eXDEV)
-                                then copyFile fp filepath >> removeFile fp
-                                else throw e
-                    renameFile fp filepath `catch` exdev
+                    (fp, h) <- openTempFile tmpDir "hindent.hs"
+                    case reformat style (Just exts) text of
+                        Left e -> error (filepath ++ ": " ++ e)
+                        Right out -> do
+                            L8.hPutStr h (S.toLazyByteString out)
+                            hFlush h
+                            hClose h
+                            let exdev e =
+                                    if ioe_errno e ==
+                                       Just ((\(Errno a) -> a) eXDEV)
+                                        then copyFile fp filepath >>
+                                             removeFile fp
+                                        else throw e
+                            renameFile fp filepath `catch` exdev
                 Nothing ->
                     L8.interact
-                           (either error S.toLazyByteString . reformat style (Just exts) . L8.toStrict)
+                        (either error S.toLazyByteString .
+                         reformat style (Just exts) . L8.toStrict)
         Failed (Wrap (Stopped Version) _) ->
             putStrLn ("hindent " ++ showVersion version)
         Failed (Wrap (Stopped Help) _) -> putStrLn help
         _ -> error help
   where
+
+
 
 help :: [Char]
 help =
