@@ -771,7 +771,7 @@ decl (InlineSig _ inline _ name) = do
   pretty name
 
   write " #-}"
-decl x = pretty' x
+decl x' = pretty' x'
 
 instance Pretty Deriving where
   prettyInternal (Deriving _ heads) =
@@ -973,7 +973,9 @@ instance Pretty InstRule where
   prettyInternal (IRule _ mvarbinds mctx ihead) =
     do case mvarbinds of
          Nothing -> return ()
-         Just xs -> spaced (map pretty xs)
+         Just xs -> do write "forall "
+                       spaced (map pretty xs)
+                       write ". "
        withCtx mctx (pretty ihead)
 
 instance Pretty InstHead where

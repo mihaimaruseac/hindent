@@ -49,6 +49,21 @@ Type declaration
 type EventSource a = (AddHandler a, a -> IO ())
 ```
 
+Instance declaration without decls
+
+``` haskell
+instance C a
+```
+
+Instance declaration with decls
+
+``` haskell
+instance C a where
+    foobar = do
+        x y
+        k p
+```
+
 # Expressions
 
 Lazy patterns in a lambda
@@ -364,7 +379,7 @@ main = putStrLn "Hello, World!"
 
 ## Regression tests
 
-cocreature removed from declaration issue
+cocreature removed from declaration issue #186
 
 ``` haskell
 -- https://github.com/chrisdone/hindent/issues/186
@@ -374,6 +389,16 @@ trans One e n =
         (emptyImage
          { notPresent = S.singleton (TransitionResult Two (Just A) n)
          })
+```
+
+sheyll explicit forall in instances #218
+
+``` haskell
+-- https://github.com/chrisdone/hindent/issues/218
+instance forall x. C
+
+instance forall x. Show x =>
+         C x
 ```
 
 # Behaviour checks
