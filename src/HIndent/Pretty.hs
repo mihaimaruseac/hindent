@@ -825,8 +825,8 @@ instance Pretty BangType where
       NoStrictAnnot _ -> return ()
 
 instance Pretty Unpackedness where
-  prettyInternal (Unpack _) = write "{-# UNPACK -#}"
-  prettyInternal (NoUnpack _) = write "{-# NOUNPACK -#}"
+  prettyInternal (Unpack _) = write "{-# UNPACK #-}"
+  prettyInternal (NoUnpack _) = write "{-# NOUNPACK #-}"
   prettyInternal (NoUnpackPragma _) = return ()
 
 instance Pretty Binds where
