@@ -763,11 +763,15 @@ decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
                             (prefixedLined "|"
                                            (map (depend space . pretty) xs)))
 
-decl (InlineSig _ inline _ name) = do
+decl (InlineSig _ inline active name) = do
   write "{-# "
 
   unless inline $ write "NO"
   write "INLINE "
+  case active of
+    Nothing -> return ()
+    Just (ActiveFrom _ x) -> write ("[" ++ show x ++ "] ")
+    Just (ActiveUntil _ x) -> write ("[~" ++ show x ++ "] ")
   pretty name
 
   write " #-}"
