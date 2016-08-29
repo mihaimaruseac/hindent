@@ -1182,9 +1182,7 @@ instance Pretty ModuleHead where
        maybe (return ())
              (\exports ->
                 do newline
-                   indented 2 (pretty exports)
-                   newline
-                   space)
+                   indented 2 (pretty exports))
              mexports
        write " where"
 
@@ -1211,9 +1209,11 @@ instance Pretty WarningText where
     write "{-# WARNING " >> string s >> write " #-}"
 
 instance Pretty ExportSpecList where
-  prettyInternal (ExportSpecList _ es) =
-    parens (prefixedLined ","
-                          (map pretty es))
+  prettyInternal (ExportSpecList _ es) = do
+    depend (write "(")
+           (prefixedLined "," (map pretty es))
+    newline
+    write ")"
 
 instance Pretty ExportSpec where
   prettyInternal x = string " " >> pretty' x
