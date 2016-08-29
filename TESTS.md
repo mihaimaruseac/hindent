@@ -24,8 +24,8 @@ module X
   ( x
   , y
   , Z
-  , P(x, z))
-  where
+  , P(x, z)
+  ) where
 ```
 
 ## Imports
