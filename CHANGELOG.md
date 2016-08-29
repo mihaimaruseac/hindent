@@ -1,22 +1,27 @@
 5.1.1:
-   * Preserve spaces between groups of imports (fixes #200)
-   * Support shebangs (closes #208)
-   * Output filename for parse errors (fixes #179)
-   * Input with newline ends with newline (closes #211)
-   * Document -X (closes #212)
-   * Fix explicit forall in instances (closes #218)
+
+    * Preserve spaces between groups of imports (fixes #200)
+    * Support shebangs (closes #208)
+    * Output filename for parse errors (fixes #179)
+    * Input with newline ends with newline (closes #211)
+    * Document -X (closes #212)
+    * Fix explicit forall in instances (closes #218)
+    * Put last paren of export list on a new line #227
 
 5.1.0:
-   * Rewrote comment association, more reliable
-   * Added --tab-size flag for indentation spaces
-   * Fixed some miscellaneous bugs
+
+    * Rewrote comment association, more reliable
+    * Added --tab-size flag for indentation spaces
+    * Fixed some miscellaneous bugs
 
 5.0.1:
+
     * Re-implement using bytestring instead of text
     * Made compatible with GHC 7.8 through to GHC 8.0
     * Added test suite and benchmarks in TESTS.md and BENCHMARKS.md
 
 5.0.0:
+
 	* Drop support for styles
 
 4.6.4
