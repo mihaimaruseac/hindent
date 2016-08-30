@@ -223,7 +223,8 @@ exceptions =
   , InternalServerError
   , InvalidStatusCode
   , MissingContentHeader
-  , InternalServerError]
+  , InternalServerError
+  ]
 ```
 
 # Johan Tibell compatibility checks
@@ -335,7 +336,8 @@ bob -- after bob
     , ( 2 -- bar
       , 2.5 -- mu
        )
-    , 3]
+    , 3
+    ]
 
 foo = 1 -- after foo
 ```
@@ -416,7 +418,8 @@ bob {- after bob -}
     , ( 2 {- bar -}
       , 2.5 {- mu -}
        )
-    , 3]
+    , 3
+    ]
 
 foo = 1 {- after foo -}
 ```
@@ -599,7 +602,8 @@ quasiQuotes =
                                 , ( "List of characters"
                                   , ListPresentation
                                       typeString
-                                      (map (snd $(presentVar)) xs))]
+                                      (map (snd $(presentVar)) xs))
+                                ]
                               where getCh (CharPresentation "GHC.Types.Char" ch) =
                                       ch
                                     getCh (ChoicePresentation _ ((_, CharPresentation _ ch):_)) =
@@ -608,7 +612,8 @@ quasiQuotes =
                             _ ->
                               ListPresentation
                                 typeString
-                                (map (snd $(presentVar)) xs)))|]))]
+                                (map (snd $(presentVar)) xs)))|]))
+  ]
 ```
 
 Random snippet from hindent itself

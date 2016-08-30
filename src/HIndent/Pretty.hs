@@ -516,8 +516,12 @@ exp (App _ op arg) = do
 exp (List _ es) =
   do mst <- fitsOnOneLine p
      case mst of
-       Nothing -> brackets (prefixedLined ","
-                                          (map (depend space . pretty) es))
+       Nothing -> do
+         depend
+           (write "[")
+           (prefixedLined "," (map (depend space . pretty) es))
+         newline
+         write "]"
        Just st -> put st
   where p =
           brackets (inter (write ", ")
