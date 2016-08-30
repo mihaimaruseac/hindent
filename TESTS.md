@@ -442,14 +442,14 @@ radupopescu `deriving` keyword not aligned with pipe symbol for type declaration
 
 ``` haskell
 data Stuffs
-    = Things
-    | This
-    | That
-    deriving (Show)
+  = Things
+  | This
+  | That
+  deriving (Show)
 
 data Simple =
-    Simple
-    deriving (Show)
+  Simple
+  deriving (Show)
 ```
 
 # Behaviour checks
