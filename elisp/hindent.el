@@ -60,9 +60,9 @@ This customization is deprecated and ignored."
                  (integer :tag "Override" 120))
   :safe (lambda (val) (or (integerp val) (not val))))
 
-(defcustom hindent-tab-size
+(defcustom hindent-indent-size
   2
-  "Optionally override the tab size."
+  "Optionally override the indent size."
   :group 'haskell
   :type '(choice (const :tag "Default: 2" 2)
                  (integer :tag "Override" 4))
@@ -192,10 +192,10 @@ This is the place where hindent is actually called."
                                       (list "--line-length"
                                             (number-to-string
                                              hindent-line-length)))
-                                    (when hindent-tab-size
-                                      (list "--tab-size"
+                                    (when hindent-indent-size
+                                      (list "--indent-size"
                                             (number-to-string
-                                             hindent-tab-size)))
+                                             hindent-indent-size)))
                                     (hindent-extra-arguments)))))
             (cond
              ((= ret 1)

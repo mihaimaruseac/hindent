@@ -13,9 +13,9 @@ Haskell pretty printer
 ## Usage
 
     $ hindent --help
-    hindent --version --help --style STYLE --line-length <...> --tab-size <...> --no-force-newline [-X<...>]* [<FILENAME>]
+    hindent --version --help --style STYLE --line-length <...> --indent-size <...> --no-force-newline [-X<...>]* [<FILENAME>]
     Version 5.1.1
-    Default --tab-size is 2. Specify --tab-size 4 if you prefer that.
+    Default --indent-size is 2. Specify --indent-size 4 if you prefer that.
     -X to pass extensions e.g. -XMagicHash etc.
     The --style option is now ignored, but preserved for backwards-compatibility.
     Johan Tibell is the default and only style.
@@ -24,13 +24,13 @@ hindent is used in a pipeline style
 
     $ cat path/to/sourcefile.hs | hindent
 
-The default tab size is `2`. Configure tab size with `--tab-size`:
+The default indentation size is `2` spaces. Configure indentation size with `--indent-size`:
 
-    $ echo 'example = case x of Just p -> foo bar' | hindent --tab-size 2; echo
+    $ echo 'example = case x of Just p -> foo bar' | hindent --indent-size 2; echo
     example =
       case x of
         Just p -> foo bar
-    $ echo 'example = case x of Just p -> foo bar' | hindent --tab-size 4; echo
+    $ echo 'example = case x of Just p -> foo bar' | hindent --indent-size 4; echo
     example =
         case x of
             Just p -> foo bar
@@ -42,7 +42,7 @@ Create a `.hindent.yaml` file in your project directory or in your
 default:
 
 ``` yaml
-tab-size: 2
+indent-size: 2
 line-length: 80
 force-trailing-newline: true
 ```

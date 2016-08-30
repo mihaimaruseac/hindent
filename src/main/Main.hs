@@ -88,7 +88,7 @@ help config =
   "\nVersion " ++
   showVersion version ++
   "\n" ++
-  "Default --tab-size is 2. Specify --tab-size 4 if you prefer that.\n" ++
+  "Default --indent-size is 2. Specify --indent-size 4 if you prefer that.\n" ++
   "-X to pass extensions e.g. -XMagicHash etc.\n" ++
   "The --style option is now ignored, but preserved for backwards-compatibility.\n" ++
   "Johan Tibell is the default and only style."
@@ -115,13 +115,15 @@ options config = ver *> ((,,) <$> style <*> exts <*> file)
         (optional
            (constant "--style" "Style to print with" () *> anyString "STYLE")) <*>
       lineLen <*>
-      tabsize <*>
+      indentSpaces <*>
       trailingNewline
     exts = fmap getExtensions (many (prefix "X" "Language extension"))
-    tabsize =
+    indentSpaces =
       fmap
         (>>= (readMaybe . T.unpack))
-        (optional (arg "tab-size" "Tab size, default: 4"))
+        (optional
+           (arg "indent-size" "Indentation size in spaces, default: 4" <|>
+            arg "tab-size" "Same as --indent-size, for compatibility"))
     lineLen =
       fmap
         (>>= (readMaybe . T.unpack))
