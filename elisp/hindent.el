@@ -118,7 +118,7 @@ Provide the following keybindings:
     (when start-end
       (let ((beg (car start-end))
             (end (cdr start-end)))
-        (hindent-reformat-region beg end)))))
+        (hindent-reformat-region beg end t)))))
 
 ;;;###autoload
 (defun hindent-reformat-buffer ()
@@ -142,19 +142,20 @@ declaration."
     (hindent/reformat-decl)))
 
 ;;;###autoload
-(defun hindent-reformat-region (beg end)
+(defun hindent-reformat-region (beg end &optional drop-newline)
   "Reformat the given region, accounting for indentation."
   (interactive "r")
   (if (= (save-excursion (goto-char beg)
                          (line-beginning-position))
          beg)
-      (hindent-reformat-region-as-is beg end)
+      (hindent-reformat-region-as-is beg end drop-newline)
     (let* ((column (- beg (line-beginning-position)))
            (string (buffer-substring-no-properties beg end))
            (new-string (with-temp-buffer
                          (insert (make-string column ? ) string)
                          (hindent-reformat-region-as-is (point-min)
-                                                        (point-max))
+                                                        (point-max)
+                                                        drop-newline)
                          (delete-region (point-min) (1+ column))
                          (buffer-substring (point-min)
                                            (point-max)))))
@@ -171,7 +172,7 @@ declaration."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Internal library
 
-(defun hindent-reformat-region-as-is (beg end)
+(defun hindent-reformat-region-as-is (beg end &optional drop-newline)
   "Reformat the given region as-is.
 
 This is the place where hindent is actually called."
@@ -208,8 +209,13 @@ This is the place where hindent is actually called."
                     (message "language pragma")
                   (error error-string))))
              ((= ret 0)
-              (let ((new-str (with-current-buffer temp
-                               (buffer-string))))
+              (let* ((last-decl (= end (point-max)))
+                     (new-str (with-current-buffer temp
+                                (when (and drop-newline (not last-decl))
+                                  (goto-char (point-max))
+                                  (when (looking-back "\n")
+                                    (delete-backward-char 1)))
+                                (buffer-string))))
                 (if (not (string= new-str orig-str))
                     (let ((line (line-number-at-pos))
                           (col (current-column)))
