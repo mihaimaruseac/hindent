@@ -523,6 +523,14 @@ import CommentAfter
 import HelloWorld
 ```
 
+Wrapped import list shouldn't add newline
+
+```haskell
+import TooLongList
+       (alpha, beta, gamma, delta, epsilon, zeta, eta, theta)
+import Test
+```
+
 radupopescu `deriving` keyword not aligned with pipe symbol for type declarations
 
 ``` haskell
