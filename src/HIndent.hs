@@ -349,7 +349,9 @@ collectAllComments =
               fst (srcSpanStart commentSpan) >= fst (srcSpanEnd nodeSpan)))) <=<
   shortCircuit
     (traverse
-     -- Collect forwards comments which start at the end line of a node.
+     -- Collect forwards comments which start at the end line of a
+     -- node: Does the start line of the comment match the end-line
+     -- of the node?
        (collectCommentsBy
           (<>)
           CommentSameLine
@@ -357,7 +359,9 @@ collectAllComments =
               fst (srcSpanStart commentSpan) == fst (srcSpanEnd nodeSpan)))) <=<
   shortCircuit
     (traverseBackwards
-     -- Collect backwards comments which are on the same line as a node.
+     -- Collect backwards comments which are on the same line as a
+     -- node: Does the start line & end line of the comment match
+     -- that of the node?
        (collectCommentsBy
           (<>)
           CommentSameLine
