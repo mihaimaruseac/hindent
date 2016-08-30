@@ -779,7 +779,7 @@ decl x' = pretty' x'
 
 instance Pretty Deriving where
   prettyInternal (Deriving _ heads) =
-    do write " deriving"
+    do write "deriving"
        space
        let heads' =
              if length heads == 1
@@ -1513,7 +1513,7 @@ decl' (DataDecl _ dataornew ctx dhead condecls@[_] mderivs)
                            multiCons condecls))
        case mderivs of
          Nothing -> return ()
-         Just derivs -> pretty derivs
+         Just derivs -> space >> pretty derivs
   where multiCons xs =
           depend (write " =")
                  (inter (write "|")

@@ -438,6 +438,20 @@ import CommentAfter
 import HelloWorld
 ```
 
+radupopescu `deriving` keyword not aligned with pipe symbol for type declarations
+
+``` haskell
+data Stuffs
+    = Things
+    | This
+    | That
+    deriving (Show)
+
+data Simple =
+    Simple
+    deriving (Show)
+```
+
 # Behaviour checks
 
 Unicode
