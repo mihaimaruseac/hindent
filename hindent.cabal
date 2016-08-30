@@ -42,6 +42,7 @@ library
                    , transformers
                    , exceptions
                    , text
+                   , yaml
 
 executable hindent
   hs-source-dirs:    src/main
@@ -56,6 +57,13 @@ executable hindent
                    , ghc-prim
                    , directory
                    , text
+                   , yaml
+                   , unix-compat
+                   , deepseq
+                   , path
+                   , path-io
+                   , transformers
+                   , exceptions
 
 test-suite hindent-test
   type: exitcode-stdio-1.0

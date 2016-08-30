@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE NamedFieldPuns #-}
@@ -16,14 +17,17 @@ module HIndent.Types
   ,NodeComment(..)
   ) where
 
-import Control.Applicative
-import Control.Monad
-import Control.Monad.State.Strict (MonadState(..),StateT)
-import Control.Monad.Trans.Maybe
-import Data.ByteString.Builder
-import Data.Functor.Identity
-import Data.Int (Int64)
-import Language.Haskell.Exts.SrcLoc
+import           Control.Applicative
+import           Control.Monad
+import           Control.Monad.State.Strict (MonadState(..),StateT)
+import           Control.Monad.Trans.Maybe
+import           Data.ByteString.Builder
+import           Data.Functor.Identity
+import           Data.Int (Int64)
+import           Data.Maybe
+import           Data.Yaml (FromJSON(..))
+import qualified Data.Yaml as Y
+import           Language.Haskell.Exts.SrcLoc
 
 -- | A pretty printing monad.
 newtype Printer a =
@@ -59,6 +63,16 @@ data Config = Config
     , configIndentSpaces :: !Int64 -- ^ How many spaces to indent?
     , configTrailingNewline :: !Bool -- ^ End with a newline.
     }
+
+instance FromJSON Config where
+  parseJSON (Y.Object v) =
+    Config <$>
+    fmap (fromMaybe (configMaxColumns defaultConfig)) (v Y..:? "line-length") <*>
+    fmap (fromMaybe (configIndentSpaces defaultConfig)) (v Y..:? "tab-size") <*>
+    fmap
+      (fromMaybe (configTrailingNewline defaultConfig))
+      (v Y..:? "force-trailing-newline")
+  parseJSON _ = fail "Expected Object for Config value"
 
 -- | Default style configuration.
 defaultConfig :: Config
