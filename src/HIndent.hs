@@ -275,6 +275,7 @@ badExtensions =
     ,XmlSyntax, RegularPatterns -- steals a-b
     ,UnboxedTuples -- breaks (#) lens operator
     -- ,QuasiQuotes -- breaks [x| ...], making whitespace free list comps break
+    ,PatternSynonyms -- steals the pattern keyword
     ]
 
 
