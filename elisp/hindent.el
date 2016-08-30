@@ -37,8 +37,10 @@
 ;; Customization properties
 
 (defcustom hindent-style
-  "fundamental"
-  "The style to use for formatting."
+  nil
+  "The style to use for formatting.
+
+This customization is deprecated and ignored."
   :group 'haskell
   :type 'string
   :safe #'stringp)
@@ -51,18 +53,26 @@
   :safe #'stringp)
 
 (defcustom hindent-line-length
-  nil
-  "Optionally override the line length of the formatting style."
+  80
+  "Optionally override the line length."
   :group 'haskell
-  :type '(choice (const :tag "From style" nil)
-                 (integer :tag "Override" 80))
+  :type '(choice (const :tag "Default: 80" 80)
+                 (integer :tag "Override" 120))
+  :safe (lambda (val) (or (integerp val) (not val))))
+
+(defcustom hindent-tab-size
+  2
+  "Optionally override the tab size."
+  :group 'haskell
+  :type '(choice (const :tag "Default: 2" 2)
+                 (integer :tag "Override" 4))
   :safe (lambda (val) (or (integerp val) (not val))))
 
 (defcustom hindent-reformat-buffer-on-save nil
-  "Set to t to run `hindent-reformat-buffer' when a buffer in `hindent-mode' is saved."
+  "Set to t to run `hindent-reformat-buffer' when a buffer in
+`hindent-mode' is saved."
   :group 'haskell
   :safe #'booleanp)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Minor mode
@@ -176,13 +186,15 @@ This is the place where hindent is actually called."
                                           hindent-process-path
                                           nil ; delete
                                           temp ; output
-                                          nil
-                                          "--style"
-                                          hindent-style)
+                                          nil)
                                     (when hindent-line-length
                                       (list "--line-length"
                                             (number-to-string
                                              hindent-line-length)))
+                                    (when hindent-tab-size
+                                      (list "--tab-size"
+                                            (number-to-string
+                                             hindent-tab-size)))
                                     (hindent-extra-arguments)))))
             (cond
              ((= ret 1)
