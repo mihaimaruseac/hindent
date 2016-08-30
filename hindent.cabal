@@ -61,9 +61,9 @@ executable hindent
                    , unix-compat
                    , deepseq
                    , path
-                   , path-io
                    , transformers
                    , exceptions
+                   , filepath
 
 test-suite hindent-test
   type: exitcode-stdio-1.0
