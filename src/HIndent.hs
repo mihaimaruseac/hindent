@@ -339,65 +339,55 @@ traverseInOrder cmp f ast = do
 -- this from bottom to top.
 collectAllComments :: Module SrcSpanInfo -> State [Comment] (Module NodeInfo)
 collectAllComments =
-    shortCircuit
-        (traverseBackwards
-         -- Finally, collect backwards comments which come after each node.
-             (collectCommentsBy
-                  (<>)
-                  CommentAfterLine
-                  (\nodeSpan commentSpan ->
-                        fst (srcSpanStart commentSpan) >=
-                        fst (srcSpanEnd nodeSpan)))) <=<
-    shortCircuit
-        (traverse
-         -- Collect forwards comments which start at the end line of a node.
-             (collectCommentsBy
-                  (<>)
-                  CommentSameLine
-                  (\nodeSpan commentSpan ->
-                        fst (srcSpanStart commentSpan) ==
-                        fst (srcSpanEnd nodeSpan)))) <=<
-    shortCircuit
-        (traverseBackwards
-         -- Collect backwards comments which are on the same line as a node.
-             (collectCommentsBy
-                  (<>)
-                  CommentSameLine
-                  (\nodeSpan commentSpan ->
-                        fst (srcSpanStart commentSpan) ==
-                        fst (srcSpanStart nodeSpan) &&
-                        fst (srcSpanStart commentSpan) ==
-                        fst (srcSpanEnd nodeSpan)))) <=<
-    shortCircuit
-        (traverse
-         -- First, collect forwards comments for declarations which both
-         -- start on column 1 and occur before the declaration.
-             (collectCommentsBy
-                  (<>)
-                  CommentBeforeLine
-                  (\nodeSpan commentSpan ->
-                        (snd (srcSpanStart nodeSpan) == 1 &&
-                         snd (srcSpanStart commentSpan) == 1) &&
-                        fst (srcSpanStart commentSpan) <
-                        fst (srcSpanStart nodeSpan)))) .
-    fmap nodify
+  shortCircuit
+    (traverseBackwards
+     -- Finally, collect backwards comments which come after each node.
+       (collectCommentsBy
+          (<>)
+          CommentAfterLine
+          (\nodeSpan commentSpan ->
+              fst (srcSpanStart commentSpan) >= fst (srcSpanEnd nodeSpan)))) <=<
+  shortCircuit
+    (traverse
+     -- Collect forwards comments which start at the end line of a node.
+       (collectCommentsBy
+          (<>)
+          CommentSameLine
+          (\nodeSpan commentSpan ->
+              fst (srcSpanStart commentSpan) == fst (srcSpanEnd nodeSpan)))) <=<
+  shortCircuit
+    (traverseBackwards
+     -- Collect backwards comments which are on the same line as a node.
+       (collectCommentsBy
+          (<>)
+          CommentSameLine
+          (\nodeSpan commentSpan ->
+              fst (srcSpanStart commentSpan) == fst (srcSpanStart nodeSpan) &&
+              fst (srcSpanStart commentSpan) == fst (srcSpanEnd nodeSpan)))) <=<
+  shortCircuit
+    (traverse
+     -- First, collect forwards comments for declarations which both
+     -- start on column 1 and occur before the declaration.
+       (collectCommentsBy
+          (<>)
+          CommentBeforeLine
+          (\nodeSpan commentSpan ->
+              (snd (srcSpanStart nodeSpan) == 1 &&
+               snd (srcSpanStart commentSpan) == 1) &&
+              fst (srcSpanStart commentSpan) < fst (srcSpanStart nodeSpan)))) .
+  fmap nodify
   where
     nodify s = NodeInfo s mempty
     -- Sort the comments by their end position.
     traverseBackwards =
-        traverseInOrder
-            (\x y ->
-                  on
-                      (flip compare)
-                      (srcSpanEnd . srcInfoSpan . nodeInfoSpan)
-                      x
-                      y)
+      traverseInOrder
+        (\x y -> on (flip compare) (srcSpanEnd . srcInfoSpan . nodeInfoSpan) x y)
     -- Stop traversing if all comments have been consumed.
     shortCircuit m v = do
-        comments <- get
-        if null comments
-            then return v
-            else m v
+      comments <- get
+      if null comments
+        then return v
+        else m v
 
 -- | Collect comments by satisfying the given predicate, to collect a
 -- comment means to remove it from the pool of available comments in
