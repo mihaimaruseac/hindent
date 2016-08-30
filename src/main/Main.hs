@@ -69,6 +69,7 @@ help =
   "\nVersion " ++
   showVersion version ++
   "\n" ++
+  "Default --tab-size is 2. Specify --tab-size 4 if you prefer that.\n" ++
   "-X to pass extensions e.g. -XMagicHash etc.\n" ++
   "The --style option is now ignored, but preserved for backwards-compatibility.\n" ++
   "Johan Tibell is the default and only style."
