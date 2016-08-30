@@ -1,3 +1,10 @@
+5.2.0:
+    * Default tab-width is now 2
+    * Supports .hindent.yaml file to specify alt tab-width and max
+      column
+    * Put last paren of export list on a new line
+    * Implement tab-size support in Emacs Lisp
+
 5.1.1:
 
     * Preserve spaces between groups of imports (fixes #200)

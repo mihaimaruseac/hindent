@@ -1,5 +1,5 @@
 name:                hindent
-version:             5.1.1
+version:             5.2.0
 synopsis:            Extensible Haskell pretty printer
 description:         Extensible Haskell pretty printer. Both a library and an executable.
                      .
@@ -48,6 +48,7 @@ executable hindent
   hs-source-dirs:    src/main
   ghc-options:       -Wall -O2
   main-is:           Main.hs
+  other-modules: Path.Find, Path.IO
   build-depends:     base >= 4 && < 5
                    , hindent
                    , bytestring
