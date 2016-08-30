@@ -54,7 +54,8 @@ pretty a = do
     (\(i, c') -> do
        case c' of
          CommentSameLine c -> do
-           space
+           col <- gets psColumn
+           unless (col == 0) space
            writeComment c
          CommentAfterLine c -> do
            when (i == 0) newline

@@ -70,14 +70,14 @@ Lazy patterns in a lambda
 
 ``` haskell
 f = \ ~a -> undefined
- -- \~a yields parse error on input ‘\~’
+-- \~a yields parse error on input ‘\~’
 ```
 
 Bang patterns in a lambda
 
 ``` haskell
 f = \ !a -> undefined
- -- \!a yields parse error on input ‘\!’
+-- \!a yields parse error on input ‘\!’
 ```
 
 List comprehensions
@@ -374,7 +374,7 @@ Comments around regular declarations
 -- This is some random comment.
 -- | Main entry point.
 main = putStrLn "Hello, World!"
- -- This is another random comment.
+-- This is another random comment.
 ```
 
 Multi-line comments
@@ -429,10 +429,24 @@ Here is more docs and such.
 Etc.
 -}
 main = putStrLn "Hello, World!"
- {- This is another random comment. -}
+{- This is another random comment. -}
 ```
 
 # Regression tests
+
+bitemyapp wonky multiline comment handling #231
+
+``` haskell
+module Woo where
+
+hi = "hello"
+{-
+test comment
+-}
+-- blah blah
+-- blah blah
+-- blah blah
+```
 
 cocreature removed from declaration issue #186
 
@@ -513,7 +527,7 @@ Unicode
 
 ``` haskell
 α = γ * "ω"
- -- υ
+-- υ
 ```
 
 Empty module
