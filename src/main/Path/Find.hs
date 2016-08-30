@@ -19,7 +19,7 @@ import Control.Monad.IO.Class
 import System.IO.Error (isPermissionError)
 import Data.List
 import Path
-import Path.IO
+import Path.IO hiding (findFiles)
 import System.PosixCompat.Files (getSymbolicLinkStatus, isSymbolicLink)
 
 -- | Find the location of a file matching the given predicate.
@@ -96,4 +96,3 @@ findInParents f path = do
             if next == path
                 then return Nothing
                 else findInParents f next
-
