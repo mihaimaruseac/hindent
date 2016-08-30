@@ -71,7 +71,7 @@ getConfig = do
   cur <- Path.getCurrentDir
   homeDir <- Path.getHomeDir
   mfile <-
-    Path.findFileUp cur ((== ".hindent") . toFilePath . filename) (Just homeDir)
+    Path.findFileUp cur ((== ".hindent.yaml") . toFilePath . filename) (Just homeDir)
   case mfile of
     Nothing -> return defaultConfig
     Just file -> do

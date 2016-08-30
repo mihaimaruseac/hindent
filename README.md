@@ -35,6 +35,18 @@ The default tab size is `2`. Configure tab size with `--tab-size`:
         case x of
             Just p -> foo bar
 
+## Customization
+
+Create a `.hindent.yaml` file in your project directory or in your
+`~/` home directory. The following fields are accepted and are the
+default:
+
+``` yaml
+tab-size: 2
+line-length: 80
+force-trailing-newline: true
+```
+
 ## Emacs
 
 In
