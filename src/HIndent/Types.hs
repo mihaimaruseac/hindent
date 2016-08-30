@@ -15,6 +15,7 @@ module HIndent.Types
   ,defaultConfig
   ,NodeInfo(..)
   ,NodeComment(..)
+  ,SomeComment(..)
   ) where
 
 import           Control.Applicative
@@ -83,11 +84,18 @@ defaultConfig =
     , configTrailingNewline = True
     }
 
+-- | Some comment to print.
+data SomeComment
+  = EndOfLine String
+  | MultiLine String
+  deriving (Show, Ord, Eq)
+
+-- | Comment associated with a node.
 data NodeComment
-  = CommentSameLine String
-  | CommentAfterLine String
-  | CommentBeforeLine String
-  deriving (Show,Ord,Eq)
+  = CommentSameLine SomeComment
+  | CommentAfterLine SomeComment
+  | CommentBeforeLine SomeComment
+  deriving (Show, Ord, Eq)
 
 -- | Information for each node in the AST.
 data NodeInfo = NodeInfo

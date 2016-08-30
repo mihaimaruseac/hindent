@@ -404,18 +404,23 @@ collectAllComments =
 -- the State. This allows for a multiple pass approach.
 collectCommentsBy
   :: ([NodeComment] -> [NodeComment] -> [NodeComment])
-  -> (String -> NodeComment)
+  -> (SomeComment -> NodeComment)
   -> (SrcSpan -> SrcSpan -> Bool)
   -> NodeInfo
   -> State [Comment] NodeInfo
 collectCommentsBy append cons predicate nodeInfo@(NodeInfo (SrcSpanInfo nodeSpan _) _) = do
   comments <- get
-  let (others,mine) =
+  let (others, mine) =
         partitionEithers
           (map
-             (\comment@(Comment _ commentSpan commentString) ->
+             (\comment@(Comment multiLine commentSpan commentString) ->
                  if predicate nodeSpan (setFilename commentString commentSpan)
-                   then Right (cons commentString)
+                   then Right
+                          (cons
+                             ((if multiLine
+                                 then MultiLine
+                                 else EndOfLine)
+                                commentString))
                    else Left comment)
              comments)
   put others

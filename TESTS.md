@@ -28,7 +28,7 @@ module X
   ) where
 ```
 
-## Imports
+# Imports
 
 Import lists
 
@@ -226,6 +226,7 @@ exceptions =
   , InternalServerError]
 
 ```
+
 # Johan Tibell compatibility checks
 
 Basic example from Tibbe's style
@@ -245,6 +246,7 @@ filter p (x:xs)
   | otherwise = filter p xs
 
 ```
+
 Data declarations
 
 ``` haskell
@@ -294,6 +296,7 @@ foo =
      \b -> cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
 
 ```
+
 # Comments
 
 Comments within a declaration
@@ -377,7 +380,62 @@ main = putStrLn "Hello, World!"
  -- This is another random comment.
 ```
 
-## Regression tests
+Multi-line comments
+
+``` haskell
+bob {- after bob -}
+ =
+  foo {- next to foo -}
+  {- line after foo -}
+    (bar
+       foo {- next to bar foo -}
+       bar {- next to bar -}
+     ) {- next to the end paren of (bar) -}
+    {- line after (bar) -}
+    mu {- next to mu -}
+    {- line after mu -}
+    {- another line after mu -}
+    zot {- next to zot -}
+    {- line after zot -}
+    (case casey {- after casey -}
+           of
+       Just {- after Just -}
+        -> do
+         justice {- after justice -}
+          *
+           foo
+             (blah * blah + z + 2 / 4 + a - {- before a line break -}
+              2 * {- inside this mess -}
+              z /
+              2 /
+              2 /
+              aooooo /
+              aaaaa {- bob comment -}
+              ) +
+           (sdfsdfsd fsdfsdf) {- blah comment -}
+         putStrLn "")
+    [1, 2, 3]
+    [ 1 {- foo -}
+    , ( 2 {- bar -}
+      , 2.5 {- mu -}
+       )
+    , 3]
+
+foo = 1 {- after foo -}
+```
+
+Multi-line comments with multi-line contents
+
+``` haskell
+{- | This is some random comment.
+Here is more docs and such.
+Etc.
+-}
+main = putStrLn "Hello, World!"
+ {- This is another random comment. -}
+```
+
+# Regression tests
 
 cocreature removed from declaration issue #186
 

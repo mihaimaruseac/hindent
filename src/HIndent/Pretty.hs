@@ -43,33 +43,42 @@ pretty a = do
     (\c' -> do
        case c' of
          CommentBeforeLine c -> do
-           write ("--" ++ c)
+           case c of
+             EndOfLine s -> write ("--" ++ s)
+             MultiLine s -> write ("{-" ++ s ++ "-}")
            newline
          _ -> return ())
     comments
   prettyInternal a
   mapM_
-    (\(i,c') -> do
+    (\(i, c') -> do
        case c' of
          CommentSameLine c -> do
-           write (" --" ++ c)
-           modify
-             (\s ->
-                 s
-                 { psEolComment = True
-                 })
+           space
+           writeComment c
          CommentAfterLine c -> do
            when (i == 0) newline
-           write ("--" ++ c)
-           modify
-             (\s ->
-                 s
-                 { psEolComment = True
-                 })
+           writeComment c
          _ -> return ())
     (zip [0 :: Int ..] comments)
   where
     comments = nodeInfoComments (ann a)
+    writeComment =
+      \case
+        EndOfLine cs -> do
+          write ("--" ++ cs)
+          modify
+            (\s ->
+                s
+                { psEolComment = True
+                })
+        MultiLine cs -> do
+          write ("{-" ++ cs ++ "-}")
+          modify
+            (\s ->
+                s
+                { psEolComment = True
+                })
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
