@@ -1246,7 +1246,8 @@ stmt (Generator _ p e) =
      pretty p
      indented indentSpaces
               (dependOrNewline
-                 (write " <- ")
+                 (write " <-")
+                 space
                  e
                  pretty)
 stmt x = case x of
@@ -1263,18 +1264,20 @@ stmt x = case x of
 
 -- | Make the right hand side dependent if it fits on one line,
 -- otherwise send it to the next line.
-dependOrNewline :: Printer ()
-                -> Exp NodeInfo
-                -> (Exp NodeInfo -> Printer ())
-                -> Printer ()
-dependOrNewline left right f =
+dependOrNewline
+  :: Printer ()
+  -> Printer ()
+  -> Exp NodeInfo
+  -> (Exp NodeInfo -> Printer ())
+  -> Printer ()
+dependOrNewline left prefix right f =
   do msg <- fitsOnOneLine renderDependent
      case msg of
        Nothing -> do left
                      newline
                      (f right)
        Just st -> put st
-  where renderDependent = depend left (f right)
+  where renderDependent = depend left (do prefix; f right)
 
 -- | Handle do and case specially and also space out guards more.
 rhs :: Rhs NodeInfo -> Printer ()

@@ -434,6 +434,19 @@ main = putStrLn "Hello, World!"
 
 # Regression tests
 
+jml Adds trailing whitespace when wrapping #221
+
+``` haskell
+x = do
+  config <- execParser options
+  comments <-
+    case config of
+      Diff False args -> commentsFromDiff args
+      Diff True args -> commentsFromDiff ("--cached" : args)
+      Files args -> commentsFromFiles args
+  mapM_ (putStrLn . Fixme.formatTodo) (concatMap Fixme.getTodos comments)
+```
+
 meditans hindent freezes when trying to format this code #222
 
 ``` haskell
