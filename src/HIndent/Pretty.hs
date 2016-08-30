@@ -325,8 +325,12 @@ swingBy i a b =
 -- * Instances
 
 instance Pretty Context where
-  prettyInternal  =
-    context
+  prettyInternal ctx@(CxTuple _ asserts) = do
+    mst <- fitsOnOneLine (parens (inter (comma >> space) (map pretty asserts)))
+    case mst of
+      Nothing -> context ctx
+      Just st -> put st
+  prettyInternal ctx = context ctx
 
 instance Pretty Pat where
   prettyInternal x =
@@ -1369,20 +1373,11 @@ match (InfixMatch _ pat1 name pats rhs' mbinds) =
 
 -- | Format contexts with spaces and commas between class constraints.
 context :: Context NodeInfo -> Printer ()
-context ctx@(CxTuple _ asserts) =
-  do mst <-
-          fitsOnOneLine
-            (parens (inter (comma >> space)
-                           (map pretty asserts)))
-     case mst of
-       Nothing -> prettyInternal ctx
-       Just st -> put st
-context ctx = case ctx of
-                CxSingle _ a -> pretty a
-                CxTuple _ as ->
-                  parens (prefixedLined ","
-                                        (map pretty as))
-                CxEmpty _ -> parens (return ())
+context ctx =
+  case ctx of
+    CxSingle _ a -> pretty a
+    CxTuple _ as -> parens (prefixedLined "," (map pretty as))
+    CxEmpty _ -> parens (return ())
 
 unboxParens :: Printer a -> Printer a
 unboxParens p =
@@ -1485,7 +1480,7 @@ decl' (TypeSig _ names ty') =
                    Just ts ->
                      do write "forall "
                         spaced (map pretty ts)
-                        write ". "
+                        write "."
                         newline
                  case mctx of
                    Nothing -> prettyTy ty
