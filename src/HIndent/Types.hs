@@ -65,7 +65,7 @@ defaultConfig :: Config
 defaultConfig =
     Config
     { configMaxColumns = 80
-    , configIndentSpaces = 4
+    , configIndentSpaces = 2
     , configTrailingNewline = True
     }
 
