@@ -62,8 +62,8 @@ instance C a where
   foobar = do
     x y
     k p
-
 ```
+
 # Expressions
 
 Lazy patterns in a lambda
@@ -87,8 +87,8 @@ defaultExtensions =
   [ e
   | e@EnableExtension {} <- knownExtensions ] \\
   map EnableExtension badExtensions
-
 ```
+
 Record indentation
 
 ``` haskell
@@ -98,8 +98,8 @@ getGitProvider =
   { getModuleName = "Git"
   , getEvents = getRepoCommits
   }
-
 ```
+
 Records again
 
 ``` haskell
@@ -110,8 +110,8 @@ commitToEvent gitFolderPath timezone commit =
   , eventIcon = "glyphicon-cog"
   , eventDate = localTimeToUTC timezone (commitDate commit)
   }
-
 ```
+
 Cases
 
 ``` haskell
@@ -121,16 +121,16 @@ strToMonth month =
     "Jan" -> 1
     "Feb" -> 2
     _ -> error $ "Unknown month " ++ month
-
 ```
+
 Operators
 
 ``` haskell
 x =
   Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*> Just thisissolong <*>
   Just stilllonger
-
 ```
+
 # Type signatures
 
 Class constraints
@@ -139,8 +139,8 @@ Class constraints
 fun
   :: (Class a, Class b)
   => a -> b -> c
-
 ```
+
 Tuples
 
 ``` haskell
@@ -182,8 +182,8 @@ x =
          Just x -> e
          Nothing -> p
      | otherwise -> e
-
 ```
+
 Case inside a `where` and `do`
 
 ``` haskell
@@ -210,8 +210,8 @@ g x =
       let y = 2
           z = 3
       in y
-
 ```
+
 Lists
 
 ``` haskell
@@ -224,7 +224,6 @@ exceptions =
   , InvalidStatusCode
   , MissingContentHeader
   , InternalServerError]
-
 ```
 
 # Johan Tibell compatibility checks
@@ -244,7 +243,6 @@ filter _ [] = []
 filter p (x:xs)
   | p x = x : filter p xs
   | otherwise = filter p xs
-
 ```
 
 Data declarations
@@ -265,8 +263,8 @@ data Person = Person
   , lastName :: !String -- ^ Last name
   , age :: !Int -- ^ Age
   }
-
 ```
+
 Spaces between deriving classes
 
 ``` haskell
@@ -276,8 +274,8 @@ data Person = Person
   , lastName :: !String -- ^ Last name
   , age :: !Int -- ^ Age
   } deriving (Eq, Show)
-
 ```
+
 Hanging lambdas
 
 ``` haskell
@@ -294,7 +292,6 @@ foo =
   \a ->
      alloca 20 $
      \b -> cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
-
 ```
 
 # Comments
@@ -369,8 +366,8 @@ data X = X
     -- ^ This is a long comment which starts on the following line
     -- from from the field, lines continue at the sme column.
   }
-
 ```
+
 Comments around regular declarations
 
 ``` haskell
@@ -447,8 +444,8 @@ trans One e n =
     (emptyImage
      { notPresent = S.singleton (TransitionResult Two (Just A) n)
      })
-
 ```
+
 sheyll explicit forall in instances #218
 
 ``` haskell
@@ -530,7 +527,6 @@ Trailing newline is preserved
 module X where
 
 foo = 123
-
 ```
 
 # Complex input
