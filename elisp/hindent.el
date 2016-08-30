@@ -19,32 +19,19 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+;;; Commentary:
+
+;; Provides a minor mode and commands for easily using the "hindent"
+;; program to reformat Haskell code.
+
+;; Add `hindent-mode' to your `haskell-mode-hook' and use the provided
+;; keybindings as needed.  Set `hindent-reformat-buffer-on-save' to
+;; `t' globally or in local variables to have your code automatically
+;; reformatted.
+
 ;;; Code:
 
 (require 'cl-lib)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Minor mode
-
-(defvar hindent-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap indent-region] #'hindent-reformat-region)
-    (define-key map [remap fill-paragraph] #'hindent-reformat-decl-or-fill)
-    map)
-  "Keymap for `hindent-mode'.")
-
-;;;###autoload
-(define-minor-mode hindent-mode
-  "Indent code with the hindent program.
-
-Provide the following keybindings:
-
-\\{hindent-mode-map}"
-  :init-value nil
-  :keymap hindent-mode-map
-  :lighter " HI"
-  :group 'haskell
-  :require 'hindent)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Customization properties
@@ -70,6 +57,43 @@ Provide the following keybindings:
   :type '(choice (const :tag "From style" nil)
                  (integer :tag "Override" 80))
   :safe (lambda (val) (or (integerp val) (not val))))
+
+(defcustom hindent-reformat-buffer-on-save nil
+  "Set to t to run `hindent-reformat-buffer' when a buffer in `hindent-mode' is saved."
+  :group 'haskell
+  :safe #'booleanp)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Minor mode
+
+(defvar hindent-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [remap indent-region] #'hindent-reformat-region)
+    (define-key map [remap fill-paragraph] #'hindent-reformat-decl-or-fill)
+    map)
+  "Keymap for `hindent-mode'.")
+
+;;;###autoload
+(define-minor-mode hindent-mode
+  "Indent code with the hindent program.
+
+Provide the following keybindings:
+
+\\{hindent-mode-map}"
+  :init-value nil
+  :keymap hindent-mode-map
+  :lighter " HI"
+  :group 'haskell
+  :require 'hindent
+  (if hindent-mode
+      (add-hook 'before-save-hook 'hindent--before-save nil t)
+    (remove-hook 'before-save-hook 'hindent--before-save t)))
+
+(defun hindent--before-save ()
+  "Optionally reformat the buffer on save."
+  (when hindent-reformat-buffer-on-save
+    (hindent-reformat-buffer)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interactive functions
