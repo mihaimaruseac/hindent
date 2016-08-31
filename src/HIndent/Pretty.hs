@@ -191,29 +191,21 @@ depend maker dependent =
         then column col dependent
         else dependent
 
+-- | Wrap.
+wrap :: String -> String -> Printer a -> Printer a
+wrap open close p = depend (write open) $ p <* write close
+
 -- | Wrap in parens.
 parens :: Printer a -> Printer a
-parens p =
-  depend (write "(")
-         (do v <- p
-             write ")"
-             return v)
+parens = wrap "(" ")"
 
 -- | Wrap in braces.
 braces :: Printer a -> Printer a
-braces p =
-  depend (write "{")
-         (do v <- p
-             write "}"
-             return v)
+braces = wrap "{" "}"
 
 -- | Wrap in brackets.
 brackets :: Printer a -> Printer a
-brackets p =
-  depend (write "[")
-         (do v <- p
-             write "]"
-             return v)
+brackets = wrap "[" "]"
 
 -- | Write a space.
 space :: Printer ()
@@ -235,11 +227,6 @@ write x =
      let addingNewline = eol && x /= "\n"
      when addingNewline newline
      state <- get
-     when
-       hardFail
-       (guard
-          (additionalLines == 0 &&
-           (psColumn state < configMaxColumns (psConfig state))))
      let writingNewline = x == "\n"
          out :: String
          out =
@@ -248,15 +235,21 @@ write x =
                                ' ') <>
                    x
               else x
+         psColumn' =
+            if additionalLines > 0
+               then fromIntegral (length (concat (take 1 (reverse srclines))))
+               else psColumn state + fromIntegral (length out)
+     when
+       hardFail
+       (guard
+          (additionalLines == 0 &&
+           (psColumn' <= configMaxColumns (psConfig state))))
      modify (\s ->
                s {psOutput = psOutput state <> S.stringUtf8 out
                  ,psNewline = False
                  ,psLine = psLine state + fromIntegral additionalLines
                  ,psEolComment= False
-                 ,psColumn =
-                    if additionalLines > 0
-                       then fromIntegral (length (concat (take 1 (reverse srclines))))
-                       else psColumn state + fromIntegral (length out)})
+                 ,psColumn = psColumn'})
   where srclines = lines x
         additionalLines =
           length (filter (== '\n') x)
@@ -445,28 +438,28 @@ exp (Lambda _ pats (Do l stmts)) =
                          (lined (map pretty stmts))
        Just st -> put st
 -- | Space out tuples.
-exp (Tuple _ boxed exps) =
-  depend (write (case boxed of
-                   Unboxed -> "(#"
-                   Boxed -> "("))
-         (do mst <- fitsOnOneLine p
-             case mst of
-               Nothing -> prefixedLined ","
-                                        (map (depend space . pretty) exps)
-               Just st -> put st
-             write (case boxed of
-                      Unboxed -> "#)"
-                      Boxed -> ")"))
-  where p = inter (write ", ") (map pretty exps)
+exp (Tuple _ boxed exps) = do
+  let horVariant = parensB boxed $ inter (write ", ") (map pretty exps)
+      verVariant = parensB boxed $ prefixedLined "," (map (depend space . pretty) exps)
+  mst <- fitsOnOneLine horVariant
+  case mst of
+    Nothing -> verVariant
+    Just st -> put st
+  where
+    parensB Unboxed = wrap "(#" "#)"
+    parensB Boxed   = parens
 -- | Space out tuples.
-exp (TupleSection _ boxed mexps) =
-  depend (write (case boxed of
-                   Unboxed -> "(#"
-                   Boxed -> "("))
-         (do inter (write ", ") (map (maybe (return ()) pretty) mexps)
-             write (case boxed of
-                      Unboxed -> "#)"
-                      Boxed -> ")"))
+exp (TupleSection _ boxed mexps) = do
+  let horVariant = parensB boxed $ inter (write ", ") (map (maybe (return ()) pretty) mexps)
+      verVariant =
+        parensB boxed $ prefixedLined "," (map (maybe (return ()) (depend space . pretty)) mexps)
+  mst <- fitsOnOneLine horVariant
+  case mst of
+    Nothing -> verVariant
+    Just st -> put st
+  where
+    parensB Unboxed = wrap "(#" "#)"
+    parensB Boxed   = parens
 -- | Infix apps, same algorithm as ChrisDone at the moment.
 exp e@(InfixApp _ a op b) =
   infixApp e a op b Nothing
