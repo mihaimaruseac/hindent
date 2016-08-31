@@ -607,6 +607,15 @@ data Simple =
   deriving (Show)
 ```
 
+sgraf812 top-level pragmas should not add an additional newline #255
+
+``` haskell
+-- https://github.com/chrisdone/hindent/issues/255
+{-# INLINE f #-}
+f :: Int -> Int
+f n = n
+```
+
 # Behaviour checks
 
 Unicode
