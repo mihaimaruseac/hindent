@@ -1092,9 +1092,8 @@ formatImports imps =
             case mprev of
                 Nothing -> 0
                 Just prev ->
-                    fst
-                        (srcSpanStart (srcInfoSpan (nodeInfoSpan (ann current)))) -
-                    fst (srcSpanStart (srcInfoSpan (nodeInfoSpan (ann prev))))
+                    fst (srcSpanStart (srcInfoSpan (nodeInfoSpan (ann current)))) -
+                    fst (srcSpanEnd   (srcInfoSpan (nodeInfoSpan (ann prev   ))))
 
 instance Pretty Bracket where
   prettyInternal x =
