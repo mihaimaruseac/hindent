@@ -1057,6 +1057,7 @@ instance Pretty Module where
                             ,interOf newline
                                      (map (\case
                                              r@TypeSig{} -> (1,pretty r)
+                                             r@InlineSig{} -> (1, pretty r)
                                              r -> (2,pretty r))
                                           decls))])
            newline
