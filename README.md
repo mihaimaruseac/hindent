@@ -85,8 +85,6 @@ which provides a text object for top level bindings.
 
 ## Atom
 
-Basic support is provided through
-[atom/hindent.coffee](https://github.com/chrisdone/hindent/blob/master/atom/hindent.coffee). Mode
-should be installed as package into `.atom\packages\${PACKAGE_NAME}`,
-here is simple example of atom
-[package](https://github.com/Heather/atom-hindent).
+Fortunately, you can use https://atom.io/packages/ide-haskell with the
+path to hindent specified instead of that to stylish-haskell. Works
+like a charm that way!
