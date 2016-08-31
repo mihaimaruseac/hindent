@@ -188,14 +188,6 @@ This is the place where hindent is actually called."
                                           nil ; delete
                                           temp ; output
                                           nil)
-                                    (when hindent-line-length
-                                      (list "--line-length"
-                                            (number-to-string
-                                             hindent-line-length)))
-                                    (when hindent-indent-size
-                                      (list "--indent-size"
-                                            (number-to-string
-                                             hindent-indent-size)))
                                     (hindent-extra-arguments)))))
             (cond
              ((= ret 1)
