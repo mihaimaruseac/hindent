@@ -501,14 +501,16 @@ meditans hindent freezes when trying to format this code #222
 ``` haskell
 c
   :: forall new.
-     (Settable "pitch" Pitch (Map.AsMap (new Map.:\ "pitch")) new
-     ,Default (Book' (Map.AsMap (new Map.:\ "pitch"))))
+     ( Settable "pitch" Pitch (Map.AsMap (new Map.:\ "pitch")) new
+     , Default (Book' (Map.AsMap (new Map.:\ "pitch")))
+     )
   => Book' new
 c = set #pitch C (def :: Book' (Map.AsMap (new Map.:\ "pitch")))
 
 foo
-  :: (Foooooooooooooooooooooooooooooooooooooooooo
-     ,Foooooooooooooooooooooooooooooooooooooooooo)
+  :: ( Foooooooooooooooooooooooooooooooooooooooooo
+     , Foooooooooooooooooooooooooooooooooooooooooo
+     )
   => A
 ```
 
