@@ -360,13 +360,22 @@ instance Pretty Pat where
       PList _ ps ->
         brackets (commas (map pretty ps))
       PParen _ e -> parens (pretty e)
-      PRec _ qname fields ->
-        do indentSpaces <- getIndentSpaces
-           depend (do pretty qname
-                      space)
-                  (braces (prefixedLined ","
-                                         (map (indented indentSpaces . pretty) fields)))
-
+      PRec _ qname fields -> do
+        let horVariant = do
+              pretty qname
+              space
+              braces $ commas $ map pretty fields
+            verVariant =
+              depend (pretty qname >> space) $ do
+                case fields of
+                  [] -> write "{}"
+                  [field] -> braces $ pretty field
+                  _ -> do
+                    depend (write "{") $
+                      prefixedLined "," $ map (depend space . pretty) fields
+                    newline
+                    write "}"
+        horVariant `ifFitsOnOneLineOrElse` verVariant
       PAsPat _ n p ->
         depend (do pretty n
                    write "@")
@@ -1548,7 +1557,7 @@ conDecl (RecDecl _ name fields) =
   depend (do pretty name
              write " ")
          (do depend (write "{")
-                    (prefixedLined ","
+                    (prefixedLined ", "
                                    (map (depend space . pretty) fields))
              write "}")
 conDecl x = case x of
@@ -1562,7 +1571,7 @@ conDecl x = case x of
                 depend (do pretty name
                            space)
                        (do depend (write "{")
-                                  (prefixedLined ","
+                                  (prefixedLined ", "
                                                  (map pretty fields))
                            write "}")
 
