@@ -108,18 +108,24 @@ defaultExtensions =
   map EnableExtension badExtensions
 ```
 
-Record indentation
+Record, short
 
 ``` haskell
 getGitProvider :: EventProvider GitRecord ()
 getGitProvider =
-  EventProvider
-  { getModuleName = "Git"
-  , getEvents = getRepoCommits
-  }
+  EventProvider {getModuleName = "Git", getEvents = getRepoCommits}
 ```
 
-Records again
+Record, medium
+
+``` haskell
+commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
+commitToEvent gitFolderPath timezone commit =
+  Event.Event
+  {pluginName = getModuleName getGitProvider, eventIcon = "glyphicon-cog"}
+```
+
+Record, long
 
 ``` haskell
 commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
@@ -576,9 +582,7 @@ cocreature removed from declaration issue #186
 trans One e n =
   M.singleton
     (Query Unmarked (Mark NonExistent)) -- The goal of this is to fail always
-    (emptyImage
-     { notPresent = S.singleton (TransitionResult Two (Just A) n)
-     })
+    (emptyImage {notPresent = S.singleton (TransitionResult Two (Just A) n)})
 ```
 
 sheyll explicit forall in instances #218
