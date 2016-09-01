@@ -153,6 +153,13 @@ x =
 
 # Type signatures
 
+Long arguments list
+
+```haskell
+longLongFunction :: ReaderT r (WriterT w (StateT s m)) a
+                 -> StateT s (WriterT w (ReaderT r m)) a
+```
+
 Class constraints
 
 ``` haskell
