@@ -292,6 +292,28 @@ test
   ,)
 ```
 
+# Record syntax
+
+Pattern matching, short
+
+```haskell
+fun Rec {alpha = beta, gamma = delta, epsilon = zeta, eta = theta, iota = kappa} = do
+  beta + delta + zeta + theta + kappa
+```
+
+Pattern matching, long
+
+```haskell
+fun Rec { alpha = beta
+        , gamma = delta
+        , epsilon = zeta
+        , eta = theta
+        , iota = kappa
+        , lambda = mu
+        } =
+  beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
+```
+
 # Johan Tibell compatibility checks
 
 Basic example from Tibbe's style
