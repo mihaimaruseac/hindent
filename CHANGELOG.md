@@ -1,4 +1,14 @@
+5.1.1:
+    * Fix hanging on large constraints
+    * Render multi-line comments
+    * Rename --tab-size to --indent-size
+    * Don't add a spurious space for comments at the end of the file
+    * Don't add trailing whitespace on <-
+    * Disable PatternSynonyms
+    * Put a newline before the closing bracket on a list
+
 5.2.0:
+
     * Default tab-width is now 2
     * Supports .hindent.yaml file to specify alt tab-width and max
       column
