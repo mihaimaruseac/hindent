@@ -83,6 +83,10 @@ much trouble you can try
 [vim-textobj-haskell](https://github.com/gilligan/vim-textobj-haskell)
 which provides a text object for top level bindings.
 
+In order to format an entire source file execute:
+
+    :%!hindent
+
 ## Atom
 
 Fortunately, you can use https://atom.io/packages/ide-haskell with the
