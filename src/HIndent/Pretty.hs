@@ -15,7 +15,7 @@ module HIndent.Pretty
 import           Control.Applicative
 import           Control.Monad.State.Strict hiding (state)
 import qualified Data.ByteString.Builder as S
-import qualified Data.Foldable
+import           Data.Foldable (for_)
 import           Data.Foldable (traverse_)
 import           Data.Int
 import           Data.List
@@ -539,18 +539,32 @@ exp (Let _ binds e) =
 exp (ListComp _ e qstmt) = do
   let horVariant = brackets $ do
         pretty e
-        unless (null qstmt) $ do
-          write " | "
-          commas $ map pretty qstmt
+        write " | "
+        commas $ map pretty qstmt
       verVariant = do
         write "[ "
         pretty e
-        unless (null qstmt) $ do
-          newline
+        newline
+        depend (write "| ") $ prefixedLined ", " $ map pretty qstmt
+        newline
+        write "]"
+  horVariant `ifFitsOnOneLineOrElse` verVariant
+
+exp (ParComp _ e qstmts) = do
+  let horVariant = brackets $ do
+        pretty e
+        for_ qstmts $ \qstmt -> do
+          write " | "
+          commas $ map pretty qstmt
+      verVariant = do
+        depend (write "[ ") $ pretty e
+        newline
+        for_ qstmts $ \qstmt -> do
           depend (write "| ") $ prefixedLined ", " $ map pretty qstmt
           newline
         write "]"
   horVariant `ifFitsOnOneLineOrElse` verVariant
+
 exp (TypeApp _ _) = error "FIXME: No implementation for TypeApp"
 exp (ExprHole {}) = write "_"
 exp (NegApp _ e) =
@@ -679,8 +693,6 @@ exp x@ParArray{} = pretty' x
 exp x@ParArrayFromTo{} = pretty' x
 exp x@ParArrayFromThenTo{} = pretty' x
 exp x@ParArrayComp{} = pretty' x
-exp ParComp{} =
-  error "FIXME: No implementation for ParComp."
 exp (OverloadedLabel _ label) = string ('#' : label)
 
 instance Pretty IPName where
@@ -1370,7 +1382,7 @@ match (Match _ name pats rhs' mbinds) =
                 space)
             (spaced (map pretty pats))
      withCaseContext False (pretty rhs')
-     Data.Foldable.forM_ mbinds bindingGroup
+     for_ mbinds bindingGroup
 match (InfixMatch _ pat1 name pats rhs' mbinds) =
   do depend (do pretty pat1
                 space
@@ -1381,7 +1393,7 @@ match (InfixMatch _ pat1 name pats rhs' mbinds) =
             (do space
                 spaced (map pretty pats))
      withCaseContext False (pretty rhs')
-     Data.Foldable.forM_ mbinds bindingGroup
+     for_ mbinds bindingGroup
 
 -- | Format contexts with spaces and commas between class constraints.
 context :: Context NodeInfo -> Printer ()
@@ -1521,7 +1533,7 @@ decl' (PatBind _ pat rhs' mbinds) =
   withCaseContext False $
     do pretty pat
        pretty rhs'
-       Data.Foldable.forM_ mbinds bindingGroup
+       for_ mbinds bindingGroup
 
 -- | Handle records specially for a prettier display (see guide).
 decl' (DataDecl _ dataornew ctx dhead condecls@[_] mderivs)
