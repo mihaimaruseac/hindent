@@ -1376,7 +1376,10 @@ context :: Context NodeInfo -> Printer ()
 context ctx =
   case ctx of
     CxSingle _ a -> pretty a
-    CxTuple _ as -> parens (prefixedLined "," (map pretty as))
+    CxTuple _ as -> do
+      depend (write "( ") $ prefixedLined ", " (map pretty as)
+      newline
+      write ")"
     CxEmpty _ -> parens (return ())
 
 unboxParens :: Printer a -> Printer a
