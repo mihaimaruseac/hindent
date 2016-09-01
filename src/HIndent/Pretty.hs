@@ -110,7 +110,7 @@ spaced = inter space
 
 -- | Print all the printers separated by commas.
 commas :: [Printer ()] -> Printer ()
-commas = inter (do comma; space)
+commas = inter (write ", ")
 
 -- | Print all the printers separated by sep.
 inter :: Printer () -> [Printer ()] -> Printer ()
@@ -527,18 +527,21 @@ exp (Let _ binds e) =
              newline
              indented (-4) (depend (write "in ")
                                    (pretty e)))
-exp (ListComp _ e qstmt) =
-  brackets (do space
-               pretty e
-               unless (null qstmt)
-                      (do newline
-                          indented (-1)
-                                   (write "|")
-                          prefixedLined ","
-                                        (map (\x -> do space
-                                                       pretty x
-                                                       space)
-                                             qstmt)))
+exp (ListComp _ e qstmt) = do
+  let horVariant = brackets $ do
+        pretty e
+        unless (null qstmt) $ do
+          write " | "
+          commas $ map pretty qstmt
+      verVariant = do
+        write "[ "
+        pretty e
+        unless (null qstmt) $ do
+          newline
+          depend (write "| ") $ prefixedLined ", " $ map pretty qstmt
+          newline
+        write "]"
+  horVariant `ifFitsOnOneLineOrElse` verVariant
 exp (TypeApp _ _) = error "FIXME: No implementation for TypeApp"
 exp (ExprHole {}) = write "_"
 exp (NegApp _ e) =
@@ -1612,6 +1615,20 @@ fitsOnOneLine p =
      return (if ok
                 then Just st' { psHardLimit = psHardLimit st }
                 else Nothing)
+
+-- | If first printer fits, use it, else use the second one.
+ifFitsOnOneLineOrElse :: Printer a -> Printer a -> Printer a
+ifFitsOnOneLineOrElse a b = do
+  stOrig <- get
+  put stOrig{psHardLimit = True}
+  res <- fmap Just a <|> return Nothing
+  case res of
+    Just r -> do
+      modify $ \st -> st{psHardLimit = psHardLimit stOrig}
+      return r
+    Nothing -> do
+      put stOrig
+      b
 
 bindingGroup :: Binds NodeInfo -> Printer ()
 bindingGroup binds =
