@@ -80,12 +80,31 @@ f = \ !a -> undefined
 -- \!a yields parse error on input ‘\!’
 ```
 
-List comprehensions
+List comprehensions, short
+
+``` haskell
+map f xs = [f x | x <- xs]
+```
+
+List comprehensions, long
 
 ``` haskell
 defaultExtensions =
   [ e
-  | e@EnableExtension {} <- knownExtensions ] \\
+  | EnableExtension {extensionField1 = extensionField1} <-
+      knownExtensions knownExtensions
+  , let a = b
+    -- comment
+  , let c = d
+    -- comment
+  ]
+```
+
+List comprehensions with operators
+
+```haskell
+defaultExtensions =
+  [e | e@EnableExtension {} <- knownExtensions] \\
   map EnableExtension badExtensions
 ```
 
