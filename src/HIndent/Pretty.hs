@@ -570,19 +570,16 @@ exp (ExprHole {}) = write "_"
 exp (NegApp _ e) =
   depend (write "-")
          (pretty e)
-exp (Lambda _ ps e) =
-  depend
-    (write "\\")
-    (do spaced
-          (map
-             (\(i,x) -> do
-                case (i, x) of
-                  (0,PIrrPat {}) -> space
-                  (0,PBangPat {}) -> space
-                  _ -> return ()
-                pretty x)
-             (zip [0 :: Int ..] ps))
-        swing (write " ->") (pretty e))
+exp (Lambda _ ps e) = do
+  write "\\"
+  spaced [ do case (i, x) of
+                (0, PIrrPat {}) -> space
+                (0, PBangPat {}) -> space
+                _ -> return ()
+              pretty x
+         | (i, x) <- zip [0 :: Int ..] ps
+         ]
+  swing (write " ->") $ pretty e
 exp (Paren _ e) = parens (pretty e)
 exp (Case _ e alts) =
   do depend (write "case ")
@@ -1669,30 +1666,34 @@ infixApp :: Exp NodeInfo
          -> Maybe Int64
          -> Printer ()
 infixApp e a op b indent =
-  do msg <-
-          fitsOnOneLine
-            (spaced (map (\link ->
-                            case link of
-                              OpChainExp e' -> pretty e'
-                              OpChainLink qop -> pretty qop)
-                         (flattenOpChain e)))
-     case msg of
-       Nothing -> do prettyWithIndent a
-                     space
-                     pretty op
-                     newline
-                     case indent of
-                       Nothing -> prettyWithIndent b
-                       Just col ->
-                         do indentSpaces <- getIndentSpaces
-                            column (col + indentSpaces)
-                                   (prettyWithIndent b)
-       Just st -> put st
-  where prettyWithIndent e' =
-          case e' of
-            (InfixApp _ a' op' b') ->
-              infixApp e' a' op' b' indent
-            _ -> pretty e'
+  hor `ifFitsOnOneLineOrElse` ver
+  where
+    hor =
+      spaced
+        [ case link of
+          OpChainExp e' -> pretty e'
+          OpChainLink qop -> pretty qop
+        | link <- flattenOpChain e
+        ]
+    ver = do
+      prettyWithIndent a
+      space
+      pretty op
+      case b of
+        Lambda{} -> space >> pretty b
+        LCase{} -> space >> pretty b
+        Do _ stmts -> swing (write " do") $ lined (map pretty stmts)
+        _ -> do
+          newline
+          case indent of
+            Nothing -> prettyWithIndent b
+            Just col -> do
+              indentSpaces <- getIndentSpaces
+              column (col + indentSpaces) (prettyWithIndent b)
+    prettyWithIndent e' =
+      case e' of
+        InfixApp _ a' op' b' -> infixApp e' a' op' b' indent
+        _ -> pretty e'
 
 -- | A link in a chain of operator applications.
 data OpChainLink l
