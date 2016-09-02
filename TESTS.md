@@ -798,3 +798,19 @@ exp' (App _ op a) = do
     flatten (App _ f' a') b = flatten f' (a' : b)
     flatten f' as = (f', as)
 ```
+
+# Content-dependent exclusions
+
+Break `when` and `unless` expressions after condition if possible.
+
+```haskell
+f = do
+  when (some complex condition) $
+    some long $ long $ long $ long $ long $ complex action
+```
+
+```haskell pending
+f = do
+  unless (some complex condition) .
+    some long . long . long . long . long $ complex action
+```
