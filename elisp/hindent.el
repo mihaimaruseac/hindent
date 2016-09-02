@@ -36,26 +36,31 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Customization properties
 
+(defgroup hindent nil
+  "Integration with the \"hindent\" reformatting program."
+  :prefix "hindent-"
+  :group 'haskell)
+
 (defcustom hindent-style
   nil
   "The style to use for formatting.
 
 This customization is deprecated and ignored."
-  :group 'haskell
+  :group 'hindent
   :type 'string
   :safe #'stringp)
 
 (defcustom hindent-process-path
   "hindent"
   "Location where the hindent executable is located."
-  :group 'haskell
+  :group 'hindent
   :type 'string
   :safe #'stringp)
 
 (defcustom hindent-line-length
   80
   "Optionally override the line length."
-  :group 'haskell
+  :group 'hindent
   :type '(choice (const :tag "Default: 80" 80)
                  (integer :tag "Override" 120))
   :safe (lambda (val) (or (integerp val) (not val))))
@@ -63,7 +68,7 @@ This customization is deprecated and ignored."
 (defcustom hindent-indent-size
   2
   "Optionally override the indent size."
-  :group 'haskell
+  :group 'hindent
   :type '(choice (const :tag "Default: 2" 2)
                  (integer :tag "Override" 4))
   :safe (lambda (val) (or (integerp val) (not val))))
@@ -71,7 +76,8 @@ This customization is deprecated and ignored."
 (defcustom hindent-reformat-buffer-on-save nil
   "Set to t to run `hindent-reformat-buffer' when a buffer in
 `hindent-mode' is saved."
-  :group 'haskell
+  :group 'hindent
+  :type 'boolean
   :safe #'booleanp)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -94,7 +100,7 @@ Provide the following keybindings:
   :init-value nil
   :keymap hindent-mode-map
   :lighter " HI"
-  :group 'haskell
+  :group 'hindent
   :require 'hindent
   (if hindent-mode
       (add-hook 'before-save-hook 'hindent--before-save nil t)
