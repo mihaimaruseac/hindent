@@ -139,7 +139,7 @@ declaration."
                  (list (if current-prefix-arg 'full))))
   (if (hindent-in-comment)
       (fill-paragraph justify t)
-    (hindent/reformat-decl)))
+    (hindent-reformat-decl)))
 
 ;;;###autoload
 (defun hindent-reformat-region (beg end &optional drop-newline)
@@ -165,9 +165,8 @@ declaration."
         (insert new-string)))))
 
 ;;;###autoload
-(defun hindent/reformat-decl ()
-  "See `hindent-reformat-decl'."
-  (hindent-reformat-decl))
+(define-obsolete-function-alias 'hindent/reformat-decl 'hindent-reformat-decl)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Internal library
