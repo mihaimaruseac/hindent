@@ -1593,17 +1593,20 @@ recDecl r = prettyInternal r
 
 recUpdateExpr :: Printer () -> [FieldUpdate NodeInfo] -> Printer ()
 recUpdateExpr expWriter updates = do
+  ifFitsOnOneLineOrElse hor $ do
     expWriter
     newline
-    mapM_
-      (\(i,x) -> do
-         if i == 0
-           then write "{ "
-           else write ", "
-         pretty x
-         newline)
-      (zip [0::Int ..] updates)
-    write "}"
+    updatesHor `ifFitsOnOneLineOrElse` updatesVer
+  where
+    hor = do
+      expWriter
+      space
+      updatesHor
+    updatesHor = braces $ commas $ map pretty updates
+    updatesVer = do
+      depend (write "{ ") $ prefixedLined ", " $ map pretty updates
+      newline
+      write "}"
 
 --------------------------------------------------------------------------------
 -- Predicates
