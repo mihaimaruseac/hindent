@@ -185,6 +185,29 @@ x =
   Just thisissolong <*> Just stilllonger <*> evenlonger
 ```
 
+Operator with `do`
+
+```haskell
+for xs $ do
+  left x
+  right x
+```
+
+Operator with lambda
+
+```haskell
+for xs $ \x -> do
+  left x
+  right x
+```
+
+Operator with lambda-case
+
+```haskell
+for xs $ \case
+  Left x -> x
+```
+
 # Type signatures
 
 Long arguments list
@@ -429,17 +452,15 @@ Hanging lambdas
 ``` haskell
 bar :: IO ()
 bar =
-  forM_ [1, 2, 3] $
-  \n -> do
+  forM_ [1, 2, 3] $ \n -> do
     putStrLn "Here comes a number!"
     print n
 
 foo :: IO ()
 foo =
-  alloca 10 $
-  \a ->
-     alloca 20 $
-     \b -> cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
+  alloca 10 $ \a ->
+    alloca 20 $ \b ->
+      cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
 ```
 
 # Comments
@@ -747,36 +768,36 @@ A complex, slow-to-print decl
 quasiQuotes =
   [ ( ''[]
     , \(typeVariable:_) _automaticPrinter ->
-         (let presentVar = varE (presentVarName typeVariable)
-          in lamE
-               [varP (presentVarName typeVariable)]
-               [|(let typeString = "[" ++ fst $(presentVar) ++ "]"
-                  in ( typeString
-                     , \xs ->
-                          case fst $(presentVar) of
-                            "GHC.Types.Char" ->
-                              ChoicePresentation
-                                "String"
-                                [ ( "String"
-                                  , StringPresentation
-                                      "String"
-                                      (concatMap
-                                         getCh
-                                         (map (snd $(presentVar)) xs)))
-                                , ( "List of characters"
-                                  , ListPresentation
-                                      typeString
-                                      (map (snd $(presentVar)) xs))
-                                ]
-                              where getCh (CharPresentation "GHC.Types.Char" ch) =
-                                      ch
-                                    getCh (ChoicePresentation _ ((_, CharPresentation _ ch):_)) =
-                                      ch
-                                    getCh _ = ""
-                            _ ->
-                              ListPresentation
-                                typeString
-                                (map (snd $(presentVar)) xs)))|]))
+        (let presentVar = varE (presentVarName typeVariable)
+         in lamE
+              [varP (presentVarName typeVariable)]
+              [|(let typeString = "[" ++ fst $(presentVar) ++ "]"
+                 in ( typeString
+                    , \xs ->
+                        case fst $(presentVar) of
+                          "GHC.Types.Char" ->
+                            ChoicePresentation
+                              "String"
+                              [ ( "String"
+                                , StringPresentation
+                                    "String"
+                                    (concatMap
+                                       getCh
+                                       (map (snd $(presentVar)) xs)))
+                              , ( "List of characters"
+                                , ListPresentation
+                                    typeString
+                                    (map (snd $(presentVar)) xs))
+                              ]
+                            where getCh (CharPresentation "GHC.Types.Char" ch) =
+                                    ch
+                                  getCh (ChoicePresentation _ ((_, CharPresentation _ ch):_)) =
+                                    ch
+                                  getCh _ = ""
+                          _ ->
+                            ListPresentation
+                              typeString
+                              (map (snd $(presentVar)) xs)))|]))
   ]
 ```
 
