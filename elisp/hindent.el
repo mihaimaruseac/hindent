@@ -212,7 +212,7 @@ This is the place where hindent is actually called."
                                 (when (and drop-newline (not last-decl))
                                   (goto-char (point-max))
                                   (when (looking-back "\n")
-                                    (delete-backward-char 1)))
+                                    (delete-char -1)))
                                 (buffer-string))))
                 (if (not (string= new-str orig-str))
                     (let ((line (line-number-at-pos))
