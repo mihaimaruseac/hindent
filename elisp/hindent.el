@@ -36,26 +36,31 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Customization properties
 
+(defgroup hindent nil
+  "Integration with the \"hindent\" reformatting program."
+  :prefix "hindent-"
+  :group 'haskell)
+
 (defcustom hindent-style
   nil
   "The style to use for formatting.
 
 This customization is deprecated and ignored."
-  :group 'haskell
+  :group 'hindent
   :type 'string
   :safe #'stringp)
 
 (defcustom hindent-process-path
   "hindent"
   "Location where the hindent executable is located."
-  :group 'haskell
+  :group 'hindent
   :type 'string
   :safe #'stringp)
 
 (defcustom hindent-line-length
   80
   "Optionally override the line length."
-  :group 'haskell
+  :group 'hindent
   :type '(choice (const :tag "Default: 80" 80)
                  (integer :tag "Override" 120))
   :safe (lambda (val) (or (integerp val) (not val))))
@@ -63,7 +68,7 @@ This customization is deprecated and ignored."
 (defcustom hindent-indent-size
   2
   "Optionally override the indent size."
-  :group 'haskell
+  :group 'hindent
   :type '(choice (const :tag "Default: 2" 2)
                  (integer :tag "Override" 4))
   :safe (lambda (val) (or (integerp val) (not val))))
@@ -71,7 +76,8 @@ This customization is deprecated and ignored."
 (defcustom hindent-reformat-buffer-on-save nil
   "Set to t to run `hindent-reformat-buffer' when a buffer in
 `hindent-mode' is saved."
-  :group 'haskell
+  :group 'hindent
+  :type 'boolean
   :safe #'booleanp)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -94,7 +100,7 @@ Provide the following keybindings:
   :init-value nil
   :keymap hindent-mode-map
   :lighter " HI"
-  :group 'haskell
+  :group 'hindent
   :require 'hindent
   (if hindent-mode
       (add-hook 'before-save-hook 'hindent--before-save nil t)
@@ -205,7 +211,7 @@ This is the place where hindent is actually called."
                                 (when (and drop-newline (not last-decl))
                                   (goto-char (point-max))
                                   (when (looking-back "\n")
-                                    (delete-backward-char 1)))
+                                    (delete-char -1)))
                                 (buffer-string))))
                 (if (not (string= new-str orig-str))
                     (let ((line (line-number-at-pos))
@@ -289,18 +295,12 @@ expected to work."
                   (point))
                (/= (line-beginning-position) (point)))
       (forward-char -1))
-    (and (or (eq 'font-lock-comment-delimiter-face
-                 (get-text-property (point) 'face))
-             (eq 'font-lock-doc-face
-                 (get-text-property (point) 'face))
-             (eq 'font-lock-comment-face
-                 (get-text-property (point) 'face))
-             (save-excursion (goto-char (line-beginning-position))
-                             (looking-at "^\-\- ")))
-         ;; Pragmas {-# SPECIALIZE .. #-} etc are not to be treated as
-         ;; comments, even though they are highlighted as such
-         (not (save-excursion (goto-char (line-beginning-position))
-                              (looking-at "{-# "))))))
+    (and
+     (elt (syntax-ppss) 4)
+     ;; Pragmas {-# SPECIALIZE .. #-} etc are not to be treated as
+     ;; comments, even though they are highlighted as such
+     (not (save-excursion (goto-char (line-beginning-position))
+                          (looking-at "{-# "))))))
 
 (defun hindent-extra-arguments ()
   "Pass in extra arguments, such as extensions and optionally
