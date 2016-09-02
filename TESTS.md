@@ -166,6 +166,25 @@ longLongFunction :: ReaderT r (WriterT w (StateT s m)) a
                  -> StateT s (WriterT w (ReaderT r m)) a
 ```
 
+Long argument list should line break
+
+```haskell pending
+longLongFunction ::
+     ReaderT r (WriterT w (StateT s m)) a
+  -> StateT s (WriterT w (ReaderT r m)) a
+```
+
+Class constraints should leave :: on same line
+
+``` haskell pending
+-- see https://github.com/chrisdone/hindent/pull/266#issuecomment-244182805
+fun ::
+  (Class a, Class b)
+  => foo bar mu zot
+  -> foo bar mu zot
+  -> c
+```
+
 Class constraints
 
 ``` haskell

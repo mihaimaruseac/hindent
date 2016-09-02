@@ -11,6 +11,7 @@ import           Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Builder as L
 import qualified Data.ByteString.Lazy.Char8 as L8
+import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Lazy.UTF8 as LUTF8
 import qualified Data.ByteString.UTF8 as UTF8
 import           Data.Function
@@ -32,11 +33,11 @@ toSpec :: [Markdone] -> Spec
 toSpec = go
   where
     go (Section name children:next) = do
-        describe (UTF8.toString name) (go children)
-        go next
+      describe (UTF8.toString name) (go children)
+      go next
     go (PlainText desc:CodeFence lang code:next) =
-      if lang == "haskell"
-        then do
+      case lang of
+        "haskell" -> do
           it
             (UTF8.toString desc)
             (shouldBeReadable
@@ -44,12 +45,17 @@ toSpec = go
                   (("-- " <>) . L8.pack)
                   L.toLazyByteString
                   (reformat
-                     HIndent.Types.defaultConfig {configTrailingNewline = False}
+                     HIndent.Types.defaultConfig
+                     { configTrailingNewline = False
+                     }
                      (Just defaultExtensions)
                      code))
                (L.fromStrict code))
           go next
-        else go next
+        "haskell pending" -> do
+          it (UTF8.toString desc) pending
+          go next
+        _ -> go next
     go (PlainText {}:next) = go next
     go (CodeFence {}:next) = go next
     go [] = return ()
