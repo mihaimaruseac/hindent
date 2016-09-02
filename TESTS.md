@@ -167,13 +167,22 @@ strToMonth month =
     _ -> error $ "Unknown month " ++ month
 ```
 
-Operators
+Operators, bad
 
 ``` haskell
 x =
   Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
   Just thisissolong <*>
-  Just stilllonger
+  Just stilllonger <*>
+  evenlonger
+```
+
+Operators, good
+
+```haskell pending
+x =
+  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
+  Just thisissolong <*> Just stilllonger <*> evenlonger
 ```
 
 # Type signatures
