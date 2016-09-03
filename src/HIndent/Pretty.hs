@@ -1469,7 +1469,11 @@ typ x = case x of
               Just n ->
                 do write "_"
                    pretty n
-          _ -> error ("FIXME: No implementation for " ++ show x)
+          TyQuasiQuote _ n s ->
+            brackets (depend (do string n
+                                 write "|")
+                             (do string s
+                                 write "|"))
 
 -- | Specially format records. Indent where clauses only 2 spaces.
 decl' :: Decl NodeInfo -> Printer ()
