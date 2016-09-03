@@ -11,7 +11,6 @@ import           Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Builder as L
 import qualified Data.ByteString.Lazy.Char8 as L8
-import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Lazy.UTF8 as LUTF8
 import qualified Data.ByteString.UTF8 as UTF8
 import           Data.Function
@@ -68,7 +67,7 @@ shouldBeReadable x y = shouldBe (Readable x (Just (diff y x))) (Readable y Nothi
 -- | Prints a string without quoting and escaping.
 data Readable = Readable
   { readableString :: ByteString
-  , readableDiff :: (Maybe String)
+  , readableDiff :: Maybe String
   }
 instance Eq Readable where
   (==) = on (==) readableString
@@ -82,4 +81,4 @@ instance Show Readable where
 
 -- | A diff display.
 diff :: ByteString -> ByteString -> String
-diff x y = ppDiff (on (getGroupedDiff) (lines . LUTF8.toString) x y)
+diff x y = ppDiff (on getGroupedDiff (lines . LUTF8.toString) x y)
