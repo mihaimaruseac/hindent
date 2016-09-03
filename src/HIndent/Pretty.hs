@@ -38,47 +38,28 @@ class (Annotated ast,Typeable ast) => Pretty ast where
 pretty :: (Pretty ast,Show (ast NodeInfo))
        => ast NodeInfo -> Printer ()
 pretty a = do
-  mapM_
-    (\c' ->
-       case c' of
-         CommentBeforeLine c -> do
-           case c of
-             EndOfLine s -> write ("--" ++ s)
-             MultiLine s -> write ("{-" ++ s ++ "-}")
-           newline
-         _ -> return ())
-    comments
+  for_ comments $ \c' ->
+    case c' of
+      CommentBeforeLine c -> writeCommentCode c >> newline
+      _ -> return ()
   prettyInternal a
-  mapM_
-    (\(i, c') ->
-       case c' of
-         CommentSameLine c -> do
-           col <- gets psColumn
-           unless (col == 0) space
-           writeComment c
-         CommentAfterLine c -> do
-           when (i == 0) newline
-           writeComment c
-         _ -> return ())
-    (zip [0 :: Int ..] comments)
+  for_ (zip [0 :: Int ..] comments) $ \(i, c') ->
+    case c' of
+      CommentSameLine c -> do
+        col <- gets psColumn
+        unless (col == 0) space
+        writeComment c
+      CommentAfterLine c -> do
+        when (i == 0) newline
+        writeComment c
+      _ -> return ()
   where
     comments = nodeInfoComments (ann a)
-    writeComment =
-      \case
-        EndOfLine cs -> do
-          write ("--" ++ cs)
-          modify
-            (\s ->
-                s
-                { psEolComment = True
-                })
-        MultiLine cs -> do
-          write ("{-" ++ cs ++ "-}")
-          modify
-            (\s ->
-                s
-                { psEolComment = True
-                })
+    writeComment c = do
+      writeCommentCode c
+      modify (\s -> s {psEolComment = True})
+    writeCommentCode (EndOfLine cs) = write ("--" ++ cs)
+    writeCommentCode (MultiLine cs) = write ("{-" ++ cs ++ "-}")
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
@@ -88,16 +69,6 @@ pretty' = write . P.prettyPrint . fmap nodeInfoSpan
 
 --------------------------------------------------------------------------------
 -- * Combinators
-
--- | Set the (newline-) indent level to the given column for the given
--- printer.
-column :: Int64 -> Printer a -> Printer a
-column i p = do
-  level <- gets psIndentLevel
-  modify (\s -> s {psIndentLevel = i})
-  m <- p
-  modify (\s -> s {psIndentLevel = level})
-  return m
 
 -- | Increase indentation level by n spaces for the given printer.
 indented :: Int64 -> Printer a -> Printer a
@@ -149,6 +120,16 @@ prefixedLined pref ps' =
                             do newline
                                depend (write pref) p')
                          ps)
+
+-- | Set the (newline-) indent level to the given column for the given
+-- printer.
+column :: Int64 -> Printer a -> Printer a
+column i p = do
+  level <- gets psIndentLevel
+  modify (\s -> s {psIndentLevel = i})
+  m <- p
+  modify (\s -> s {psIndentLevel = level})
+  return m
 
 -- | Output a newline.
 newline :: Printer ()
