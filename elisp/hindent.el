@@ -45,10 +45,13 @@
   nil
   "The style to use for formatting.
 
-This customization is deprecated and ignored."
+For hindent versions lower than 5, you must set this to a non-nil string."
   :group 'hindent
   :type 'string
   :safe #'stringp)
+
+(make-obsolete-variable 'hindent-style nil "hindent 5")
+
 
 (defcustom hindent-process-path
   "hindent"
@@ -305,9 +308,11 @@ expected to work."
 (defun hindent-extra-arguments ()
   "Pass in extra arguments, such as extensions and optionally
 other things later."
-  (if (boundp 'haskell-language-extensions)
-      haskell-language-extensions
-    '()))
+  (append
+   (when (boundp 'haskell-language-extensions)
+     haskell-language-extensions)
+   (when hindent-style
+     (list "--style" hindent-style))))
 
 (provide 'hindent)
 
