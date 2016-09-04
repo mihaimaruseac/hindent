@@ -1,4 +1,5 @@
 5.1.1:
+
     * Fix hanging on large constraints
     * Render multi-line comments
     * Rename --tab-size to --indent-size
