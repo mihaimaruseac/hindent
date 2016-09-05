@@ -250,6 +250,12 @@ Tuples
 fun :: (a, b, c) -> (a, b)
 ```
 
+Quasiquotes in types
+
+```haskell
+fun :: [a|bc|]
+```
+
 # Function declarations
 
 Where clause
