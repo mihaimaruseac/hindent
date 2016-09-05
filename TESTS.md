@@ -755,6 +755,18 @@ f :: Int -> Int
 f n = n
 ```
 
+ivan-timokhin breaks code with type operators #277
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/277
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+
+type m ~> n = ()
+
+class (a :< b) c
+```
+
 # Behaviour checks
 
 Unicode

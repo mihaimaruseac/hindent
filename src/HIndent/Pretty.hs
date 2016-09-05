@@ -1039,9 +1039,12 @@ instance Pretty DeclHead where
       DHInfix _ var name ->
         do pretty var
            space
-           write "`"
-           pretty name
-           write "`"
+           case name of
+              Ident _ _ -> do
+                write "`"
+                pretty name
+                write "`"
+              Symbol _ s -> write s
       DHApp _ dhead var ->
         depend (pretty dhead)
                (do space
