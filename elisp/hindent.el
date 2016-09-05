@@ -233,19 +233,18 @@ This is the place where hindent is actually called."
                       (message "Formatted."))
                   (message "Already formatted.")))))))))))
 
-(defun hindent-decl-points (&optional use-line-comments)
   "Get the start and end position of the current
 declaration. This assumes that declarations start at column zero
 and that the rest is always indented by one space afterwards, so
 Template Haskell uses with it all being at column zero are not
 expected to work."
+(defun hindent-decl-points ()
   (cond
    ;; If we're in a block comment spanning multiple lines then let's
    ;; see if it starts at the beginning of the line (or if any comment
    ;; is at the beginning of the line, we don't care to treat it as a
    ;; proper declaration.
-   ((and (not use-line-comments)
-         (hindent-in-comment)
+   ((and (hindent-in-comment)
          (save-excursion (goto-char (line-beginning-position))
                          (hindent-in-comment)))
     nil)
