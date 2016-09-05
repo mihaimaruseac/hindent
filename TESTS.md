@@ -767,6 +767,15 @@ type m ~> n = ()
 class (a :< b) c
 ```
 
+ivan-timokhin variables swapped around in constraints #278
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/278
+data Link c1 c2 a c =
+  forall b. (c1 a b, c2 b c) =>
+            Link (Proxy b)
+```
+
 # Behaviour checks
 
 Unicode

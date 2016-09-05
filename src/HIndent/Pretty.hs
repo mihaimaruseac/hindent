@@ -844,7 +844,7 @@ instance Pretty Asst where
            write " ~ "
            pretty b
       ParenA _ asst -> parens (pretty asst)
-      AppA _ name tys -> spaced (pretty name : map pretty tys)
+      AppA _ name tys -> spaced (pretty name : map pretty (reverse tys))
       WildCardA _ name ->
         case name of
           Nothing -> write "_"
