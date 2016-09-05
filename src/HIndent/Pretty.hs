@@ -1421,7 +1421,8 @@ typ x = case x of
                         do write "forall "
                            spaced (map pretty ts)
                            write ". ")
-                   (withCtx ctx (pretty ty))
+                   (do indentSpaces <- getIndentSpaces
+                       withCtx ctx (indented indentSpaces (pretty ty)))
           TyFun _ a b ->
             depend (do pretty a
                        write " -> ")
