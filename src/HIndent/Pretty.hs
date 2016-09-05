@@ -1497,11 +1497,10 @@ decl' (TypeSig _ names ty') =
                           (declTy ty')
        Nothing -> do inter (write ", ")
                            (map pretty names)
+                     write " ::"
                      newline
                      indentSpaces <- getIndentSpaces
-                     indented indentSpaces
-                              (depend (write ":: ")
-                                      (declTy ty'))
+                     indented indentSpaces (declTy ty')
 
   where declTy dty =
           case dty of
@@ -1518,9 +1517,8 @@ decl' (TypeSig _ names ty') =
                    Just ctx ->
                      do pretty ctx
                         newline
-                        indented (-3)
-                                 (depend (write "=> ")
-                                         (prettyTy ty))
+                        depend (write "=> ")
+                               (prettyTy ty)
             _ -> prettyTy dty
         collapseFaps (TyFun _ arg result) = arg : collapseFaps result
         collapseFaps e = [e]

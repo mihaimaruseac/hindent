@@ -239,8 +239,8 @@ fun ::
 Class constraints
 
 ``` haskell
-fun
-  :: (Class a, Class b)
+fun ::
+  (Class a, Class b)
   => a -> b -> c
 ```
 
@@ -638,18 +638,18 @@ x = do
 meditans hindent freezes when trying to format this code #222
 
 ``` haskell
-c
-  :: forall new.
-     ( Settable "pitch" Pitch (Map.AsMap (new Map.:\ "pitch")) new
-     , Default (Book' (Map.AsMap (new Map.:\ "pitch")))
-     )
+c ::
+  forall new.
+  ( Settable "pitch" Pitch (Map.AsMap (new Map.:\ "pitch")) new
+  , Default (Book' (Map.AsMap (new Map.:\ "pitch")))
+  )
   => Book' new
 c = set #pitch C (def :: Book' (Map.AsMap (new Map.:\ "pitch")))
 
-foo
-  :: ( Foooooooooooooooooooooooooooooooooooooooooo
-     , Foooooooooooooooooooooooooooooooooooooooooo
-     )
+foo ::
+  ( Foooooooooooooooooooooooooooooooooooooooooo
+  , Foooooooooooooooooooooooooooooooooooooooooo
+  )
   => A
 ```
 
