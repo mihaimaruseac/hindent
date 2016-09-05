@@ -260,7 +260,7 @@ Default signatures
 
 ```haskell
 -- https://github.com/chrisdone/hindent/issues/283
-class Foo a  where
+class Foo a where
   bar :: a -> a -> a
   default bar :: Monoid a =>
     a -> a -> a
