@@ -748,8 +748,7 @@ decl (FunBind _ matches) =
 decl (ClassDecl _ ctx dhead fundeps decls) =
   do depend (write "class ")
             (withCtx ctx
-                     (depend (do pretty dhead
-                                 space)
+                     (depend (do pretty dhead)
                              (depend (unless (null fundeps)
                                              (do write " | "
                                                  commas (map pretty fundeps)))
@@ -845,7 +844,7 @@ instance Pretty Asst where
            write " ~ "
            pretty b
       ParenA _ asst -> parens (pretty asst)
-      AppA _ name tys -> spaced (pretty name : map pretty tys)
+      AppA _ name tys -> spaced (pretty name : map pretty (reverse tys))
       WildCardA _ name ->
         case name of
           Nothing -> write "_"
@@ -1039,9 +1038,12 @@ instance Pretty DeclHead where
       DHInfix _ var name ->
         do pretty var
            space
-           write "`"
-           pretty name
-           write "`"
+           case name of
+              Ident _ _ -> do
+                write "`"
+                pretty name
+                write "`"
+              Symbol _ s -> write s
       DHApp _ dhead var ->
         depend (pretty dhead)
                (do space

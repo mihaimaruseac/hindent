@@ -260,7 +260,7 @@ Default signatures
 
 ```haskell
 -- https://github.com/chrisdone/hindent/issues/283
-class Foo a  where
+class Foo a where
   bar :: a -> a -> a
   default bar :: Monoid a =>
     a -> a -> a
@@ -753,6 +753,27 @@ sgraf812 top-level pragmas should not add an additional newline #255
 {-# INLINE f #-}
 f :: Int -> Int
 f n = n
+```
+
+ivan-timokhin breaks code with type operators #277
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/277
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+
+type m ~> n = ()
+
+class (a :< b) c
+```
+
+ivan-timokhin variables swapped around in constraints #278
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/278
+data Link c1 c2 a c =
+  forall b. (c1 a b, c2 b c) =>
+            Link (Proxy b)
 ```
 
 # Behaviour checks
