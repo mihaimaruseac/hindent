@@ -748,8 +748,7 @@ decl (FunBind _ matches) =
 decl (ClassDecl _ ctx dhead fundeps decls) =
   do depend (write "class ")
             (withCtx ctx
-                     (depend (do pretty dhead
-                                 space)
+                     (depend (do pretty dhead)
                              (depend (unless (null fundeps)
                                              (do write " | "
                                                  commas (map pretty fundeps)))
