@@ -230,6 +230,24 @@ list =
   ]
 ```
 
+Type families
+
+```haskell
+type family Id a
+```
+
+Type family instances
+
+```haskell
+type instance Id Int = Int
+```
+
+Type family dependencies
+
+```haskell
+type family Id a = r | r -> a
+```
+
 # Type signatures
 
 Long arguments list

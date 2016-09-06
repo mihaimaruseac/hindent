@@ -776,9 +776,20 @@ decl (TypeDecl _ typehead typ') =
                          (pretty typ')))
 
 decl (TypeFamDecl _ declhead result injectivity) = do
-    write "type family"
-    space
-    pretty declhead
+  write "type family "
+  pretty declhead
+  case result of
+    Just r -> do
+      space
+      write "="
+      space
+      pretty r
+    Nothing -> return ()
+  case injectivity of
+    Just i -> do
+      space
+      pretty i
+    Nothing -> return ()
 decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
   do depend (do pretty dataornew
                 space)
