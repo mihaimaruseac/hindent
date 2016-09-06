@@ -862,20 +862,23 @@ instance Pretty Asst where
   prettyInternal x =
     case x of
       ClassA _ name types -> spaced (pretty name : map pretty types)
-      i@InfixA{} -> pretty' i
-      IParam{} -> error "FIXME: No implementation for IParam."
-      EqualP _ a b ->
-        do pretty a
-           write " ~ "
-           pretty b
+      i@InfixA {} -> pretty' i
+      IParam _ name ty -> do
+        pretty name
+        write " :: "
+        pretty ty
+      EqualP _ a b -> do
+        pretty a
+        write " ~ "
+        pretty b
       ParenA _ asst -> parens (pretty asst)
       AppA _ name tys -> spaced (pretty name : map pretty (reverse tys))
       WildCardA _ name ->
         case name of
           Nothing -> write "_"
-          Just n ->
-            do write "_"
-               pretty n
+          Just n -> do
+            write "_"
+            pretty n
 
 instance Pretty BangType where
   prettyInternal x =

@@ -307,6 +307,14 @@ class Foo a where
   bar = mappend
 ```
 
+Implicit parameters
+
+```haskell
+f
+  :: (?x :: Int)
+  => Int
+```
+
 # Function declarations
 
 Where clause
