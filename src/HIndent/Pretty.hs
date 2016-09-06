@@ -568,6 +568,7 @@ exp (ParComp _ e qstmts) = do
 exp (TypeApp _ t) = do 
   write "@"
   pretty t
+  
 exp (ExprHole {}) = write "_"
 exp (NegApp _ e) =
   depend (write "-")
