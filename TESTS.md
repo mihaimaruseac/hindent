@@ -248,6 +248,14 @@ Type family dependencies
 type family Id a = r | r -> a
 ```
 
+Binding implicit parameters
+
+```haskell
+f =
+  let ?x = 42
+  in f
+```
+
 # Template Haskell
 
 Expression brackets

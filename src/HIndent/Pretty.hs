@@ -1166,8 +1166,12 @@ instance Pretty Bracket where
 instance Pretty IPBind where
   prettyInternal x =
     case x of
-      IPBind _ _ _ ->
-        error "FIXME: No implementation for IPBind."
+      IPBind _ name exp -> do
+        pretty name
+        space
+        write "="
+        space
+        pretty exp
 
 --------------------------------------------------------------------------------
 -- * Fallback printers
