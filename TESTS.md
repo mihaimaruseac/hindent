@@ -208,6 +208,12 @@ for xs $ \case
   Left x -> x
 ```
 
+Type application
+
+```haskell
+fun @Int 12
+```
+
 # Type signatures
 
 Long arguments list
