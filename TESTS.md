@@ -214,6 +214,68 @@ Type application
 fun @Int 12
 ```
 
+Transform list comprehensions
+
+```haskell
+list =
+  [ (x, y, map the v)
+  | x <- [1 .. 10]
+  , y <- [1 .. 10]
+  , let v = x + y
+  , then group by v using groupWith
+  , then take 10
+  , then group using permutations
+  , t <- concat v
+  , then takeWhile by t < 3
+  ]
+```
+
+Type families
+
+```haskell
+type family Id a
+```
+
+Type family instances
+
+```haskell
+type instance Id Int = Int
+```
+
+Type family dependencies
+
+```haskell
+type family Id a = r | r -> a
+```
+
+Binding implicit parameters
+
+```haskell
+f =
+  let ?x = 42
+  in f
+```
+
+# Template Haskell
+
+Expression brackets
+
+```haskell
+add1 x = [|x + 1|]
+```
+
+Pattern brackets
+
+```haskell
+mkPat = [p|(x, y)|]
+```
+
+Type brackets
+
+```haskell
+foo :: $([t|Bool|]) -> a
+```
+
 # Type signatures
 
 Long arguments list
@@ -271,6 +333,14 @@ class Foo a where
   default bar :: Monoid a =>
     a -> a -> a
   bar = mappend
+```
+
+Implicit parameters
+
+```haskell
+f
+  :: (?x :: Int)
+  => Int
 ```
 
 # Function declarations
