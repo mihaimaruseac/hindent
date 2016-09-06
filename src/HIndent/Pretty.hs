@@ -565,7 +565,9 @@ exp (ParComp _ e qstmts) = do
         write "]"
   horVariant `ifFitsOnOneLineOrElse` verVariant
 
-exp (TypeApp _ _) = error "FIXME: No implementation for TypeApp"
+exp (TypeApp _ t) = do 
+  write "@"
+  pretty t
 exp (ExprHole {}) = write "_"
 exp (NegApp _ e) =
   depend (write "-")
