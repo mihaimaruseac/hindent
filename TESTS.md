@@ -248,6 +248,26 @@ Type family dependencies
 type family Id a = r | r -> a
 ```
 
+# Template Haskell
+
+Expression brackets
+
+```haskell
+add1 x = [|x + 1|]
+```
+
+Pattern brackets
+
+```haskell
+mkPat = [p|(x, y)|]
+```
+
+Type brackets
+
+```haskell
+foo :: $([t|Bool|]) -> a
+```
+
 # Type signatures
 
 Long arguments list

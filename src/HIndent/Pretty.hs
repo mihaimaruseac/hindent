@@ -1144,14 +1144,24 @@ instance Pretty Bracket where
   prettyInternal x =
     case x of
       ExpBracket _ p ->
-        brackets (depend (write "|")
-                         (do pretty p
-                             write "|"))
-      PatBracket _ _ ->
-        error "FIXME: No implementation for PatBracket."
-      TypeBracket _ _ ->
-        error "FIXME: No implementation for TypeBracket."
-      d@(DeclBracket _ _) -> pretty' d
+        brackets
+          (depend
+             (write "|")
+             (do pretty p
+                 write "|"))
+      PatBracket _ p ->
+        brackets
+          (depend
+             (write "p|")
+             (do pretty p
+                 write "|"))
+      TypeBracket _ ty ->
+        brackets
+          (depend
+             (write "t|")
+             (do pretty ty
+                 write "|"))
+      d@(DeclBracket _ decls) -> pretty' d
 
 instance Pretty IPBind where
   prettyInternal x =
@@ -1493,7 +1503,7 @@ typ x = case x of
                write " ~ "
                pretty right
           ty@TyPromoted{} -> pretty' ty
-          TySplice{} -> error "FIXME: No implementation for TySplice."
+          TySplice _ splice -> pretty splice
           TyWildCard _ name ->
             case name of
               Nothing -> write "_"
