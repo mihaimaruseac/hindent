@@ -225,6 +225,12 @@ longLongFunction ::
   -> StateT s (WriterT w (ReaderT r m)) a
 ```
 
+```haskell
+longLonglongFunction ::
+     T "alonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongliteral" a
+  -> T "alonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongliteral" a
+```
+
 Class constraints should leave :: on same line
 
 ``` haskell pending
