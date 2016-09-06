@@ -706,16 +706,25 @@ instance Pretty QualStmt where
   prettyInternal x =
     case x of
       QualStmt _ s -> pretty s
-      ThenTrans{} ->
-        error "FIXME: No implementation for ThenTrans."
-      ThenBy{} ->
-        error "FIXME: No implementation for ThenBy."
-      GroupBy{} ->
-        error "FIXME: No implementation for GroupBy."
-      GroupUsing{} ->
-        error "FIXME: No implementation for GroupUsing."
-      GroupByUsing{} ->
-        error "FIXME: No implementation for GroupByUsing."
+      ThenTrans _ s -> do
+        write "then "
+        pretty s
+      ThenBy _ s t -> do
+        write "then "
+        pretty s
+        write " by "
+        pretty t
+      GroupBy _ s -> do
+        write "then group by "
+        pretty s
+      GroupUsing _ s -> do
+        write "then group using "
+        pretty s
+      GroupByUsing _ s t -> do
+        write "then group by "
+        pretty s
+        write " using "
+        pretty t
 
 instance Pretty Decl where
   prettyInternal = decl'
@@ -766,8 +775,10 @@ decl (TypeDecl _ typehead typ') =
                  (depend (write " = ")
                          (pretty typ')))
 
-decl TypeFamDecl{} =
-  error "FIXME: No implementation for TypeFamDecl."
+decl (TypeFamDecl _ declhead result injectivity) = do
+    write "type family"
+    space
+    pretty declhead
 decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
   do depend (do pretty dataornew
                 space)
