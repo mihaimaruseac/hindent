@@ -1071,7 +1071,7 @@ instance Pretty DeclHead where
                 write "`"
                 pretty name
                 write "`"
-              Symbol _ s -> write s
+              Symbol _ _ -> pretty name
       DHApp _ dhead var ->
         depend (pretty dhead)
                (do space
@@ -1215,7 +1215,9 @@ instance Pretty Literal where
   prettyInternal x = pretty' x
 
 instance Pretty Name where
-  prettyInternal = pretty' -- Var
+  prettyInternal x = case x of
+                          Ident _ _ -> pretty' x -- Identifiers.
+                          Symbol _ s -> string s -- Symbols
 
 instance Pretty QName where
   prettyInternal =
