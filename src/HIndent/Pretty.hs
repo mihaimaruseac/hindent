@@ -15,8 +15,7 @@ module HIndent.Pretty
 import           Control.Applicative
 import           Control.Monad.State.Strict hiding (state)
 import qualified Data.ByteString.Builder as S
-import           Data.Foldable (for_)
-import           Data.Foldable (traverse_)
+import           Data.Foldable (for_, traverse_)
 import           Data.Int
 import           Data.List
 import           Data.Maybe
@@ -565,10 +564,10 @@ exp (ParComp _ e qstmts) = do
         write "]"
   horVariant `ifFitsOnOneLineOrElse` verVariant
 
-exp (TypeApp _ t) = do 
+exp (TypeApp _ t) = do
   write "@"
   pretty t
-  
+
 exp (ExprHole {}) = write "_"
 exp (NegApp _ e) =
   depend (write "-")
@@ -1161,17 +1160,17 @@ instance Pretty Bracket where
              (write "t|")
              (do pretty ty
                  write "|"))
-      d@(DeclBracket _ decls) -> pretty' d
+      d@(DeclBracket _ _) -> pretty' d
 
 instance Pretty IPBind where
   prettyInternal x =
     case x of
-      IPBind _ name exp -> do
+      IPBind _ name expr -> do
         pretty name
         space
         write "="
         space
-        pretty exp
+        pretty expr
 
 --------------------------------------------------------------------------------
 -- * Fallback printers
