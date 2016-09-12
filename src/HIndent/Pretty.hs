@@ -670,6 +670,8 @@ exp (MultiIf _ alts) =
 exp (Lit _ lit) = prettyInternal lit
 exp (Var _ q) = case q of
                   Special _ Cons{} -> parens (pretty q)
+                  Qual _ _ (Symbol _ _) -> parens (pretty q)
+                  UnQual _ (Symbol _ _) -> parens (pretty q)
                   _ -> pretty q
 exp (IPVar _ q) = pretty q
 exp (Con _ q) = case q of
