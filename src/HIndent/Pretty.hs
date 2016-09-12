@@ -669,6 +669,8 @@ exp (MultiIf _ alts) =
 exp (Lit _ lit) = prettyInternal lit
 exp (Var _ q) = case q of
                   Special _ Cons{} -> parens (pretty q)
+                  Qual _ _ (Symbol _ _) -> parens (pretty q)
+                  UnQual _ (Symbol _ _) -> parens (pretty q)
                   _ -> pretty q
 exp (IPVar _ q) = pretty q
 exp (Con _ q) = case q of
@@ -1070,7 +1072,7 @@ instance Pretty DeclHead where
                 write "`"
                 pretty name
                 write "`"
-              Symbol _ s -> write s
+              Symbol _ _ -> pretty name
       DHApp _ dhead var ->
         depend (pretty dhead)
                (do space
@@ -1214,7 +1216,9 @@ instance Pretty Literal where
   prettyInternal x = pretty' x
 
 instance Pretty Name where
-  prettyInternal = pretty' -- Var
+  prettyInternal x = case x of
+                          Ident _ _ -> pretty' x -- Identifiers.
+                          Symbol _ s -> string s -- Symbols
 
 instance Pretty QName where
   prettyInternal =

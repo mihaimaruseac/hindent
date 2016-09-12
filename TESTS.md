@@ -852,6 +852,26 @@ data Link c1 c2 a c =
             Link (Proxy b)
 ```
 
+ttuegel qualified infix sections get mangled #273
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/273
+import qualified Data.Vector as V
+
+main :: IO ()
+main = do
+  let _ = foldr1 (V.++) [V.empty, V.empty]
+  pure ()
+
+-- more corner cases.
+xs = V.empty V.++ V.empty
+
+ys = (++) [] []
+
+cons :: V.Vector a -> V.Vector a -> V.Vector a
+cons = (V.++)
+```
+
 # Behaviour checks
 
 Unicode
