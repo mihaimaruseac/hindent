@@ -872,6 +872,13 @@ cons :: V.Vector a -> V.Vector a -> V.Vector a
 cons = (V.++)
 ```
 
+ivan-timokhin breaks operators type signatures #301
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/301
+(+) :: ()
+```
+
 # Behaviour checks
 
 Unicode
