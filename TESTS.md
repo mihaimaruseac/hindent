@@ -179,7 +179,7 @@ x =
 
 Operators, good
 
-```haskell pending
+```haskell
 x =
   Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
   Just thisissolong <*> Just stilllonger <*> evenlonger
