@@ -10,6 +10,7 @@ module Main where
 
 import           Control.Applicative
 import           Control.Exception
+import           Control.Monad
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Builder as S
 import qualified Data.ByteString.Lazy.Char8 as L8
@@ -44,11 +45,11 @@ main = do
       case mfilepath of
         Just filepath -> do
           text <- S.readFile filepath
-          tmpDir <- IO.getTemporaryDirectory
-          (fp, h) <- IO.openTempFile tmpDir "hindent.hs"
           case reformat style (Just exts) text of
             Left e -> error (filepath ++ ": " ++ e)
-            Right out -> do
+            Right out -> unless (L8.fromStrict text == S.toLazyByteString out) $ do
+              tmpDir <- IO.getTemporaryDirectory
+              (fp, h) <- IO.openTempFile tmpDir "hindent.hs"
               L8.hPutStr h (S.toLazyByteString out)
               IO.hFlush h
               IO.hClose h
