@@ -1537,7 +1537,10 @@ decl' (TypeSig _ names ty') =
   do mst <- fitsOnOneLine (declTy ty')
      case mst of
        Just{} -> depend (do inter (write ", ")
-                                  (map pretty names)
+                                  (map (\x -> case x of
+                                          Ident _ _ -> pretty x
+                                          Symbol _ _ -> parens (pretty x))
+                                       names)
                             write " :: ")
                           (declTy ty')
        Nothing -> do inter (write ", ")
