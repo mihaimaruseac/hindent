@@ -879,6 +879,23 @@ ivan-timokhin breaks operators type signatures #301
 (+) :: ()
 ```
 
+cdepillabout Long deriving clauses are not reformatted #289
+
+```haskell
+newtype Foo =
+  Foo Proxy
+  deriving ( Functor
+           , Applicative
+           , Monad
+           , Semigroup
+           , Monoid
+           , Alternative
+           , MonadPlus
+           , Foldable
+           , Traversable
+           )
+```
+
 # Behaviour checks
 
 Unicode
