@@ -52,6 +52,18 @@ import Data.Text (a, b, c)
 import Data.Text hiding (a, b, c)
 ```
 
+# Imports sorted
+
+```haskell given
+import B
+import A
+```
+
+```haskell expect
+import A
+import B
+```
+
 # Declarations
 
 Type declaration
