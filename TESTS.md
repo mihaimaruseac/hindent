@@ -52,7 +52,7 @@ import Data.Text (a, b, c)
 import Data.Text hiding (a, b, c)
 ```
 
-# Imports sorted
+Sorted
 
 ```haskell given
 import B
@@ -814,8 +814,8 @@ joe9 preserve newlines between import groups
 import Data.List
 import Data.Maybe
 
-import MyProject
 import FooBar
+import MyProject
 
 import GHC.Monad
 
@@ -838,9 +838,9 @@ import HelloWorld
 Wrapped import list shouldn't add newline
 
 ```haskell
-import TooLongList
+import ATooLongList
        (alpha, beta, gamma, delta, epsilon, zeta, eta, theta)
-import Test
+import B
 ```
 
 radupopescu `deriving` keyword not aligned with pipe symbol for type declarations

@@ -1134,22 +1134,40 @@ instance Pretty Module where
       XmlPage{} -> error "FIXME: No implementation for XmlPage."
       XmlHybrid{} -> error "FIXME: No implementation for XmlHybrid."
 
--- | Format imports, preserving empty newlines between them.
+-- | Format imports, preserving empty newlines between groups.
 formatImports :: [ImportDecl NodeInfo] -> Printer ()
-formatImports imps =
-    mapM_ formatImport (zip [1 ..] (zip (Nothing : map Just imps) imps))
+formatImports =
+  sequence_ .
+  intersperse (newline >> newline) .
+  map formatImportGroup . groupAdjacentBy atNextLine
   where
-    formatImport (i, (mprev, current)) = do
-        when (difference > 1) newline
-        pretty current
-        unless (i == length imps) newline
+    atNextLine import1 import2 =
+      let (end1, _) = srcSpanEnd (srcInfoSpan (nodeInfoSpan (ann import1)))
+          (start2, _) = srcSpanStart (srcInfoSpan (nodeInfoSpan (ann import2)))
+      in start2 - end1 <= 1
+    formatImportGroup =
+      sequence_ .
+      intersperse newline . map formatImport . sortOn moduleVisibleName
       where
-        difference =
-            case mprev of
-                Nothing -> 0
-                Just prev ->
-                    fst (srcSpanStart (srcInfoSpan (nodeInfoSpan (ann current)))) -
-                    fst (srcSpanEnd   (srcInfoSpan (nodeInfoSpan (ann prev   ))))
+        moduleVisibleName idecl =
+          let ModuleName _ name = importModule idecl
+          in name
+    formatImport = pretty
+
+groupAdjacentBy :: (a -> a -> Bool) -> [a] -> [[a]]
+groupAdjacentBy _ [] = []
+groupAdjacentBy adj items = xs : groupAdjacentBy adj rest
+  where
+    (xs, rest) = spanAdjacentBy adj items
+
+spanAdjacentBy :: (a -> a -> Bool) -> [a] -> ([a], [a])
+spanAdjacentBy _ [] = ([], [])
+spanAdjacentBy _ [x] = ([x], [])
+spanAdjacentBy adj (x:xs@(y:_))
+  | adj x y =
+    let (xs', rest') = spanAdjacentBy adj xs
+    in (x : xs', rest')
+  | otherwise = ([x], xs)
 
 instance Pretty Bracket where
   prettyInternal x =
