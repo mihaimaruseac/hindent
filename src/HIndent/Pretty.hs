@@ -782,7 +782,10 @@ decl (TypeFamDecl _ declhead result injectivity) = do
   case result of
     Just r -> do
       space
-      write "="
+      let sep = case r of
+                  KindSig _ _ -> "::"
+                  TyVarSig _ _ -> "="
+      write sep
       space
       pretty r
     Nothing -> return ()

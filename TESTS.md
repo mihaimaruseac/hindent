@@ -236,6 +236,12 @@ Type families
 type family Id a
 ```
 
+Type family annotations
+
+``` haskell
+type family Id a :: *
+```
+
 Type family instances
 
 ```haskell
