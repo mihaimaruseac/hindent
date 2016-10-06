@@ -1422,7 +1422,7 @@ guardedRhs (GuardedRhs _ stmts e) = do
 
 match :: Match NodeInfo -> Printer ()
 match (Match _ name pats rhs' mbinds) =
-  do depend (do pretty name
+  do depend (do prettyName name
                 space)
             (spaced (map pretty pats))
      withCaseContext False (pretty rhs')
@@ -1537,14 +1537,11 @@ decl' (TypeSig _ names ty') =
   do mst <- fitsOnOneLine (declTy ty')
      case mst of
        Just{} -> depend (do inter (write ", ")
-                                  (map (\x -> case x of
-                                          Ident _ _ -> pretty x
-                                          Symbol _ _ -> parens (pretty x))
-                                       names)
+                                  (map prettyName names)
                             write " :: ")
                           (declTy ty')
        Nothing -> do inter (write ", ")
-                           (map pretty names)
+                           (map prettyName names)
                      newline
                      indentSpaces <- getIndentSpaces
                      indented indentSpaces
@@ -1603,6 +1600,13 @@ decl' (DataDecl _ dataornew ctx dhead condecls@[_] mderivs)
                  (inter (write "|")
                         (map (depend space . qualConDecl) xs))
 decl' e = decl e
+
+-- | Pretty print name in prefix position
+prettyName :: Name NodeInfo -> Printer ()
+prettyName name =
+  case name of
+    Ident _ _ -> pretty name
+    Symbol _ _ -> parens (pretty name)
 
 -- | Use special record display, used by 'dataDecl' in a record scenario.
 qualConDecl :: QualConDecl NodeInfo -> Printer ()
