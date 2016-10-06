@@ -1422,7 +1422,7 @@ guardedRhs (GuardedRhs _ stmts e) = do
 
 match :: Match NodeInfo -> Printer ()
 match (Match _ name pats rhs' mbinds) =
-  do depend (do pretty name
+  do depend (do prettyName name
                 space)
             (spaced (map pretty pats))
      withCaseContext False (pretty rhs')
@@ -1578,9 +1578,6 @@ decl' (TypeSig _ names ty') =
                               prefixedLined "-> "
                                             (map pretty tys)
                Just st -> put st
-        prettyName name = case name of
-          Ident _ _ -> pretty name
-          Symbol _ _ -> parens (pretty name)
 decl' (PatBind _ pat rhs' mbinds) =
   withCaseContext False $
     do pretty pat
@@ -1603,6 +1600,13 @@ decl' (DataDecl _ dataornew ctx dhead condecls@[_] mderivs)
                  (inter (write "|")
                         (map (depend space . qualConDecl) xs))
 decl' e = decl e
+
+-- | Pretty print name in prefix position
+prettyName :: Name NodeInfo -> Printer ()
+prettyName name =
+  case name of
+    Ident _ _ -> pretty name
+    Symbol _ _ -> parens (pretty name)
 
 -- | Use special record display, used by 'dataDecl' in a record scenario.
 qualConDecl :: QualConDecl NodeInfo -> Printer ()
