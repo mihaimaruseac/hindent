@@ -879,6 +879,15 @@ ivan-timokhin breaks operators type signatures #301
 (+) :: ()
 ```
 
+ivan-timokhin breaks operators type signatures #308
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/308
+(!)
+  :: Monad m
+  => m ()
+```
+
 # Behaviour checks
 
 Unicode
