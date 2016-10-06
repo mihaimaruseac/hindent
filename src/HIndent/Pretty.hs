@@ -1537,14 +1537,11 @@ decl' (TypeSig _ names ty') =
   do mst <- fitsOnOneLine (declTy ty')
      case mst of
        Just{} -> depend (do inter (write ", ")
-                                  (map (\x -> case x of
-                                          Ident _ _ -> pretty x
-                                          Symbol _ _ -> parens (pretty x))
-                                       names)
+                                  (map prettyName names)
                             write " :: ")
                           (declTy ty')
        Nothing -> do inter (write ", ")
-                           (map pretty names)
+                           (map prettyName names)
                      newline
                      indentSpaces <- getIndentSpaces
                      indented indentSpaces
@@ -1581,6 +1578,9 @@ decl' (TypeSig _ names ty') =
                               prefixedLined "-> "
                                             (map pretty tys)
                Just st -> put st
+        prettyName name = case name of
+          Ident _ _ -> pretty name
+          Symbol _ _ -> parens (pretty name)
 decl' (PatBind _ pat rhs' mbinds) =
   withCaseContext False $
     do pretty pat
