@@ -345,6 +345,12 @@ f
 
 # Function declarations
 
+Prefix notation for operators
+
+``` haskell
+(+) a b = a
+```
+
 Where clause
 
 ``` haskell
