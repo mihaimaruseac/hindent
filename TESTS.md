@@ -28,6 +28,17 @@ module X
   ) where
 ```
 
+Exports, indentation 4
+
+``` haskell 4
+module X
+    ( x
+    , y
+    , Z
+    , P(x, z)
+    ) where
+```
+
 # Imports
 
 Import lists
