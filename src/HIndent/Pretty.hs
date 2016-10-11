@@ -1432,9 +1432,15 @@ guardedRhs (GuardedRhs _ stmts e) = do
 
 match :: Match NodeInfo -> Printer ()
 match (Match _ name pats rhs' mbinds) =
-  do depend (do pretty name
+  do depend (do case name of
+                  Ident _ _ ->
+                    pretty name
+                  Symbol _ _ ->
+                    do write "("
+                       pretty name
+                       write ")"
                 space)
-            (spaced (map pretty pats))
+       (spaced (map pretty pats))
      withCaseContext False (pretty rhs')
      for_ mbinds bindingGroup
 match (InfixMatch _ pat1 name pats rhs' mbinds) =
