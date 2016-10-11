@@ -16,7 +16,7 @@ import qualified Data.ByteString.Lazy.UTF8 as LUTF8
 import qualified Data.ByteString.UTF8 as UTF8
 import           Data.Function
 import           Data.Monoid
-import           HIndent
+import qualified HIndent
 import           HIndent.Types
 import           Markdone
 import           Test.Hspec
@@ -28,29 +28,29 @@ main = do
     forest <- parse (tokenize bytes)
     hspec (toSpec forest)
 
--- -- | Convert the Markdone document to Spec benchmarks.
+reformat :: Config -> S.ByteString -> ByteString
+reformat cfg code =
+  either (("-- " <>) . L8.pack) L.toLazyByteString $
+  HIndent.reformat cfg (Just HIndent.defaultExtensions) code
+
+-- | Convert the Markdone document to Spec benchmarks.
 toSpec :: [Markdone] -> Spec
 toSpec = go
   where
+    cfg = HIndent.Types.defaultConfig {configTrailingNewline = False}
     go (Section name children:next) = do
       describe (UTF8.toString name) (go children)
       go next
     go (PlainText desc:CodeFence lang code:next) =
       case lang of
         "haskell" -> do
-          it
-            (UTF8.toString desc)
-            (shouldBeReadable
-               (either
-                  (("-- " <>) . L8.pack)
-                  L.toLazyByteString
-                  (reformat
-                     HIndent.Types.defaultConfig
-                     { configTrailingNewline = False
-                     }
-                     (Just defaultExtensions)
-                     code))
-               (L.fromStrict code))
+          it (UTF8.toString desc) $
+            shouldBeReadable (reformat cfg code) (L.fromStrict code)
+          go next
+        "haskell 4" -> do
+          let cfg' = cfg {configIndentSpaces = 4}
+          it (UTF8.toString desc) $
+            shouldBeReadable (reformat cfg' code) (L.fromStrict code)
           go next
         "haskell pending" -> do
           it (UTF8.toString desc) pending
@@ -68,7 +68,7 @@ shouldBeReadable x y = shouldBe (Readable x (Just (diff y x))) (Readable y Nothi
 -- | Prints a string without quoting and escaping.
 data Readable = Readable
   { readableString :: ByteString
-  , readableDiff :: (Maybe String)
+  , readableDiff :: Maybe String
   }
 instance Eq Readable where
   (==) = on (==) readableString
@@ -82,4 +82,4 @@ instance Show Readable where
 
 -- | A diff display.
 diff :: ByteString -> ByteString -> String
-diff x y = ppDiff (on (getGroupedDiff) (lines . LUTF8.toString) x y)
+diff x y = ppDiff (on getGroupedDiff (lines . LUTF8.toString) x y)

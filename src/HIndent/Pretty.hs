@@ -1271,7 +1271,8 @@ instance Pretty ModuleHead where
        maybe (return ())
              (\exports ->
                 do newline
-                   indented 2 (pretty exports))
+                   indentSpaces <- getIndentSpaces
+                   indented indentSpaces (pretty exports))
              mexports
        write " where"
 
