@@ -1562,6 +1562,10 @@ typ x = case x of
                              (do string s
                                  write "|"))
 
+prettyTopName :: Name NodeInfo -> Printer ()
+prettyTopName x@Ident{} = pretty x
+prettyTopName x@Symbol{} = parens $ pretty x
+
 -- | Specially format records. Indent where clauses only 2 spaces.
 decl' :: Decl NodeInfo -> Printer ()
 -- | Pretty print type signatures like
@@ -1572,23 +1576,19 @@ decl' :: Decl NodeInfo -> Printer ()
 --     -> (Char -> X -> Y)
 --     -> IO ()
 --
-decl' (TypeSig _ names ty') =
-  do mst <- fitsOnOneLine (declTy ty')
-     case mst of
-       Just{} -> depend (do inter (write ", ")
-                                  (map (\x -> case x of
-                                          Ident _ _ -> pretty x
-                                          Symbol _ _ -> parens (pretty x))
-                                       names)
-                            write " :: ")
-                          (declTy ty')
-       Nothing -> do inter (write ", ")
-                           (map pretty names)
-                     newline
-                     indentSpaces <- getIndentSpaces
-                     indented indentSpaces
-                              (depend (write ":: ")
-                                      (declTy ty'))
+decl' (TypeSig _ names ty') = do
+  mst <- fitsOnOneLine (declTy ty')
+  case mst of
+    Just {} ->
+      depend
+        (do commas (map prettyTopName names)
+            write " :: ")
+        (declTy ty')
+    Nothing -> do
+      commas (map prettyTopName names)
+      newline
+      indentSpaces <- getIndentSpaces
+      indented indentSpaces (depend (write ":: ") (declTy ty'))
 
   where declTy dty =
           case dty of
