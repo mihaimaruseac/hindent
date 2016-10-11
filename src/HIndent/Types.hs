@@ -1,7 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -63,6 +62,7 @@ data Config = Config
     { configMaxColumns :: !Int64 -- ^ Maximum columns to fit code into ideally.
     , configIndentSpaces :: !Int64 -- ^ How many spaces to indent?
     , configTrailingNewline :: !Bool -- ^ End with a newline.
+    , configSortImports :: !Bool -- ^ Sort imports in groups.
     }
 
 instance FromJSON Config where
@@ -74,7 +74,8 @@ instance FromJSON Config where
       (v Y..:? "indent-size" <|> v Y..:? "tab-size") <*>
     fmap
       (fromMaybe (configTrailingNewline defaultConfig))
-      (v Y..:? "force-trailing-newline")
+      (v Y..:? "force-trailing-newline") <*>
+    fmap (fromMaybe (configSortImports defaultConfig)) (v Y..:? "sort-imports")
   parseJSON _ = fail "Expected Object for Config value"
 
 -- | Default style configuration.
@@ -84,6 +85,7 @@ defaultConfig =
     { configMaxColumns = 80
     , configIndentSpaces = 2
     , configTrailingNewline = True
+    , configSortImports = True
     }
 
 -- | Some comment to print.

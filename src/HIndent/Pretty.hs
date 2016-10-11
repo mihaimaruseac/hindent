@@ -1145,9 +1145,13 @@ formatImports =
       let (end1, _) = srcSpanEnd (srcInfoSpan (nodeInfoSpan (ann import1)))
           (start2, _) = srcSpanStart (srcInfoSpan (nodeInfoSpan (ann import2)))
       in start2 - end1 <= 1
-    formatImportGroup =
-      sequence_ .
-      intersperse newline . map formatImport . sortOn moduleVisibleName
+    formatImportGroup imps = do
+      shouldSortImports <- gets $ configSortImports . psConfig
+      let imps1 =
+            if shouldSortImports
+              then sortOn moduleVisibleName imps
+              else imps
+      sequence_ . intersperse newline $ map formatImport imps1
       where
         moduleVisibleName idecl =
           let ModuleName _ name = importModule idecl
