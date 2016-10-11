@@ -836,15 +836,22 @@ decl x' = pretty' x'
 
 instance Pretty Deriving where
   prettyInternal (Deriving _ heads) =
-    do write "deriving"
-       space
-       let heads' =
-             if length heads == 1
-                then map stripParens heads
-                else heads
-       parens (commas (map pretty heads'))
-    where stripParens (IParen _ iRule) = stripParens iRule
-          stripParens x = x
+    depend (write "deriving" >> space) $ do
+      let heads' =
+            if length heads == 1
+              then map stripParens heads
+              else heads
+      maybeDerives <- fitsOnOneLine $ parens (commas (map pretty heads'))
+      case maybeDerives of
+        Nothing -> formatMultiLine heads'
+        Just derives -> put derives
+    where
+      stripParens (IParen _ iRule) = stripParens iRule
+      stripParens x = x
+      formatMultiLine derives = do
+        depend (write "( ") $ prefixedLined ", " (map pretty derives)
+        newline
+        write ")"
 
 instance Pretty Alt where
   prettyInternal x =
