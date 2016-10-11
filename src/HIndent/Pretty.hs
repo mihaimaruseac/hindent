@@ -1573,7 +1573,7 @@ decl' :: Decl NodeInfo -> Printer ()
 --     -> IO ()
 --
 decl' (TypeSig _ names ty') =
-  do mst <- fitsOnOneLine (declTy ty')
+  do mst <- fitsOnOneLine (declTy "" ty')
      case mst of
        Just{} -> depend (do inter (write ", ")
                                   (map (\x -> case x of
@@ -1581,16 +1581,15 @@ decl' (TypeSig _ names ty') =
                                           Symbol _ _ -> parens (pretty x))
                                        names)
                             write " :: ")
-                          (declTy ty')
+                          (declTy "" ty')
        Nothing -> do inter (write ", ")
                            (map pretty names)
+                     write " ::"
                      newline
                      indentSpaces <- getIndentSpaces
-                     indented indentSpaces
-                              (depend (write ":: ")
-                                      (declTy ty'))
+                     indented indentSpaces (declTy "   " ty')
 
-  where declTy dty =
+  where declTy prefix dty =
           case dty of
             TyForall _ mbinds mctx ty ->
               do case mbinds of
@@ -1601,21 +1600,21 @@ decl' (TypeSig _ names ty') =
                         write "."
                         newline
                  case mctx of
-                   Nothing -> prettyTy ty
+                   Nothing -> prettyTy prefix ty
                    Just ctx ->
                      do pretty ctx
                         newline
-                        indented (-3)
-                                 (depend (write "=> ")
-                                         (prettyTy ty))
-            _ -> prettyTy dty
+                        prettyTy "=> " ty
+            _ -> prettyTy prefix dty
         collapseFaps (TyFun _ arg result) = arg : collapseFaps result
         collapseFaps e = [e]
-        prettyTy ty =
-          do mst <- fitsOnOneLine (pretty ty)
+        prettyTy prefix ty =
+          do mst <- fitsOnOneLine $ do
+                write prefix
+                pretty ty
              case mst of
-               Nothing -> case collapseFaps ty of
-                            [] -> pretty ty
+               Nothing -> depend (write prefix) $ case collapseFaps ty of
+                            [] -> pretty  ty
                             tys ->
                               prefixedLined "-> "
                                             (map pretty tys)
