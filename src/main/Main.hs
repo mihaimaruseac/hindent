@@ -1,7 +1,5 @@
 {-# LANGUAGE Unsafe #-}
-{-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
 
 -- | Main entry point to hindent.
 --
@@ -117,7 +115,8 @@ options config = ver *> ((,,) <$> style <*> exts <*> file)
            (constant "--style" "Style to print with" () *> anyString "STYLE")) <*>
       lineLen <*>
       indentSpaces <*>
-      trailingNewline
+      trailingNewline <*>
+      sortImports
     exts = fmap getExtensions (many (prefix "X" "Language extension"))
     indentSpaces =
       fmap
@@ -132,10 +131,15 @@ options config = ver *> ((,,) <$> style <*> exts <*> file)
     trailingNewline =
       optional
         (constant "--no-force-newline" "Don't force a trailing newline" False)
-    makeStyle s mlen tabs trailing =
+    sortImports =
+      optional
+        (constant "--sort-imports" "Sort imports in groups" True <|>
+         constant "--no-sort-imports" "Don't sort imports" False)
+    makeStyle s mlen tabs trailing imports =
       s
       { configMaxColumns = fromMaybe (configMaxColumns s) mlen
       , configIndentSpaces = fromMaybe (configIndentSpaces s) tabs
       , configTrailingNewline = fromMaybe (configTrailingNewline s) trailing
+      , configSortImports = fromMaybe (configSortImports s) imports
       }
     file = fmap (fmap T.unpack) (optional (anyString "[<filename>]"))
