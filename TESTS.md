@@ -56,6 +56,9 @@ import Options.Applicative
 import Options.Applicative
        hiding (ParserInfo, execParser, fullDesc, help, helper, info, long,
                metavar, short, strOption)
+import Test.ImportSpecList
+       (A, A(), A(..), A(x), A(x, y), B, B(), B(..), B(x), B(x, y))
+import Test.ImportSpecList ((+), type (+), (-))
 import "text" Data.Text (a, b, c)
 import qualified "text" Data.Text hiding (d, e, f)
 ```
@@ -847,7 +850,7 @@ Wrapped import list shouldn't add newline
 
 ```haskell
 import ATooLongList
-       (alpha, beta, gamma, delta, epsilon, zeta, eta, theta)
+       (alpha, beta, delta, epsilon, eta, gamma, theta, zeta)
 import B
 ```
 
