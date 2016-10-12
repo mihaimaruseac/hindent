@@ -44,12 +44,20 @@ module X
 Import lists
 
 ``` haskell
+import Control.Monad (when)
 import Data.Text
-import Data.Text
-import qualified Data.Text as T
-import qualified Data.Text (a, b, c)
 import Data.Text (a, b, c)
 import Data.Text hiding (a, b, c)
+import qualified Data.Text as T
+import qualified Data.Text (a, b, c)
+import Options.Applicative
+       (ParserInfo, execParser, fullDesc, help, helper, info, long,
+        metavar, short, strOption)
+import Options.Applicative
+       hiding (ParserInfo, execParser, fullDesc, help, helper, info, long,
+               metavar, short, strOption)
+import "text" Data.Text (a, b, c)
+import qualified "text" Data.Text hiding (d, e, f)
 ```
 
 Sorted
