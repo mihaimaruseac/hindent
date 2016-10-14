@@ -634,8 +634,35 @@ bob -- after bob
        )
     , 3
     ]
+    -- in the end of the function
+  where
+    alpha = alpha
+    -- between alpha and beta
+    beta = beta
+    -- after beta
 
 foo = 1 -- after foo
+
+gamma = do
+  delta
+  epsilon
+  -- in the end of a do-block 1
+
+gamma = do
+  delta
+  epsilon
+  -- the very last block is detected differently
+```
+
+Doesn't work yet (wrong comment position detection)
+
+```haskell pending
+gamma = do
+  -- in the beginning of a do-block
+  delta
+  where
+    -- before alpha
+    alpha = alpha
 ```
 
 Haddock comments

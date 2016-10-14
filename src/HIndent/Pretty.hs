@@ -41,7 +41,7 @@ pretty a = do
   mapM_
     (\c' -> do
        case c' of
-         CommentBeforeLine c -> do
+         CommentBeforeLine _ c -> do
            case c of
              EndOfLine s -> write ("--" ++ s)
              MultiLine s -> write ("{-" ++ s ++ "-}")
@@ -52,13 +52,21 @@ pretty a = do
   mapM_
     (\(i, c') -> do
        case c' of
-         CommentSameLine c -> do
+         CommentSameLine spn c -> do
            col <- gets psColumn
-           unless (col == 0) space
-           writeComment c
-         CommentAfterLine c -> do
+           if col == 0
+             then do
+               -- write comment keeping original indentation
+               let col' = fromIntegral $ srcSpanStartColumn spn - 1
+               column col' $ writeComment c
+             else do
+               space
+               writeComment c
+         CommentAfterLine spn c -> do
            when (i == 0) newline
-           writeComment c
+           -- write comment keeping original indentation
+           let col = fromIntegral $ srcSpanStartColumn spn - 1
+           column col $ writeComment c
          _ -> return ())
     (zip [0 :: Int ..] comments)
   where
@@ -1142,8 +1150,8 @@ formatImports =
   map formatImportGroup . groupAdjacentBy atNextLine
   where
     atNextLine import1 import2 =
-      let (end1, _) = srcSpanEnd (srcInfoSpan (nodeInfoSpan (ann import1)))
-          (start2, _) = srcSpanStart (srcInfoSpan (nodeInfoSpan (ann import2)))
+      let end1 = srcSpanEndLine (srcInfoSpan (nodeInfoSpan (ann import1)))
+          start2 = srcSpanStartLine (srcInfoSpan (nodeInfoSpan (ann import2)))
       in start2 - end1 <= 1
     formatImportGroup imps = do
       shouldSortImports <- gets $ configSortImports . psConfig
