@@ -6,7 +6,6 @@ module Main where
 import           Data.Algorithm.Diff
 import           Data.Algorithm.DiffOutput
 import qualified Data.ByteString as S
-import qualified Data.ByteString.Char8 as S8
 import           Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Builder as L
