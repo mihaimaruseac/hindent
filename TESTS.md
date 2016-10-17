@@ -63,14 +63,20 @@ import "text" Data.Text (a, b, c)
 import qualified "text" Data.Text hiding (d, e, f)
 ```
 
-Sorted
+Sorted in groups
 
 ```haskell given
+import D
+import C
+
 import B
 import A
 ```
 
 ```haskell expect
+import C
+import D
+
 import A
 import B
 ```
