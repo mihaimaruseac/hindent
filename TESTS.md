@@ -70,6 +70,10 @@ Type declaration
 
 ``` haskell
 type EventSource a = (AddHandler a, a -> IO ())
+
+type API = "1" :>
+           (("authorize" :> Get '[] ()) :<|>
+            ("members" :> "me" :> "boards" :> Get '[JSON] [Board]))
 ```
 
 Instance declaration without decls
