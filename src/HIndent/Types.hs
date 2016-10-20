@@ -95,16 +95,17 @@ data SomeComment
   deriving (Show, Ord, Eq)
 
 -- | Comment associated with a node.
+-- 'SrcSpan' is the original source span of the comment.
 data NodeComment
-  = CommentSameLine SomeComment
-  | CommentAfterLine SomeComment
-  | CommentBeforeLine SomeComment
+  = CommentSameLine SrcSpan SomeComment
+  | CommentAfterLine SrcSpan SomeComment
+  | CommentBeforeLine SrcSpan SomeComment
   deriving (Show, Ord, Eq)
 
 -- | Information for each node in the AST.
 data NodeInfo = NodeInfo
   { nodeInfoSpan :: !SrcSpanInfo -- ^ Location info from the parser.
-  , nodeInfoComments :: ![NodeComment] -- ^ Comment attached to this node.
+  , nodeInfoComments :: ![NodeComment] -- ^ Comments attached to this node.
   }
 instance Show NodeInfo where
   show (NodeInfo _ []) = ""

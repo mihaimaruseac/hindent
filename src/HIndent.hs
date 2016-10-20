@@ -399,7 +399,7 @@ collectAllComments =
 -- the State. This allows for a multiple pass approach.
 collectCommentsBy
   :: ([NodeComment] -> [NodeComment] -> [NodeComment])
-  -> (SomeComment -> NodeComment)
+  -> (SrcSpan -> SomeComment -> NodeComment)
   -> (SrcSpan -> SrcSpan -> Bool)
   -> NodeInfo
   -> State [Comment] NodeInfo
@@ -412,6 +412,7 @@ collectCommentsBy append cons predicate nodeInfo@(NodeInfo (SrcSpanInfo nodeSpan
                  if predicate nodeSpan (setFilename commentString commentSpan)
                    then Right
                           (cons
+                             commentSpan
                              ((if multiLine
                                  then MultiLine
                                  else EndOfLine)
