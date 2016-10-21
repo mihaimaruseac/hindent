@@ -72,6 +72,12 @@ Type declaration
 type EventSource a = (AddHandler a, a -> IO ())
 ```
 
+Type declaration with infix promoted type constructor
+
+```haskell
+fun2 :: Def ('[Ref s (Stored Uint32), IBool] ':-> IBool)
+```
+
 Instance declaration without decls
 
 ``` haskell

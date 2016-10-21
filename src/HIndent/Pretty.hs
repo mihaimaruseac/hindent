@@ -429,6 +429,13 @@ prettyInfixOp x =
         Symbol _ s -> string s
     Special _ s -> pretty s
 
+prettyInfixTypeOp :: Type NodeInfo -> Printer ()
+prettyInfixTypeOp t = case t of
+  TyPromoted _ (PromotedCon _ _ op) -> do
+    write "'"
+    prettyInfixOp op
+  _ -> pretty t
+
 instance Pretty Type where
   prettyInternal  =
     typ
@@ -1534,7 +1541,18 @@ typ x = case x of
             brackets (do write ":"
                          pretty t
                          write ":")
-          TyApp _ f a -> spaced [pretty f,pretty a]
+          TyApp _ f a ->
+            case f of
+              TyApp _ g op@(TyPromoted _ (PromotedCon _ _ (UnQual _ (Symbol _ _)))) -> do
+                -- workaround for HSE parsing bug
+                pretty g
+                space
+                prettyInfixTypeOp op
+                ifFitsOnOneLineThenSpaceElseNewline $ pretty a
+              _ -> do
+                pretty f
+                space
+                pretty a
           TyVar _ n -> pretty n
           TyCon _ p -> pretty p
           TyParen _ e -> parens (pretty e)
