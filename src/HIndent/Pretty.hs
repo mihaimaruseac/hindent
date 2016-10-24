@@ -1771,6 +1771,11 @@ ifFitsOnOneLineOrElse a b = do
       put stOrig
       b
 
+-- | If printer after fits, use it, else use it after newline
+ifFitsOnOneLineThenSpaceElseNewline :: Printer a -> Printer a
+ifFitsOnOneLineThenSpaceElseNewline p =
+  ifFitsOnOneLineOrElse (space >> p) (newline >> p)
+
 bindingGroup :: Binds NodeInfo -> Printer ()
 bindingGroup binds =
   do newline
