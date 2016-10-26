@@ -967,6 +967,17 @@ newtype Foo =
            )
 ```
 
+ivan-timokhin Breaks instances with type operators #342
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/342
+instance Foo (->)
+
+instance Foo (^>)
+
+instance Foo (T.<^)
+```
+
 # Behaviour checks
 
 Unicode
