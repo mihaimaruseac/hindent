@@ -316,15 +316,8 @@ foo :: $([t|Bool|]) -> a
 Long arguments list
 
 ```haskell
-longLongFunction :: ReaderT r (WriterT w (StateT s m)) a
-                 -> StateT s (WriterT w (ReaderT r m)) a
-```
-
-Long argument list should line break
-
-```haskell pending
-longLongFunction ::
-     ReaderT r (WriterT w (StateT s m)) a
+longLongFunction
+  :: ReaderT r (WriterT w (StateT s m)) a
   -> StateT s (WriterT w (ReaderT r m)) a
 ```
 
@@ -465,6 +458,34 @@ exceptions =
   , MissingContentHeader
   , InternalServerError
   ]
+
+type Exceptions = '[]
+
+type Exceptions = '[InvalidStatusCode]
+
+type Exceptions = '[InvalidStatusCod, MissingContentHeader, InternalServerError]
+
+type Exceptions =
+  '[InvalidStatusCode, MissingContentHeader, InternalServerError]
+
+type Exceptions =
+  '[ InvalidStatusCode
+   , MissingContentHeader
+   , InternalServerError
+   , InvalidStatusCode
+   ]
+
+exceptions :: '[]
+exceptions :: '[InvalidStatusCode]
+exceptions :: '[InvalidStatusCode, MissingContentHeader, InternalServerError]
+exceptions
+  :: '[InvalidStatusCoders, MissingContentHeaders, InternalServerErrors]
+exceptions
+  :: '[ InvalidStatusCode
+      , MissingContentHeader
+      , InternalServerError
+      , InvalidStatusCode
+      ]
 ```
 
 Long line, function application
