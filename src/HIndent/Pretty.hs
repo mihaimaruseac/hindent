@@ -1554,16 +1554,20 @@ typ x = case x of
                 space
                 pretty a
           TyVar _ n -> pretty n
-          TyCon _ p -> case p of
-                            Qual _ _ name -> case name of
-                                                  Ident _ _ -> pretty p
-                                                  Symbol _ _ -> parens (pretty p)
-                            UnQual _ name -> case name of
-                                                  Ident _ _ -> pretty p
-                                                  Symbol _ _ -> parens (pretty p)
-                            Special _ con -> case con of
-                                                  FunCon _ -> parens (pretty p)
-                                                  _ -> pretty p
+          TyCon _ p ->
+            case p of
+              Qual _ _ name ->
+                case name of
+                  Ident _ _ -> pretty p
+                  Symbol _ _ -> parens (pretty p)
+              UnQual _ name ->
+                case name of
+                  Ident _ _ -> pretty p
+                  Symbol _ _ -> parens (pretty p)
+              Special _ con ->
+                case con of
+                  FunCon _ -> parens (pretty p)
+                  _ -> pretty p
           TyParen _ e -> parens (pretty e)
           TyInfix _ a op b ->
             depend (do pretty a
