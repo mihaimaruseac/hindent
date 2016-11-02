@@ -809,6 +809,24 @@ decl (TypeFamDecl _ declhead result injectivity) = do
       space
       pretty i
     Nothing -> return ()
+decl (ClosedTypeFamDecl _ declhead result injectivity instances) = do
+  write "type family "
+  pretty declhead
+  for_ result $ \r -> do
+    space
+    let sep = case r of
+                KindSig _ _ -> "::"
+                TyVarSig _ _ -> "="
+    write sep
+    space
+    pretty r
+  for_ injectivity $ \i -> do
+    space
+    pretty i
+  space
+  write "where"
+  newline
+  indentedBlock (lined (map pretty instances))
 decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
   do depend (do pretty dataornew
                 space)
@@ -851,6 +869,12 @@ decl (InlineSig _ inline active name) = do
 
   write " #-}"
 decl x' = pretty' x'
+
+instance Pretty TypeEqn where
+  prettyInternal (TypeEqn _ in_ out_) = do
+    pretty in_
+    write " = "
+    pretty out_
 
 instance Pretty Deriving where
   prettyInternal (Deriving _ heads) =

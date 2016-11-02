@@ -291,6 +291,13 @@ f =
   in f
 ```
 
+Closed type families
+
+```haskell
+type family Closed (a :: k) :: Bool where
+  Closed x = 'True
+```
+
 # Template Haskell
 
 Expression brackets
