@@ -35,7 +35,7 @@ class (Annotated ast,Typeable ast) => Pretty ast where
   prettyInternal :: ast NodeInfo -> Printer ()
 
 -- | Pretty print including comments.
-pretty :: (Pretty ast)
+pretty :: (Pretty ast,Show (ast NodeInfo))
        => ast NodeInfo -> Printer ()
 pretty a = do
   mapM_
@@ -281,7 +281,7 @@ sandbox p =
      return (a,new)
 
 -- | Render a type with a context, or not.
-withCtx :: (Pretty ast)
+withCtx :: (Pretty ast,Show (ast NodeInfo))
         => Maybe (ast NodeInfo) -> Printer b -> Printer b
 withCtx Nothing m = m
 withCtx (Just ctx) m =
