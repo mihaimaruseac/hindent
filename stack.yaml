@@ -1,3 +1,8 @@
-resolver: lts-7.3
+resolver: lts-6.10
+packages:
+- '.'
 extra-deps:
 - haskell-src-exts-1.18.2
+- descriptive-0.9.4
+- path-0.5.9
+- path-io-1.2.0
