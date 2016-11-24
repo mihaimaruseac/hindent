@@ -1,4 +1,4 @@
-5.1.1:
+5.2.1:
 
     * Fix hanging on large constraints
     * Render multi-line comments
