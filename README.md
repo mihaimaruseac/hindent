@@ -47,6 +47,8 @@ line-length: 80
 force-trailing-newline: true
 ```
 
+By default, HIndent preserves the newline or lack of newline in your input. With `force-trailing-newline`, it will make sure there is always a trailing newline.
+
 ## Emacs
 
 In
