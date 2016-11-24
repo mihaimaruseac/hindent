@@ -62,7 +62,7 @@ tokenize = map token . S8.lines
                else PlainLine line
 
 -- | Parse into a forest.
-parse :: (Functor m,MonadThrow m) => [Token] -> m [Markdone]
+parse :: (MonadThrow m) => [Token] -> m [Markdone]
 parse = go (0 :: Int)
   where
     go level =
