@@ -90,7 +90,7 @@ pretty a = do
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
-pretty' :: (Pretty ast,P.Pretty (ast SrcSpanInfo))
+pretty' :: (Functor ast, P.Pretty (ast SrcSpanInfo))
         => ast NodeInfo -> Printer ()
 pretty' = write . P.prettyPrint . fmap nodeInfoSpan
 
@@ -785,11 +785,19 @@ decl (ClassDecl _ ctx dhead fundeps decls) =
      unless (null (fromMaybe [] decls))
             (do newline
                 indentedBlock (lined (map pretty (fromMaybe [] decls))))
-decl (TypeDecl _ typehead typ') =
-  depend (write "type ")
-         (depend (pretty typehead)
-                 (depend (write " = ")
-                         (pretty typ')))
+decl (TypeDecl _ typehead body) = h `ifFitsOnOneLineOrElse` v
+  where
+    h = do
+      write "type "
+      pretty typehead
+      write " = "
+      pretty body
+    v = do
+      write "type "
+      pretty typehead
+      write " ="
+      newline
+      indentedBlock $ pretty body
 
 decl (TypeFamDecl _ declhead result injectivity) = do
   write "type family "
@@ -1611,7 +1619,20 @@ typ x = case x of
             do pretty left
                write " ~ "
                pretty right
-          ty@TyPromoted{} -> pretty' ty
+          TyPromoted _ t ->
+            case t of
+              PromotedList _ _ [] -> write "'[]"
+              PromotedList _ _ [t0] -> wrap "'[" "]" $ pretty t0
+              PromotedList _ _ ts ->
+                let h = do
+                      write "'"
+                      brackets . commas $ map pretty ts
+                    v = do
+                      depend (write "'[ ") . prefixedLined " , " $ map pretty ts
+                      newline
+                      write " ]"
+                in h `ifFitsOnOneLineOrElse` v
+              _ -> pretty' t
           TySplice _ splice -> pretty splice
           TyWildCard _ name ->
             case name of
@@ -1639,21 +1660,19 @@ decl' :: Decl NodeInfo -> Printer ()
 --     -> (Char -> X -> Y)
 --     -> IO ()
 --
-decl' (TypeSig _ names ty') = do
-  mst <- fitsOnOneLine (declTy ty')
-  case mst of
-    Just {} ->
-      depend
-        (do commas (map prettyTopName names)
-            write " :: ")
-        (declTy ty')
-    Nothing -> do
-      commas (map prettyTopName names)
-      newline
-      indentSpaces <- getIndentSpaces
-      indented indentSpaces (depend (write ":: ") (declTy ty'))
-
-  where declTy dty =
+decl' (TypeSig _ names ty') = hor `ifFitsOnOneLineOrElse` ver
+  where header = do
+          commas (map prettyTopName names)
+          write " :: "
+        hor = do
+          header
+          declTy ty'
+        ver = do
+          commas (map prettyTopName names)
+          newline
+          indentSpaces <- getIndentSpaces
+          indented indentSpaces (depend (write ":: ") (declTy ty'))
+        declTy dty =
           case dty of
             TyForall _ mbinds mctx ty ->
               do case mbinds of
