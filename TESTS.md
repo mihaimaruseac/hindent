@@ -843,7 +843,15 @@ instance forall x. Show x =>
 
 tfausak support shebangs #208
 
-``` haskell
+``` haskell given
+#!/usr/bin/env stack
+-- stack runghc
+main =
+ pure ()
+-- https://github.com/chrisdone/hindent/issues/208
+```
+
+``` haskell expect
 #!/usr/bin/env stack
 -- stack runghc
 main = pure ()
