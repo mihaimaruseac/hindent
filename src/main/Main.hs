@@ -55,6 +55,7 @@ main = do
                     if ioe_errno e == Just ((\(Errno a) -> a) eXDEV)
                       then IO.copyFile fp filepath >> IO.removeFile fp
                       else throw e
+              IO.copyPermissions filepath fp
               IO.renameFile fp filepath `catch` exdev
         Nothing ->
           L8.interact
