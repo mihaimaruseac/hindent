@@ -1022,6 +1022,7 @@ Very long names #310
 class A where
   {-# MINIMAL averylongnamewithnoparticularmeaning
             | ananotherverylongnamewithnomoremeaning #-}
+```
 
 NorfairKing Do as left-hand side of an infix operation #296
 
