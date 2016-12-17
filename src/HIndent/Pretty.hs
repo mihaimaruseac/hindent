@@ -1857,14 +1857,18 @@ infixApp e a op b indent =
         ]
     ver = do
       prettyWithIndent a
-      space
-      pretty op
+      beforeRhs <- case a of
+                     Do _ _ -> do
+                       indentSpaces <- getIndentSpaces
+                       column (fromMaybe 0 indent + indentSpaces + 3) (newline >> pretty op) -- 3 = "do "
+                       return space
+                     _ -> space >> pretty op >> return newline
       case b of
         Lambda{} -> space >> pretty b
         LCase{} -> space >> pretty b
         Do _ stmts -> swing (write " do") $ lined (map pretty stmts)
         _ -> do
-          newline
+          beforeRhs
           case indent of
             Nothing -> prettyWithIndent b
             Just col -> do
