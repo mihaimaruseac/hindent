@@ -153,21 +153,23 @@ cppSplitBlocks :: ByteString -> [CodeBlock]
 cppSplitBlocks inp =
   modifyLast (inBlock (<> trailing)) .
   map (classify . mconcat . intersperse "\n") .
-  groupBy ((==) `on` cppLine) . S8.lines $
+  groupBy ((==) `on` nonHaskellLine) . S8.lines $
   inp
   where
+    nonHaskellLine :: ByteString -> Bool
+    nonHaskellLine src = cppLine src || shebangLine src
+    shebangLine :: ByteString -> Bool
+    shebangLine = S8.isPrefixOf "#!"
     cppLine :: ByteString -> Bool
     cppLine src =
       any
         (`S8.isPrefixOf` src)
         ["#if", "#end", "#else", "#define", "#undef", "#elif"]
     classify :: ByteString -> CodeBlock
-    classify text =
-      if S8.isPrefixOf "#!" text
-         then Shebang text
-         else if cppLine text
-                then CPPDirectives text
-                else HaskellSource text
+    classify text
+      | shebangLine text = Shebang text
+      | cppLine text = CPPDirectives text
+      | otherwise = HaskellSource text
     -- Hack to work around some parser issues in haskell-src-exts: Some pragmas
     -- need to have a newline following them in order to parse properly, so we include
     -- the trailing newline in the code block if it existed.
