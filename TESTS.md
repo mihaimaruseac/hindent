@@ -985,6 +985,15 @@ instance Foo (^>)
 instance Foo (T.<^)
 ```
 
+NorfairKing Do as left-hand side of an infix operation #296
+
+```haskell
+block =
+  do ds <- inBraces $ inWhiteSpace declarations
+     return $ Block ds
+     <?> "block"
+```
+
 # Behaviour checks
 
 Unicode
