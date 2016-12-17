@@ -868,6 +868,9 @@ decl (InlineSig _ inline active name) = do
   pretty name
 
   write " #-}"
+decl (MinimalPragma _ (Just formula)) =
+  wrap "{-# " " #-}" $ do
+    depend (write "MINIMAL ") $ pretty formula
 decl x' = pretty' x'
 
 instance Pretty TypeEqn where
@@ -1244,6 +1247,21 @@ instance Pretty IPBind where
         write "="
         space
         pretty expr
+
+instance Pretty BooleanFormula where
+  prettyInternal (VarFormula _ i@(Ident _ _)) = pretty' i
+  prettyInternal (VarFormula _ (Symbol _ s)) = write "(" >> string s >> write ")"
+  prettyInternal (AndFormula _ fs) = do
+      maybeFormulas <- fitsOnOneLine $ inter (write ", ") $ map pretty fs
+      case maybeFormulas of
+        Nothing -> prefixedLined ", " (map pretty fs)
+        Just formulas -> put formulas
+  prettyInternal (OrFormula _ fs) = do
+      maybeFormulas <- fitsOnOneLine $ inter (write " | ") $ map pretty fs
+      case maybeFormulas of
+        Nothing -> prefixedLined "| " (map pretty fs)
+        Just formulas -> put formulas
+  prettyInternal (ParenFormula _ f) = parens $ pretty f
 
 --------------------------------------------------------------------------------
 -- * Fallback printers
