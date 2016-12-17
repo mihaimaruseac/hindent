@@ -393,6 +393,7 @@ a = undefined
 ```
 
 Promoted list with a tuple (issue #348)
+
 ```haskell
 a :: A '[ '(a, b, c, d)]
 a = undefined
