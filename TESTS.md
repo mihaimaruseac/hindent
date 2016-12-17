@@ -985,6 +985,23 @@ instance Foo (^>)
 instance Foo (T.<^)
 ```
 
+# MINIMAL pragma
+
+Monad example
+
+```haskell
+class A where
+  {-# MINIMAL return, ((>>=) | (join, fmap)) #-}
+```
+
+Very long names #310
+
+```haskell
+class A where
+  {-# MINIMAL averylongnamewithnoparticularmeaning
+            | ananotherverylongnamewithnomoremeaning #-}
+```
+
 # Behaviour checks
 
 Unicode
