@@ -75,6 +75,8 @@ type EventSource a = (AddHandler a, a -> IO ())
 Type declaration with infix promoted type constructor
 
 ```haskell
+fun1 :: Def ('[Ref s (Stored Uint32), IBool] 'T.:-> IBool)
+
 fun2 :: Def ('[Ref s (Stored Uint32), IBool] ':-> IBool)
 ```
 
@@ -390,6 +392,10 @@ Promoted list (issue #348)
 ```haskell
 a :: A '[ 'True]
 a = undefined
+
+-- nested promoted list with multiple elements.
+b :: A '[ '[ 'True, 'False], '[ 'False, 'True]]
+b = undefined
 ```
 
 Promoted list with a tuple (issue #348)
@@ -397,6 +403,10 @@ Promoted list with a tuple (issue #348)
 ```haskell
 a :: A '[ '(a, b, c, d)]
 a = undefined
+
+-- nested promoted tuples.
+b :: A '[ '( 'True, 'False, '[], '( 'False, 'True))]
+b = undefined
 ```
 
 # Function declarations
