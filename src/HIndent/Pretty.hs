@@ -1629,11 +1629,19 @@ typ x = case x of
             do pretty left
                write " ~ "
                pretty right
-          TyPromoted _ (PromotedList _ _ (first@(TyPromoted _ _) : rest)) ->
-            do wrap "'[" "]" $ do
-                 space
-                 pretty' first
-                 mapM_ pretty' rest
+          TyPromoted _ (PromotedList _ _ ts) ->
+            do write "'["
+               unless (null ts) $ write " "
+               commas (map pretty ts)
+               write "]"
+          TyPromoted _ (PromotedTuple _ ts) ->
+            do trace "ccc" $ write "'("
+               unless (null ts) $ write " "
+               commas (map pretty ts)
+               write ")"
+          TyPromoted _ (PromotedCon _ _ tname) ->
+            do write "'"
+               pretty tname
           ty@TyPromoted{} -> pretty' ty
           TySplice _ splice -> pretty splice
           TyWildCard _ name ->
