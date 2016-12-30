@@ -1617,7 +1617,7 @@ typ x = case x of
                commas (map pretty ts)
                write "]"
           TyPromoted _ (PromotedTuple _ ts) ->
-            do trace "ccc" $ write "'("
+            do write "'("
                unless (null ts) $ write " "
                commas (map pretty ts)
                write ")"
