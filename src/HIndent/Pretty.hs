@@ -429,13 +429,6 @@ prettyInfixOp x =
         Symbol _ s -> string s
     Special _ s -> pretty s
 
-prettyInfixTypeOp :: Type NodeInfo -> Printer ()
-prettyInfixTypeOp t = case t of
-  TyPromoted _ (PromotedCon _ _ op) -> do
-    write "'"
-    prettyInfixOp op
-  _ -> pretty t
-
 instance Pretty Type where
   prettyInternal  =
     typ
@@ -1583,18 +1576,7 @@ typ x = case x of
             brackets (do write ":"
                          pretty t
                          write ":")
-          TyApp _ f a ->
-            case f of
-              TyApp _ g op@(TyPromoted _ (PromotedCon _ _ (UnQual _ (Symbol _ _)))) -> do
-                -- workaround for HSE parsing bug
-                pretty g
-                space
-                prettyInfixTypeOp op
-                ifFitsOnOneLineThenSpaceElseNewline $ pretty a
-              _ -> do
-                pretty f
-                space
-                pretty a
+          TyApp _ f a -> spaced [pretty f, pretty a]
           TyVar _ n -> pretty n
           TyCon _ p ->
             case p of
@@ -1629,11 +1611,19 @@ typ x = case x of
             do pretty left
                write " ~ "
                pretty right
-          TyPromoted _ (PromotedList _ _ (first@(TyPromoted _ _) : rest)) ->
-            do wrap "'[" "]" $ do
-                 space
-                 pretty' first
-                 mapM_ pretty' rest
+          TyPromoted _ (PromotedList _ _ ts) ->
+            do write "'["
+               unless (null ts) $ write " "
+               commas (map pretty ts)
+               write "]"
+          TyPromoted _ (PromotedTuple _ ts) ->
+            do write "'("
+               unless (null ts) $ write " "
+               commas (map pretty ts)
+               write ")"
+          TyPromoted _ (PromotedCon _ _ tname) ->
+            do write "'"
+               pretty tname
           ty@TyPromoted{} -> pretty' ty
           TySplice _ splice -> pretty splice
           TyWildCard _ name ->
@@ -1830,11 +1820,6 @@ ifFitsOnOneLineOrElse a b = do
     Nothing -> do
       put stOrig
       b
-
--- | If printer after fits, use it, else use it after newline
-ifFitsOnOneLineThenSpaceElseNewline :: Printer a -> Printer a
-ifFitsOnOneLineThenSpaceElseNewline p =
-  ifFitsOnOneLineOrElse (space >> p) (newline >> p)
 
 bindingGroup :: Binds NodeInfo -> Printer ()
 bindingGroup binds =
