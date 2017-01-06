@@ -1,3 +1,9 @@
+5.2.2:
+
+    * Parallel list comprehensions
+    * Leave do, lambda, lambda-case on previous line of $
+    * Misc fixes
+
 5.2.1:
 
     * Fix hanging on large constraints

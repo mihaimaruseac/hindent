@@ -1,5 +1,5 @@
 name:                hindent
-version:             5.2.1
+version:             5.2.2
 synopsis:            Extensible Haskell pretty printer
 description:         Extensible Haskell pretty printer. Both a library and an executable.
                      .
