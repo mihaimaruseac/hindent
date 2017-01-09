@@ -1126,3 +1126,7 @@ exp' (App _ op a) = do
     flatten (App _ f' a') b = flatten f' (a' : b)
     flatten f' as = (f', as)
 ```
+Quasi quotes
+```haskell
+exp = [name|exp|]
+```
