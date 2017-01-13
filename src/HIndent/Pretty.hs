@@ -848,6 +848,27 @@ decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
                             (prefixedLined "|"
                                            (map (depend space . pretty) xs)))
 
+decl (GDataDecl _ dataornew ctx dhead mkind condecls mderivs) =
+  do depend (pretty dataornew >> space)
+       (withCtx ctx
+         (do pretty dhead
+             case mkind of
+               Nothing -> return ()
+               Just kind -> do write " :: "
+                               pretty kind
+             write " where"))
+     indentedBlock $ do
+       case condecls of
+         [] -> return ()
+         _ -> do
+           newline
+           lined (map pretty condecls)
+       case mderivs of
+         Nothing -> return ()
+         Just derivs ->
+           do newline
+              pretty derivs
+
 decl (InlineSig _ inline active name) = do
   write "{-# "
 
@@ -1061,6 +1082,17 @@ instance Pretty QualConDecl where
                            write ". "))
                (withCtx ctx
                        (pretty d))
+
+instance Pretty GadtDecl where
+  prettyInternal (GadtDecl _ name fields t) = do
+    pretty name
+    write " :: "
+    case fromMaybe [] fields of
+      [] -> return ()
+      fs -> do
+        braces (commas (map pretty fs))
+        write " -> "
+    pretty t
 
 instance Pretty Rhs where
   prettyInternal =
