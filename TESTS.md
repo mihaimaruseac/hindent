@@ -1019,6 +1019,14 @@ instance Foo (^>)
 instance Foo (T.<^)
 ```
 
+RecursiveDo `rec` and `mdo` keyword #328
+```haskell
+rec = undefined
+
+mdo = undefined
+```
+
+
 # MINIMAL pragma
 
 Monad example
