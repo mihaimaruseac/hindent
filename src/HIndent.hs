@@ -43,8 +43,8 @@ import qualified Data.Text as T
 import           Data.Traversable hiding (mapM)
 import           HIndent.Pretty
 import           HIndent.Types
-import           Language.Haskell.Exts hiding (Style, prettyPrint, Pretty, style, parse)
 import qualified Language.Haskell.Exts as Exts
+import           Language.Haskell.Exts hiding (Style, prettyPrint, Pretty, style, parse)
 import           Prelude
 
 -- | A block of code.
@@ -55,8 +55,8 @@ data CodeBlock
      deriving (Show, Eq)
 
 -- | Format the given source.
-reformat :: Config -> Maybe [Extension] -> ByteString -> Either String Builder
-reformat config mexts =
+reformat :: Config -> Maybe [Extension] -> Maybe FilePath -> ByteString -> Either String Builder
+reformat config mexts mfilepath =
     preserveTrailingNewline
         (fmap (mconcat . intersperse "\n") . mapM processBlock . cppSplitBlocks)
   where
@@ -111,12 +111,13 @@ reformat config mexts =
                         (findSmallestPrefix (S.tail p : map S.tail ps))
                else ""
     mode' =
-        case mexts of
-            Just exts ->
-                parseMode
-                { extensions = exts
-                }
-            Nothing -> parseMode
+        let m = case mexts of
+                  Just exts ->
+                    parseMode
+                    { extensions = exts
+                    }
+                  Nothing -> parseMode
+        in m { parseFilename = fromMaybe "<interactive>" mfilepath }
     preserveTrailingNewline f x =
         if S8.null x || S8.all isSpace x
             then return mempty
@@ -246,7 +247,7 @@ testFileAst fp  = S.readFile fp >>= print . testAst
 test :: ByteString -> IO ()
 test =
   either error (L8.putStrLn . S.toLazyByteString) .
-  reformat defaultConfig Nothing
+  reformat defaultConfig Nothing Nothing
 
 -- | Parse the source and annotate it with comments, yielding the resulting AST.
 testAst :: ByteString -> Either String (Module NodeInfo)

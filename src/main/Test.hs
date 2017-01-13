@@ -30,7 +30,7 @@ main = do
 reformat :: Config -> S.ByteString -> ByteString
 reformat cfg code =
   either (("-- " <>) . L8.pack) L.toLazyByteString $
-  HIndent.reformat cfg (Just HIndent.defaultExtensions) code
+  HIndent.reformat cfg (Just HIndent.defaultExtensions) Nothing code
 
 -- | Convert the Markdone document to Spec benchmarks.
 toSpec :: [Markdone] -> Spec

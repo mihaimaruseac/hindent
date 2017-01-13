@@ -43,8 +43,8 @@ main = do
       case mfilepath of
         Just filepath -> do
           text <- S.readFile filepath
-          case reformat style (Just exts) text of
-            Left e -> error (filepath ++ ": " ++ e)
+          case reformat style (Just exts) mfilepath text of
+            Left e -> error e
             Right out -> unless (L8.fromStrict text == S.toLazyByteString out) $ do
               tmpDir <- IO.getTemporaryDirectory
               (fp, h) <- IO.openTempFile tmpDir "hindent.hs"
@@ -59,7 +59,7 @@ main = do
               IO.renameFile fp filepath `catch` exdev
         Nothing ->
           L8.interact
-            (either error S.toLazyByteString . reformat style (Just exts) . L8.toStrict)
+            (either error S.toLazyByteString . reformat style (Just exts) Nothing . L8.toStrict)
     Failed (Wrap (Stopped Version) _) ->
       putStrLn ("hindent " ++ showVersion version)
     Failed (Wrap (Stopped Help) _) -> putStrLn (help defaultConfig)
