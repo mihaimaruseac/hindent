@@ -44,6 +44,7 @@ import           Data.Traversable hiding (mapM)
 import           HIndent.Pretty
 import           HIndent.Types
 import           Language.Haskell.Exts hiding (Style, prettyPrint, Pretty, style, parse)
+import qualified Language.Haskell.Exts as Exts
 import           Prelude
 
 -- | A block of code.
@@ -71,7 +72,7 @@ reformat config mexts =
                    fmap
                        (S.lazyByteString . addPrefix prefix . S.toLazyByteString)
                        (prettyPrint config m comments)
-               ParseFailed _ e -> Left e
+               ParseFailed loc e -> Left (Exts.prettyPrint loc ++ ": " ++ e)
     unlines' = S.concat . intersperse "\n"
     unlines'' = L.concat . intersperse "\n"
     addPrefix :: ByteString -> L8.ByteString -> L8.ByteString
