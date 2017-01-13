@@ -97,6 +97,19 @@ instance C a where
     k p
 ```
 
+Class declaration with many fundeps
+```haskell
+class Foo a b c d e f
+  | a b c d e -> f
+  , a b c d f -> e
+  , a b c e f -> d
+  , a b d e f -> c
+  , a c d e f -> b
+  , b c d e f -> a
+  where
+  foo :: a -> b -> c -> d -> e -> f
+```
+
 # Expressions
 
 Lazy patterns in a lambda

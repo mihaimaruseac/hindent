@@ -766,14 +766,7 @@ decl (TypeSig _ names ty) =
 decl (FunBind _ matches) =
   lined (map pretty matches)
 decl (ClassDecl _ ctx dhead fundeps decls) =
-  do depend (write "class ")
-            (withCtx ctx
-                     (depend (do pretty dhead)
-                             (depend (unless (null fundeps)
-                                             (do write " | "
-                                                 commas (map pretty fundeps)))
-                                     (unless (null (fromMaybe [] decls))
-                                             (write " where")))))
+  do classHead ctx dhead fundeps decls
      unless (null (fromMaybe [] decls))
             (do newline
                 indentedBlock (lined (map pretty (fromMaybe [] decls))))
@@ -864,6 +857,30 @@ decl (MinimalPragma _ (Just formula)) =
   wrap "{-# " " #-}" $ do
     depend (write "MINIMAL ") $ pretty formula
 decl x' = pretty' x'
+
+classHead
+  :: Maybe (Context NodeInfo)
+  -> DeclHead NodeInfo
+  -> [FunDep NodeInfo]
+  -> Maybe [ClassDecl NodeInfo]
+  -> Printer ()
+classHead ctx dhead fundeps decls = shortHead `ifFitsOnOneLineOrElse` longHead
+  where
+    shortHead =
+      depend
+        (write "class ")
+        (withCtx ctx $
+         depend
+           (pretty dhead)
+           (depend (unless (null fundeps) (write " | " >> commas (map pretty fundeps)))
+              (unless (null (fromMaybe [] decls)) (write " where"))))
+    longHead = do
+      depend (write "class ") (withCtx ctx $ pretty dhead)
+      newline
+      indentedBlock $ do
+        depend (write "| ") $ prefixedLined ", " $ map pretty fundeps
+        newline
+        unless (null (fromMaybe [] decls)) (write "where")
 
 instance Pretty TypeEqn where
   prettyInternal (TypeEqn _ in_ out_) = do
