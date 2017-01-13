@@ -174,7 +174,7 @@ Record, medium
 commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
 commitToEvent gitFolderPath timezone commit =
   Event.Event
-  {pluginName = getModuleName getGitProvider, eventIcon = "glyphicon-cog"}
+    {pluginName = getModuleName getGitProvider, eventIcon = "glyphicon-cog"}
 ```
 
 Record, long
@@ -183,10 +183,10 @@ Record, long
 commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
 commitToEvent gitFolderPath timezone commit =
   Event.Event
-  { pluginName = getModuleName getGitProvider
-  , eventIcon = "glyphicon-cog"
-  , eventDate = localTimeToUTC timezone (commitDate commit)
-  }
+    { pluginName = getModuleName getGitProvider
+    , eventIcon = "glyphicon-cog"
+    , eventDate = localTimeToUTC timezone (commitDate commit)
+    }
 ```
 
 Cases
@@ -1017,6 +1017,22 @@ instance Foo (->)
 instance Foo (^>)
 
 instance Foo (T.<^)
+```
+
+Indents record constructions and updates #358
+```haskell
+foo =
+  assert
+    sanityCheck
+    BomSnapshotAggr
+      { snapshot = Just bs
+      , previousId = M.bomSnapshotHistoryPreviousId . entityVal <$> bsp
+      , nextId = M.bomSnapshotHistoryNextId . entityVal <$> bsn
+      , bomEx = bx''
+      , orderSubstitutes =
+          S.fromList . map OrderSubstituteAggrByCreatedAtAsc $ subs
+      , snapshotSubstitute = msub
+      }
 ```
 
 # MINIMAL pragma

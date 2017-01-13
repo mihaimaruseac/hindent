@@ -1774,7 +1774,7 @@ recUpdateExpr expWriter updates = do
   ifFitsOnOneLineOrElse hor $ do
     expWriter
     newline
-    updatesHor `ifFitsOnOneLineOrElse` updatesVer
+    indentedBlock (updatesHor `ifFitsOnOneLineOrElse` updatesVer)
   where
     hor = do
       expWriter
