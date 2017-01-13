@@ -72,6 +72,28 @@ Type declaration
 type EventSource a = (AddHandler a, a -> IO ())
 ```
 
+Type declaration with large tuple #290
+```haskell
+type MyContext m =
+  ( MonadState Int m
+  , MonadReader Int m
+  , MonadError Text m
+  , MonadMask m
+  , Monoid m
+  , Functor m)
+```
+
+Type signature with large type tuple #359
+```haskell
+thing
+  :: ( ResB.BomEx
+     , Maybe [( Entity BomSnapshot
+              , ( [ResBS.OrderSubstituteAggr]
+                , ( Maybe (Entity BomSnapshotHistory)
+                  , Maybe (Entity BomSnapshotHistory))))])
+  -> [(ResB.BomEx, Maybe ResBS.BomSnapshotAggr)]
+```
+
 Type declaration with infix promoted type constructor
 
 ```haskell

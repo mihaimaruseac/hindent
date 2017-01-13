@@ -777,11 +777,14 @@ decl (ClassDecl _ ctx dhead fundeps decls) =
      unless (null (fromMaybe [] decls))
             (do newline
                 indentedBlock (lined (map pretty (fromMaybe [] decls))))
-decl (TypeDecl _ typehead typ') =
-  depend (write "type ")
-         (depend (pretty typehead)
-                 (depend (write " = ")
-                         (pretty typ')))
+decl (TypeDecl _ typehead typ') = do
+  write "type "
+  pretty typehead
+  let ppTyp = pretty typ'
+  depend (write " = ") ppTyp `ifFitsOnOneLineOrElse` do
+    write " ="
+    newline
+    indentedBlock ppTyp
 
 decl (TypeFamDecl _ declhead result injectivity) = do
   write "type family "
@@ -1538,16 +1541,17 @@ context ctx =
       write ")"
     CxEmpty _ -> parens (return ())
 
-unboxParens :: Printer a -> Printer a
-unboxParens p =
-  depend (write "(# ")
-         (do v <- p
-             write " #)"
-             return v)
-
 typ :: Type NodeInfo -> Printer ()
-typ (TyTuple _ Boxed types) = parens $ inter (write ", ") $ map pretty types
-typ (TyTuple _ Unboxed types) = unboxParens $ inter (write ", ") $ map pretty types
+typ (TyTuple _ Boxed types) = do
+  let horVar = parens $ inter (write ", ") (map pretty types)
+  let verVar = parens $ prefixedLined "," (map (depend space . pretty) types)
+  horVar `ifFitsOnOneLineOrElse` verVar
+
+typ (TyTuple _ Unboxed types) = do
+  let horVar = wrap "(# " " #)" $ inter (write ", ") (map pretty types)
+  let verVar = wrap "(#" " #)" $ prefixedLined "," (map (depend space . pretty) types)
+  horVar `ifFitsOnOneLineOrElse` verVar
+
 typ x = case x of
           TyForall _ mbinds ctx ty ->
             depend (case mbinds of
@@ -1716,6 +1720,7 @@ decl' (DataDecl _ dataornew ctx dhead condecls@[_] mderivs)
           depend (write " =")
                  (inter (write "|")
                         (map (depend space . qualConDecl) xs))
+
 decl' e = decl e
 
 -- | Use special record display, used by 'dataDecl' in a record scenario.
