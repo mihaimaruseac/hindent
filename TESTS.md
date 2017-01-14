@@ -80,9 +80,35 @@ import qualified MegaModule as M ((>>>), MonadBaseControl, void, MaybeT(..), joi
 
 ```haskell expect
 import qualified MegaModule as M
-       (Either, Maybe(Just, Nothing), MaybeT(..),
-        Monad((>>), (>>=), return), MonadBaseControl, (<<<), (>>>), join,
-        liftIO, void)
+  ( Either
+  , Maybe(Just, Nothing)
+  , MaybeT(..)
+  , Monad((>>), (>>=), return)
+  , MonadBaseControl
+  , (<<<)
+  , (>>>)
+  , join
+  , liftIO
+  , void
+  )
+```
+
+Pretty import specification
+
+```haskell
+import A hiding
+  ( foobarbazqux
+  , foobarbazqux
+  , foobarbazqux
+  , foobarbazqux
+  , foobarbazqux
+  , foobarbazqux
+  , foobarbazqux
+  )
+
+import Name hiding ()
+
+import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
 ```
 
 # Declarations
@@ -940,8 +966,7 @@ import B
 ```
 
 ```haskell expect
-import ATooLongList
-       (alpha, beta, delta, epsilon, eta, gamma, theta, zeta)
+import ATooLongList (alpha, beta, delta, epsilon, eta, gamma, theta, zeta)
 import B
 ```
 
