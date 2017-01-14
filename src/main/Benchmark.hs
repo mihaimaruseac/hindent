@@ -38,11 +38,11 @@ toCriterion = go
                    (either error L.toLazyByteString .
                     reformat
                       HIndent.Types.defaultConfig
-                      (Just defaultExtensions))
+                      (Just defaultExtensions)
+                      Nothing)
                    code)) :
              go next
         else go next
     go (PlainText {}:next) = go next
     go (CodeFence {}:next) = go next
     go [] = []
-
