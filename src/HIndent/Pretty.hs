@@ -322,6 +322,41 @@ swingBy i a b =
      newline
      column (orig + i) b
 
+-- | Preserves some newlines between things.
+preserveSomeNewlines
+  :: (Show (ast NodeInfo), Pretty ast)
+  => ([ast NodeInfo] -> Printer ()) -> [ast NodeInfo] -> Printer ()
+preserveSomeNewlines _ [] = return ()
+preserveSomeNewlines pp things = do
+  let ajdThings = groupAdjacentBy atNextLine things
+  col <- gets psIndentLevel
+  inter (newline >> newline) (map (column col . pp) ajdThings)
+  -- (inter (newline >> newline) . map pp . groupAdjacentBy atNextLine) things
+
+atNextLine
+  :: (Annotated ast, Annotated ast1)
+  => ast1 NodeInfo -> ast NodeInfo -> Bool
+atNextLine thing1 thing2 =
+  let end1 = srcSpanEndLine (srcInfoSpan (nodeInfoSpan (ann thing1)))
+      start2 = srcSpanStartLine (srcInfoSpan (nodeInfoSpan (ann thing2)))
+  in start2 - end1 <= 1
+
+groupAdjacentBy :: (a -> a -> Bool) -> [a] -> [[a]]
+groupAdjacentBy _ [] = []
+groupAdjacentBy adj items = xs : groupAdjacentBy adj rest
+  where
+    (xs, rest) = spanAdjacentBy adj items
+
+spanAdjacentBy :: (a -> a -> Bool) -> [a] -> ([a], [a])
+spanAdjacentBy _ [] = ([], [])
+spanAdjacentBy _ [x] = ([x], [])
+spanAdjacentBy adj (x:xs@(y:_))
+  | adj x y =
+    let (xs', rest') = spanAdjacentBy adj xs
+    in (x : xs', rest')
+  | otherwise = ([x], xs)
+
+
 --------------------------------------------------------------------------------
 -- * Instances
 
@@ -497,7 +532,7 @@ exp (If _ if' then' else') =
                  write "do"
                  newline
                  indentSpaces <- getIndentSpaces
-                 indented indentSpaces (lined (map pretty stmts))
+                 indented indentSpaces ((preserveSomeNewlines (lined . map pretty) stmts))
             _ ->
               depend (write str)
                      (pretty e)
@@ -599,10 +634,10 @@ exp (Case _ e alts) =
      indentedBlock (lined (map (withCaseContext True . pretty) alts))
 exp (Do _ stmts) =
   depend (write "do ")
-         (lined (map pretty stmts))
+         (preserveSomeNewlines (lined . map pretty) stmts)
 exp (MDo _ stmts) =
   depend (write "mdo ")
-         (lined (map pretty stmts))
+         (preserveSomeNewlines (lined . map pretty) stmts)
 exp (LeftSection _ e op) =
   parens (depend (do pretty e
                      space)
@@ -750,14 +785,15 @@ decl (PatBind _ pat rhs' mbinds) =
             indentedBlock (depend (write "where ")
                                   (pretty binds))
 decl (InstDecl _ moverlap dhead decls) =
-  do depend (write "instance ")
+  do let decls' = fromMaybe [] decls
+     depend (write "instance ")
             (depend (maybeOverlap moverlap)
                     (depend (pretty dhead)
-                            (unless (null (fromMaybe [] decls))
+                            (unless (null decls')
                                     (write " where"))))
-     unless (null (fromMaybe [] decls))
+     unless (null decls')
             (do newline
-                indentedBlock (lined (map pretty (fromMaybe [] decls))))
+                indentedBlock (preserveSomeNewlines (lined . map pretty) decls'))
 decl (SpliceDecl _ e) = pretty e
 decl (TypeSig _ names ty) =
   depend (do inter (write ", ")
@@ -767,17 +803,18 @@ decl (TypeSig _ names ty) =
 decl (FunBind _ matches) =
   lined (map pretty matches)
 decl (ClassDecl _ ctx dhead fundeps decls) =
-  do depend (write "class ")
+  do let decls' = fromMaybe [] decls
+     depend (write "class ")
             (withCtx ctx
                      (depend (do pretty dhead)
                              (depend (unless (null fundeps)
                                              (do write " | "
                                                  commas (map pretty fundeps)))
-                                     (unless (null (fromMaybe [] decls))
+                                     (unless (null decls')
                                              (write " where")))))
-     unless (null (fromMaybe [] decls))
+     unless (null decls')
             (do newline
-                indentedBlock (lined (map pretty (fromMaybe [] decls))))
+                indentedBlock (lined (map pretty decls')))
 decl (TypeDecl _ typehead typ') = do
   write "type "
   pretty typehead
@@ -972,7 +1009,7 @@ instance Pretty Unpackedness where
 instance Pretty Binds where
   prettyInternal x =
     case x of
-      BDecls _ ds -> lined (map pretty ds)
+      BDecls _ ds -> preserveSomeNewlines (lined . map pretty) ds
       IPBinds _ i -> lined (map pretty i)
 
 instance Pretty ClassDecl where
@@ -1241,14 +1278,8 @@ instance Pretty Module where
 -- | Format imports, preserving empty newlines between groups.
 formatImports :: [ImportDecl NodeInfo] -> Printer ()
 formatImports =
-  sequence_ .
-  intersperse (newline >> newline) .
-  map formatImportGroup . groupAdjacentBy atNextLine
+  preserveSomeNewlines formatImportGroup
   where
-    atNextLine import1 import2 =
-      let end1 = srcSpanEndLine (srcInfoSpan (nodeInfoSpan (ann import1)))
-          start2 = srcSpanStartLine (srcInfoSpan (nodeInfoSpan (ann import2)))
-      in start2 - end1 <= 1
     formatImportGroup imps = do
       shouldSortImports <- gets $ configSortImports . psConfig
       let imps1 =
@@ -1261,21 +1292,6 @@ formatImports =
           let ModuleName _ name = importModule idecl
           in name
     formatImport = pretty
-
-groupAdjacentBy :: (a -> a -> Bool) -> [a] -> [[a]]
-groupAdjacentBy _ [] = []
-groupAdjacentBy adj items = xs : groupAdjacentBy adj rest
-  where
-    (xs, rest) = spanAdjacentBy adj items
-
-spanAdjacentBy :: (a -> a -> Bool) -> [a] -> ([a], [a])
-spanAdjacentBy _ [] = ([], [])
-spanAdjacentBy _ [x] = ([x], [])
-spanAdjacentBy adj (x:xs@(y:_))
-  | adj x y =
-    let (xs', rest') = spanAdjacentBy adj xs
-    in (x : xs', rest')
-  | otherwise = ([x], xs)
 
 instance Pretty Bracket where
   prettyInternal x =
@@ -1507,7 +1523,7 @@ rhs (UnGuardedRhs _ (Do _ dos)) =
                      | otherwise = max 2 indentSpaces
      swingBy indentation
              (write "do")
-             (lined (map pretty dos))
+             (preserveSomeNewlines (lined . map pretty) dos)
 rhs (UnGuardedRhs _ e) = do
   msg <-
     fitsOnOneLine
@@ -1542,7 +1558,7 @@ guardedRhs (GuardedRhs _ stmts (Do _ dos)) =
      inCase <- gets psInsideCase
      write (if inCase then " -> " else " = ")
      swing (write "do")
-            (lined (map pretty dos))
+           (preserveSomeNewlines (lined . map pretty) dos)
 guardedRhs (GuardedRhs _ stmts e) = do
     mst <- fitsOnOneLine printStmts
     case mst of
@@ -1955,7 +1971,7 @@ infixApp e a op b indent =
       case b of
         Lambda{} -> space >> pretty b
         LCase{} -> space >> pretty b
-        Do _ stmts -> swing (write " do") $ lined (map pretty stmts)
+        Do _ stmts -> swing (write " do") $ (preserveSomeNewlines (lined . map pretty) stmts)
         _ -> do
           beforeRhs
           case indent of
