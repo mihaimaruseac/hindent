@@ -50,7 +50,8 @@ import           Prelude
 -- | A block of code.
 data CodeBlock
     = Shebang ByteString
-    | HaskellSource ByteString
+    | HaskellSource Int ByteString
+    -- ^ Includes the starting line (indexed from 0) for error reporting
     | CPPDirectives ByteString
      deriving (Show, Eq)
 
@@ -63,7 +64,7 @@ reformat config mexts mfilepath =
     processBlock :: CodeBlock -> Either String Builder
     processBlock (Shebang text) = Right $ S.byteString text
     processBlock (CPPDirectives text) = Right $ S.byteString text
-    processBlock (HaskellSource text) =
+    processBlock (HaskellSource line text) =
         let ls = S8.lines text
             prefix = findPrefix ls
             code = unlines' (map (stripPrefix prefix) ls)
@@ -72,7 +73,8 @@ reformat config mexts mfilepath =
                    fmap
                        (S.lazyByteString . addPrefix prefix . S.toLazyByteString)
                        (prettyPrint config m comments)
-               ParseFailed loc e -> Left (Exts.prettyPrint loc ++ ": " ++ e)
+               ParseFailed loc e ->
+                 Left (Exts.prettyPrint (loc {srcLine = srcLine loc + line}) ++ ": " ++ e)
     unlines' = S.concat . intersperse "\n"
     unlines'' = L.concat . intersperse "\n"
     addPrefix :: ByteString -> L8.ByteString -> L8.ByteString
@@ -154,12 +156,12 @@ hasTrailingLine xs =
 cppSplitBlocks :: ByteString -> [CodeBlock]
 cppSplitBlocks inp =
   modifyLast (inBlock (<> trailing)) .
-  map (classify . mconcat . intersperse "\n") .
-  groupBy ((==) `on` nonHaskellLine) . S8.lines $
+  map (classify . unlines') .
+  groupBy ((==) `on` nonHaskellLine) . zip [0 ..] . S8.lines $
   inp
   where
-    nonHaskellLine :: ByteString -> Bool
-    nonHaskellLine src = cppLine src || shebangLine src
+    nonHaskellLine :: (Int, ByteString) -> Bool
+    nonHaskellLine (_, src) = cppLine src || shebangLine src
     shebangLine :: ByteString -> Bool
     shebangLine = S8.isPrefixOf "#!"
     cppLine :: ByteString -> Bool
@@ -167,16 +169,19 @@ cppSplitBlocks inp =
       any
         (`S8.isPrefixOf` src)
         ["#if", "#end", "#else", "#define", "#undef", "#elif"]
-    classify :: ByteString -> CodeBlock
-    classify text
+    unlines' :: [(Int, ByteString)] -> (Int, ByteString)
+    unlines' [] = (0, S.empty)
+    unlines' srcs@((line, _):_) =
+      (line, mconcat . intersperse "\n" $ map snd srcs)
+    classify :: (Int, ByteString) -> CodeBlock
+    classify (line, text)
       | shebangLine text = Shebang text
       | cppLine text = CPPDirectives text
-      | otherwise = HaskellSource text
+      | otherwise = HaskellSource line text
     -- Hack to work around some parser issues in haskell-src-exts: Some pragmas
     -- need to have a newline following them in order to parse properly, so we include
     -- the trailing newline in the code block if it existed.
-    trailing
-      :: ByteString
+    trailing :: ByteString
     trailing =
       if S8.isSuffixOf "\n" inp
         then "\n"
@@ -186,7 +191,7 @@ cppSplitBlocks inp =
     modifyLast f [x] = [f x]
     modifyLast f (x:xs) = x : modifyLast f xs
     inBlock :: (ByteString -> ByteString) -> CodeBlock -> CodeBlock
-    inBlock f (HaskellSource txt) = HaskellSource (f txt)
+    inBlock f (HaskellSource line txt) = HaskellSource line (f txt)
     inBlock _ dir = dir
 
 
