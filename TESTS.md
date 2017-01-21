@@ -100,7 +100,10 @@ instance C a where
 GADT declarations
 ```haskell
 data Ty :: (* -> *) where
-  TCon :: {field1 :: Int, field2 :: Bool} -> Ty Bool
+  TCon
+    :: { field1 :: Int
+       , field2 :: Bool}
+    -> Ty Bool
   TCon' :: (a :: *) -> a -> Ty a
 ```
 
