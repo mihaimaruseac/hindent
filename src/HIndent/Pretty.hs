@@ -848,6 +848,27 @@ decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
                             (prefixedLined "|"
                                            (map (depend space . pretty) xs)))
 
+decl (GDataDecl _ dataornew ctx dhead mkind condecls mderivs) =
+  do depend (pretty dataornew >> space)
+       (withCtx ctx
+         (do pretty dhead
+             case mkind of
+               Nothing -> return ()
+               Just kind -> do write " :: "
+                               pretty kind
+             write " where"))
+     indentedBlock $ do
+       case condecls of
+         [] -> return ()
+         _ -> do
+           newline
+           lined (map pretty condecls)
+       case mderivs of
+         Nothing -> return ()
+         Just derivs ->
+           do newline
+              pretty derivs
+
 decl (InlineSig _ inline active name) = do
   write "{-# "
 
@@ -1061,6 +1082,32 @@ instance Pretty QualConDecl where
                            write ". "))
                (withCtx ctx
                        (pretty d))
+
+instance Pretty GadtDecl where
+  prettyInternal (GadtDecl _ name fields t) =
+    horVar `ifFitsOnOneLineOrElse` verVar
+    where
+      fields' p =
+        case fromMaybe [] fields of
+          [] -> return ()
+          fs -> do
+            depend (write "{") $ do
+              prefixedLined "," (map (depend space . pretty) fs)
+            write "}"
+            p
+      horVar =
+        depend (pretty name >> write " :: ") $ do
+          fields' (write " -> ")
+          declTy t
+      verVar = do
+        pretty name
+        newline
+        indentedBlock $
+          depend (write ":: ") $ do
+            fields' $ do
+              newline
+              indented (-3) (write "-> ")
+            declTy t
 
 instance Pretty Rhs where
   prettyInternal =
@@ -1665,36 +1712,6 @@ decl' (TypeSig _ names ty') = do
       indentSpaces <- getIndentSpaces
       indented indentSpaces (depend (write ":: ") (declTy ty'))
 
-  where declTy dty =
-          case dty of
-            TyForall _ mbinds mctx ty ->
-              do case mbinds of
-                   Nothing -> return ()
-                   Just ts ->
-                     do write "forall "
-                        spaced (map pretty ts)
-                        write "."
-                        newline
-                 case mctx of
-                   Nothing -> prettyTy ty
-                   Just ctx ->
-                     do pretty ctx
-                        newline
-                        indented (-3)
-                                 (depend (write "=> ")
-                                         (prettyTy ty))
-            _ -> prettyTy dty
-        collapseFaps (TyFun _ arg result) = arg : collapseFaps result
-        collapseFaps e = [e]
-        prettyTy ty =
-          do mst <- fitsOnOneLine (pretty ty)
-             case mst of
-               Nothing -> case collapseFaps ty of
-                            [] -> pretty ty
-                            tys ->
-                              prefixedLined "-> "
-                                            (map pretty tys)
-               Just st -> put st
 decl' (PatBind _ pat rhs' mbinds) =
   withCaseContext False $
     do pretty pat
@@ -1717,6 +1734,36 @@ decl' (DataDecl _ dataornew ctx dhead condecls@[_] mderivs)
                  (inter (write "|")
                         (map (depend space . qualConDecl) xs))
 decl' e = decl e
+
+declTy :: Type NodeInfo -> Printer ()
+declTy dty =
+  case dty of
+    TyForall _ mbinds mctx ty -> do
+      case mbinds of
+        Nothing -> return ()
+        Just ts -> do
+          write "forall "
+          spaced (map pretty ts)
+          write "."
+          newline
+      case mctx of
+        Nothing -> prettyTy ty
+        Just ctx -> do
+          pretty ctx
+          newline
+          indented (-3) (depend (write "=> ") (prettyTy ty))
+    _ -> prettyTy dty
+  where
+    collapseFaps (TyFun _ arg result) = arg : collapseFaps result
+    collapseFaps e = [e]
+    prettyTy ty = do
+      mst <- fitsOnOneLine (pretty ty)
+      case mst of
+        Nothing ->
+          case collapseFaps ty of
+            [] -> pretty ty
+            tys -> prefixedLined "-> " (map pretty tys)
+        Just st -> put st
 
 -- | Use special record display, used by 'dataDecl' in a record scenario.
 qualConDecl :: QualConDecl NodeInfo -> Printer ()
