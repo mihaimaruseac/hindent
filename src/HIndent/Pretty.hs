@@ -1453,8 +1453,9 @@ stmt x = case x of
            LetStmt _ binds ->
              depend (write "let ")
                     (pretty binds)
-           RecStmt{} ->
-             error "FIXME: No implementation for RecStmt."
+           RecStmt _ e ->
+             depend (write "rec ") $
+                    mapM_ (\xe -> pretty xe >> newline) e
 
 -- | Make the right hand side dependent if it fits on one line,
 -- otherwise send it to the next line.
