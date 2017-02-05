@@ -1454,8 +1454,8 @@ stmt x = case x of
              depend (write "let ")
                     (pretty binds)
            RecStmt _ es ->
-             depend (write "rec ") $
-                    mapM_ (\e -> pretty e >> newline) es
+             depend (write "rec ")
+                    (lined (map pretty es))
 
 -- | Make the right hand side dependent if it fits on one line,
 -- otherwise send it to the next line.
