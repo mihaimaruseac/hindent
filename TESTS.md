@@ -44,24 +44,39 @@ module X
 Import lists
 
 ``` haskell
-import Data.Text
-import Data.Text
+import           Control.Monad (when)
+import           Data.Text
+import           Data.Text
 import qualified Data.Text as T
 import qualified Data.Text (a, b, c)
-import Data.Text (a, b, c)
-import Data.Text hiding (a, b, c)
+import           Data.Text (a, b, c)
+import           Data.Text hiding (a, b, c)
+import           "text" Data.Text (a, b, c)
+import qualified "text" Data.Text hiding (d, e, f)
+import           Options.Applicative
+                 (ParserInfo, execParser, fullDesc, help, helper, info, long,
+                  metavar, short, strOption)
+import           Options.Applicative hiding
+                 (ParserInfo, execParser, fullDesc, help, helper, info, long,
+                  metavar, short, strOption)
 ```
 
-Sorted
+Sorted in groups
 
 ```haskell given
-import B
-import A
+import           D
+import           C
+
+import           B
+import           A
 ```
 
 ```haskell expect
-import A
-import B
+import           C
+import           D
+
+import           A
+import           B
 ```
 
 # Declarations
@@ -898,36 +913,36 @@ joe9 preserve newlines between import groups
 
 ``` haskell
 -- https://github.com/chrisdone/hindent/issues/200
-import Data.List
-import Data.Maybe
+import           Data.List
+import           Data.Maybe
 
-import FooBar
-import MyProject
+import           FooBar
+import           MyProject
 
-import GHC.Monad
+import           GHC.Monad
 
 -- blah
-import Hello
+import           Hello
 
-import CommentAfter -- Comment here shouldn't affect newlines
-import HelloWorld
+import           CommentAfter -- Comment here shouldn't affect newlines
+import           HelloWorld
 
-import CommentAfter -- Comment here shouldn't affect newlines
+import           CommentAfter -- Comment here shouldn't affect newlines
 
-import HelloWorld
+import           HelloWorld
 
 -- Comment here shouldn't affect newlines
-import CommentAfter
+import           CommentAfter
 
-import HelloWorld
+import           HelloWorld
 ```
 
 Wrapped import list shouldn't add newline
 
 ```haskell
-import ATooLongList
-       (alpha, beta, gamma, delta, epsilon, zeta, eta, theta)
-import B
+import           ATooLongList
+                 (alpha, beta, gamma, delta, epsilon, zeta, eta, theta)
+import           B
 ```
 
 radupopescu `deriving` keyword not aligned with pipe symbol for type declarations

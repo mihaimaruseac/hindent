@@ -1,10 +1,11 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 -- | Pretty printing.
 
@@ -16,6 +17,7 @@ import           Control.Applicative
 import           Control.Monad.State.Strict hiding (state)
 import qualified Data.ByteString.Builder as S
 import           Data.Foldable (for_, traverse_)
+import           Data.Functor (($>))
 import           Data.Int
 import           Data.List
 import           Data.Maybe
@@ -1398,14 +1400,52 @@ instance Pretty ModulePragma where
   prettyInternal = pretty'
 
 instance Pretty ImportDecl where
-  prettyInternal = pretty'
+  prettyInternal ImportDecl { importAs
+                            , importModule
+                            , importPkg
+                            , importQualified
+                            , importSpecs
+                            } = depend declhead declbody
+    where
+      declhead = do
+        write "import "
+        write $
+          (if importQualified
+             then id
+             else ($> ' '))
+            "qualified "
+      declbody = do
+        case importPkg of
+          Nothing -> pure ()
+          Just pkg -> wrap "\"" "\" " $ write pkg
+        pretty importModule
+        case importAs of
+          Nothing -> pure ()
+          Just asName -> write " as " >> pretty asName
+        case importSpecs of
+          Nothing -> pure ()
+          Just specs@(ImportSpecList _ hiding _) -> do
+            when hiding $ write " hiding"
+            ifFitsOnOneLineThenSpaceElseNewline $ pretty specs
 
 instance Pretty ModuleName where
   prettyInternal (ModuleName _ name) =
     write name
 
 instance Pretty ImportSpecList where
-  prettyInternal = pretty'
+  prettyInternal (ImportSpecList _ _ ispecs) =
+    -- "hiding" is printed in 'prettyInternal@ImportDecl'
+    depend (write "(") $ begin ispecs
+    where
+      begin [] = write ")"
+      begin [spec] = pretty spec >> write ")"
+      begin (spec:specs) = pretty spec >> comma >> continue specs
+      continue [] = write ")"
+      continue [spec] =
+        ifFitsOnOneLineThenSpaceElseNewline (pretty spec >> write ")")
+      continue (spec:specs) = do
+        ifFitsOnOneLineThenSpaceElseNewline (pretty spec >> comma)
+        continue specs
 
 instance Pretty ImportSpec where
   prettyInternal = pretty'
@@ -1867,6 +1907,10 @@ ifFitsOnOneLineOrElse a b = do
     Nothing -> do
       put stOrig
       b
+
+ifFitsOnOneLineThenSpaceElseNewline :: Printer a -> Printer a
+ifFitsOnOneLineThenSpaceElseNewline p =
+  ifFitsOnOneLineOrElse (space >> p) (newline >> p)
 
 bindingGroup :: Binds NodeInfo -> Printer ()
 bindingGroup binds =
