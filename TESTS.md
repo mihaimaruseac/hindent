@@ -97,6 +97,16 @@ instance C a where
     k p
 ```
 
+GADT declarations
+```haskell
+data Ty :: (* -> *) where
+  TCon
+    :: { field1 :: Int
+       , field2 :: Bool}
+    -> Ty Bool
+  TCon' :: (a :: *) -> a -> Ty a
+```
+
 # Expressions
 
 Lazy patterns in a lambda
@@ -1050,6 +1060,13 @@ ttuegel Record formatting applied to expressions with RecordWildCards #274
 foo (Bar {..}) = Bar {..}
 ```
 
+RecursiveDo `rec` and `mdo` keyword #328
+
+```haskell
+rec = undefined
+
+mdo = undefined
+```
 
 # MINIMAL pragma
 
