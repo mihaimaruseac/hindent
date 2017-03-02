@@ -1020,12 +1020,14 @@ instance Foo (T.<^)
 ```
 
 neongreen “{” is lost when formatting “Foo{}” #366
+
 ```haskell
 -- https://github.com/chrisdone/hindent/issues/366
 foo = Nothing {}
 ```
 
 jparoz Trailing space in list comprehension #357
+
 ```haskell
 -- https://github.com/chrisdone/hindent/issues/357
 foo =
@@ -1042,6 +1044,7 @@ foo =
 ```
 
 ttuegel Record formatting applied to expressions with RecordWildCards #274
+
 ```haskell
 -- https://github.com/chrisdone/hindent/issues/274
 foo (Bar {..}) = Bar {..}
