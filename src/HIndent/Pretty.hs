@@ -1,10 +1,11 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 -- | Pretty printing.
 
@@ -90,7 +91,7 @@ pretty a = do
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
-pretty' :: (Pretty ast,P.Pretty (ast SrcSpanInfo))
+pretty' :: (Functor ast, P.Pretty (ast SrcSpanInfo))
         => ast NodeInfo -> Printer ()
 pretty' = write . P.prettyPrint . fmap nodeInfoSpan
 
@@ -1230,13 +1231,14 @@ formatImports =
       shouldSortImports <- gets $ configSortImports . psConfig
       let imps1 =
             if shouldSortImports
-              then sortOn moduleVisibleName imps
+              then sortOn moduleSortKey imps
               else imps
       sequence_ . intersperse newline $ map formatImport imps1
       where
-        moduleVisibleName idecl =
-          let ModuleName _ name = importModule idecl
-          in name
+        moduleSortKey ImportDecl { importModule = ModuleName _ name
+                                 , importPkg
+                                 , importQualified
+                                 } = (importPkg, name, importQualified)
     formatImport = pretty
 
 groupAdjacentBy :: (a -> a -> Bool) -> [a] -> [[a]]
@@ -1405,10 +1407,49 @@ instance Pretty ModuleName where
     write name
 
 instance Pretty ImportSpecList where
-  prettyInternal = pretty'
+  prettyInternal (ImportSpecList _ _ specs0) = do
+    -- "hiding" is printed in 'prettyInternal@ImportDecl'
+    shouldSortImports <- gets $ configSortImports . psConfig
+    let specs1 =
+          if shouldSortImports
+            then sortOn specKey specs0
+            else specs0
+    depend (write "(") $ begin specs1
+    where
+      begin [] = write ")"
+      begin [spec] = pretty spec >> write ")"
+      begin (spec:specs) = pretty spec >> comma >> continue specs
+      continue [] = write ")"
+      continue [spec] =
+        ifFitsOnOneLineThenSpaceElseNewline (pretty spec >> write ")")
+      continue (spec:specs) = do
+        ifFitsOnOneLineThenSpaceElseNewline (pretty spec >> comma)
+        continue specs
+      specKey (IVar _ name) = (nameKey name, "")
+      specKey (IAbs _ ns name) = (nameKey name, nsKey ns)
+      specKey (IThingAll _ name) = (nameKey name, "")
+      specKey (IThingWith _ name _) = (nameKey name, "")
+      nsKey NoNamespace{} = "" :: String
+      nsKey TypeNamespace{} = "type"
+      nsKey PatternNamespace{} = "pattern"
+
+nameKey :: Name t -> String
+nameKey (Ident _ name) = name
+nameKey (Symbol _ name) = name
 
 instance Pretty ImportSpec where
-  prettyInternal = pretty'
+  prettyInternal (IThingWith _ iname components0) = do
+    pretty iname
+    shouldSortImports <- gets $ configSortImports . psConfig
+    let components1 =
+          if shouldSortImports
+            then sortOn cnameKey components0
+            else components0
+    parens . commas $ map pretty' components1
+    where
+      cnameKey (ConName _ name) = nameKey name
+      cnameKey (VarName _ name) = nameKey name
+  prettyInternal spec = pretty' spec
 
 instance Pretty WarningText where
   prettyInternal (DeprText _ s) =
@@ -1867,6 +1908,11 @@ ifFitsOnOneLineOrElse a b = do
     Nothing -> do
       put stOrig
       b
+
+-- | If printer after fits, use it, else use it after newline
+ifFitsOnOneLineThenSpaceElseNewline :: Printer a -> Printer a
+ifFitsOnOneLineThenSpaceElseNewline p =
+  ifFitsOnOneLineOrElse (space >> p) (newline >> p)
 
 bindingGroup :: Binds NodeInfo -> Printer ()
 bindingGroup binds =

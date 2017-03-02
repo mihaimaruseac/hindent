@@ -44,22 +44,39 @@ module X
 Import lists
 
 ``` haskell
+import Control.Monad (when)
 import Data.Text
-import Data.Text
-import qualified Data.Text as T
-import qualified Data.Text (a, b, c)
 import Data.Text (a, b, c)
 import Data.Text hiding (a, b, c)
+import qualified Data.Text as T
+import qualified Data.Text (a, b, c)
+import Options.Applicative
+       (ParserInfo, execParser, fullDesc, help, helper, info, long,
+        metavar, short, strOption)
+import Options.Applicative
+       hiding (ParserInfo, execParser, fullDesc, help, helper, info, long,
+               metavar, short, strOption)
+import Test.ImportSpecList
+       (A, A(), A(..), A(x), A(x, y), B, B(), B(..), B(x), B(x, y))
+import Test.ImportSpecList ((+), type (+), (-))
+import "text" Data.Text (a, b, c)
+import qualified "text" Data.Text hiding (d, e, f)
 ```
 
-Sorted
+Sorted in groups
 
 ```haskell given
+import D
+import C
+
 import B
 import A
 ```
 
 ```haskell expect
+import C
+import D
+
 import A
 import B
 ```
@@ -926,7 +943,7 @@ Wrapped import list shouldn't add newline
 
 ```haskell
 import ATooLongList
-       (alpha, beta, gamma, delta, epsilon, zeta, eta, theta)
+       (alpha, beta, delta, epsilon, eta, gamma, theta, zeta)
 import B
 ```
 
