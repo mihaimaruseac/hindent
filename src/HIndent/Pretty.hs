@@ -1783,7 +1783,7 @@ conDecl (RecDecl _ name fields) =
   depend (do pretty name
              write " ")
          (do depend (write "{")
-                    (prefixedLined ", "
+                    (prefixedLined ","
                                    (map (depend space . pretty) fields))
              write "}")
 conDecl x = case x of
