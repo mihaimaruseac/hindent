@@ -614,20 +614,6 @@ data Person = Person
   , lastName :: !String -- ^ Last name
   , age :: !Int -- ^ Age
   }
-
-data X
-  = X { x :: Int }
-  | X'
-
-data X = X
-  { x :: Int
-  , x' :: Int
-  }
-
-data X
-  = X { x :: Int
-      , x' :: Int }
-  | X'
 ```
 
 Spaces between deriving classes
@@ -1080,6 +1066,25 @@ RecursiveDo `rec` and `mdo` keyword #328
 rec = undefined
 
 mdo = undefined
+```
+
+sophie-h Record syntax change in 5.2.2 #393
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/393
+data X
+  = X { x :: Int }
+  | X'
+
+data X = X
+  { x :: Int
+  , x' :: Int
+  }
+
+data X
+  = X { x :: Int
+      , x' :: Int }
+  | X'
 ```
 
 k-bx Infix data constructor gets reformatted into a parse error #328
