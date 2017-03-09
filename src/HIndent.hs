@@ -229,10 +229,9 @@ parseMode =
   defaultParseMode {extensions = allExtensions
                    ,fixities = Nothing}
   where allExtensions =
-          filter isDisabledExtention knownExtensions
-        isDisabledExtention (DisableExtension _) = False
-        isDisabledExtention _ = True
-
+          filter isDisabledExtension knownExtensions
+        isDisabledExtension (DisableExtension _) = False
+        isDisabledExtension _ = True
 
 -- | Test the given file.
 testFile :: FilePath -> IO ()
@@ -278,6 +277,8 @@ badExtensions =
     ,UnboxedTuples -- breaks (#) lens operator
     -- ,QuasiQuotes -- breaks [x| ...], making whitespace free list comps break
     ,PatternSynonyms -- steals the pattern keyword
+    ,RecursiveDo -- steals the rec keyword
+    ,DoRec -- same
     ]
 
 

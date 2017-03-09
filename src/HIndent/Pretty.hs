@@ -5,6 +5,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
 
 -- | Pretty printing.
 
@@ -938,7 +939,16 @@ instance Pretty Asst where
         write " ~ "
         pretty b
       ParenA _ asst -> parens (pretty asst)
-      AppA _ name tys -> spaced (pretty name : map pretty (reverse tys))
+      AppA _ name tys ->
+        let
+#if MIN_VERSION_haskell_src_exts(1,19,0)
+          hse_workaround = id
+#else
+          -- Workaround for bug in haskell-src-exts < 1.19.0
+          -- <https://github.com/haskell-suite/haskell-src-exts/issues/328>
+          hse_workaround = reverse
+#endif
+        in spaced (pretty name : map pretty (hse_workaround tys))
       WildCardA _ name ->
         case name of
           Nothing -> write "_"

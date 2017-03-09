@@ -1043,6 +1043,45 @@ instance Foo (^>)
 instance Foo (T.<^)
 ```
 
+neongreen “{” is lost when formatting “Foo{}” #366
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/366
+foo = Nothing {}
+```
+
+jparoz Trailing space in list comprehension #357
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/357
+foo =
+  [ (x, y)
+  | x <- [1 .. 10]
+  , y <- [11 .. 20]
+  , even x
+  , even x
+  , even x
+  , even x
+  , even x
+  , odd y
+  ]
+```
+
+ttuegel Record formatting applied to expressions with RecordWildCards #274
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/274
+foo (Bar {..}) = Bar {..}
+```
+
+RecursiveDo `rec` and `mdo` keyword #328
+
+```haskell
+rec = undefined
+
+mdo = undefined
+```
+
 # MINIMAL pragma
 
 Monad example
