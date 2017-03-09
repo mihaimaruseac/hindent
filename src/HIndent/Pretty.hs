@@ -1797,8 +1797,8 @@ conDecl (ConDecl _ name bangty) =
   depend (do pretty name
              unless (null bangty) space)
          (lined (map pretty bangty))
-conDecl (InfixConDecl l a f b) =
-  pretty (ConDecl l f [a,b])
+conDecl (InfixConDecl _ a f b) =
+  inter space [pretty a, pretty f, pretty b]
 
 -- | Record decls are formatted like: Foo
 -- { bar :: X

@@ -1082,6 +1082,15 @@ rec = undefined
 mdo = undefined
 ```
 
+k-bx Infix data constructor gets reformatted into a parse error #328
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/328
+data Expect =
+  String :--> String
+  deriving (Show)
+```
+
 # MINIMAL pragma
 
 Monad example
