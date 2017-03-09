@@ -1043,7 +1043,7 @@ instance Foo (^>)
 instance Foo (T.<^)
 ```
 
-neongreen “{” is lost when formatting “Foo{}” #366
+neongreen "{" is lost when formatting "Foo{}" #366
 
 ```haskell
 -- https://github.com/chrisdone/hindent/issues/366
@@ -1189,7 +1189,9 @@ exp' (App _ op a) = do
     flatten (App _ f' a') b = flatten f' (a' : b)
     flatten f' as = (f', as)
 ```
+
 Quasi quotes
+
 ```haskell
 exp = [name|exp|]
 ```
