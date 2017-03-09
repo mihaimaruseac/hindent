@@ -614,6 +614,20 @@ data Person = Person
   , lastName :: !String -- ^ Last name
   , age :: !Int -- ^ Age
   }
+
+data X
+  = X { x :: Int }
+  | X'
+
+data X = X
+  { x :: Int
+  , x' :: Int
+  }
+
+data X
+  = X { x :: Int
+      , x' :: Int }
+  | X'
 ```
 
 Spaces between deriving classes

@@ -1720,20 +1720,19 @@ decl' (PatBind _ pat rhs' mbinds) =
        for_ mbinds bindingGroup
 
 -- | Handle records specially for a prettier display (see guide).
-decl' (DataDecl _ dataornew ctx dhead condecls@[_] mderivs)
-  | any isRecord condecls =
+decl' (DataDecl _ dataornew ctx dhead [con] mderivs)
+  | isRecord con =
     do depend (do pretty dataornew
-                  unless (null condecls) space)
+                  space)
               (withCtx ctx
                        (do pretty dhead
-                           multiCons condecls))
+                           singleCons con))
        case mderivs of
          Nothing -> return ()
          Just derivs -> space >> pretty derivs
-  where multiCons xs =
+  where singleCons x =
           depend (write " =")
-                 (inter (write "|")
-                        (map (depend space . qualConDecl) xs))
+                 ((depend space . qualConDecl) x)
 decl' e = decl e
 
 declTy :: Type NodeInfo -> Printer ()
@@ -1768,14 +1767,12 @@ declTy dty =
 
 -- | Use special record display, used by 'dataDecl' in a record scenario.
 qualConDecl :: QualConDecl NodeInfo -> Printer ()
-qualConDecl x =
-  case x of
-    QualConDecl _ tyvars ctx d ->
-      depend (unless (null (fromMaybe [] tyvars))
-                     (do write "forall "
-                         spaced (map pretty (fromMaybe [] tyvars))
-                         write ". "))
-             (withCtx ctx (recDecl d))
+qualConDecl (QualConDecl _ tyvars ctx d) =
+  depend (unless (null (fromMaybe [] tyvars))
+                 (do write "forall "
+                     spaced (map pretty (fromMaybe [] tyvars))
+                     write ". "))
+         (withCtx ctx (recDecl d))
 
 -- | Fields are preceded with a space.
 conDecl :: ConDecl NodeInfo -> Printer ()
@@ -1783,23 +1780,15 @@ conDecl (RecDecl _ name fields) =
   depend (do pretty name
              write " ")
          (do depend (write "{")
-                    (prefixedLined ", "
+                    (prefixedLined ","
                                    (map (depend space . pretty) fields))
-             write "}")
-conDecl x = case x of
-              ConDecl _ name bangty ->
-                depend (do pretty name
-                           unless (null bangty) space)
-                       (lined (map pretty bangty))
-              InfixConDecl l a f b ->
-                pretty (ConDecl l f [a,b])
-              RecDecl _ name fields ->
-                depend (do pretty name
-                           space)
-                       (do depend (write "{")
-                                  (prefixedLined ", "
-                                                 (map pretty fields))
-                           write "}")
+             write " }")
+conDecl (ConDecl _ name bangty) =
+  depend (do pretty name
+             unless (null bangty) space)
+         (lined (map pretty bangty))
+conDecl (InfixConDecl l a f b) =
+  pretty (ConDecl l f [a,b])
 
 -- | Record decls are formatted like: Foo
 -- { bar :: X
