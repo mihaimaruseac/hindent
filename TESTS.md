@@ -1096,6 +1096,14 @@ data Expect =
   deriving (Show)
 ```
 
+sheyll Misplaced `where` with method comments
+
+```haskell
+class Foo a where
+  -- Lala
+  foo :: a
+```
+
 # MINIMAL pragma
 
 Monad example
