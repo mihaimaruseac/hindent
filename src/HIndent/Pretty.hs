@@ -1650,12 +1650,11 @@ typ x = case x of
                   FunCon _ -> parens (pretty p)
                   _ -> pretty p
           TyParen _ e -> parens (pretty e)
-          TyInfix _ a op b ->
-            depend (do pretty a
-                       space)
-                   (depend (do prettyInfixOp op
-                               space)
-                           (pretty b))
+          TyInfix _ a op b -> do
+            pretty a
+            space
+            prettyInfixOp op
+            ifFitsOnOneLineOrElse (space >> pretty b) (newline >> pretty b)
           TyKind _ ty k ->
             parens (do pretty ty
                        write " :: "
