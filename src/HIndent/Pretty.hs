@@ -1614,15 +1614,6 @@ typ (TyTuple _ Boxed types) = do
   let horVar = parens $ inter (write ", ") (map pretty types)
   let verVar = parens $ prefixedLined "," (map (depend space . pretty) types)
   horVar `ifFitsOnOneLineOrElse` verVar
-
-typ (TyTuple _ Unboxed types) = do
-  let horVar = wrap "(# " " #)" $ inter (write ", ") (map pretty types)
-  let verVar = wrap "(#" " #)" $ prefixedLined "," (map (depend space . pretty) types)
-  horVar `ifFitsOnOneLineOrElse` verVar
-typ (TyTuple _ Boxed types) = do
-  let horVar = parens $ inter (write ", ") (map pretty types)
-  let verVar = parens $ prefixedLined "," (map (depend space . pretty) types)
-  horVar `ifFitsOnOneLineOrElse` verVar
 typ (TyTuple _ Unboxed types) = do
   let horVar = wrap "(# " " #)" $ inter (write ", ") (map pretty types)
   let verVar = wrap "(#" " #)" $ prefixedLined "," (map (depend space . pretty) types)
