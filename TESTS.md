@@ -334,38 +334,29 @@ foo :: $([t|Bool|]) -> a
 
 # Type signatures
 
-Long arguments list
-
-```haskell
-longLongFunction :: ReaderT r (WriterT w (StateT s m)) a
-                 -> StateT s (WriterT w (ReaderT r m)) a
-```
-
 Long argument list should line break
 
-```haskell pending
+```haskell
 longLongFunction ::
      ReaderT r (WriterT w (StateT s m)) a
   -> StateT s (WriterT w (ReaderT r m)) a
 ```
 
-Class constraints should leave :: on same line
+Class constraints should leave `::` on same line
 
-``` haskell pending
+``` haskell
 -- see https://github.com/chrisdone/hindent/pull/266#issuecomment-244182805
 fun ::
-  (Class a, Class b)
-  => foo bar mu zot
-  -> foo bar mu zot
+     (Class a, Class b)
+  => fooooooooooo bar mu zot
+  -> fooooooooooo bar mu zot
   -> c
 ```
 
 Class constraints
 
 ``` haskell
-fun
-  :: (Class a, Class b)
-  => a -> b -> c
+fun :: (Class a, Class b) => a -> b -> c
 ```
 
 Tuples
@@ -394,9 +385,7 @@ class Foo a where
 Implicit parameters
 
 ```haskell
-f
-  :: (?x :: Int)
-  => Int
+f :: (?x :: Int) => Int
 ```
 
 Promoted list (issue #348)
@@ -426,9 +415,7 @@ b = undefined
 Prefix notation for operators
 
 ``` haskell
-(+)
-  :: Num a
-  => a -> a -> a
+(+) :: Num a => a -> a -> a
 (+) a b = a
 ```
 
@@ -828,16 +815,15 @@ x = do
 meditans hindent freezes when trying to format this code #222
 
 ``` haskell
-c
-  :: forall new.
+c :: forall new.
      ( Settable "pitch" Pitch (Map.AsMap (new Map.:\ "pitch")) new
      , Default (Book' (Map.AsMap (new Map.:\ "pitch")))
      )
   => Book' new
 c = set #pitch C (def :: Book' (Map.AsMap (new Map.:\ "pitch")))
 
-foo
-  :: ( Foooooooooooooooooooooooooooooooooooooooooo
+foo ::
+     ( Foooooooooooooooooooooooooooooooooooooooooo
      , Foooooooooooooooooooooooooooooooooooooooooo
      )
   => A
@@ -1094,6 +1080,27 @@ k-bx Infix data constructor gets reformatted into a parse error #328
 data Expect =
   String :--> String
   deriving (Show)
+```
+
+tfausak Class constraints cause too many newlines #244
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/244
+x :: Num a => a
+```
+
+expipiplus1 Always break before `::` on overlong signatures #390
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/390
+fun :: Is => Short
+fun = undefined
+
+someFunctionSignature ::
+     Wiiiiiiiiiiiiiiiiith
+  -> Enough
+  -> (Arguments -> To ())
+  -> Overflow (The Line Limit)
 ```
 
 # MINIMAL pragma

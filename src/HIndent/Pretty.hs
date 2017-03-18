@@ -1604,13 +1604,6 @@ context ctx =
       write ")"
     CxEmpty _ -> parens (return ())
 
--- | If the given operator is an element of line breaks in configuration.
-isLineBreak :: QName NodeInfo -> Printer Bool
-isLineBreak (UnQual _ (Symbol _ s)) = do
-  breaks <- gets (configLineBreaks . psConfig)
-  return $ s `elem` breaks
-isLineBreak _ = return False
-
 typ :: Type NodeInfo -> Printer ()
 typ (TyTuple _ Boxed types) = wrap "(" ")" $ inter (write ", ") (map pretty types)
 typ (TyTuple _ Unboxed types) = wrap "(# " " #)" $ inter (write ", ") (map pretty types)
@@ -1717,18 +1710,23 @@ decl' :: Decl NodeInfo -> Printer ()
 --     -> IO ()
 --
 decl' (TypeSig _ names ty') = do
-  mst <- fitsOnOneLine (declTy ty')
+  mst <- fitsOnOneLine (depend (do commas (map prettyTopName names)
+                                   write " :: ")
+                               (declTy ty'))
   case mst of
-    Just {} ->
-      depend
-        (do commas (map prettyTopName names)
-            write " :: ")
-        (declTy ty')
     Nothing -> do
       commas (map prettyTopName names)
-      newline
       indentSpaces <- getIndentSpaces
-      indented indentSpaces (depend (write ":: ") (declTy ty'))
+      if allNamesLength >= indentSpaces
+        then do write " ::"
+                newline
+                indented indentSpaces (depend (write "   ") (declTy ty'))
+        else (depend (write " :: ") (declTy ty'))
+    Just st -> put st
+  where
+    nameLength (Ident _ s) = length s
+    nameLength (Symbol _ s) = length s + 2
+    allNamesLength = fromIntegral $ sum (map nameLength names) + 2 * (length names - 1)
 
 decl' (PatBind _ pat rhs' mbinds) =
   withCaseContext False $
@@ -1755,32 +1753,62 @@ decl' e = decl e
 declTy :: Type NodeInfo -> Printer ()
 declTy dty =
   case dty of
-    TyForall _ mbinds mctx ty -> do
+    TyForall _ mbinds mctx ty ->
       case mbinds of
-        Nothing -> return ()
+        Nothing -> do
+          case mctx of
+            Nothing -> prettyTy False ty
+            Just ctx -> do
+              mst <- fitsOnOneLine (do pretty ctx
+                                       depend (write " => ") (prettyTy False ty))
+              case mst of
+                Nothing -> do
+                  pretty ctx
+                  newline
+                  indented (-3) (depend (write "=> ") (prettyTy True ty))
+                Just st -> put st
         Just ts -> do
           write "forall "
           spaced (map pretty ts)
           write "."
-          newline
-      case mctx of
-        Nothing -> prettyTy ty
-        Just ctx -> do
-          pretty ctx
-          newline
-          indented (-3) (depend (write "=> ") (prettyTy ty))
-    _ -> prettyTy dty
+          case mctx of
+            Nothing -> do
+              mst <- fitsOnOneLine (space >> prettyTy False ty)
+              case mst of
+                Nothing -> do
+                  newline
+                  prettyTy True ty
+                Just st -> put st
+            Just ctx -> do
+              mst <- fitsOnOneLine (space >> pretty ctx)
+              case mst of
+                Nothing -> do
+                  newline
+                  pretty ctx
+                  newline
+                  indented (-3) (depend (write "=> ") (prettyTy True ty))
+                Just st -> do
+                  put st
+                  newline
+                  indented (-3) (depend (write "=> ") (prettyTy True ty))
+    _ -> prettyTy False dty
   where
     collapseFaps (TyFun _ arg result) = arg : collapseFaps result
     collapseFaps e = [e]
-    prettyTy ty = do
-      mst <- fitsOnOneLine (pretty ty)
-      case mst of
-        Nothing ->
+    prettyTy breakLine ty = do
+      if breakLine
+        then
           case collapseFaps ty of
             [] -> pretty ty
             tys -> prefixedLined "-> " (map pretty tys)
-        Just st -> put st
+        else do
+          mst <- fitsOnOneLine (pretty ty)
+          case mst of
+            Nothing ->
+              case collapseFaps ty of
+                [] -> pretty ty
+                tys -> prefixedLined "-> " (map pretty tys)
+            Just st -> put st
 
 -- | Use special record display, used by 'dataDecl' in a record scenario.
 qualConDecl :: QualConDecl NodeInfo -> Printer ()
@@ -1847,6 +1875,13 @@ recUpdateExpr expWriter updates = do
 isRecord :: QualConDecl t -> Bool
 isRecord (QualConDecl _ _ _ RecDecl{}) = True
 isRecord _ = False
+
+-- | If the given operator is an element of line breaks in configuration.
+isLineBreak :: QName NodeInfo -> Printer Bool
+isLineBreak (UnQual _ (Symbol _ s)) = do
+  breaks <- gets (configLineBreaks . psConfig)
+  return $ s `elem` breaks
+isLineBreak _ = return False
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
 fitsOnOneLine :: Printer a -> Printer (Maybe PrintState)
