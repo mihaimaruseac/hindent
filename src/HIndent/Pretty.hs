@@ -779,19 +779,12 @@ decl (ClassDecl _ ctx dhead fundeps decls) =
             (do newline
                 indentedBlock (lined (map pretty (fromMaybe [] decls))))
 decl (TypeDecl _ typehead typ') = do
-  mst <- fitsOnOneLine (pretty typ')
-  case mst of
-    Just {} ->
-      do write "type "
-         pretty typehead
-         write " = "
-         pretty typ'
-    Nothing ->
-      do write "type "
-         pretty typehead
-         newline
-         indentSpaces <- getIndentSpaces
-         indented indentSpaces (depend (write " = ") (pretty typ'))
+  write "type "
+  pretty typehead
+  ifFitsOnOneLineOrElse
+    (depend (write " = ") (pretty typ'))
+    (do newline
+        indentedBlock (depend (write " = ") (pretty typ')))
 decl (TypeFamDecl _ declhead result injectivity) = do
   write "type family "
   pretty declhead
@@ -1617,8 +1610,23 @@ context ctx =
     CxEmpty _ -> parens (return ())
 
 typ :: Type NodeInfo -> Printer ()
-typ (TyTuple _ Boxed types) = wrap "(" ")" $ inter (write ", ") (map pretty types)
-typ (TyTuple _ Unboxed types) = wrap "(# " " #)" $ inter (write ", ") (map pretty types)
+typ (TyTuple _ Boxed types) = do
+  let horVar = parens $ inter (write ", ") (map pretty types)
+  let verVar = parens $ prefixedLined "," (map (depend space . pretty) types)
+  horVar `ifFitsOnOneLineOrElse` verVar
+
+typ (TyTuple _ Unboxed types) = do
+  let horVar = wrap "(# " " #)" $ inter (write ", ") (map pretty types)
+  let verVar = wrap "(#" " #)" $ prefixedLined "," (map (depend space . pretty) types)
+  horVar `ifFitsOnOneLineOrElse` verVar
+typ (TyTuple _ Boxed types) = do
+  let horVar = parens $ inter (write ", ") (map pretty types)
+  let verVar = parens $ prefixedLined "," (map (depend space . pretty) types)
+  horVar `ifFitsOnOneLineOrElse` verVar
+typ (TyTuple _ Unboxed types) = do
+  let horVar = wrap "(# " " #)" $ inter (write ", ") (map pretty types)
+  let verVar = wrap "(#" " #)" $ prefixedLined "," (map (depend space . pretty) types)
+  horVar `ifFitsOnOneLineOrElse` verVar
 typ (TyForall _ mbinds ctx ty) =
   depend (case mbinds of
             Nothing -> return ()
