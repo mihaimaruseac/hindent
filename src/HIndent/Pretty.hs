@@ -1149,7 +1149,19 @@ instance Pretty InstRule where
          Just xs -> do write "forall "
                        spaced (map pretty xs)
                        write ". "
-       withCtx mctx (pretty ihead)
+       case mctx of
+         Nothing -> pretty ihead
+         Just ctx -> do
+           mst <- fitsOnOneLine (do pretty ctx
+                                    write " => "
+                                    pretty ihead
+                                    write " where")
+           case mst of
+             Nothing -> withCtx mctx (pretty ihead)
+             Just {} -> do
+               pretty ctx
+               write " => "
+               pretty ihead
 
 instance Pretty InstHead where
   prettyInternal x =

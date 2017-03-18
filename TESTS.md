@@ -859,8 +859,7 @@ sheyll explicit forall in instances #218
 -- https://github.com/chrisdone/hindent/issues/218
 instance forall x. C
 
-instance forall x. Show x =>
-         C x
+instance forall x. Show x => C x
 ```
 
 tfausak support shebangs #208
@@ -1087,6 +1086,15 @@ tfausak Class constraints cause too many newlines #244
 ```haskell
 -- https://github.com/commercialhaskell/hindent/issues/244
 x :: Num a => a
+x = undefined
+
+-- instance
+instance Num a => C a
+
+-- long instance
+instance Nuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuum a =>
+         C a where
+  f = undefined
 ```
 
 expipiplus1 Always break before `::` on overlong signatures #390
