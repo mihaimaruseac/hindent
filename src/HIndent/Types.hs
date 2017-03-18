@@ -63,19 +63,27 @@ data Config = Config
     , configIndentSpaces :: !Int64 -- ^ How many spaces to indent?
     , configTrailingNewline :: !Bool -- ^ End with a newline.
     , configSortImports :: !Bool -- ^ Sort imports in groups.
+    , configLineBreaks :: [String] -- ^ Break line when meets these operators.
     }
 
 instance FromJSON Config where
   parseJSON (Y.Object v) =
     Config <$>
-    fmap (fromMaybe (configMaxColumns defaultConfig)) (v Y..:? "line-length") <*>
-    fmap
-      (fromMaybe (configIndentSpaces defaultConfig))
-      (v Y..:? "indent-size" <|> v Y..:? "tab-size") <*>
-    fmap
-      (fromMaybe (configTrailingNewline defaultConfig))
-      (v Y..:? "force-trailing-newline") <*>
-    fmap (fromMaybe (configSortImports defaultConfig)) (v Y..:? "sort-imports")
+      fmap
+        (fromMaybe (configMaxColumns defaultConfig))
+        (v Y..:? "line-length") <*>
+      fmap
+        (fromMaybe (configIndentSpaces defaultConfig))
+        (v Y..:? "indent-size" <|> v Y..:? "tab-size") <*>
+      fmap
+        (fromMaybe (configTrailingNewline defaultConfig))
+        (v Y..:? "force-trailing-newline") <*>
+      fmap
+        (fromMaybe (configSortImports defaultConfig))
+        (v Y..:? "sort-imports") <*>
+      fmap
+        (fromMaybe (configLineBreaks defaultConfig))
+        (v Y..:? "line-breaks")
   parseJSON _ = fail "Expected Object for Config value"
 
 -- | Default style configuration.
@@ -86,6 +94,7 @@ defaultConfig =
     , configIndentSpaces = 2
     , configTrailingNewline = True
     , configSortImports = True
+    , configLineBreaks = []
     }
 
 -- | Some comment to print.

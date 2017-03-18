@@ -119,6 +119,16 @@ instance C a where
     k p
 ```
 
+GADT declarations
+```haskell
+data Ty :: (* -> *) where
+  TCon
+    :: { field1 :: Int
+       , field2 :: Bool}
+    -> Ty Bool
+  TCon' :: (a :: *) -> a -> Ty a
+```
+
 # Expressions
 
 Lazy patterns in a lambda
@@ -346,38 +356,29 @@ foo :: $([t|Bool|]) -> a
 
 # Type signatures
 
-Long arguments list
-
-```haskell
-longLongFunction :: ReaderT r (WriterT w (StateT s m)) a
-                 -> StateT s (WriterT w (ReaderT r m)) a
-```
-
 Long argument list should line break
 
-```haskell pending
+```haskell
 longLongFunction ::
      ReaderT r (WriterT w (StateT s m)) a
   -> StateT s (WriterT w (ReaderT r m)) a
 ```
 
-Class constraints should leave :: on same line
+Class constraints should leave `::` on same line
 
-``` haskell pending
+``` haskell
 -- see https://github.com/chrisdone/hindent/pull/266#issuecomment-244182805
 fun ::
-  (Class a, Class b)
-  => foo bar mu zot
-  -> foo bar mu zot
+     (Class a, Class b)
+  => fooooooooooo bar mu zot
+  -> fooooooooooo bar mu zot
   -> c
 ```
 
 Class constraints
 
 ``` haskell
-fun
-  :: (Class a, Class b)
-  => a -> b -> c
+fun :: (Class a, Class b) => a -> b -> c
 ```
 
 Tuples
@@ -406,9 +407,7 @@ class Foo a where
 Implicit parameters
 
 ```haskell
-f
-  :: (?x :: Int)
-  => Int
+f :: (?x :: Int) => Int
 ```
 
 Promoted list (issue #348)
@@ -438,9 +437,7 @@ b = undefined
 Prefix notation for operators
 
 ``` haskell
-(+)
-  :: Num a
-  => a -> a -> a
+(+) :: Num a => a -> a -> a
 (+) a b = a
 ```
 
@@ -840,16 +837,15 @@ x = do
 meditans hindent freezes when trying to format this code #222
 
 ``` haskell
-c
-  :: forall new.
+c :: forall new.
      ( Settable "pitch" Pitch (Map.AsMap (new Map.:\ "pitch")) new
      , Default (Book' (Map.AsMap (new Map.:\ "pitch")))
      )
   => Book' new
 c = set #pitch C (def :: Book' (Map.AsMap (new Map.:\ "pitch")))
 
-foo
-  :: ( Foooooooooooooooooooooooooooooooooooooooooo
+foo ::
+     ( Foooooooooooooooooooooooooooooooooooooooooo
      , Foooooooooooooooooooooooooooooooooooooooooo
      )
   => A
@@ -885,8 +881,7 @@ sheyll explicit forall in instances #218
 -- https://github.com/chrisdone/hindent/issues/218
 instance forall x. C
 
-instance forall x. Show x =>
-         C x
+instance forall x. Show x => C x
 ```
 
 tfausak support shebangs #208
@@ -1041,6 +1036,103 @@ instance Foo (^>)
 instance Foo (T.<^)
 ```
 
+neongreen "{" is lost when formatting "Foo{}" #366
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/366
+foo = Nothing {}
+```
+
+jparoz Trailing space in list comprehension #357
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/357
+foo =
+  [ (x, y)
+  | x <- [1 .. 10]
+  , y <- [11 .. 20]
+  , even x
+  , even x
+  , even x
+  , even x
+  , even x
+  , odd y
+  ]
+```
+
+ttuegel Record formatting applied to expressions with RecordWildCards #274
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/274
+foo (Bar {..}) = Bar {..}
+```
+
+RecursiveDo `rec` and `mdo` keyword #328
+
+```haskell
+rec = undefined
+
+mdo = undefined
+```
+
+sophie-h Record syntax change in 5.2.2 #393
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/393
+data X
+  = X { x :: Int }
+  | X'
+
+data X = X
+  { x :: Int
+  , x' :: Int
+  }
+
+data X
+  = X { x :: Int
+      , x' :: Int }
+  | X'
+```
+
+k-bx Infix data constructor gets reformatted into a parse error #328
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/328
+data Expect =
+  String :--> String
+  deriving (Show)
+```
+
+tfausak Class constraints cause too many newlines #244
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/244
+x :: Num a => a
+x = undefined
+
+-- instance
+instance Num a => C a
+
+-- long instance
+instance Nuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuum a =>
+         C a where
+  f = undefined
+```
+
+expipiplus1 Always break before `::` on overlong signatures #390
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/390
+fun :: Is => Short
+fun = undefined
+
+someFunctionSignature ::
+     Wiiiiiiiiiiiiiiiiith
+  -> Enough
+  -> (Arguments -> To ())
+  -> Overflow (The Line Limit)
+```
+
 # MINIMAL pragma
 
 Monad example
@@ -1148,7 +1240,9 @@ exp' (App _ op a) = do
     flatten (App _ f' a') b = flatten f' (a' : b)
     flatten f' as = (f', as)
 ```
+
 Quasi quotes
+
 ```haskell
 exp = [name|exp|]
 ```
