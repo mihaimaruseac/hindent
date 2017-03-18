@@ -778,12 +778,20 @@ decl (ClassDecl _ ctx dhead fundeps decls) =
      unless (null (fromMaybe [] decls))
             (do newline
                 indentedBlock (lined (map pretty (fromMaybe [] decls))))
-decl (TypeDecl _ typehead typ') =
-  depend (write "type ")
-         (depend (pretty typehead)
-                 (depend (write " = ")
-                         (pretty typ')))
-
+decl (TypeDecl _ typehead typ') = do
+  mst <- fitsOnOneLine (pretty typ')
+  case mst of
+    Just {} ->
+      do write "type "
+         pretty typehead
+         write " = "
+         pretty typ'
+    Nothing ->
+      do write "type "
+         pretty typehead
+         newline
+         indentSpaces <- getIndentSpaces
+         indented indentSpaces (depend (write " = ") (pretty typ'))
 decl (TypeFamDecl _ declhead result injectivity) = do
   write "type family "
   pretty declhead
@@ -1596,104 +1604,103 @@ context ctx =
       write ")"
     CxEmpty _ -> parens (return ())
 
-unboxParens :: Printer a -> Printer a
-unboxParens p =
-  depend (write "(# ")
-         (do v <- p
-             write " #)"
-             return v)
+-- | If the given operator is an element of line breaks in configuration.
+isLineBreak :: QName NodeInfo -> Printer Bool
+isLineBreak (UnQual _ (Symbol _ s)) = do
+  breaks <- gets (configLineBreaks . psConfig)
+  return $ s `elem` breaks
+isLineBreak _ = return False
 
 typ :: Type NodeInfo -> Printer ()
-typ (TyTuple _ Boxed types) = parens $ inter (write ", ") $ map pretty types
-typ (TyTuple _ Unboxed types) = unboxParens $ inter (write ", ") $ map pretty types
-typ x = case x of
-          TyForall _ mbinds ctx ty ->
-            depend (case mbinds of
-                      Nothing -> return ()
-                      Just ts ->
-                        do write "forall "
-                           spaced (map pretty ts)
-                           write ". ")
-                   (do indentSpaces <- getIndentSpaces
-                       withCtx ctx (indented indentSpaces (pretty ty)))
-          TyFun _ a b ->
-            depend (do pretty a
-                       write " -> ")
-                   (pretty b)
-          TyTuple _ boxed tys ->
-            depend (write (case boxed of
-                             Unboxed -> "(#"
-                             Boxed -> "("))
-                   (do commas (map pretty tys)
-                       write (case boxed of
-                                Unboxed -> "#)"
-                                Boxed -> ")"))
-          TyList _ t -> brackets (pretty t)
-          TyParArray _ t ->
-            brackets (do write ":"
-                         pretty t
-                         write ":")
-          TyApp _ f a -> spaced [pretty f, pretty a]
-          TyVar _ n -> pretty n
-          TyCon _ p ->
-            case p of
-              Qual _ _ name ->
-                case name of
-                  Ident _ _ -> pretty p
-                  Symbol _ _ -> parens (pretty p)
-              UnQual _ name ->
-                case name of
-                  Ident _ _ -> pretty p
-                  Symbol _ _ -> parens (pretty p)
-              Special _ con ->
-                case con of
-                  FunCon _ -> parens (pretty p)
-                  _ -> pretty p
-          TyParen _ e -> parens (pretty e)
-          TyInfix _ a op b ->
-            depend (do pretty a
-                       space)
-                   (depend (do prettyInfixOp op
-                               space)
-                           (pretty b))
-          TyKind _ ty k ->
-            parens (do pretty ty
-                       write " :: "
-                       pretty k)
-          TyBang _ bangty unpackty right ->
-            do pretty unpackty
-               pretty bangty
-               pretty right
-          TyEquals _ left right ->
-            do pretty left
-               write " ~ "
-               pretty right
-          TyPromoted _ (PromotedList _ _ ts) ->
-            do write "'["
-               unless (null ts) $ write " "
-               commas (map pretty ts)
-               write "]"
-          TyPromoted _ (PromotedTuple _ ts) ->
-            do write "'("
-               unless (null ts) $ write " "
-               commas (map pretty ts)
-               write ")"
-          TyPromoted _ (PromotedCon _ _ tname) ->
-            do write "'"
-               pretty tname
-          ty@TyPromoted{} -> pretty' ty
-          TySplice _ splice -> pretty splice
-          TyWildCard _ name ->
-            case name of
-              Nothing -> write "_"
-              Just n ->
-                do write "_"
-                   pretty n
-          TyQuasiQuote _ n s ->
-            brackets (depend (do string n
-                                 write "|")
-                             (do string s
-                                 write "|"))
+typ (TyTuple _ Boxed types) = wrap "(" ")" $ inter (write ", ") (map pretty types)
+typ (TyTuple _ Unboxed types) = wrap "(# " " #)" $ inter (write ", ") (map pretty types)
+typ (TyForall _ mbinds ctx ty) =
+  depend (case mbinds of
+            Nothing -> return ()
+            Just ts ->
+              do write "forall "
+                 spaced (map pretty ts)
+                 write ". ")
+         (do indentSpaces <- getIndentSpaces
+             withCtx ctx (indented indentSpaces (pretty ty)))
+typ (TyFun _ a b) =
+  depend (do pretty a
+             write " -> ")
+         (pretty b)
+typ (TyList _ t) = brackets (pretty t)
+typ (TyParArray _ t) =
+  brackets (do write ":"
+               pretty t
+               write ":")
+typ (TyApp _ f a) = spaced [pretty f, pretty a]
+typ (TyVar _ n) = pretty n
+typ (TyCon _ p) =
+  case p of
+    Qual _ _ name ->
+      case name of
+        Ident _ _ -> pretty p
+        Symbol _ _ -> parens (pretty p)
+    UnQual _ name ->
+      case name of
+        Ident _ _ -> pretty p
+        Symbol _ _ -> parens (pretty p)
+    Special _ con ->
+      case con of
+        FunCon _ -> parens (pretty p)
+        _ -> pretty p
+typ (TyParen _ e) = parens (pretty e)
+typ (TyInfix _ a op b) = do
+  -- Apply special rules to line-break operators.
+  linebreak <- isLineBreak op
+  if linebreak
+    then do pretty a
+            newline
+            prettyInfixOp op
+            space
+            pretty b
+    else do pretty a
+            space
+            prettyInfixOp op
+            space
+            pretty b
+typ (TyKind _ ty k) =
+  parens (do pretty ty
+             write " :: "
+             pretty k)
+typ (TyBang _ bangty unpackty right) =
+  do pretty unpackty
+     pretty bangty
+     pretty right
+typ (TyEquals _ left right) =
+  do pretty left
+     write " ~ "
+     pretty right
+typ (TyPromoted _ (PromotedList _ _ ts)) =
+  do write "'["
+     unless (null ts) $ write " "
+     commas (map pretty ts)
+     write "]"
+typ (TyPromoted _ (PromotedTuple _ ts)) =
+  do write "'("
+     unless (null ts) $ write " "
+     commas (map pretty ts)
+     write ")"
+typ (TyPromoted _ (PromotedCon _ _ tname)) =
+  do write "'"
+     pretty tname
+typ ty@TyPromoted{} = pretty' ty
+typ (TySplice _ splice) = pretty splice
+typ (TyWildCard _ name) =
+  case name of
+    Nothing -> write "_"
+    Just n ->
+      do write "_"
+         pretty n
+typ (TyQuasiQuote _ n s) =
+  brackets (depend (do string n
+                       write "|")
+                   (do string s
+                       write "|"))
 
 prettyTopName :: Name NodeInfo -> Printer ()
 prettyTopName x@Ident{} = pretty x
