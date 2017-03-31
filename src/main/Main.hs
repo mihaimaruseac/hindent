@@ -6,32 +6,32 @@
 -- hindent
 module Main where
 
-import           Control.Applicative
-import           Control.Exception
-import           Control.Monad
+import Control.Applicative
+import Control.Exception
+import Control.Monad
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Builder as S
 import qualified Data.ByteString.Lazy.Char8 as L8
-import           Data.Maybe
-import           Data.Text (Text)
+import Data.Maybe
+import Data.Text (Text)
 import qualified Data.Text as T
-import           Data.Version (showVersion)
+import Data.Version (showVersion)
 import qualified Data.Yaml as Y
-import           Descriptive
-import           Descriptive.Options
-import           Foreign.C.Error
-import           GHC.IO.Exception
-import           HIndent
-import           HIndent.Types
-import           Language.Haskell.Exts hiding (Style, style)
-import           Path
+import Descriptive
+import Descriptive.Options
+import Foreign.C.Error
+import GHC.IO.Exception
+import HIndent
+import HIndent.Types
+import Language.Haskell.Exts hiding (Style, style)
+import Path
 import qualified Path.Find as Path
 import qualified Path.IO as Path
-import           Paths_hindent (version)
+import Paths_hindent (version)
 import qualified System.Directory as IO
-import           System.Environment
+import System.Environment
 import qualified System.IO as IO
-import           Text.Read
+import Text.Read
 
 -- | Main entry point.
 main :: IO ()
@@ -39,31 +39,38 @@ main = do
   args <- getArgs
   config <- getConfig
   case consume (options config) (map T.pack args) of
-    Succeeded (style, exts, mfilepath) ->
-      case mfilepath of
-        Just filepath -> do
-          text <- S.readFile filepath
-          case reformat style (Just exts) text of
-            Left e -> error (filepath ++ ": " ++ e)
-            Right out -> unless (L8.fromStrict text == S.toLazyByteString out) $ do
-              tmpDir <- IO.getTemporaryDirectory
-              (fp, h) <- IO.openTempFile tmpDir "hindent.hs"
-              L8.hPutStr h (S.toLazyByteString out)
-              IO.hFlush h
-              IO.hClose h
-              let exdev e =
-                    if ioe_errno e == Just ((\(Errno a) -> a) eXDEV)
-                      then IO.copyFile fp filepath >> IO.removeFile fp
-                      else throw e
-              IO.copyPermissions filepath fp
-              IO.renameFile fp filepath `catch` exdev
-        Nothing ->
+    Succeeded (style, exts, filepaths) ->
+      case (length filepaths) > 0 of
+        True -> do
+          mapM_ (reformatFile style exts) filepaths
+        False ->
           L8.interact
-            (either error S.toLazyByteString . reformat style (Just exts) . L8.toStrict)
+            (either error S.toLazyByteString .
+             reformat style (Just exts) . L8.toStrict)
     Failed (Wrap (Stopped Version) _) ->
       putStrLn ("hindent " ++ showVersion version)
     Failed (Wrap (Stopped Help) _) -> putStrLn (help defaultConfig)
     _ -> error (help defaultConfig)
+
+-- | Given a Config and [Extension], reformats a file
+reformatFile :: Config -> [Extension] -> FilePath -> IO ()
+reformatFile style exts filepath = do
+  text <- S.readFile filepath
+  case reformat style (Just exts) text of
+    Left e -> error (filepath ++ ": " ++ e)
+    Right out ->
+      unless (L8.fromStrict text == S.toLazyByteString out) $ do
+        tmpDir <- IO.getTemporaryDirectory
+        (fp, h) <- IO.openTempFile tmpDir "hindent.hs"
+        L8.hPutStr h (S.toLazyByteString out)
+        IO.hFlush h
+        IO.hClose h
+        let exdev e =
+              if ioe_errno e == Just ((\(Errno a) -> a) eXDEV)
+                then IO.copyFile fp filepath >> IO.removeFile fp
+                else throw e
+        IO.copyPermissions filepath fp
+        IO.renameFile fp filepath `catch` exdev
 
 -- | Read config from a config file, or return 'defaultConfig'.
 getConfig :: IO Config
@@ -71,7 +78,10 @@ getConfig = do
   cur <- Path.getCurrentDir
   homeDir <- Path.getHomeDir
   mfile <-
-    Path.findFileUp cur ((== ".hindent.yaml") . toFilePath . filename) (Just homeDir)
+    Path.findFileUp
+      cur
+      ((== ".hindent.yaml") . toFilePath . filename)
+      (Just homeDir)
   case mfile of
     Nothing -> return defaultConfig
     Just file -> do
@@ -97,12 +107,13 @@ help config =
 data Stoppers
   = Version
   | Help
-   deriving (Show)
+  deriving (Show)
 
 -- | Program options.
-options
-  :: Monad m
-  => Config -> Consumer [Text] (Option Stoppers) m (Config, [Extension], Maybe FilePath)
+options ::
+     Monad m
+  => Config
+  -> Consumer [Text] (Option Stoppers) m (Config, [Extension], [FilePath])
 options config = ver *> ((,,) <$> style <*> exts <*> file)
   where
     ver =
@@ -143,4 +154,4 @@ options config = ver *> ((,,) <$> style <*> exts <*> file)
       , configTrailingNewline = fromMaybe (configTrailingNewline s) trailing
       , configSortImports = fromMaybe (configSortImports s) imports
       }
-    file = fmap (fmap T.unpack) (optional (anyString "[<filename>]"))
+    file = fmap (fmap T.unpack) (many (anyString "[<filename>]"))
