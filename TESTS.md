@@ -1250,3 +1250,100 @@ Quasi quotes
 ```haskell
 exp = [name|exp|]
 ```
+
+# Preserving some newlines
+
+Instance declarations
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/312
+instance Bar Int where
+  doSomething :: Int -> Int
+  doSomething = id
+
+  doSomethingElse :: Int -> String
+  doSomethingElse = show
+
+  oneMoreThing :: Int
+  oneMoreThing = 0
+```
+
+Do notation
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/250
+app :: Window -> Image -> Event Char -> Event Image -> MomentIO ()
+app window initialFrame keyPressed frameCaptured = do
+  currentFrame <- stepper initialFrame frameCaptured
+
+  let arucoMarkers = fmap detectMarkers currentFrame
+
+      charucoMarkers =
+        join <$>
+        (liftA2 interpolateCharucoMarkers <$> (Just <$> currentFrame) <*>
+         arucoMarkers)
+
+      calibrationProgressRequested = filterE ('c' ==) keyPressed
+
+      saveCameraParametersRequested = filterE ('s' ==) keyPressed
+
+      calibrationParametersCalculated =
+        filterJust
+          (liftA2 (,) <$> arucoMarkers <*>
+           charucoMarkers <@ calibrationProgressRequested)
+
+  calibrationFramesUpdated <-
+    accumE [] ((:) <$> calibrationParametersCalculated)
+
+  let (frameWidth, frameHeight) = dimensions initialFrame
+
+      cameraCalibrationChanged =
+        fmap
+          (calibrateCameraFromFrames frameWidth frameHeight)
+          calibrationFramesUpdated
+
+  cameraCalibrationParameters <-
+    stepper Nothing (fmap Just cameraCalibrationChanged)
+
+  reactimate
+    (fmap
+       saveParameters
+       (filterJust
+          (cameraCalibrationParameters <@ saveCameraParametersRequested)))
+
+  sinkImage
+    window
+    (display <$> currentFrame <*> arucoMarkers <*> charucoMarkers <*>
+     cameraCalibrationParameters)
+```
+
+Lets
+
+```haskell
+fun =
+  let a = 1
+
+      b = 2
+
+      z = 3
+  in a + b + z
+```
+
+Where
+
+```haskell
+fun = undefined
+  where
+    ok = undefined
+
+    no = yes
+```
+
+Comments
+
+```haskell
+test = do
+  undefined
+  -- comment
+  undefined
+```
