@@ -64,6 +64,19 @@ import A
 import B
 ```
 
+Explicit imports - capitals first (typeclasses/types), then operators, then identifiers
+
+```haskell given
+import qualified MegaModule as M ((>>>), MonadBaseControl, void, MaybeT(..), join, Maybe(Nothing, Just), liftIO, Either, (<<<), Monad(return, (>>=), (>>)))
+```
+
+```haskell expect
+import qualified MegaModule as M
+       (Either, Maybe(Just, Nothing), MaybeT(..),
+        Monad((>>), (>>=), return), MonadBaseControl, (<<<), (>>>), join,
+        liftIO, void)
+```
+
 # Declarations
 
 Type declaration
@@ -909,9 +922,15 @@ import HelloWorld
 
 Wrapped import list shouldn't add newline
 
-```haskell
+```haskell given
 import ATooLongList
        (alpha, beta, gamma, delta, epsilon, zeta, eta, theta)
+import B
+```
+
+```haskell expect
+import ATooLongList
+       (alpha, beta, delta, epsilon, eta, gamma, theta, zeta)
 import B
 ```
 

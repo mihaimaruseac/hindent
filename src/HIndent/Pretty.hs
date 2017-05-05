@@ -1253,14 +1253,21 @@ formatImports =
       shouldSortImports <- gets $ configSortImports . psConfig
       let imps1 =
             if shouldSortImports
-              then sortOn moduleVisibleName imps
+              then sortImports imps
               else imps
       sequence_ . intersperse newline $ map formatImport imps1
-      where
-        moduleVisibleName idecl =
-          let ModuleName _ name = importModule idecl
-          in name
+    moduleVisibleName idecl =
+      let ModuleName _ name = importModule idecl
+      in name
     formatImport = pretty
+    sortImports imps = sortOn moduleVisibleName . map sortImportSpecsOnImport $ imps
+    sortImportSpecsOnImport imp = imp { importSpecs = fmap sortImportSpecs (importSpecs imp) }
+    sortImportSpecs (ImportSpecList l hiding specs) = ImportSpecList l hiding sortedSpecs
+      where
+        sortedSpecs = sortBy importSpecCompare . map sortCNames $ specs
+
+        sortCNames (IThingWith l2 name cNames) = IThingWith l2 name . sortBy cNameCompare $ cNames
+        sortCNames is = is
 
 groupAdjacentBy :: (a -> a -> Bool) -> [a] -> [[a]]
 groupAdjacentBy _ [] = []
@@ -1276,6 +1283,70 @@ spanAdjacentBy adj (x:xs@(y:_))
     let (xs', rest') = spanAdjacentBy adj xs
     in (x : xs', rest')
   | otherwise = ([x], xs)
+
+importSpecCompare :: ImportSpec l -> ImportSpec l -> Ordering
+importSpecCompare (IAbs _ _ (Ident _ s1)) (IAbs _ _ (Ident _ s2)) = compare s1 s2
+importSpecCompare (IAbs _ _ (Ident _ _)) (IAbs _ _ (Symbol _ _)) = GT
+importSpecCompare (IAbs _ _ (Ident _ s1)) (IThingAll _ (Ident _ s2)) = compare s1 s2
+importSpecCompare (IAbs _ _ (Ident _ _)) (IThingAll _ (Symbol _ _)) = GT
+importSpecCompare (IAbs _ _ (Ident _ s1)) (IThingWith _ (Ident _ s2) _) = compare s1 s2
+importSpecCompare (IAbs _ _ (Ident _ _)) (IThingWith _ (Symbol _ _) _) = GT
+importSpecCompare (IAbs _ _ (Symbol _ _)) (IAbs _ _ (Ident _ _)) = LT
+importSpecCompare (IAbs _ _ (Symbol _ s1)) (IAbs _ _ (Symbol _ s2)) = compare s1 s2
+importSpecCompare (IAbs _ _ (Symbol _ _)) (IThingAll _ (Ident _ _)) = LT
+importSpecCompare (IAbs _ _ (Symbol _ s1)) (IThingAll _ (Symbol _ s2)) = compare s1 s2
+importSpecCompare (IAbs _ _ (Symbol _ _)) (IThingWith _ (Ident _ _) _) = LT
+importSpecCompare (IAbs _ _ (Symbol _ s1)) (IThingWith _ (Symbol _ s2) _) = compare s1 s2
+importSpecCompare (IAbs _ _ _) (IVar _ _) = LT
+importSpecCompare (IThingAll _ (Ident _ s1)) (IAbs _ _ (Ident _ s2)) = compare s1 s2
+importSpecCompare (IThingAll _ (Ident _ _)) (IAbs _ _ (Symbol _ _)) = GT
+importSpecCompare (IThingAll _ (Ident _ s1)) (IThingAll _ (Ident _ s2)) = compare s1 s2
+importSpecCompare (IThingAll _ (Ident _ _)) (IThingAll _ (Symbol _ _)) = GT
+importSpecCompare (IThingAll _ (Ident _ s1)) (IThingWith _ (Ident _ s2) _) = compare s1 s2
+importSpecCompare (IThingAll _ (Ident _ _)) (IThingWith _ (Symbol _ _) _) = GT
+importSpecCompare (IThingAll _ (Symbol _ _)) (IAbs _ _ (Ident _ _)) = LT
+importSpecCompare (IThingAll _ (Symbol _ s1)) (IAbs _ _ (Symbol _ s2)) = compare s1 s2
+importSpecCompare (IThingAll _ (Symbol _ _)) (IThingAll _ (Ident _ _)) = LT
+importSpecCompare (IThingAll _ (Symbol _ s1)) (IThingAll _ (Symbol _ s2)) = compare s1 s2
+importSpecCompare (IThingAll _ (Symbol _ _)) (IThingWith _ (Ident _ _) _) = LT
+importSpecCompare (IThingAll _ (Symbol _ s1)) (IThingWith _ (Symbol _ s2) _) = compare s1 s2
+importSpecCompare (IThingAll _ _) (IVar _ _) = LT
+importSpecCompare (IThingWith _ (Ident _ s1) _) (IAbs _ _ (Ident _ s2)) = compare s1 s2
+importSpecCompare (IThingWith _ (Ident _ _) _) (IAbs _ _ (Symbol _ _)) = GT
+importSpecCompare (IThingWith _ (Ident _ s1) _) (IThingAll _ (Ident _ s2)) = compare s1 s2
+importSpecCompare (IThingWith _ (Ident _ _) _) (IThingAll _ (Symbol _ _)) = GT
+importSpecCompare (IThingWith _ (Ident _ s1) _) (IThingWith _ (Ident _ s2) _) = compare s1 s2
+importSpecCompare (IThingWith _ (Ident _ _) _) (IThingWith _ (Symbol _ _) _) = GT
+importSpecCompare (IThingWith _ (Symbol _ _) _) (IAbs _ _ (Ident _ _)) = LT
+importSpecCompare (IThingWith _ (Symbol _ s1) _) (IAbs _ _ (Symbol _ s2)) = compare s1 s2
+importSpecCompare (IThingWith _ (Symbol _ _) _) (IThingAll _ (Ident _ _)) = LT
+importSpecCompare (IThingWith _ (Symbol _ s1) _) (IThingAll _ (Symbol _ s2)) = compare s1 s2
+importSpecCompare (IThingWith _ (Symbol _ _) _) (IThingWith _ (Ident _ _) _) = LT
+importSpecCompare (IThingWith _ (Symbol _ s1) _) (IThingWith _ (Symbol _ s2) _) = compare s1 s2
+importSpecCompare (IThingWith _ _ _) (IVar _ _) = LT
+importSpecCompare (IVar _ (Ident _ s1)) (IVar _ (Ident _ s2)) = compare s1 s2
+importSpecCompare (IVar _ (Ident _ _)) (IVar _ (Symbol _ _)) = GT
+importSpecCompare (IVar _ (Symbol _ _)) (IVar _ (Ident _ _)) = LT
+importSpecCompare (IVar _ (Symbol _ s1)) (IVar _ (Symbol _ s2)) = compare s1 s2
+importSpecCompare (IVar _ _) _ = GT
+
+cNameCompare :: CName l -> CName l -> Ordering
+cNameCompare (VarName _ (Ident _ s1)) (VarName _ (Ident _ s2)) = compare s1 s2
+cNameCompare (VarName _ (Ident _ _)) (VarName _ (Symbol _ _)) = GT
+cNameCompare (VarName _ (Ident _ s1)) (ConName _ (Ident _ s2)) = compare s1 s2
+cNameCompare (VarName _ (Ident _ _)) (ConName _ (Symbol _ _)) = GT
+cNameCompare (VarName _ (Symbol _ _)) (VarName _ (Ident _ _)) = LT
+cNameCompare (VarName _ (Symbol _ s1)) (VarName _ (Symbol _ s2)) = compare s1 s2
+cNameCompare (VarName _ (Symbol _ _)) (ConName _ (Ident _ _)) = LT
+cNameCompare (VarName _ (Symbol _ s1)) (ConName _ (Symbol _ s2)) = compare s1 s2
+cNameCompare (ConName _ (Ident _ s1)) (VarName _ (Ident _ s2)) = compare s1 s2
+cNameCompare (ConName _ (Ident _ _)) (VarName _ (Symbol _ _)) = GT
+cNameCompare (ConName _ (Ident _ s1)) (ConName _ (Ident _ s2)) = compare s1 s2
+cNameCompare (ConName _ (Ident _ _)) (ConName _ (Symbol _ _)) = GT
+cNameCompare (ConName _ (Symbol _ _)) (VarName _ (Ident _ _)) = LT
+cNameCompare (ConName _ (Symbol _ s1)) (VarName _ (Symbol _ s2)) = compare s1 s2
+cNameCompare (ConName _ (Symbol _ _)) (ConName _ (Ident _ _)) = LT
+cNameCompare (ConName _ (Symbol _ s1)) (ConName _ (Symbol _ s2)) = compare s1 s2
 
 instance Pretty Bracket where
   prettyInternal x =
