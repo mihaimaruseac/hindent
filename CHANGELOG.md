@@ -1,3 +1,16 @@
+5.2.3:
+
+    * Sort explicit import lists
+    * Report the `SrcLoc` when there's a parse error
+    * Improve long type signatures pretty printing
+    * Support custom line-break operators, add `--line-breaks` argument
+    * Fix infix data constructor
+    * Disable `RecursiveDo` and `DoRec` extensions by default
+    * Add RecStmt support
+    * Improve GADT records, data declaration records
+    * Complicated type alias and type signatures pretty printing
+    * Fix quasi-quoter names
+
 5.2.2:
 
     * Parallel list comprehensions
