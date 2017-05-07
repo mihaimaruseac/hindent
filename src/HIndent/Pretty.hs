@@ -509,10 +509,16 @@ exp (App _ op arg) = do
   case mst of
     Nothing -> do
       let (f:args) = flattened
-      pretty f
-      newline
+      col <- gets psColumn
       spaces <- getIndentSpaces
-      indented spaces (lined (map pretty args))
+      pretty f
+      col' <- gets psColumn
+      let diff = col' - col - if col == 0 then spaces else 0
+      if diff + 1 <= spaces
+        then space
+        else newline
+      spaces' <- getIndentSpaces
+      indented spaces' (lined (map pretty args))
     Just st -> put st
   where
     flatten (App label' op' arg') = flatten op' ++ [amap (addComments label') arg']

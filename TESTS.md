@@ -1156,6 +1156,25 @@ thing ::
   -> [(ResB.BomEx, Maybe ResBS.BomSnapshotAggr)]
 ```
 
+
+NorfairKing Hindent linebreaks after very short names if the total line length goes over 80 #405
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/405
+t =
+  f "this is a very loooooooooooooooooooooooooooong string that goes over the line length"
+    argx
+    argy
+    argz
+
+t =
+  function
+    "this is a very loooooooooooooooooooooooooooong string that goes over the line length"
+    argx
+    argy
+    argz
+```
+
 # MINIMAL pragma
 
 Monad example
