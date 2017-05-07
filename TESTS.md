@@ -1156,6 +1156,15 @@ thing ::
   -> [(ResB.BomEx, Maybe ResBS.BomSnapshotAggr)]
 ```
 
+NorfairKing Do as left-hand side of an infix operation #296
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/296
+block =
+  do ds <- inBraces $ inWhiteSpace declarations
+     return $ Block ds
+     <?> "block"
+```
 
 NorfairKing Hindent linebreaks after very short names if the total line length goes over 80 #405
 
@@ -1190,15 +1199,6 @@ Very long names #310
 class A where
   {-# MINIMAL averylongnamewithnoparticularmeaning
             | ananotherverylongnamewithnomoremeaning #-}
-```
-
-NorfairKing Do as left-hand side of an infix operation #296
-
-```haskell
-block =
-  do ds <- inBraces $ inWhiteSpace declarations
-     return $ Block ds
-     <?> "block"
 ```
 
 # Behaviour checks
