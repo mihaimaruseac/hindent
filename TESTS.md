@@ -64,6 +64,19 @@ import A
 import B
 ```
 
+Explicit imports - capitals first (typeclasses/types), then operators, then identifiers
+
+```haskell given
+import qualified MegaModule as M ((>>>), MonadBaseControl, void, MaybeT(..), join, Maybe(Nothing, Just), liftIO, Either, (<<<), Monad(return, (>>=), (>>)))
+```
+
+```haskell expect
+import qualified MegaModule as M
+       (Either, Maybe(Just, Nothing), MaybeT(..),
+        Monad((>>), (>>=), return), MonadBaseControl, (<<<), (>>>), join,
+        liftIO, void)
+```
+
 # Declarations
 
 Type declaration
@@ -97,17 +110,15 @@ instance C a where
     k p
 ```
 
-Class declaration with many fundeps
+GADT declarations
+
 ```haskell
-class Foo a b c d e f
-  | a b c d e -> f
-  , a b c d f -> e
-  , a b c e f -> d
-  , a b d e f -> c
-  , a c d e f -> b
-  , b c d e f -> a
-  where
-  foo :: a -> b -> c -> d -> e -> f
+data Ty :: (* -> *) where
+  TCon
+    :: { field1 :: Int
+       , field2 :: Bool}
+    -> Ty Bool
+  TCon' :: (a :: *) -> a -> Ty a
 ```
 
 # Expressions
@@ -337,38 +348,29 @@ foo :: $([t|Bool|]) -> a
 
 # Type signatures
 
-Long arguments list
-
-```haskell
-longLongFunction :: ReaderT r (WriterT w (StateT s m)) a
-                 -> StateT s (WriterT w (ReaderT r m)) a
-```
-
 Long argument list should line break
 
-```haskell pending
+```haskell
 longLongFunction ::
      ReaderT r (WriterT w (StateT s m)) a
   -> StateT s (WriterT w (ReaderT r m)) a
 ```
 
-Class constraints should leave :: on same line
+Class constraints should leave `::` on same line
 
-``` haskell pending
+``` haskell
 -- see https://github.com/chrisdone/hindent/pull/266#issuecomment-244182805
 fun ::
-  (Class a, Class b)
-  => foo bar mu zot
-  -> foo bar mu zot
+     (Class a, Class b)
+  => fooooooooooo bar mu zot
+  -> fooooooooooo bar mu zot
   -> c
 ```
 
 Class constraints
 
 ``` haskell
-fun
-  :: (Class a, Class b)
-  => a -> b -> c
+fun :: (Class a, Class b) => a -> b -> c
 ```
 
 Tuples
@@ -397,9 +399,7 @@ class Foo a where
 Implicit parameters
 
 ```haskell
-f
-  :: (?x :: Int)
-  => Int
+f :: (?x :: Int) => Int
 ```
 
 Promoted list (issue #348)
@@ -429,9 +429,7 @@ b = undefined
 Prefix notation for operators
 
 ``` haskell
-(+)
-  :: Num a
-  => a -> a -> a
+(+) :: Num a => a -> a -> a
 (+) a b = a
 ```
 
@@ -831,16 +829,15 @@ x = do
 meditans hindent freezes when trying to format this code #222
 
 ``` haskell
-c
-  :: forall new.
+c :: forall new.
      ( Settable "pitch" Pitch (Map.AsMap (new Map.:\ "pitch")) new
      , Default (Book' (Map.AsMap (new Map.:\ "pitch")))
      )
   => Book' new
 c = set #pitch C (def :: Book' (Map.AsMap (new Map.:\ "pitch")))
 
-foo
-  :: ( Foooooooooooooooooooooooooooooooooooooooooo
+foo ::
+     ( Foooooooooooooooooooooooooooooooooooooooooo
      , Foooooooooooooooooooooooooooooooooooooooooo
      )
   => A
@@ -876,8 +873,7 @@ sheyll explicit forall in instances #218
 -- https://github.com/chrisdone/hindent/issues/218
 instance forall x. C
 
-instance forall x. Show x =>
-         C x
+instance forall x. Show x => C x
 ```
 
 tfausak support shebangs #208
@@ -927,9 +923,15 @@ import HelloWorld
 
 Wrapped import list shouldn't add newline
 
-```haskell
+```haskell given
 import ATooLongList
        (alpha, beta, gamma, delta, epsilon, zeta, eta, theta)
+import B
+```
+
+```haskell expect
+import ATooLongList
+       (alpha, beta, delta, epsilon, eta, gamma, theta, zeta)
 import B
 ```
 
@@ -1032,6 +1034,175 @@ instance Foo (^>)
 instance Foo (T.<^)
 ```
 
+neongreen "{" is lost when formatting "Foo{}" #366
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/366
+foo = Nothing {}
+```
+
+jparoz Trailing space in list comprehension #357
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/357
+foo =
+  [ (x, y)
+  | x <- [1 .. 10]
+  , y <- [11 .. 20]
+  , even x
+  , even x
+  , even x
+  , even x
+  , even x
+  , odd y
+  ]
+```
+
+ttuegel Record formatting applied to expressions with RecordWildCards #274
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/274
+foo (Bar {..}) = Bar {..}
+```
+
+RecursiveDo `rec` and `mdo` keyword #328
+
+```haskell
+rec = undefined
+
+mdo = undefined
+```
+
+sophie-h Record syntax change in 5.2.2 #393
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/393
+data X
+  = X { x :: Int }
+  | X'
+
+data X = X
+  { x :: Int
+  , x' :: Int
+  }
+
+data X
+  = X { x :: Int
+      , x' :: Int }
+  | X'
+```
+
+k-bx Infix data constructor gets reformatted into a parse error #328
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/328
+data Expect =
+  String :--> String
+  deriving (Show)
+```
+
+tfausak Class constraints cause too many newlines #244
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/244
+x :: Num a => a
+x = undefined
+
+-- instance
+instance Num a => C a
+
+-- long instance
+instance Nuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuum a =>
+         C a where
+  f = undefined
+```
+
+expipiplus1 Always break before `::` on overlong signatures #390
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/390
+fun :: Is => Short
+fun = undefined
+
+someFunctionSignature ::
+     Wiiiiiiiiiiiiiiiiith
+  -> Enough
+  -> (Arguments -> To ())
+  -> Overflow (The Line Limit)
+```
+
+duog Long Type Constraint Synonyms are not reformatted #290
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/290
+type MyContext m
+   = ( MonadState Int m
+     , MonadReader Int m
+     , MonadError Text m
+     , MonadMask m
+     , Monoid m
+     , Functor m)
+```
+
+ocharles Type application differs from function application (leading to long lines) #359
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/359
+thing ::
+     ( ResB.BomEx
+     , Maybe [( Entity BomSnapshot
+              , ( [ResBS.OrderSubstituteAggr]
+                , ( Maybe (Entity BomSnapshotHistory)
+                  , Maybe (Entity BomSnapshotHistory))))])
+  -> [(ResB.BomEx, Maybe ResBS.BomSnapshotAggr)]
+```
+
+NorfairKing Do as left-hand side of an infix operation #296
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/296
+block =
+  do ds <- inBraces $ inWhiteSpace declarations
+     return $ Block ds
+     <?> "block"
+```
+
+NorfairKing Hindent linebreaks after very short names if the total line length goes over 80 #405
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/405
+t =
+  f "this is a very loooooooooooooooooooooooooooong string that goes over the line length"
+    argx
+    argy
+    argz
+
+t =
+  function
+    "this is a very loooooooooooooooooooooooooooong string that goes over the line length"
+    argx
+    argy
+    argz
+```
+
+ivan-timokhin No linebreaks for long functional dependency declarations #323
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/323
+class Foo a b | a -> b where
+  f :: a -> b
+
+class Foo a b c d e f
+  | a b c d e -> f
+  , a b c d f -> e
+  , a b c e f -> d
+  , a b d e f -> c
+  , a c d e f -> b
+  , b c d e f -> a
+  where
+  foo :: a -> b -> c -> d -> e -> f
+```
+
 # MINIMAL pragma
 
 Monad example
@@ -1047,15 +1218,6 @@ Very long names #310
 class A where
   {-# MINIMAL averylongnamewithnoparticularmeaning
             | ananotherverylongnamewithnomoremeaning #-}
-```
-
-NorfairKing Do as left-hand side of an infix operation #296
-
-```haskell
-block =
-  do ds <- inBraces $ inWhiteSpace declarations
-     return $ Block ds
-     <?> "block"
 ```
 
 # Behaviour checks
@@ -1139,7 +1301,9 @@ exp' (App _ op a) = do
     flatten (App _ f' a') b = flatten f' (a' : b)
     flatten f' as = (f', as)
 ```
+
 Quasi quotes
+
 ```haskell
 exp = [name|exp|]
 ```
