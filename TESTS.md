@@ -1203,6 +1203,20 @@ class Foo a b c d e f
   foo :: a -> b -> c -> d -> e -> f
 ```
 
+utdemir Hindent breaks TH name captures of operators #412
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/412
+data T =
+  (-)
+
+q = '(-)
+
+data (-)
+
+q = ''(-)
+```
+
 # MINIMAL pragma
 
 Monad example

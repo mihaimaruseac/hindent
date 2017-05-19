@@ -423,10 +423,26 @@ prettyInfixOp x =
       case n of
         Ident _ i -> do write "`"; pretty mn; write "."; string i; write "`";
         Symbol _ s -> do pretty mn; write "."; string s;
+    UnQual _ n -> prettyQuoteName n
+    Special _ s -> pretty s
+
+prettyQuoteName :: Name NodeInfo -> Printer ()
+prettyQuoteName x =
+  case x of
+    Ident _ i -> string i
+    Symbol _ s -> string ("(" ++ s ++ ")")
+
+prettyQuoteQName :: QName NodeInfo -> Printer ()
+prettyQuoteQName x =
+  case x of
+    Qual _ mn n ->
+      case n of
+        Ident _ i -> do pretty mn; write "."; string i;
+        Symbol _ s -> do write "("; pretty mn; write "."; string s; write ")";
     UnQual _ n ->
       case n of
-        Ident _ i -> string ("`" ++ i ++ "`")
-        Symbol _ s -> string s
+        Ident _ i -> string i
+        Symbol _ s -> do write "("; string s; write ")";
     Special _ s -> pretty s
 
 instance Pretty Type where
@@ -641,10 +657,10 @@ exp (ExpTypeSig _ e t) =
          (pretty t)
 exp (VarQuote _ x) =
   depend (write "'")
-         (pretty x)
+         (prettyQuoteQName x)
 exp (TypQuote _ x) =
   depend (write "''")
-         (pretty x)
+         (prettyQuoteQName x)
 exp (BracketExp _ b) = pretty b
 exp (SpliceExp _ s) = pretty s
 exp (QuasiQuote _ n s) =
@@ -1199,7 +1215,7 @@ instance Pretty InstHead where
 instance Pretty DeclHead where
   prettyInternal x =
     case x of
-      DHead _ name -> pretty name
+      DHead _ name -> prettyQuoteName name
       DHParen _ h -> parens (pretty h)
       DHInfix _ var name ->
         do pretty var
@@ -1934,7 +1950,7 @@ conDecl (RecDecl _ name fields) =
                                    (map (depend space . pretty) fields))
              write " }")
 conDecl (ConDecl _ name bangty) =
-  depend (do pretty name
+  depend (do prettyQuoteName name
              unless (null bangty) space)
          (lined (map pretty bangty))
 conDecl (InfixConDecl _ a f b) =
