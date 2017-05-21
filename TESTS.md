@@ -1217,6 +1217,18 @@ data (-)
 q = ''(-)
 ```
 
+utdemir Hindent can not parse empty case statements #414
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/414
+{-# LANGUAGE EmptyCase #-}
+{-# LANGUAGE LambdaCase #-}
+
+f1 = case () of {}
+
+f2 = \case {}
+```
+
 # MINIMAL pragma
 
 Monad example

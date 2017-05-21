@@ -34,7 +34,7 @@ library
                      HIndent.Pretty
   build-depends:     base >= 4.7 && <5
                    , containers
-                   , haskell-src-exts >= 1.18
+                   , haskell-src-exts >= 1.19
                    , monad-loops
                    , mtl
                    , bytestring
