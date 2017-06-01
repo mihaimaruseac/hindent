@@ -110,6 +110,53 @@ instance C a where
     k p
 ```
 
+Data declarations
+
+```haskell
+data X
+  = X
+  | X'
+```
+
+```haskell
+data X
+  = X
+  | X'
+  deriving (Show)
+```
+
+```haskell
+data X = X
+  { x :: Int
+  }
+```
+
+```haskell
+data X = X
+  { x :: Int
+  } deriving (Show)
+```
+
+```haskell
+data X
+  = X { x :: Int}
+  | X'
+```
+
+```haskell
+data X = X
+  { x :: Int
+  , x' :: Int
+  }
+```
+
+```haskell
+data X
+  = X { x :: Int
+      , x' :: Int}
+  | X'
+```
+
 GADT declarations
 
 ```haskell
