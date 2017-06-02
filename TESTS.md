@@ -1229,6 +1229,13 @@ f1 = case () of {}
 f2 = \case {}
 ```
 
+TimoFreiberg INLINE (and other) pragmas for operators are reformatted without parens #415
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/415
+{-# NOINLINE (<>) #-}
+```
+
 # MINIMAL pragma
 
 Monad example

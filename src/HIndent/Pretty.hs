@@ -899,7 +899,7 @@ decl (InlineSig _ inline active name) = do
     Nothing -> return ()
     Just (ActiveFrom _ x) -> write ("[" ++ show x ++ "] ")
     Just (ActiveUntil _ x) -> write ("[~" ++ show x ++ "] ")
-  pretty name
+  prettyQuoteQName name
 
   write " #-}"
 decl (MinimalPragma _ (Just formula)) =
