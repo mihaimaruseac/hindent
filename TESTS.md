@@ -1236,6 +1236,13 @@ TimoFreiberg INLINE (and other) pragmas for operators are reformatted without pa
 {-# NOINLINE (<>) #-}
 ```
 
+NorfairKing Hindent breaks servant API's #417
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/417
+type API = api1 :<|> api2
+```
+
 # MINIMAL pragma
 
 Monad example

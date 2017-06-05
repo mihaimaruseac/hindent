@@ -423,7 +423,7 @@ prettyInfixOp x =
       case n of
         Ident _ i -> do write "`"; pretty mn; write "."; string i; write "`";
         Symbol _ s -> do pretty mn; write "."; string s;
-    UnQual _ n -> prettyQuoteName n
+    UnQual _ n -> pretty n
     Special _ s -> pretty s
 
 prettyQuoteName :: Name NodeInfo -> Printer ()
