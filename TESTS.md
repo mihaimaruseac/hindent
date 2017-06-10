@@ -351,17 +351,17 @@ foo :: $([t|Bool|]) -> a
 Long argument list should line break
 
 ```haskell
-longLongFunction ::
-     ReaderT r (WriterT w (StateT s m)) a
+longLongFunction
+  :: ReaderT r (WriterT w (StateT s m)) a
   -> StateT s (WriterT w (ReaderT r m)) a
 ```
 
-Class constraints should leave `::` on same line
+Consistency for type signatures with class constraints
 
 ``` haskell
 -- see https://github.com/chrisdone/hindent/pull/266#issuecomment-244182805
-fun ::
-     (Class a, Class b)
+fun
+  :: (Class a, Class b)
   => fooooooooooo bar mu zot
   -> fooooooooooo bar mu zot
   -> c
@@ -836,8 +836,8 @@ c :: forall new.
   => Book' new
 c = set #pitch C (def :: Book' (Map.AsMap (new Map.:\ "pitch")))
 
-foo ::
-     ( Foooooooooooooooooooooooooooooooooooooooooo
+foo
+  :: ( Foooooooooooooooooooooooooooooooooooooooooo
      , Foooooooooooooooooooooooooooooooooooooooooo
      )
   => A
@@ -1124,8 +1124,8 @@ expipiplus1 Always break before `::` on overlong signatures #390
 fun :: Is => Short
 fun = undefined
 
-someFunctionSignature ::
-     Wiiiiiiiiiiiiiiiiith
+someFunctionSignature
+  :: Wiiiiiiiiiiiiiiiiith
   -> Enough
   -> (Arguments -> To ())
   -> Overflow (The Line Limit)
@@ -1148,8 +1148,8 @@ ocharles Type application differs from function application (leading to long lin
 
 ```haskell
 -- https://github.com/commercialhaskell/hindent/issues/359
-thing ::
-     ( ResB.BomEx
+thing
+  :: ( ResB.BomEx
      , Maybe [( Entity BomSnapshot
               , ( [ResBS.OrderSubstituteAggr]
                 , ( Maybe (Entity BomSnapshotHistory)

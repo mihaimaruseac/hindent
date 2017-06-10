@@ -1843,9 +1843,8 @@ decl' (TypeSig _ names ty') = do
       commas (map prettyTopName names)
       indentSpaces <- getIndentSpaces
       if allNamesLength >= indentSpaces
-        then do write " ::"
-                newline
-                indented indentSpaces (depend (write "   ") (declTy ty'))
+        then do newline
+                indented indentSpaces (depend (write ":: ") (declTy ty'))
         else (depend (write " :: ") (declTy ty'))
     Just st -> put st
   where
