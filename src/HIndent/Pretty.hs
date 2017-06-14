@@ -359,11 +359,11 @@ instance Pretty Pat where
                (spaced (map pretty args))
       PTuple _ boxed pats ->
         depend (write (case boxed of
-                         Unboxed -> "(#"
+                         Unboxed -> "(# "
                          Boxed -> "("))
                (do commas (map pretty pats)
                    write (case boxed of
-                            Unboxed -> "#)"
+                            Unboxed -> " #)"
                             Boxed -> ")"))
       PList _ ps ->
         brackets (commas (map pretty ps))
@@ -471,27 +471,31 @@ exp (Lambda _ pats (Do l stmts)) =
        Just st -> put st
 -- | Space out tuples.
 exp (Tuple _ boxed exps) = do
-  let horVariant = parensB boxed $ inter (write ", ") (map pretty exps)
-      verVariant = parensB boxed $ prefixedLined "," (map (depend space . pretty) exps)
+  let horVariant = parensHorB boxed $ inter (write ", ") (map pretty exps)
+      verVariant = parensVerB boxed $ prefixedLined "," (map (depend space . pretty) exps)
   mst <- fitsOnOneLine horVariant
   case mst of
     Nothing -> verVariant
     Just st -> put st
   where
-    parensB Unboxed = wrap "(#" "#)"
-    parensB Boxed   = parens
+    parensHorB Boxed = parens
+    parensHorB Unboxed = wrap "(# " " #)"
+    parensVerB Boxed = parens
+    parensVerB Unboxed = wrap "(#" "#)"
 -- | Space out tuples.
 exp (TupleSection _ boxed mexps) = do
-  let horVariant = parensB boxed $ inter (write ", ") (map (maybe (return ()) pretty) mexps)
+  let horVariant = parensHorB boxed $ inter (write ", ") (map (maybe (return ()) pretty) mexps)
       verVariant =
-        parensB boxed $ prefixedLined "," (map (maybe (return ()) (depend space . pretty)) mexps)
+        parensVerB boxed $ prefixedLined "," (map (maybe (return ()) (depend space . pretty)) mexps)
   mst <- fitsOnOneLine horVariant
   case mst of
     Nothing -> verVariant
     Just st -> put st
   where
-    parensB Unboxed = wrap "(#" "#)"
-    parensB Boxed   = parens
+    parensHorB Boxed = parens
+    parensHorB Unboxed = wrap "(# " " #)"
+    parensVerB Boxed = parens
+    parensVerB Unboxed = wrap "(#" "#)"
 -- | Infix apps, same algorithm as ChrisDone at the moment.
 exp e@(InfixApp _ a op b) =
   infixApp e a op b Nothing
@@ -1506,9 +1510,9 @@ instance Pretty SpecialCon where
                 replicate (i - 1) ',' ++
                 ")")
       TupleCon _ Unboxed i ->
-        string ("(#" ++
+        string ("(# " ++
                 replicate (i - 1) ',' ++
-                "#)")
+                " #)")
       Cons _ -> write ":"
       UnboxedSingleCon _ -> write "(##)"
 
