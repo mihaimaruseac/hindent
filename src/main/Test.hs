@@ -14,11 +14,13 @@ import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.Lazy.UTF8 as LUTF8
 import qualified Data.ByteString.UTF8 as UTF8
 import           Data.Function
+import           Data.List
 import           Data.Monoid
 import qualified HIndent
 import           HIndent.Types
 import           Markdone
 import           Test.Hspec
+import           Language.Haskell.Exts (Extension, classifyExtension)
 
 -- | Main benchmarks.
 main :: IO ()
@@ -27,10 +29,10 @@ main = do
     forest <- parse (tokenize bytes)
     hspec (toSpec forest)
 
-reformat :: Config -> S.ByteString -> ByteString
-reformat cfg code =
+reformat :: Config -> [Extension] -> S.ByteString -> ByteString
+reformat cfg exts code =
   either (("-- " <>) . L8.pack) L.toLazyByteString $
-  HIndent.reformat cfg (Just HIndent.defaultExtensions) Nothing code
+    HIndent.reformat cfg (Just (exts ++ HIndent.defaultExtensions)) Nothing code
 
 -- | Convert the Markdone document to Spec benchmarks.
 toSpec :: [Markdone] -> Spec
@@ -40,22 +42,22 @@ toSpec = go
     go (Section name children:next) = do
       describe (UTF8.toString name) (go children)
       go next
-    go (PlainText desc:CodeFence lang code:next) =
+    go (PlainText desc:CodeFence language code:next) =
       case lang of
         "haskell" -> do
           it (UTF8.toString desc) $
-            shouldBeReadable (reformat cfg code) (L.fromStrict code)
+            shouldBeReadable (reformat cfg exts code) (L.fromStrict code)
           go next
         "haskell 4" -> do
           let cfg' = cfg {configIndentSpaces = 4}
           it (UTF8.toString desc) $
-            shouldBeReadable (reformat cfg' code) (L.fromStrict code)
+            shouldBeReadable (reformat cfg' exts code) (L.fromStrict code)
           go next
         "haskell given" ->
           case skipEmptyLines next of
             CodeFence "haskell expect" codeExpect:next' -> do
               it (UTF8.toString desc) $
-                shouldBeReadable (reformat cfg code) (L.fromStrict codeExpect)
+                shouldBeReadable (reformat cfg exts code) (L.fromStrict codeExpect)
               go next'
             _ ->
               fail
@@ -64,6 +66,13 @@ toSpec = go
           it (UTF8.toString desc) pending
           go next
         _ -> go next
+      where
+        (lang, exts) = parseExtensions language
+        parseExtensions language =
+          let (langStr, extsStr) = break (== 'X') (UTF8.toString language)
+              lang = dropWhileEnd (== ' ') langStr
+              exts = map (classifyExtension . tail) . words $ extsStr
+           in (lang, exts)
     go (PlainText {}:next) = go next
     go (CodeFence {}:next) = go next
     go [] = return ()
