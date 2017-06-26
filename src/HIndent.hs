@@ -286,6 +286,7 @@ badExtensions =
     ,PatternSynonyms -- steals the pattern keyword
     ,RecursiveDo -- steals the rec keyword
     ,DoRec -- same
+    ,TypeApplications -- since GHC 8 and haskell-src-exts-1.19
     ]
 
 

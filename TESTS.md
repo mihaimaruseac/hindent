@@ -1243,6 +1243,15 @@ NorfairKing Hindent breaks servant API's #417
 type API = api1 :<|> api2
 ```
 
+andersk Cannot parse @: operator #421
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/421
+a @: b = a + b
+
+main = print (2 @: 2)
+```
+
 # MINIMAL pragma
 
 Monad example
