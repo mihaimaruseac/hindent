@@ -1252,6 +1252,16 @@ a @: b = a + b
 main = print (2 @: 2)
 ```
 
+andersk Corrupts parenthesized type operators #422
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/422
+data T a =
+  a :@ a
+
+test = (:@)
+```
+
 # MINIMAL pragma
 
 Monad example
