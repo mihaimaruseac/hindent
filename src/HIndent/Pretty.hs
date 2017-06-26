@@ -415,6 +415,11 @@ instance Pretty Pat where
       PXRPats{} -> pretty' x
       PVar{} -> pretty' x
 
+-- | Pretty infix application of a name (identifier or symbol).
+prettyInfixName :: Name NodeInfo -> Printer ()
+prettyInfixName (Ident _ n) = do write "`"; string n; write "`";
+prettyInfixName (Symbol _ s) = string s
+
 -- | Pretty print a name for being an infix operator.
 prettyInfixOp ::  QName NodeInfo -> Printer ()
 prettyInfixOp x =
@@ -423,7 +428,7 @@ prettyInfixOp x =
       case n of
         Ident _ i -> do write "`"; pretty mn; write "."; string i; write "`";
         Symbol _ s -> do pretty mn; write "."; string s;
-    UnQual _ n -> pretty n
+    UnQual _ n -> prettyInfixName n
     Special _ s -> pretty s
 
 prettyQuoteName :: Name NodeInfo -> Printer ()
@@ -1108,10 +1113,7 @@ instance Pretty Match where
       InfixMatch _ pat1 name pats rhs' mbinds ->
         do depend (do pretty pat1
                       space
-                      case name of
-                        Ident _ i ->
-                          string ("`" ++ i ++ "`")
-                        Symbol _ s -> string s)
+                      prettyInfixName name)
                   (do space
                       spaced (map pretty pats))
            withCaseContext False (pretty rhs')
@@ -1230,12 +1232,7 @@ instance Pretty DeclHead where
       DHInfix _ var name ->
         do pretty var
            space
-           case name of
-              Ident _ _ -> do
-                write "`"
-                pretty name
-                write "`"
-              Symbol _ _ -> pretty name
+           prettyInfixName name
       DHApp _ dhead var ->
         depend (pretty dhead)
                (do space
@@ -1709,10 +1706,7 @@ match (Match _ name pats rhs' mbinds) =
 match (InfixMatch _ pat1 name pats rhs' mbinds) =
   do depend (do pretty pat1
                 space
-                case name of
-                  Ident _ i ->
-                    string ("`" ++ i ++ "`")
-                  Symbol _ s -> string s)
+                prettyInfixName name)
             (do space
                 spaced (map pretty pats))
      withCaseContext False (pretty rhs')

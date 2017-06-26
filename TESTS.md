@@ -1262,6 +1262,13 @@ data T a =
 test = (:@)
 ```
 
+NorfairKing Infix constructor pattern is broken #424
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/424
+from $ \(author `InnerJoin` post) -> pure ()
+```
+
 # MINIMAL pragma
 
 Monad example
