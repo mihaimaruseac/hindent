@@ -267,7 +267,7 @@ for xs $ \case
 
 Type application
 
-```haskell XTypeApplications
+```haskell
 fun @Int 12
 ```
 
