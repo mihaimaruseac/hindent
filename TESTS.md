@@ -1269,6 +1269,18 @@ NorfairKing Infix constructor pattern is broken #424
 from $ \(author `InnerJoin` post) -> pure ()
 ```
 
+NorfairKing Hindent can no longer parse type applications code #426
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/426
+{-# LANGUAGE TypeApplications #-}
+
+f :: Num a => a
+f = id
+
+x = f @Int 12
+```
+
 # MINIMAL pragma
 
 Monad example
