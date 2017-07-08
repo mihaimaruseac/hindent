@@ -9,6 +9,14 @@ like, or contribute additional sections to it, or regression tests.
 
 # Modules
 
+Extension pragmas
+
+```haskell
+{-# LANGUAGE TypeApplications #-}
+
+fun @Int 12
+```
+
 Module header
 
 ``` haskell
@@ -268,6 +276,8 @@ for xs $ \case
 Type application
 
 ```haskell
+{-# LANGUAGE TypeApplications #-}
+
 fun @Int 12
 ```
 
