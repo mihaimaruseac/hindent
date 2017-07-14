@@ -176,7 +176,8 @@ cppSplitBlocks inp =
     cppLine src =
       any
         (`S8.isPrefixOf` src)
-        ["#if", "#end", "#else", "#define", "#undef", "#elif"]
+        ["#if", "#end", "#else", "#define", "#undef", "#elif", "#include", "#error", "#warning"]
+        -- Note: #ifdef and #ifndef are handled by #if
     unlines' :: [(Int, ByteString)] -> (Int, ByteString)
     unlines' [] = (0, S.empty)
     unlines' srcs@((line, _):_) =
