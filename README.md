@@ -2,8 +2,6 @@
 
 Haskell pretty printer
 
-[Demonstration site](http://chrisdone.com/hindent/)
-
 [Examples](https://github.com/commercialhaskell/hindent/blob/master/TESTS.md)
 
 ## Install
