@@ -3,29 +3,29 @@
 -- | Test the pretty printer.
 module Main where
 
-import           Data.Algorithm.Diff
-import           Data.Algorithm.DiffOutput
+import Data.Algorithm.Diff
+import Data.Algorithm.DiffOutput
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
-import           Data.ByteString.Lazy (ByteString)
+import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Builder as L
 import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.Lazy.UTF8 as LUTF8
 import qualified Data.ByteString.UTF8 as UTF8
-import           Data.Function
-import           Data.Monoid
+import Data.Function
+import Data.Monoid
 import qualified HIndent
-import           HIndent.Types
-import           Markdone
-import           Test.Hspec
+import HIndent.Types
+import Markdone
+import Test.Hspec
 
 -- | Main benchmarks.
 main :: IO ()
 main = do
-    bytes <- S.readFile "TESTS.md"
-    forest <- parse (tokenize bytes)
-    hspec (toSpec forest)
+  bytes <- S.readFile "TESTS.md"
+  forest <- parse (tokenize bytes)
+  hspec (toSpec forest)
 
 reformat :: Config -> S.ByteString -> ByteString
 reformat cfg code =

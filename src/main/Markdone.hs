@@ -8,16 +8,15 @@
 --
 -- All content must be in section headings with proper hierarchy,
 -- anything else is rejected.
-
 module Markdone where
 
-import           Control.DeepSeq
-import           Control.Monad.Catch
-import           Data.ByteString (ByteString)
+import Control.DeepSeq
+import Control.Monad.Catch
+import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as S8
-import           Data.Char
-import           Data.Typeable
-import           GHC.Generics
+import Data.Char
+import Data.Typeable
+import GHC.Generics
 
 -- | A markdone token.
 data Token
@@ -35,12 +34,16 @@ data Markdone
   | CodeFence !ByteString
               !ByteString
   | PlainText !ByteString
-  deriving (Show,Generic)
+  deriving (Show, Generic)
+
 instance NFData Markdone
 
 -- | Parse error.
-data MarkdownError = NoFenceEnd | ExpectedSection
-  deriving (Typeable,Show)
+data MarkdownError
+  = NoFenceEnd
+  | ExpectedSection
+  deriving (Typeable, Show)
+
 instance Exception MarkdownError
 
 -- | Tokenize the bytestring.
@@ -49,26 +52,23 @@ tokenize = map token . S8.lines
   where
     token line =
       if S8.isPrefixOf "#" line && not (S8.isPrefixOf "#!" line)
-        then let (hashes,title) = S8.span (== '#') line
+        then let (hashes, title) = S8.span (== '#') line
              in Heading (S8.length hashes) (S8.dropWhile isSpace title)
         else if S8.isPrefixOf "```" line
                then if line == "```"
                       then EndFence
                       else BeginFence
-                             (S8.dropWhile
-                                (\c ->
-                                    c == '`' || c == ' ')
-                                line)
+                             (S8.dropWhile (\c -> c == '`' || c == ' ') line)
                else PlainLine line
 
 -- | Parse into a forest.
-parse :: (Functor m,MonadThrow m) => [Token] -> m [Markdone]
+parse :: (Functor m, MonadThrow m) => [Token] -> m [Markdone]
 parse = go (0 :: Int)
   where
     go level =
       \case
         (Heading n label:rest) ->
-          let (children,rest') =
+          let (children, rest') =
                 span
                   (\case
                      Heading nextN _ -> nextN > n
@@ -79,7 +79,7 @@ parse = go (0 :: Int)
                 return (Section label childs : siblings)
         (BeginFence label:rest)
           | level > 0 ->
-            let (content,rest') =
+            let (content, rest') =
                   (span
                      (\case
                         PlainLine {} -> True
@@ -95,7 +95,7 @@ parse = go (0 :: Int)
                  _ -> throwM NoFenceEnd
         PlainLine p:rest
           | level > 0 ->
-            let (content,rest') =
+            let (content, rest') =
                   (span
                      (\case
                         PlainLine {} -> True
