@@ -1303,6 +1303,18 @@ data X (sym :: Symbol)
 type Y = X "abc\n\n\ndef"
 ```
 
+DavidEichmann Existential Quantification reordered #443
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/443
+{-# LANGUAGE ExistentialQuantification #-}
+
+data D =
+  forall a b c. D a
+                  b
+                  c
+```
+
 # MINIMAL pragma
 
 Monad example
