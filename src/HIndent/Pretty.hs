@@ -1806,6 +1806,10 @@ typ (TyPromoted _ (PromotedTuple _ ts)) =
 typ (TyPromoted _ (PromotedCon _ _ tname)) =
   do write "'"
      pretty tname
+typ (TyPromoted _ (PromotedString _ _ raw)) = do
+  do write "\""
+     string raw
+     write "\""
 typ ty@TyPromoted{} = pretty' ty
 typ (TySplice _ splice) = pretty splice
 typ (TyWildCard _ name) =

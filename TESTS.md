@@ -1291,6 +1291,18 @@ f = id
 x = f @Int 12
 ```
 
+michalrus Multiline `GHC.TypeLits.Symbol`s are being broken #451
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/451
+import GHC.TypeLits (Symbol)
+
+data X (sym :: Symbol)
+  deriving (Typeable)
+
+type Y = X "abc\n\n\ndef"
+```
+
 # MINIMAL pragma
 
 Monad example
