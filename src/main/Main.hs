@@ -6,33 +6,33 @@
 -- hindent
 module Main where
 
-import           Control.Applicative
-import           Control.Exception
-import           Control.Monad
+import Control.Applicative
+import Control.Exception
+import Control.Monad
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Builder as S
 import qualified Data.ByteString.Lazy.Char8 as L8
-import           Data.Maybe
-import           Data.Text (Text)
+import Data.Maybe
+import Data.Text (Text)
 import qualified Data.Text as T
-import           Data.Version (showVersion)
+import Data.Version (showVersion)
 import qualified Data.Yaml as Y
-import           Descriptive
-import           Descriptive.Options
-import           Foreign.C.Error
-import           GHC.IO.Exception
-import           HIndent
-import           HIndent.Types
-import           Language.Haskell.Exts hiding (Style, style)
-import           Path
+import Descriptive
+import Descriptive.Options
+import Foreign.C.Error
+import GHC.IO.Exception
+import HIndent
+import HIndent.Types
+import Language.Haskell.Exts hiding (Style, style)
+import Path
 import qualified Path.Find as Path
 import qualified Path.IO as Path
-import           Paths_hindent (version)
+import Paths_hindent (version)
 import qualified System.Directory as IO
-import           System.Environment
-import           System.Exit (exitWith)
+import System.Environment
+import System.Exit (exitWith)
 import qualified System.IO as IO
-import           Text.Read
+import Text.Read
 
 -- | Main entry point.
 main :: IO ()
@@ -48,25 +48,26 @@ main = do
             Left e -> error e
             Right out ->
               unless (L8.fromStrict text == S.toLazyByteString out) $
-                case action of
-                  Validate -> do
-                    IO.putStrLn $ filepath ++ " is not formatted"
-                    exitWith (ExitFailure 1)
-                  Reformat -> do
-                    tmpDir <- IO.getTemporaryDirectory
-                    (fp, h) <- IO.openTempFile tmpDir "hindent.hs"
-                    L8.hPutStr h (S.toLazyByteString out)
-                    IO.hFlush h
-                    IO.hClose h
-                    let exdev e =
-                          if ioe_errno e == Just ((\(Errno a) -> a) eXDEV)
-                            then IO.copyFile fp filepath >> IO.removeFile fp
-                            else throw e
-                    IO.copyPermissions filepath fp
-                    IO.renameFile fp filepath `catch` exdev
+              case action of
+                Validate -> do
+                  IO.putStrLn $ filepath ++ " is not formatted"
+                  exitWith (ExitFailure 1)
+                Reformat -> do
+                  tmpDir <- IO.getTemporaryDirectory
+                  (fp, h) <- IO.openTempFile tmpDir "hindent.hs"
+                  L8.hPutStr h (S.toLazyByteString out)
+                  IO.hFlush h
+                  IO.hClose h
+                  let exdev e =
+                        if ioe_errno e == Just ((\(Errno a) -> a) eXDEV)
+                          then IO.copyFile fp filepath >> IO.removeFile fp
+                          else throw e
+                  IO.copyPermissions filepath fp
+                  IO.renameFile fp filepath `catch` exdev
         Nothing ->
           L8.interact
-            (either error S.toLazyByteString . reformat style (Just exts) Nothing . L8.toStrict)
+            (either error S.toLazyByteString .
+             reformat style (Just exts) Nothing . L8.toStrict)
     Failed (Wrap (Stopped Version) _) ->
       putStrLn ("hindent " ++ showVersion version)
     Failed (Wrap (Stopped Help) _) -> putStrLn (help defaultConfig)
@@ -78,7 +79,10 @@ getConfig = do
   cur <- Path.getCurrentDir
   homeDir <- Path.getHomeDir
   mfile <-
-    Path.findFileUp cur ((== ".hindent.yaml") . toFilePath . filename) (Just homeDir)
+    Path.findFileUp
+      cur
+      ((== ".hindent.yaml") . toFilePath . filename)
+      (Just homeDir)
   case mfile of
     Nothing -> return defaultConfig
     Just file -> do
@@ -104,14 +108,20 @@ help config =
 data Stoppers
   = Version
   | Help
-   deriving (Show)
+  deriving (Show)
 
-data Action = Validate | Reformat
+data Action
+  = Validate
+  | Reformat
 
 -- | Program options.
-options
-  :: Monad m
-  => Config -> Consumer [Text] (Option Stoppers) m (Config, [Extension], Action, Maybe FilePath)
+options ::
+     Monad m
+  => Config
+  -> Consumer [Text] (Option Stoppers) m ( Config
+                                         , [Extension]
+                                         , Action
+                                         , Maybe FilePath)
 options config = ver *> ((,,,) <$> style <*> exts <*> action <*> file)
   where
     ver =
@@ -145,8 +155,13 @@ options config = ver *> ((,,,) <$> style <*> exts <*> action <*> file)
       optional
         (constant "--sort-imports" "Sort imports in groups" True <|>
          constant "--no-sort-imports" "Don't sort imports" False)
-    action = fromMaybe Reformat <$>
-      optional (constant "--validate" "Check if files are formatted without changing them" Validate)
+    action =
+      fromMaybe Reformat <$>
+      optional
+        (constant
+           "--validate"
+           "Check if files are formatted without changing them"
+           Validate)
     makeStyle s mlen tabs trailing imports =
       s
       { configMaxColumns = fromMaybe (configMaxColumns s) mlen
