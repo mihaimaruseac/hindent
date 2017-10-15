@@ -1538,14 +1538,43 @@ instance Pretty ModulePragma where
   prettyInternal = pretty'
 
 instance Pretty ImportDecl where
-  prettyInternal = pretty'
+  prettyInternal (ImportDecl _ name qualified source safe mpkg mas mspec) = do
+    write "import"
+    when source $ write " {-# SOURCE #-}"
+    when safe $ write " safe"
+    when qualified $ write " qualified"
+    case mpkg of
+      Nothing -> return ()
+      Just pkg -> space >> write pkg
+    space
+    pretty name
+    case mas of
+      Nothing -> return ()
+      Just asName -> do
+        space
+        write "as "
+        pretty asName
+    case mspec of
+      Nothing -> return ()
+      Just spec -> pretty spec
 
 instance Pretty ModuleName where
   prettyInternal (ModuleName _ name) =
     write name
 
 instance Pretty ImportSpecList where
-  prettyInternal = pretty'
+  prettyInternal (ImportSpecList _ hiding spec) = do
+    when hiding $ write " hiding"
+    let verVar = do
+          space
+          parens (commas (map pretty spec))
+    let horVar = do
+          newline
+          indentedBlock
+            (do depend (write "( ") (prefixedLined ", " (map pretty spec))
+                newline
+                write ")")
+    verVar `ifFitsOnOneLineOrElse` horVar
 
 instance Pretty ImportSpec where
   prettyInternal = pretty'
