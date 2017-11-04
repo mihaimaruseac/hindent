@@ -938,8 +938,9 @@ classHead ctx dhead fundeps decls = shortHead `ifFitsOnOneLineOrElse` longHead
       depend (write "class ") (withCtx ctx $ pretty dhead)
       newline
       indentedBlock $ do
-        depend (write "| ") $ prefixedLined ", " $ map pretty fundeps
-        newline
+        unless (null fundeps) $ do
+          depend (write "| ") (prefixedLined ", " $ map pretty fundeps)
+          newline
         unless (null (fromMaybe [] decls)) (write "where")
 
 instance Pretty TypeEqn where
