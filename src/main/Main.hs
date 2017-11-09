@@ -6,6 +6,7 @@
 -- hindent
 module Main where
 
+import           CabalFile
 import           Control.Applicative
 import           Control.Exception
 import           Control.Monad
@@ -43,8 +44,9 @@ main = do
     Succeeded (style, exts, action, mfilepath) ->
       case mfilepath of
         Just filepath -> do
+          cabalexts <- getCabalExtensionsForSourcePath filepath
           text <- S.readFile filepath
-          case reformat style (Just exts) mfilepath text of
+          case reformat style (Just $ cabalexts ++ exts) mfilepath text of
             Left e -> error e
             Right out ->
               unless (L8.fromStrict text == S.toLazyByteString out) $
