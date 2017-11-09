@@ -5,6 +5,7 @@ module HIndent.CabalFile
 import Data.List
 import Data.Maybe
 import Data.Traversable
+import Distribution.ModuleName
 import Distribution.PackageDescription
 import Distribution.PackageDescription.Configuration
 import Distribution.PackageDescription.Parse
@@ -14,13 +15,63 @@ import System.Directory
 import System.FilePath
 import Text.Read
 
-isUnder :: FilePath -> FilePath -> Bool
-isUnder parent child = makeRelative parent child /= child
+data Stanza = MkStanza
+  { _stanzaBuildInfo :: BuildInfo
+  , stanzaIsSourceFilePath :: FilePath -> Bool
+  }
 
-matchBuildInfo :: FilePath -> BuildInfo -> Bool
-matchBuildInfo relsrcpath bi =
-  any (\parent -> isUnder parent relsrcpath) $ hsSourceDirs bi
+-- | Find the relative path of a child path in a parent, if it is a child
+toRelative :: FilePath -> FilePath -> Maybe FilePath
+toRelative parent child = let
+  rel = makeRelative parent child
+  in if rel == child
+       then Nothing
+       else Just rel
 
+-- | Create a Stanza from `BuildInfo` and names of modules and paths
+mkStanza :: BuildInfo -> [ModuleName] -> [FilePath] -> Stanza
+mkStanza bi mnames fpaths =
+  MkStanza bi $ \path -> let
+    modpaths = fmap toFilePath $ otherModules bi ++ mnames
+    inDir dir =
+      case toRelative dir path of
+        Nothing -> False
+        Just relpath ->
+          any (equalFilePath $ dropExtension relpath) modpaths ||
+          any (equalFilePath relpath) fpaths
+    in any inDir $ hsSourceDirs bi
+
+-- | Extract `Stanza`s from a package
+packageStanzas :: PackageDescription -> [Stanza]
+packageStanzas pd = let
+  libStanza :: Library -> Stanza
+  libStanza lib = mkStanza (libBuildInfo lib) (exposedModules lib) []
+  exeStanza :: Executable -> Stanza
+  exeStanza exe = mkStanza (buildInfo exe) [] [modulePath exe]
+  testStanza :: TestSuite -> Stanza
+  testStanza ts =
+    mkStanza
+      (testBuildInfo ts)
+      (case testInterface ts of
+         TestSuiteLibV09 _ mname -> [mname]
+         _ -> [])
+      (case testInterface ts of
+         TestSuiteExeV10 _ path -> [path]
+         _ -> [])
+  benchStanza :: Benchmark -> Stanza
+  benchStanza bn =
+    mkStanza (benchmarkBuildInfo bn) [] $
+    case benchmarkInterface bn of
+      BenchmarkExeV10 _ path -> [path]
+      _ -> []
+  in mconcat
+       [ maybeToList $ fmap libStanza $ library pd
+       , fmap exeStanza $ executables pd
+       , fmap testStanza $ testSuites pd
+       , fmap benchStanza $ benchmarks pd
+       ]
+
+-- | Find cabal files that are "above" the source path
 findCabalFiles :: FilePath -> FilePath -> IO (Maybe ([FilePath], FilePath))
 findCabalFiles dir rel = do
   names <- getDirectoryContents dir
@@ -31,56 +82,35 @@ findCabalFiles dir rel = do
     [] -> findCabalFiles (takeDirectory dir) (takeFileName dir </> rel)
     _ -> return $ Just (fmap (\n -> dir </> n) cabalnames, rel)
 
-allBuildInfo' :: PackageDescription -> [BuildInfo]
-allBuildInfo' pd =
-  mconcat
-    [ maybeToList $ fmap libBuildInfo $ library pd
-    , fmap buildInfo $ executables pd
-    , fmap testBuildInfo $ testSuites pd
-    , fmap benchmarkBuildInfo $ benchmarks pd
-    ]
-
-getBest :: Ord i => [(a, i)] -> Maybe (a, i)
-getBest [] = Nothing
-getBest ((a, i):rr) =
-  Just $
-  case getBest rr of
-    Nothing -> (a, i)
-    Just (a', i') ->
-      if i' > i
-        then (a', i')
-        else (a, i)
-
-getCabalStanza :: FilePath -> IO (Maybe BuildInfo)
+-- | Find the `Stanza` that refers to this source path
+getCabalStanza :: FilePath -> IO (Maybe Stanza)
 getCabalStanza srcpath = do
   abssrcpath <- canonicalizePath srcpath
   mcp <- findCabalFiles (takeDirectory abssrcpath) (takeFileName abssrcpath)
   case mcp of
     Just (cabalpaths, relpath) -> do
-      biss <-
+      stanzass <-
         for cabalpaths $ \cabalpath -> do
           cabaltext <- readFile cabalpath
           case parsePackageDescription cabaltext of
             ParseFailed _ -> return []
             ParseOk _ gpd -> do
-              return $ allBuildInfo' $ flattenPackageDescription gpd
-      let bis = filter (matchBuildInfo relpath) $ mconcat biss
+              return $ packageStanzas $ flattenPackageDescription gpd
       return $
-        fmap fst $
-        getBest $ do
-          bi <- bis
-          dir <- hsSourceDirs bi
-          -- the best one is the one with the longest hsSourceDirs
-          return (bi, length dir)
+        case filter (\stanza -> stanzaIsSourceFilePath stanza relpath) $
+             mconcat stanzass of
+          [] -> Nothing
+          (stanza:_) -> Just stanza -- just pick the first one
     Nothing -> return Nothing
 
+-- | Get (Cabal package) language and extensions from the cabal file for this source path
 getCabalExtensions :: FilePath -> IO (Language, [Extension])
 getCabalExtensions srcpath = do
-  mbi <- getCabalStanza srcpath
+  mstanza <- getCabalStanza srcpath
   return $
-    case mbi of
+    case mstanza of
       Nothing -> (Haskell98, [])
-      Just bi -> do
+      Just (MkStanza bi _) -> do
         (fromMaybe Haskell98 $ defaultLanguage bi, defaultExtensions bi)
 
 convertLanguage :: Language -> HSE.Language
