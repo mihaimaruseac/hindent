@@ -23,7 +23,7 @@ matchBuildInfo relsrcpath bi =
 
 findCabalFiles :: FilePath -> FilePath -> IO (Maybe ([FilePath], FilePath))
 findCabalFiles dir rel = do
-  names <- listDirectory dir
+  names <- getDirectoryContents dir
   let cabalnames = filter (isSuffixOf ".cabal") names
   case cabalnames of
     []
