@@ -6,7 +6,6 @@
 -- hindent
 module Main where
 
-import           CabalFile
 import           Control.Applicative
 import           Control.Exception
 import           Control.Monad
@@ -23,6 +22,7 @@ import           Descriptive.Options
 import           Foreign.C.Error
 import           GHC.IO.Exception
 import           HIndent
+import           HIndent.CabalFile
 import           HIndent.Types
 import           Language.Haskell.Exts hiding (Style, style)
 import           Path

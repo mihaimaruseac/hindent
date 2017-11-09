@@ -1,4 +1,4 @@
-module CabalFile
+module HIndent.CabalFile
   ( getCabalExtensionsForSourcePath
   ) where
 
@@ -99,6 +99,7 @@ convertExtension (DisableExtension ke) =
   fmap HSE.DisableExtension $ convertKnownExtension ke
 convertExtension (UnknownExtension s) = Just $ HSE.UnknownExtension s
 
+-- | Get extensions from the cabal file for this source path
 getCabalExtensionsForSourcePath :: FilePath -> IO [HSE.Extension]
 getCabalExtensionsForSourcePath srcpath = do
   (lang, exts) <- getCabalExtensions srcpath
