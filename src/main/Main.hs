@@ -22,6 +22,7 @@ import           Descriptive.Options
 import           Foreign.C.Error
 import           GHC.IO.Exception
 import           HIndent
+import           HIndent.CabalFile
 import           HIndent.Types
 import           Language.Haskell.Exts hiding (Style, style)
 import           Path
@@ -43,8 +44,9 @@ main = do
     Succeeded (style, exts, action, mfilepath) ->
       case mfilepath of
         Just filepath -> do
+          cabalexts <- getCabalExtensionsForSourcePath filepath
           text <- S.readFile filepath
-          case reformat style (Just exts) mfilepath text of
+          case reformat style (Just $ cabalexts ++ exts) mfilepath text of
             Left e -> error e
             Right out ->
               unless (L8.fromStrict text == S.toLazyByteString out) $

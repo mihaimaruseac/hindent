@@ -32,8 +32,12 @@ library
   exposed-modules:   HIndent
                      HIndent.Types
                      HIndent.Pretty
+                     HIndent.CabalFile
   build-depends:     base >= 4.7 && <5
                    , containers
+                   , Cabal
+                   , filepath
+                   , directory
                    , haskell-src-exts >= 1.19
                    , monad-loops
                    , mtl
