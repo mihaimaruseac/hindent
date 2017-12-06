@@ -1,9 +1,9 @@
 name:                hindent
-version:             5.2.2
+version:             5.2.4.1
 synopsis:            Extensible Haskell pretty printer
 description:         Extensible Haskell pretty printer. Both a library and an executable.
                      .
-                     See the Github page for usage\/explanation: <https://github.com/chrisdone/hindent>
+                     See the Github page for usage\/explanation: <https://github.com/commercialhaskell/hindent>
 license:             BSD3
 stability:           Unstable
 license-file:        LICENSE.md
@@ -13,8 +13,8 @@ copyright:           2014 Chris Done, 2015 Andrew Gibiansky
 category:            Development
 build-type:          Simple
 cabal-version:       >=1.8
-homepage: http://www.github.com/chrisdone/hindent
-bug-reports: https://github.com/chrisdone/hindent/issues
+homepage:            https://github.com/commercialhaskell/hindent
+bug-reports:         https://github.com/commercialhaskell/hindent/issues
 data-files:          elisp/hindent.el
 extra-source-files:
  README.md
@@ -24,7 +24,7 @@ extra-source-files:
 
 source-repository head
     type:           git
-    location:       https://github.com/chrisdone/hindent
+    location:       https://github.com/commercialhaskell/hindent
 
 library
   hs-source-dirs:    src/
@@ -32,9 +32,13 @@ library
   exposed-modules:   HIndent
                      HIndent.Types
                      HIndent.Pretty
+                     HIndent.CabalFile
   build-depends:     base >= 4.7 && <5
                    , containers
-                   , haskell-src-exts >= 1.18
+                   , Cabal
+                   , filepath
+                   , directory
+                   , haskell-src-exts >= 1.19
                    , monad-loops
                    , mtl
                    , bytestring

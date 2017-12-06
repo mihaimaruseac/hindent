@@ -22,6 +22,7 @@ import           Descriptive.Options
 import           Foreign.C.Error
 import           GHC.IO.Exception
 import           HIndent
+import           HIndent.CabalFile
 import           HIndent.Types
 import           Language.Haskell.Exts hiding (Style, style)
 import           Path
@@ -30,6 +31,7 @@ import qualified Path.IO as Path
 import           Paths_hindent (version)
 import qualified System.Directory as IO
 import           System.Environment
+import           System.Exit (exitWith)
 import qualified System.IO as IO
 import           Text.Read
 
@@ -39,27 +41,34 @@ main = do
   args <- getArgs
   config <- getConfig
   case consume (options config) (map T.pack args) of
-    Succeeded (style, exts, mfilepath) ->
+    Succeeded (style, exts, action, mfilepath) ->
       case mfilepath of
         Just filepath -> do
+          cabalexts <- getCabalExtensionsForSourcePath filepath
           text <- S.readFile filepath
-          case reformat style (Just exts) text of
-            Left e -> error (filepath ++ ": " ++ e)
-            Right out -> unless (L8.fromStrict text == S.toLazyByteString out) $ do
-              tmpDir <- IO.getTemporaryDirectory
-              (fp, h) <- IO.openTempFile tmpDir "hindent.hs"
-              L8.hPutStr h (S.toLazyByteString out)
-              IO.hFlush h
-              IO.hClose h
-              let exdev e =
-                    if ioe_errno e == Just ((\(Errno a) -> a) eXDEV)
-                      then IO.copyFile fp filepath >> IO.removeFile fp
-                      else throw e
-              IO.copyPermissions filepath fp
-              IO.renameFile fp filepath `catch` exdev
+          case reformat style (Just $ cabalexts ++ exts) mfilepath text of
+            Left e -> error e
+            Right out ->
+              unless (L8.fromStrict text == S.toLazyByteString out) $
+                case action of
+                  Validate -> do
+                    IO.putStrLn $ filepath ++ " is not formatted"
+                    exitWith (ExitFailure 1)
+                  Reformat -> do
+                    tmpDir <- IO.getTemporaryDirectory
+                    (fp, h) <- IO.openTempFile tmpDir "hindent.hs"
+                    L8.hPutStr h (S.toLazyByteString out)
+                    IO.hFlush h
+                    IO.hClose h
+                    let exdev e =
+                          if ioe_errno e == Just ((\(Errno a) -> a) eXDEV)
+                            then IO.copyFile fp filepath >> IO.removeFile fp
+                            else throw e
+                    IO.copyPermissions filepath fp
+                    IO.renameFile fp filepath `catch` exdev
         Nothing ->
           L8.interact
-            (either error S.toLazyByteString . reformat style (Just exts) . L8.toStrict)
+            (either error S.toLazyByteString . reformat style (Just exts) Nothing . L8.toStrict)
     Failed (Wrap (Stopped Version) _) ->
       putStrLn ("hindent " ++ showVersion version)
     Failed (Wrap (Stopped Help) _) -> putStrLn (help defaultConfig)
@@ -99,11 +108,13 @@ data Stoppers
   | Help
    deriving (Show)
 
+data Action = Validate | Reformat
+
 -- | Program options.
 options
   :: Monad m
-  => Config -> Consumer [Text] (Option Stoppers) m (Config, [Extension], Maybe FilePath)
-options config = ver *> ((,,) <$> style <*> exts <*> file)
+  => Config -> Consumer [Text] (Option Stoppers) m (Config, [Extension], Action, Maybe FilePath)
+options config = ver *> ((,,,) <$> style <*> exts <*> action <*> file)
   where
     ver =
       stop (flag "version" "Print the version" Version) *>
@@ -136,6 +147,8 @@ options config = ver *> ((,,) <$> style <*> exts <*> file)
       optional
         (constant "--sort-imports" "Sort imports in groups" True <|>
          constant "--no-sort-imports" "Don't sort imports" False)
+    action = fromMaybe Reformat <$>
+      optional (constant "--validate" "Check if files are formatted without changing them" Validate)
     makeStyle s mlen tabs trailing imports =
       s
       { configMaxColumns = fromMaybe (configMaxColumns s) mlen

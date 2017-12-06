@@ -1,3 +1,33 @@
+5.2.4:
+
+    * Pretty print imports
+    * Fix pretty print for string literals for `DataKinds`
+    * Support `--validate` option for checking the format without reformatting
+    * Support parse `#include`, `#error`, `#warning` directives
+    * Support read `LANGUAGE` pragma and parse the declared extensions from source
+    * Treat `TypeApplications` extension as 'badExtensions' due to the `@` symbol
+    * Improve pretty print for unboxed tuples
+    * Fix many issues related to infix operators, includes TH name quotes,
+      `INLINE`/`NOINLINE` pragmas, infix type operator and infix constructor
+    * Fix pretty print for operators in `INLINE`/`NOINLINE` pragmas
+    * Support for `EmptyCases` extension
+    * Fix TH name quotes on operator names
+    * Optimize pretty print for many fundeps
+    * Fix extra linebreaks after short identifiers
+
+5.2.3:
+
+    * Sort explicit import lists
+    * Report the `SrcLoc` when there's a parse error
+    * Improve long type signatures pretty printing
+    * Support custom line-break operators, add `--line-breaks` argument
+    * Fix infix data constructor
+    * Disable `RecursiveDo` and `DoRec` extensions by default
+    * Add RecStmt support
+    * Improve GADT records, data declaration records
+    * Complicated type alias and type signatures pretty printing
+    * Fix quasi-quoter names
+
 5.2.2:
 
     * Parallel list comprehensions

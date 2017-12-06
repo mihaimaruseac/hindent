@@ -6,7 +6,6 @@ module Main where
 import           Data.Algorithm.Diff
 import           Data.Algorithm.DiffOutput
 import qualified Data.ByteString as S
-import qualified Data.ByteString.Char8 as S8
 import           Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Builder as L
@@ -30,7 +29,7 @@ main = do
 reformat :: Config -> S.ByteString -> ByteString
 reformat cfg code =
   either (("-- " <>) . L8.pack) L.toLazyByteString $
-  HIndent.reformat cfg (Just HIndent.defaultExtensions) code
+  HIndent.reformat cfg (Just HIndent.defaultExtensions) Nothing code
 
 -- | Convert the Markdone document to Spec benchmarks.
 toSpec :: [Markdone] -> Spec

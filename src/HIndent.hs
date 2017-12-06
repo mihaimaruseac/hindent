@@ -43,35 +43,46 @@ import qualified Data.Text as T
 import           Data.Traversable hiding (mapM)
 import           HIndent.Pretty
 import           HIndent.Types
+import qualified Language.Haskell.Exts as Exts
 import           Language.Haskell.Exts hiding (Style, prettyPrint, Pretty, style, parse)
 import           Prelude
 
 -- | A block of code.
 data CodeBlock
     = Shebang ByteString
-    | HaskellSource ByteString
+    | HaskellSource Int ByteString
+    -- ^ Includes the starting line (indexed from 0) for error reporting
     | CPPDirectives ByteString
      deriving (Show, Eq)
 
 -- | Format the given source.
-reformat :: Config -> Maybe [Extension] -> ByteString -> Either String Builder
-reformat config mexts =
+reformat :: Config -> Maybe [Extension] -> Maybe FilePath -> ByteString -> Either String Builder
+reformat config mexts mfilepath =
     preserveTrailingNewline
         (fmap (mconcat . intersperse "\n") . mapM processBlock . cppSplitBlocks)
   where
     processBlock :: CodeBlock -> Either String Builder
     processBlock (Shebang text) = Right $ S.byteString text
     processBlock (CPPDirectives text) = Right $ S.byteString text
-    processBlock (HaskellSource text) =
+    processBlock (HaskellSource line text) =
         let ls = S8.lines text
             prefix = findPrefix ls
             code = unlines' (map (stripPrefix prefix) ls)
-        in case parseModuleWithComments mode' (UTF8.toString code) of
+            exts = readExtensions (UTF8.toString code)
+            mode'' = case exts of
+                       Nothing -> mode'
+                       Just (Nothing, exts') ->
+                         mode' { extensions = exts' ++ extensions mode' }
+                       Just (Just lang, exts') ->
+                         mode' { baseLanguage = lang
+                               , extensions = exts' ++ extensions mode' }
+        in case parseModuleWithComments mode'' (UTF8.toString code) of
                ParseOk (m, comments) ->
                    fmap
                        (S.lazyByteString . addPrefix prefix . S.toLazyByteString)
                        (prettyPrint config m comments)
-               ParseFailed _ e -> Left e
+               ParseFailed loc e ->
+                 Left (Exts.prettyPrint (loc {srcLine = srcLine loc + line}) ++ ": " ++ e)
     unlines' = S.concat . intersperse "\n"
     unlines'' = L.concat . intersperse "\n"
     addPrefix :: ByteString -> L8.ByteString -> L8.ByteString
@@ -110,12 +121,13 @@ reformat config mexts =
                         (findSmallestPrefix (S.tail p : map S.tail ps))
                else ""
     mode' =
-        case mexts of
-            Just exts ->
-                parseMode
-                { extensions = exts
-                }
-            Nothing -> parseMode
+        let m = case mexts of
+                  Just exts ->
+                    parseMode
+                    { extensions = exts
+                    }
+                  Nothing -> parseMode
+        in m { parseFilename = fromMaybe "<interactive>" mfilepath }
     preserveTrailingNewline f x =
         if S8.null x || S8.all isSpace x
             then return mempty
@@ -152,29 +164,33 @@ hasTrailingLine xs =
 cppSplitBlocks :: ByteString -> [CodeBlock]
 cppSplitBlocks inp =
   modifyLast (inBlock (<> trailing)) .
-  map (classify . mconcat . intersperse "\n") .
-  groupBy ((==) `on` nonHaskellLine) . S8.lines $
+  map (classify . unlines') .
+  groupBy ((==) `on` nonHaskellLine) . zip [0 ..] . S8.lines $
   inp
   where
-    nonHaskellLine :: ByteString -> Bool
-    nonHaskellLine src = cppLine src || shebangLine src
+    nonHaskellLine :: (Int, ByteString) -> Bool
+    nonHaskellLine (_, src) = cppLine src || shebangLine src
     shebangLine :: ByteString -> Bool
     shebangLine = S8.isPrefixOf "#!"
     cppLine :: ByteString -> Bool
     cppLine src =
       any
         (`S8.isPrefixOf` src)
-        ["#if", "#end", "#else", "#define", "#undef", "#elif"]
-    classify :: ByteString -> CodeBlock
-    classify text
+        ["#if", "#end", "#else", "#define", "#undef", "#elif", "#include", "#error", "#warning"]
+        -- Note: #ifdef and #ifndef are handled by #if
+    unlines' :: [(Int, ByteString)] -> (Int, ByteString)
+    unlines' [] = (0, S.empty)
+    unlines' srcs@((line, _):_) =
+      (line, mconcat . intersperse "\n" $ map snd srcs)
+    classify :: (Int, ByteString) -> CodeBlock
+    classify (line, text)
       | shebangLine text = Shebang text
       | cppLine text = CPPDirectives text
-      | otherwise = HaskellSource text
+      | otherwise = HaskellSource line text
     -- Hack to work around some parser issues in haskell-src-exts: Some pragmas
     -- need to have a newline following them in order to parse properly, so we include
     -- the trailing newline in the code block if it existed.
-    trailing
-      :: ByteString
+    trailing :: ByteString
     trailing =
       if S8.isSuffixOf "\n" inp
         then "\n"
@@ -184,7 +200,7 @@ cppSplitBlocks inp =
     modifyLast f [x] = [f x]
     modifyLast f (x:xs) = x : modifyLast f xs
     inBlock :: (ByteString -> ByteString) -> CodeBlock -> CodeBlock
-    inBlock f (HaskellSource txt) = HaskellSource (f txt)
+    inBlock f (HaskellSource line txt) = HaskellSource line (f txt)
     inBlock _ dir = dir
 
 
@@ -229,10 +245,9 @@ parseMode =
   defaultParseMode {extensions = allExtensions
                    ,fixities = Nothing}
   where allExtensions =
-          filter isDisabledExtention knownExtensions
-        isDisabledExtention (DisableExtension _) = False
-        isDisabledExtention _ = True
-
+          filter isDisabledExtension knownExtensions
+        isDisabledExtension (DisableExtension _) = False
+        isDisabledExtension _ = True
 
 -- | Test the given file.
 testFile :: FilePath -> IO ()
@@ -246,7 +261,7 @@ testFileAst fp  = S.readFile fp >>= print . testAst
 test :: ByteString -> IO ()
 test =
   either error (L8.putStrLn . S.toLazyByteString) .
-  reformat defaultConfig Nothing
+  reformat defaultConfig Nothing Nothing
 
 -- | Parse the source and annotate it with comments, yielding the resulting AST.
 testAst :: ByteString -> Either String (Module NodeInfo)
@@ -278,6 +293,9 @@ badExtensions =
     ,UnboxedTuples -- breaks (#) lens operator
     -- ,QuasiQuotes -- breaks [x| ...], making whitespace free list comps break
     ,PatternSynonyms -- steals the pattern keyword
+    ,RecursiveDo -- steals the rec keyword
+    ,DoRec -- same
+    ,TypeApplications -- since GHC 8 and haskell-src-exts-1.19
     ]
 
 

@@ -60,21 +60,10 @@ For hindent versions lower than 5, you must set this to a non-nil string."
   :type 'string
   :safe #'stringp)
 
-(defcustom hindent-line-length
-  80
-  "Optionally override the line length."
+(defcustom hindent-extra-args
   :group 'hindent
-  :type '(choice (const :tag "Default: 80" 80)
-                 (integer :tag "Override" 120))
-  :safe (lambda (val) (or (integerp val) (not val))))
-
-(defcustom hindent-indent-size
-  2
-  "Optionally override the indent size."
-  :group 'hindent
-  :type '(choice (const :tag "Default: 2" 2)
-                 (integer :tag "Override" 4))
-  :safe (lambda (val) (or (integerp val) (not val))))
+  :type 'sexp
+  :safe #'listp)
 
 (defcustom hindent-reformat-buffer-on-save nil
   "Set to t to run `hindent-reformat-buffer' when a buffer in `hindent-mode' is saved."
@@ -318,7 +307,9 @@ work."
    (when (boundp 'haskell-language-extensions)
      haskell-language-extensions)
    (when hindent-style
-     (list "--style" hindent-style))))
+     (list "--style" hindent-style))
+   (when hindent-extra-args
+     hindent-extra-args)))
 
 (provide 'hindent)
 
