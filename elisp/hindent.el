@@ -60,6 +60,11 @@ For hindent versions lower than 5, you must set this to a non-nil string."
   :type 'string
   :safe #'stringp)
 
+(defcustom hindent-extra-args
+  :group 'hindent
+  :type 'sexp
+  :safe #'listp)
+
 (defcustom hindent-reformat-buffer-on-save nil
   "Set to t to run `hindent-reformat-buffer' when a buffer in `hindent-mode' is saved."
   :group 'hindent
@@ -302,7 +307,9 @@ work."
    (when (boundp 'haskell-language-extensions)
      haskell-language-extensions)
    (when hindent-style
-     (list "--style" hindent-style))))
+     (list "--style" hindent-style))
+   (when hindent-extra-args
+     hindent-extra-args)))
 
 (provide 'hindent)
 
