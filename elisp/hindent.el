@@ -61,6 +61,7 @@ For hindent versions lower than 5, you must set this to a non-nil string."
   :safe #'stringp)
 
 (defcustom hindent-extra-args nil
+  "Extra arguments to pass to hindent."
   :group 'hindent
   :type 'sexp
   :safe #'listp)
