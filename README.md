@@ -96,3 +96,16 @@ automatically when a Haskell file is saved.
 Fortunately, you can use https://atom.io/packages/ide-haskell with the
 path to hindent specified instead of that to stylish-haskell. Works
 like a charm that way!
+
+## IntelliJ / other JetBrains IDEs
+1. Install the "HaskForce" Haskell plugin (this is so we get the language type recognized in the file watcher)
+2. Install the "File Watchers" plugin under "Browse Repositories"
+3. Add a File Watcher with 
+    1. File type: Haskell Language
+    2. Program: `/path/to/hindent`
+    3. Arguments: `$FilePath$`
+    4. Immediate file synchronization: off
+    5. Show console: Error
+<img src="https://i.imgur.com/gghTjjn.png" width="500">
+
+Now whenever you save a file, `hindent` should autoformat it.
