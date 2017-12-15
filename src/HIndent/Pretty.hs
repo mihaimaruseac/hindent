@@ -572,7 +572,7 @@ exp (Let _ binds e) =
   depend (write "let ")
          (do pretty binds
              newline
-             indented (-4) (depend (write "in ")
+             indented (-3) (depend (write "in ")
                                    (pretty e)))
 exp (ListComp _ e qstmt) = do
   let horVariant = brackets $ do

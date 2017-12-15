@@ -352,7 +352,7 @@ Binding implicit parameters
 ```haskell
 f =
   let ?x = 42
-  in f
+   in f
 ```
 
 Closed type families
@@ -524,12 +524,12 @@ Let inside a `where`
 ``` haskell
 g x =
   let x = 1
-  in x
+   in x
   where
     foo =
       let y = 2
           z = 3
-      in y
+       in y
 ```
 
 Lists
@@ -1376,6 +1376,16 @@ class (Eq a, Show a) =>
   fromInteger :: Integer -> a
 ```
 
+michalrus `let … in …` inside of `do` breaks compilation #467
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/467
+main :: IO ()
+main = do
+  let x = 5
+   in when (x > 0) (return ())
+```
+
 # MINIMAL pragma
 
 Monad example
@@ -1424,35 +1434,35 @@ quasiQuotes =
   [ ( ''[]
     , \(typeVariable:_) _automaticPrinter ->
         (let presentVar = varE (presentVarName typeVariable)
-         in lamE
-              [varP (presentVarName typeVariable)]
-              [|(let typeString = "[" ++ fst $(presentVar) ++ "]"
-                 in ( typeString
-                    , \xs ->
-                        case fst $(presentVar) of
-                          "GHC.Types.Char" ->
-                            ChoicePresentation
-                              "String"
-                              [ ( "String"
-                                , StringPresentation
-                                    "String"
-                                    (concatMap
-                                       getCh
-                                       (map (snd $(presentVar)) xs)))
-                              , ( "List of characters"
-                                , ListPresentation
-                                    typeString
-                                    (map (snd $(presentVar)) xs))
-                              ]
-                            where getCh (CharPresentation "GHC.Types.Char" ch) =
-                                    ch
-                                  getCh (ChoicePresentation _ ((_, CharPresentation _ ch):_)) =
-                                    ch
-                                  getCh _ = ""
-                          _ ->
-                            ListPresentation
-                              typeString
-                              (map (snd $(presentVar)) xs)))|]))
+          in lamE
+               [varP (presentVarName typeVariable)]
+               [|(let typeString = "[" ++ fst $(presentVar) ++ "]"
+                   in ( typeString
+                      , \xs ->
+                          case fst $(presentVar) of
+                            "GHC.Types.Char" ->
+                              ChoicePresentation
+                                "String"
+                                [ ( "String"
+                                  , StringPresentation
+                                      "String"
+                                      (concatMap
+                                         getCh
+                                         (map (snd $(presentVar)) xs)))
+                                , ( "List of characters"
+                                  , ListPresentation
+                                      typeString
+                                      (map (snd $(presentVar)) xs))
+                                ]
+                              where getCh (CharPresentation "GHC.Types.Char" ch) =
+                                      ch
+                                    getCh (ChoicePresentation _ ((_, CharPresentation _ ch):_)) =
+                                      ch
+                                    getCh _ = ""
+                            _ ->
+                              ListPresentation
+                                typeString
+                                (map (snd $(presentVar)) xs)))|]))
   ]
 ```
 
