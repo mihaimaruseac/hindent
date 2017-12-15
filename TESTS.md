@@ -1386,6 +1386,18 @@ main = do
    in when (x > 0) (return ())
 ```
 
+sophie-h Breaking valid top-level template haskell #473
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/473
+template $
+  haskell
+    [ ''SomeVeryLongName
+    , ''AnotherLongNameEvenLongToBreakTheLine
+    , ''LastLongNameInList
+    ]
+```
+
 # MINIMAL pragma
 
 Monad example

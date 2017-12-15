@@ -2107,7 +2107,14 @@ infixApp e a op b indent =
         _ -> do
           beforeRhs
           case indent of
-            Nothing -> prettyWithIndent b
+            Nothing -> do
+              col <- fmap (psColumn . snd)
+                          (sandbox (write ""))
+              -- force indent for top-level template haskell expressions, #473.
+              if col == 0
+                then do indentSpaces <- getIndentSpaces
+                        column indentSpaces (prettyWithIndent b)
+                else prettyWithIndent b
             Just col -> do
               indentSpaces <- getIndentSpaces
               column (col + indentSpaces) (prettyWithIndent b)
