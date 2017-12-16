@@ -1885,7 +1885,9 @@ typ (TyQuasiQuote _ n s) =
                        write "|")
                    (do string s
                        write "|"))
+#if MIN_VERSION_haskell_src_exts(1,20,0)
 typ (TyUnboxedSum{}) = error "FIXME: No implementation for TyUnboxedSum."
+#endif
 
 prettyTopName :: Name NodeInfo -> Printer ()
 prettyTopName x@Ident{} = pretty x
