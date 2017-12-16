@@ -501,6 +501,10 @@ exp (TupleSection _ boxed mexps) = do
     parensHorB Unboxed = wrap "(# " " #)"
     parensVerB Boxed = parens
     parensVerB Unboxed = wrap "(#" "#)"
+-- UnboxedSum since HSE 1.20.0
+#if MIN_VERSION_haskell_src_exts(1,20,0)
+exp (UnboxedSum{}) = error "FIXME: No implementation for UnboxedSum."
+#endif
 -- | Infix apps, same algorithm as ChrisDone at the moment.
 exp e@(InfixApp _ a op b) =
   infixApp e a op b Nothing
@@ -606,8 +610,10 @@ exp (ParComp _ e qstmts) = do
 exp (TypeApp _ t) = do
   write "@"
   pretty t
-
+-- ExprHole was remove in HSE-1.20
+#if !MIN_VERSION_haskell_src_exts(1,20,0)
 exp (ExprHole {}) = write "_"
+#endif
 exp (NegApp _ e) =
   depend (write "-")
          (pretty e)
@@ -777,15 +783,6 @@ instance Pretty Decl where
 
 -- | Render a declaration.
 decl ::  Decl NodeInfo -> Printer ()
-decl (PatBind _ pat rhs' mbinds) =
-  do pretty pat
-     withCaseContext False (pretty rhs')
-     case mbinds of
-       Nothing -> return ()
-       Just binds ->
-         do newline
-            indentedBlock (depend (write "where ")
-                                  (pretty binds))
 decl (InstDecl _ moverlap dhead decls) =
   do depend (write "instance ")
             (depend (maybeOverlap moverlap)
@@ -862,8 +859,13 @@ decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
                            xs -> multiCons xs))
      indentSpaces <- getIndentSpaces
      case mderivs of
+#if MIN_VERSION_haskell_src_exts(1,20,0)
+       [] -> return ()
+       [derivs] ->
+#else
        Nothing -> return ()
        Just derivs ->
+#endif
          do newline
             column indentSpaces (pretty derivs)
   where singleCons x =
@@ -896,8 +898,13 @@ decl (GDataDecl _ dataornew ctx dhead mkind condecls mderivs) =
            newline
            lined (map pretty condecls)
        case mderivs of
+#if MIN_VERSION_haskell_src_exts(1,20,0)
+         [] -> return ()
+         [derivs] ->
+#else
          Nothing -> return ()
          Just derivs ->
+#endif
            do newline
               pretty derivs
 
@@ -950,7 +957,11 @@ instance Pretty TypeEqn where
     pretty out_
 
 instance Pretty Deriving where
+#if MIN_VERSION_haskell_src_exts(1,20,0)
+  prettyInternal (Deriving _ _ heads) =
+#else
   prettyInternal (Deriving _ heads) =
+#endif
     depend (write "deriving" >> space) $ do
       let heads' =
             if length heads == 1
@@ -1241,6 +1252,11 @@ instance Pretty DeclHead where
 
 instance Pretty Overlap where
   prettyInternal (Overlap _) = write "{-# OVERLAP #-}"
+#if MIN_VERSION_haskell_src_exts(1,20,0)
+  prettyInternal (Overlapping _) = write "{-# OVERLAPPING #-}"
+  prettyInternal (Overlaps _) = write "{-# OVERLAPS #-}"
+  prettyInternal (Overlappable _) = write "{-# OVERLAPPABLE #-}"
+#endif
   prettyInternal (NoOverlap _) = write "{-# NO_OVERLAP #-}"
   prettyInternal (Incoherent _) = write "{-# INCOHERENT #-}"
 
@@ -1515,6 +1531,9 @@ instance Pretty SpecialCon where
                 " #)")
       Cons _ -> write ":"
       UnboxedSingleCon _ -> write "(##)"
+#if MIN_VERSION_haskell_src_exts(1,20,0)
+      ExprHole _ -> write "_"
+#endif
 
 instance Pretty QOp where
   prettyInternal = pretty'
@@ -1797,18 +1816,31 @@ typ (TyCon _ p) =
         FunCon _ -> parens (pretty p)
         _ -> pretty p
 typ (TyParen _ e) = parens (pretty e)
-typ (TyInfix _ a op b) = do
+typ (TyInfix _ a promotedop b) = do
   -- Apply special rules to line-break operators.
-  linebreak <- isLineBreak op
+#if MIN_VERSION_haskell_src_exts(1,20,0)
+  let isLineBreak' op =
+        case op of
+          PromotedName _ op' -> isLineBreak op'
+          UnpromotedName _ op' -> isLineBreak op'
+      prettyInfixOp' op =
+        case op of
+          PromotedName _ op' -> write "'" >> prettyInfixOp op'
+          UnpromotedName _ op' -> prettyInfixOp op'
+#else
+  let isLineBreak' = isLineBreak
+      prettyInfixOp' = prettyInfixOp
+#endif
+  linebreak <- isLineBreak' promotedop
   if linebreak
     then do pretty a
             newline
-            prettyInfixOp op
+            prettyInfixOp' promotedop
             space
             pretty b
     else do pretty a
             space
-            prettyInfixOp op
+            prettyInfixOp' promotedop
             space
             pretty b
 typ (TyKind _ ty k) =
@@ -1853,6 +1885,7 @@ typ (TyQuasiQuote _ n s) =
                        write "|")
                    (do string s
                        write "|"))
+typ (TyUnboxedSum{}) = error "FIXME: No implementation for TyUnboxedSum."
 
 prettyTopName :: Name NodeInfo -> Printer ()
 prettyTopName x@Ident{} = pretty x
@@ -1902,8 +1935,15 @@ decl' (DataDecl _ dataornew ctx dhead [con] mderivs)
                        (do pretty dhead
                            singleCons con))
        case mderivs of
+#if MIN_VERSION_haskell_src_exts(1,20,0)
+         [] -> return ()
+         [derivs] ->
+#else
          Nothing -> return ()
-         Just derivs -> space >> pretty derivs
+         Just derivs ->
+#endif
+           do space
+              pretty derivs
   where singleCons x =
           depend (write " =")
                  ((depend space . qualConDecl) x)
