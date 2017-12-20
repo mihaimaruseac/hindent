@@ -6,6 +6,7 @@ sudo: false
 
 # Choose a lightweight base image; we provide our own build tools.
 language: c
+compiler: gcc
 
 # Caching so the next build will be fast too.
 cache:
@@ -27,30 +28,19 @@ cache:
 matrix:
   include:
 
-  - env: BUILD=stack ARGS="--resolver lts-5" BUILDARGS=""
-    compiler: ": #stack 7.10.3"
-    addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
+  - env: BUILD=stack ARGS="--resolver lts-5" GHC="7.10.3" BUILDARGS=""
 
-  - env: BUILD=stack ARGS="--resolver lts-7" BUILDARGS=""
-    compiler: ": #stack 8.0.1"
-    addons: {apt: {packages: [ghc-8.0.1], sources: [hvr-ghc]}}
+  - env: BUILD=stack ARGS="--resolver lts-7" GHC="8.0.1" BUILDARGS=""
 
-  - env: BUILD=stack ARGS="--resolver lts-9" BUILDARGS="--pedantic"
-    compiler: ": #stack 8.0.2"
-    addons: {apt: {packages: [ghc-8.0.2], sources: [hvr-ghc]}}
+  - env: BUILD=stack ARGS="--resolver lts-9" GHC="8.0.2" BUILDARGS="--pedantic"
 
-  - env: BUILD=stack ARGS="--resolver lts-10" BUILDARGS="--pedantic"
-    compiler: ": #stack 8.2.2"
-    addons: {apt: {packages: [ghc-8.2.2], sources: [hvr-ghc]}}
+  - env: BUILD=stack ARGS="--resolver lts-10" GHC="8.2.2" BUILDARGS="--pedantic"
 
   # Build on OS X in addition to Linux
   - env: BUILD=stack ARGS="" BUILDARGS=""
-    compiler: ": #stack default osx"
     os: osx
 
 before_install:
-# Using compiler above sets CC to an invalid value, so unset it
-- unset CC
 
 # We want to always allow newer versions of packages when building on GHC HEAD
 - CABALARGS=""
