@@ -41,13 +41,13 @@ matrix:
 before_install:
 - mkdir -p ~/.local/bin
 - |
-  if [ `uname` = "Darwin" ]
+  if [[ "${TRAVIS_OS_NAME}" = "osx" ]]
   then
-    travis_retry curl --insecure -L https://www.stackage.org/stack/osx-x86_64 | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin
+    travis_retry curl -sSL https://www.stackage.org/stack/${TRAVIS_OS_NAME}-x86_64 \
+      | tar xz --strip-components=1 -C ~/.local/bin --include   '*/stack'
   else
-    travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-  fi
-
+    travis_retry curl -sSL https://www.stackage.org/stack/${TRAVIS_OS_NAME}-x86_64 \
+      | tar xz --strip-components=1 -C ~/.local/bin --wildcards '*/stack'
   fi
 
 install:
