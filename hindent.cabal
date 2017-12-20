@@ -1,107 +1,136 @@
-name:                hindent
-version:             5.2.4.1
-synopsis:            Extensible Haskell pretty printer
-description:         Extensible Haskell pretty printer. Both a library and an executable.
-                     .
-                     See the Github page for usage\/explanation: <https://github.com/commercialhaskell/hindent>
-license:             BSD3
-stability:           Unstable
-license-file:        LICENSE.md
-author:              Chris Done, Andrew Gibiansky, Tobias Pflug, Pierre Radermecker
-maintainer:          chrisdone@gmail.com
-copyright:           2014 Chris Done, 2015 Andrew Gibiansky
-category:            Development
-build-type:          Simple
-cabal-version:       >=1.8
-homepage:            https://github.com/commercialhaskell/hindent
-bug-reports:         https://github.com/commercialhaskell/hindent/issues
-data-files:          elisp/hindent.el
+-- This file has been generated from package.yaml by hpack version 0.20.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 1101cc89ad4e9842c65c89e38b946f772ed0c36cc20fc57ed40c3ad87eef8603
+
+name:           hindent
+version:        5.2.4.1
+synopsis:       Extensible Haskell pretty printer
+description:    Extensible Haskell pretty printer. Both a library and an executable.
+                .
+                See the Github page for usage\/explanation: <https://github.com/commercialhaskell/hindent>
+category:       Development
+homepage:       https://github.com/commercialhaskell/hindent#readme
+bug-reports:    https://github.com/commercialhaskell/hindent/issues
+author:         Chris Done,
+                Andrew Gibiansky,
+                Tobias Pflug,
+                Pierre Radermecker
+maintainer:     chrisdone@gmail.com
+copyright:      2014 Chris Done,
+                2015 Andrew Gibiansky
+license:        BSD3
+license-file:   LICENSE.md
+build-type:     Simple
+cabal-version:  >= 1.10
+
 extra-source-files:
- README.md
- CHANGELOG.md
- BENCHMARKS.md
- TESTS.md
+    BENCHMARKS.md
+    CHANGELOG.md
+    README.md
+    TESTS.md
+
+data-files:
+    elisp/hindent.el
 
 source-repository head
-    type:           git
-    location:       https://github.com/commercialhaskell/hindent
+  type: git
+  location: https://github.com/commercialhaskell/hindent
 
 library
-  hs-source-dirs:    src/
-  ghc-options:       -Wall -O2
-  exposed-modules:   HIndent
-                     HIndent.Types
-                     HIndent.Pretty
-                     HIndent.CabalFile
-  build-depends:     base >= 4.7 && <5
-                   , containers
-                   , Cabal
-                   , filepath
-                   , directory
-                   , haskell-src-exts >= 1.20
-                   , monad-loops
-                   , mtl
-                   , bytestring
-                   , utf8-string
-                   , transformers
-                   , exceptions
-                   , text
-                   , yaml
+  hs-source-dirs:
+      src/
+  ghc-options: -Wall -O2
+  build-depends:
+      Cabal
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , exceptions
+    , filepath
+    , haskell-src-exts >=1.20
+    , monad-loops
+    , mtl
+    , text
+    , transformers
+    , utf8-string
+    , yaml
+  exposed-modules:
+      HIndent
+      HIndent.Types
+      HIndent.Pretty
+      HIndent.CabalFile
+  other-modules:
+      Paths_hindent
+  default-language: Haskell2010
 
 executable hindent
-  hs-source-dirs:    src/main
-  ghc-options:       -Wall -O2
-  main-is:           Main.hs
-  other-modules: Path.Find
-  build-depends:     base >= 4 && < 5
-                   , hindent
-                   , bytestring
-                   , utf8-string
-                   , descriptive >= 0.7 && < 0.10
-                   , haskell-src-exts
-                   , ghc-prim
-                   , directory
-                   , text
-                   , yaml
-                   , unix-compat
-                   , deepseq
-                   , path
-                   , path-io
-                   , transformers
-                   , exceptions
+  main-is: Main.hs
+  hs-source-dirs:
+      src/main
+  ghc-options: -Wall -O2
+  build-depends:
+      base >=4 && <5
+    , bytestring
+    , deepseq
+    , descriptive >=0.7 && <0.10
+    , directory
+    , exceptions
+    , ghc-prim
+    , haskell-src-exts
+    , hindent
+    , path
+    , path-io
+    , text
+    , transformers
+    , unix-compat
+    , utf8-string
+    , yaml
+  other-modules:
+      Path.Find
+  default-language: Haskell2010
 
 test-suite hindent-test
   type: exitcode-stdio-1.0
-  hs-source-dirs: src/main/
   main-is: Test.hs
-  other-modules: Markdone
-  build-depends:     base >= 4 && <5
-                   , hindent
-                   , haskell-src-exts
-                   , monad-loops
-                   , mtl
-                   , bytestring
-                   , utf8-string
-                   , hspec
-                   , directory
-                   , deepseq
-                   , exceptions
-                   , utf8-string
-                   , Diff
+  hs-source-dirs:
+      src/main/
+  build-depends:
+      Diff
+    , base >=4 && <5
+    , bytestring
+    , deepseq
+    , directory
+    , exceptions
+    , haskell-src-exts
+    , hindent
+    , hspec
+    , monad-loops
+    , mtl
+    , utf8-string
+  other-modules:
+      Markdone
+  default-language: Haskell2010
 
 benchmark hindent-bench
   type: exitcode-stdio-1.0
-  hs-source-dirs:    src/main
-  ghc-options:       -Wall -O2 -rtsopts
-  main-is:           Benchmark.hs
-  other-modules: Markdone
-  build-depends:     base >= 4 && < 5
-                   , hindent
-                   , bytestring
-                   , utf8-string
-                   , haskell-src-exts
-                   , ghc-prim
-                   , directory
-                   , criterion
-                   , deepseq
-                   , exceptions
+  main-is: Benchmark.hs
+  hs-source-dirs:
+      src/main
+  ghc-options: -Wall -O2 -rtsopts
+  build-depends:
+      base >=4 && <5
+    , bytestring
+    , criterion
+    , deepseq
+    , directory
+    , exceptions
+    , ghc-prim
+    , haskell-src-exts
+    , hindent
+    , utf8-string
+  other-modules:
+      Markdone
+  default-language: Haskell2010

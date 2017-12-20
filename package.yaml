@@ -1,0 +1,109 @@
+name: hindent
+version: '5.2.4.1'
+synopsis: Extensible Haskell pretty printer
+description: ! 'Extensible Haskell pretty printer. Both a library and an executable.
+
+
+  See the Github page for usage\/explanation: <https://github.com/commercialhaskell/hindent>'
+category: Development
+author:
+  - Chris Done
+  - Andrew Gibiansky
+  - Tobias Pflug
+  - Pierre Radermecker
+maintainer: chrisdone@gmail.com
+copyright:
+  - 2014 Chris Done
+  - 2015 Andrew Gibiansky
+license: BSD3
+license-file: LICENSE.md
+github: commercialhaskell/hindent
+extra-source-files:
+  - README.md
+  - CHANGELOG.md
+  - BENCHMARKS.md
+  - TESTS.md
+dependencies:
+  - directory
+  - bytestring
+  - utf8-string
+  - exceptions
+
+library:
+  source-dirs: src/
+  ghc-options:
+    - -Wall
+    - -O2
+  exposed-modules:
+    - HIndent
+    - HIndent.Types
+    - HIndent.Pretty
+    - HIndent.CabalFile
+  dependencies:
+    - base >=4.7 && <5
+    - containers
+    - Cabal
+    - filepath
+    - haskell-src-exts >=1.20
+    - monad-loops
+    - mtl
+    - transformers
+    - text
+    - yaml
+
+executables:
+  hindent:
+    main: Main.hs
+    source-dirs: src/main
+    ghc-options:
+      - -Wall
+      - -O2
+    dependencies:
+      - base >=4 && <5
+      - hindent
+      - descriptive >=0.7 && <0.10
+      - haskell-src-exts
+      - ghc-prim
+      - text
+      - yaml
+      - unix-compat
+      - deepseq
+      - path
+      - path-io
+      - transformers
+    other-modules: Path.Find
+
+tests:
+  hindent-test:
+    main: Test.hs
+    source-dirs: src/main/
+    dependencies:
+      - base >=4 && <5
+      - hindent
+      - haskell-src-exts
+      - monad-loops
+      - mtl
+      - hspec
+      - deepseq
+      - Diff
+    other-modules: Markdone
+
+benchmarks:
+  hindent-bench:
+    main: Benchmark.hs
+    source-dirs: src/main
+    ghc-options:
+      - -Wall
+      - -O2
+      - -rtsopts
+    dependencies:
+      - base >=4 && <5
+      - hindent
+      - haskell-src-exts
+      - ghc-prim
+      - criterion
+      - deepseq
+    other-modules: Markdone
+
+data-files:
+  - elisp/hindent.el
