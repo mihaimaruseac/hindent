@@ -71,7 +71,9 @@ executables:
       - path
       - path-io
       - transformers
-    other-modules: Path.Find
+    other-modules:
+      - Path.Find
+      - Paths_hindent
 
 tests:
   hindent-test:

@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1101cc89ad4e9842c65c89e38b946f772ed0c36cc20fc57ed40c3ad87eef8603
+-- hash: 8b8d19f80d5727084e4baf52df76b91d3d65c621ce7c750bdc1fbb780fd887f2
 
 name:           hindent
 version:        5.2.4.1
@@ -90,6 +90,7 @@ executable hindent
     , yaml
   other-modules:
       Path.Find
+      Paths_hindent
   default-language: Haskell2010
 
 test-suite hindent-test
