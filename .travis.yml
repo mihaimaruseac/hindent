@@ -52,6 +52,8 @@ before_install:
 
 install:
 - stack --no-terminal --install-ghc $ARGS install hsc2hs
+# Fix dependency issue for vector-algoritms for lts-3 and lts-5
+- stack --no-terminal --install-ghc $ARGS install mtl mwc-random
 - stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
 
 script:
