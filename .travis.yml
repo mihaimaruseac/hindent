@@ -54,6 +54,8 @@ install:
 - stack --no-terminal --install-ghc $ARGS install hsc2hs
 # Fix dependency issue for vector-algoritms for lts-3 and lts-5
 - stack --no-terminal --install-ghc $ARGS install mtl mwc-random
+# Fix dependency issue for haskell-src-exts for lts-10
+- stack --no-terminal --install-ghc $ARGS install happy
 - stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
 
 script:

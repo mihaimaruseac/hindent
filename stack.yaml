@@ -3,6 +3,5 @@ packages:
 - '.'
 extra-deps:
 - haskell-src-exts-1.20.1
-- descriptive-0.9.4
 - path-0.5.9
-- path-io-1.2.0
+- path-io-1.2.2
