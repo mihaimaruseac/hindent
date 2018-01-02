@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module HIndent.CabalFile
   ( getCabalExtensionsForSourcePath
   ) where
@@ -19,6 +21,13 @@ data Stanza = MkStanza
   { _stanzaBuildInfo :: BuildInfo
   , stanzaIsSourceFilePath :: FilePath -> Bool
   }
+
+parsePackageDesc :: String -> ParseResult GenericPackageDescription
+#if MIN_VERSION_Cabal(2,0,0)
+parsePackageDesc = parseGenericPackageDescription
+#else
+parsePackageDesc = parsePackageDescription
+#endif
 
 -- | Find the relative path of a child path in a parent, if it is a child
 toRelative :: FilePath -> FilePath -> Maybe FilePath
@@ -92,7 +101,7 @@ getCabalStanza srcpath = do
       stanzass <-
         for cabalpaths $ \cabalpath -> do
           cabaltext <- readFile cabalpath
-          case parsePackageDescription cabaltext of
+          case parsePackageDesc cabaltext of
             ParseFailed _ -> return []
             ParseOk _ gpd -> do
               return $ packageStanzas $ flattenPackageDescription gpd
