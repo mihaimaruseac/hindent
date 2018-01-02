@@ -1398,6 +1398,19 @@ template $
     ]
 ```
 
+schroffl Hindent produces invalid Syntax from FFI exports #479
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/479
+foreign export ccall "test" test :: IO ()
+
+foreign import ccall "test" test :: IO ()
+
+foreign import ccall safe "test" test :: IO ()
+
+foreign import ccall unsafe "test" test :: IO ()
+```
+
 # MINIMAL pragma
 
 Monad example

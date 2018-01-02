@@ -451,8 +451,7 @@ prettyQuoteQName x =
     Special _ s -> pretty s
 
 instance Pretty Type where
-  prettyInternal  =
-    typ
+  prettyInternal = typ
 
 instance Pretty Exp where
   prettyInternal = exp
@@ -923,6 +922,37 @@ decl (InlineSig _ inline active name) = do
 decl (MinimalPragma _ (Just formula)) =
   wrap "{-# " " #-}" $ do
     depend (write "MINIMAL ") $ pretty formula
+decl (ForImp _ callconv maybeSafety maybeName name ty) = do
+  string "foreign import "
+  pretty' callconv >> space
+  case maybeSafety of
+    Just safety -> pretty' safety >> space
+    Nothing -> return ()
+  case maybeName of
+    Just namestr -> string (show namestr) >> space
+    Nothing -> return ()
+  pretty' name
+  tyline <- fitsOnOneLine $ do string " :: "
+                               pretty' ty
+  case tyline of
+    Just line -> put line
+    Nothing -> do newline
+                  indentedBlock $ do string ":: "
+                                     pretty' ty
+decl (ForExp _ callconv maybeName name ty) = do
+  string "foreign export "
+  pretty' callconv >> space
+  case maybeName of
+    Just namestr -> string (show namestr) >> space
+    Nothing -> return ()
+  pretty' name
+  tyline <- fitsOnOneLine $ do string " :: "
+                               pretty' ty
+  case tyline of
+    Just line -> put line
+    Nothing -> do newline
+                  indentedBlock $ do string ":: "
+                                     pretty' ty
 decl x' = pretty' x'
 
 classHead
@@ -1263,6 +1293,12 @@ instance Pretty Overlap where
 instance Pretty Sign where
   prettyInternal (Signless _) = return ()
   prettyInternal (Negative _) = write "-"
+
+instance Pretty CallConv where
+  prettyInternal = pretty'
+
+instance Pretty Safety where
+  prettyInternal = pretty'
 
 --------------------------------------------------------------------------------
 -- * Unimplemented or incomplete printers
