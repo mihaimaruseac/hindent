@@ -1411,6 +1411,14 @@ foreign import ccall safe "test" test :: IO ()
 foreign import ccall unsafe "test" test :: IO ()
 ```
 
+ptek Reformatting of the {-# OVERLAPPING #-} pragma #386
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/386
+instance {-# OVERLAPPING #-} Arbitrary (Set Int) where
+  arbitrary = undefined
+```
+
 # MINIMAL pragma
 
 Monad example
