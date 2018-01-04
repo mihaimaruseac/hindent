@@ -1,3 +1,11 @@
+5.2.5:
+
+    * Support get extensions from `.cabal` file
+    * Improve indention with record constructions and updates
+    * Fix `let ... in` bug
+    * Fix top-level lambda expressions in TemplateHaskell slices
+    * Update to haskell-src-exts dependency to version `>= 1.20.0`
+
 5.2.4:
 
     * Pretty print imports
