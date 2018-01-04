@@ -35,11 +35,11 @@ matrix:
     compiler: ": #stack 8.0.1"
     addons: {apt: {packages: [ghc-8.0.1], sources: [hvr-ghc]}}
 
-  - env: BUILD=stack ARGS="--resolver lts-9" BUILDARGS="--pedantic"
+  - env: BUILD=stack ARGS="--resolver lts-9" BUILDARGS=""
     compiler: ": #stack 8.0.2"
     addons: {apt: {packages: [ghc-8.0.2], sources: [hvr-ghc]}}
 
-  - env: BUILD=stack ARGS="--resolver lts-10" BUILDARGS="--pedantic"
+  - env: BUILD=stack ARGS="--resolver lts-10" BUILDARGS=""
     compiler: ": #stack 8.2.2"
     addons: {apt: {packages: [ghc-8.2.2], sources: [hvr-ghc]}}
 
