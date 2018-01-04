@@ -2,7 +2,9 @@ resolver: lts-9.12
 packages:
 - '.'
 extra-deps:
-- haskell-src-exts-1.20.1
+- haskell-src-exts-1.20.0
 - descriptive-0.9.4
 - path-0.5.9
 - path-io-1.2.0
+
+allow-newer: True
