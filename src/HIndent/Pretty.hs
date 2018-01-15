@@ -1567,7 +1567,7 @@ instance Pretty ImportDecl where
     when qualified $ write " qualified"
     case mpkg of
       Nothing -> return ()
-      Just pkg -> space >> write pkg
+      Just pkg -> space >> write ("\"" ++ pkg ++ "\"")
     space
     pretty name
     case mas of
