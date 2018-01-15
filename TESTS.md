@@ -1424,6 +1424,7 @@ cdsmith Quotes are dropped from package imports #480
 ```haskell
 -- https://github.com/commercialhaskell/hindent/issues/480
 {-# LANGUAGE PackageImports #-}
+
 import qualified "base" Prelude as P
 ```
 
