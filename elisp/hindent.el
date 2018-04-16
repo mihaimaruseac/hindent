@@ -148,24 +148,25 @@ cause the text to be justified, as per `fill-paragraph'."
 If DROP-NEWLINE is non-nil, don't require a newline at the end of
 the file."
   (interactive "r")
-  (if (= (save-excursion (goto-char beg)
-                         (line-beginning-position))
-         beg)
-      (hindent-reformat-region-as-is beg end drop-newline)
-    (let* ((column (- beg (line-beginning-position)))
-           (string (buffer-substring-no-properties beg end))
-           (new-string (with-temp-buffer
-                         (insert (make-string column ? ) string)
-                         (hindent-reformat-region-as-is (point-min)
-                                                        (point-max)
-                                                        drop-newline)
-                         (delete-region (point-min) (1+ column))
-                         (buffer-substring (point-min)
-                                           (point-max)))))
-      (save-excursion
-        (goto-char beg)
-        (delete-region beg end)
-        (insert new-string)))))
+  (let ((inhibit-read-only t))
+    (if (= (save-excursion (goto-char beg)
+                           (line-beginning-position))
+           beg)
+        (hindent-reformat-region-as-is beg end drop-newline)
+      (let* ((column (- beg (line-beginning-position)))
+             (string (buffer-substring-no-properties beg end))
+             (new-string (with-temp-buffer
+                           (insert (make-string column ? ) string)
+                           (hindent-reformat-region-as-is (point-min)
+                                                          (point-max)
+                                                          drop-newline)
+                           (delete-region (point-min) (1+ column))
+                           (buffer-substring (point-min)
+                                             (point-max)))))
+        (save-excursion
+          (goto-char beg)
+          (delete-region beg end)
+          (insert new-string))))))
 
 ;;;###autoload
 (define-obsolete-function-alias 'hindent/reformat-decl 'hindent-reformat-decl)
