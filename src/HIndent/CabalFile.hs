@@ -8,12 +8,14 @@ import Data.Traversable
 import Distribution.ModuleName
 import Distribution.PackageDescription
 import Distribution.PackageDescription.Configuration
-import Distribution.PackageDescription.Parse
+import Distribution.PackageDescription.Parsec (parseGenericPackageDescription)
+import Distribution.Parsec.ParseResult (runParseResult)
 import Language.Haskell.Extension
 import qualified Language.Haskell.Exts.Extension as HSE
 import System.Directory
 import System.FilePath
 import Text.Read
+import qualified Data.ByteString as BS
 
 data Stanza = MkStanza
   { _stanzaBuildInfo :: BuildInfo
@@ -91,11 +93,11 @@ getCabalStanza srcpath = do
     Just (cabalpaths, relpath) -> do
       stanzass <-
         for cabalpaths $ \cabalpath -> do
-          cabaltext <- readFile cabalpath
-          case parsePackageDescription cabaltext of
-            ParseFailed _ -> return []
-            ParseOk _ gpd -> do
-              return $ packageStanzas $ flattenPackageDescription gpd
+          cabaltext <- BS.readFile cabalpath
+          let parseResult = runParseResult $ parseGenericPackageDescription cabaltext
+          return $ case snd parseResult of
+            Left _ -> []
+            Right gpd -> packageStanzas $ flattenPackageDescription gpd
       return $
         case filter (\stanza -> stanzaIsSourceFilePath stanza relpath) $
              mconcat stanzass of
