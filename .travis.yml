@@ -39,9 +39,13 @@ matrix:
     compiler: ": #stack 8.0.2"
     addons: {apt: {packages: [ghc-8.0.2], sources: [hvr-ghc]}}
 
-  - env: BUILD=stack ARGS="--resolver lts-10" BUILDARGS=""
+  - env: BUILD=stack ARGS="--resolver lts-11" BUILDARGS=""
     compiler: ": #stack 8.2.2"
     addons: {apt: {packages: [ghc-8.2.2], sources: [hvr-ghc]}}
+
+  - env: BUILD=stack ARGS="--resolver nightly-2018-05-11" BUILDARGS=""
+    compiler: ": #stack 8.4.2"
+    addons: {apt: {packages: [ghc-8.4.2], sources: [hvr-ghc]}}
 
   # Build on OS X in addition to Linux
   - env: BUILD=stack ARGS="" BUILDARGS=""
