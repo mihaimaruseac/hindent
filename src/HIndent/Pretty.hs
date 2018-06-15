@@ -16,7 +16,7 @@ module HIndent.Pretty
 import           Control.Applicative
 import           Control.Monad.State.Strict hiding (state)
 import qualified Data.ByteString.Builder as S
-import           Data.Foldable (for_, traverse_)
+import           Data.Foldable (for_, forM_, traverse_)
 import           Data.Int
 import           Data.List
 import           Data.Maybe
@@ -850,11 +850,7 @@ decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
                            [x] -> singleCons x
                            xs -> multiCons xs))
      indentSpaces <- getIndentSpaces
-     case mderivs of
-       [] -> return ()
-       [derivs] ->
-         do newline
-            column indentSpaces (pretty derivs)
+     forM_ mderivs $ \deriv -> newline >> column indentSpaces (pretty deriv)
   where singleCons x =
           do write " ="
              indentSpaces <- getIndentSpaces
@@ -884,10 +880,7 @@ decl (GDataDecl _ dataornew ctx dhead mkind condecls mderivs) =
          _ -> do
            newline
            lined (map pretty condecls)
-       case mderivs of
-         [] -> return ()
-         [derivs] -> do newline
-                        pretty derivs
+       forM_ mderivs $ \deriv -> newline >> pretty deriv
 
 decl (InlineSig _ inline active name) = do
   write "{-# "
@@ -1931,10 +1924,7 @@ decl' (DataDecl _ dataornew ctx dhead [con] mderivs)
               (withCtx ctx
                        (do pretty dhead
                            singleCons con))
-       case mderivs of
-         [] -> return ()
-         [derivs] -> do space
-                        pretty derivs
+       forM_ mderivs $ \deriv -> space >> pretty deriv
   where singleCons x =
           depend (write " =")
                  ((depend space . qualConDecl) x)
