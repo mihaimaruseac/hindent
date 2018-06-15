@@ -1085,6 +1085,26 @@ foo =
       }
 ```
 
+paraseba Deriving strategies with multiple deriving clauses
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/503
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+module Foo where
+
+import Data.Typeable
+import GHC.Generics
+
+newtype Number a =
+  Number a
+  deriving (Generic)
+  deriving newtype (Show, Eq)
+  deriving anyclass (Typeable)
+```
+
 # MINIMAL pragma
 
 neongreen "{" is lost when formatting "Foo{}" #366
