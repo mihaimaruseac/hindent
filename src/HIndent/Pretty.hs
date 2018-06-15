@@ -850,11 +850,7 @@ decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
                            [x] -> singleCons x
                            xs -> multiCons xs))
      indentSpaces <- getIndentSpaces
-     case mderivs of
-       [] -> return ()
-       [derivs] ->
-         do newline
-            column indentSpaces (pretty derivs)
+     forM_ mderivs $ \deriv -> newline >> column indentSpaces (pretty deriv)
   where singleCons x =
           do write " ="
              indentSpaces <- getIndentSpaces
