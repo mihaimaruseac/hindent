@@ -880,10 +880,7 @@ decl (GDataDecl _ dataornew ctx dhead mkind condecls mderivs) =
          _ -> do
            newline
            lined (map pretty condecls)
-       case mderivs of
-         [] -> return ()
-         [derivs] -> do newline
-                        pretty derivs
+       forM_ mderivs $ \deriv -> newline >> pretty deriv
 
 decl (InlineSig _ inline active name) = do
   write "{-# "
