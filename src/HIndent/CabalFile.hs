@@ -4,6 +4,7 @@ module HIndent.CabalFile
   ( getCabalExtensionsForSourcePath
   ) where
 
+import Control.Monad
 import qualified Data.ByteString as BS
 import Data.List
 import Data.Maybe
@@ -82,7 +83,8 @@ packageStanzas pd = let
 findCabalFiles :: FilePath -> FilePath -> IO (Maybe ([FilePath], FilePath))
 findCabalFiles dir rel = do
   names <- getDirectoryContents dir
-  let cabalnames = filter (isSuffixOf ".cabal") names
+  cabalnames <-
+    filterM (doesFileExist . (dir </>)) $ filter (isSuffixOf ".cabal") names
   case cabalnames of
     []
       | dir == "/" -> return Nothing
