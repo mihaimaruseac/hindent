@@ -16,7 +16,7 @@ module HIndent.Pretty
 import           Control.Applicative
 import           Control.Monad.State.Strict hiding (state)
 import qualified Data.ByteString.Builder as S
-import           Data.Foldable (for_, traverse_)
+import           Data.Foldable (for_, forM_, traverse_)
 import           Data.Int
 import           Data.List
 import           Data.Maybe
@@ -1927,10 +1927,7 @@ decl' (DataDecl _ dataornew ctx dhead [con] mderivs)
               (withCtx ctx
                        (do pretty dhead
                            singleCons con))
-       case mderivs of
-         [] -> return ()
-         [derivs] -> do space
-                        pretty derivs
+       forM_ mderivs $ \deriv -> space >> pretty deriv
   where singleCons x =
           depend (write " =")
                  ((depend space . qualConDecl) x)
