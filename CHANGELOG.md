@@ -1,3 +1,6 @@
+5.2.6:
+    * Switch to optparse-applicative
+
 5.2.5:
 
     * Support get extensions from `.cabal` file
