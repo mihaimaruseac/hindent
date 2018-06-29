@@ -30,6 +30,7 @@ import           System.Exit (exitWith)
 import qualified System.IO as IO
 import           Options.Applicative hiding (action, style)
 import           Data.Monoid ((<>))
+import qualified Data.Text as T
 
 data Action = Validate | Reformat
 
@@ -103,7 +104,7 @@ options config =
       ) <*
       optional (strOption
            (long "style" <> help "Style to print with (historical, now ignored)" <> metavar "STYLE") :: Parser String)
-    exts = fmap getExtensions (many (option auto (short 'X' <> help "Language extension" <> metavar "GHCEXT")))
+    exts = fmap getExtensions (many (T.pack <$> strOption (short 'X' <> help "Language extension" <> metavar "GHCEXT")))
     indentSpaces =
         option auto
            (long "indent-size" <> help "Indentation size in spaces" <> value (configIndentSpaces config) <> showDefault) <|>
