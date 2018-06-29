@@ -1,3 +1,6 @@
+5.2.7:
+    * Fix -X option bug
+
 5.2.6:
     * Switch to optparse-applicative
 
