@@ -34,7 +34,7 @@ import qualified Data.Text as T
 
 data Action = Validate | Reformat
 
-data RunMode = ShowVersion | Run Config [Extension] Action (Maybe FilePath)
+data RunMode = ShowVersion | Run Config [Extension] Action [FilePath]
 
 -- | Main entry point.
 main :: IO ()
@@ -44,12 +44,15 @@ main = do
   case runMode of
     ShowVersion ->
       putStrLn ("hindent " ++ showVersion version)
-    Run style exts action mfilepath ->
-      case mfilepath of
-        Just filepath -> do
+    Run style exts action paths ->
+      if null paths then
+         L8.interact
+            (either error S.toLazyByteString . reformat style (Just exts) Nothing . L8.toStrict)
+      else
+        forM_ paths $ \filepath -> do
           cabalexts <- getCabalExtensionsForSourcePath filepath
           text <- S.readFile filepath
-          case reformat style (Just $ cabalexts ++ exts) mfilepath text of
+          case reformat style (Just $ cabalexts ++ exts) (Just filepath) text of
             Left e -> error e
             Right out ->
               unless (L8.fromStrict text == S.toLazyByteString out) $
@@ -69,9 +72,6 @@ main = do
                             else throw e
                     IO.copyPermissions filepath fp
                     IO.renameFile fp filepath `catch` exdev
-        Nothing ->
-          L8.interact
-            (either error S.toLazyByteString . reformat style (Just exts) Nothing . L8.toStrict)
 
 -- | Read config from a config file, or return 'defaultConfig'.
 getConfig :: IO Config
@@ -124,4 +124,4 @@ options config =
       , configTrailingNewline =  trailing
       , configSortImports =  fromMaybe (configSortImports s) imports
       }
-    files = optional (strArgument (metavar "FILENAME"))
+    files = many (strArgument (metavar "FILENAMES"))
