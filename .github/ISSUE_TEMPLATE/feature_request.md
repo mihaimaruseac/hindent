@@ -4,14 +4,19 @@ about: Suggest an idea for this project
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
+**Completed checklist**
+
+- [ ] I've checked the issue tracker for similar issues.
+- [ ] I am not creating an issue about adding more configuration options for the styling/layout of hindent, because hindent is not about customizing style.
+
+**Problem description**
 
 A clear and concise description of what the problem is. 
 
-**Describe the solution you'd like**
+**Proposed solution**
 
 A clear and concise description of what you want to happen.
 
-**Describe alternatives you've considered**
+**Alternatives**
 
 A clear and concise description of any alternative solutions or features you've considered.
