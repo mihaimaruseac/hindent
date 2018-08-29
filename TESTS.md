@@ -1551,4 +1551,6 @@ Quasi quotes
 
 ```haskell
 exp = [name|exp|]
+
+f [qq|pattern|] = ()
 ```

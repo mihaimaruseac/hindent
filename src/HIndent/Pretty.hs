@@ -400,10 +400,7 @@ instance Pretty Pat where
         depend (do pretty e
                    write " -> ")
                (pretty p)
-      PQuasiQuote _ name str ->
-        brackets (depend (do string name
-                             write "|")
-                         (string str))
+      PQuasiQuote _ name str -> quotation name (string str)
       PBangPat _ p ->
         depend (write "!")
                (pretty p)
