@@ -388,6 +388,17 @@ Quoted data constructors
 cons = '(:)
 ```
 
+Pattern splices
+
+```haskell
+f $pat = ()
+
+g =
+  case x of
+    $(mkPat y z) -> True
+    _ -> False
+```
+
 # Type signatures
 
 Long argument list should line break
