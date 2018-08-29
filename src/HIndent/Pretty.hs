@@ -400,10 +400,7 @@ instance Pretty Pat where
         depend (do pretty e
                    write " -> ")
                (pretty p)
-      PQuasiQuote _ name str ->
-        brackets (depend (do string name
-                             write "|")
-                         (string str))
+      PQuasiQuote _ name str -> quotation name (string str)
       PBangPat _ p ->
         depend (write "!")
                (pretty p)
@@ -672,11 +669,7 @@ exp (TypQuote _ x) =
          (prettyQuoteQName x)
 exp (BracketExp _ b) = pretty b
 exp (SpliceExp _ s) = pretty s
-exp (QuasiQuote _ n s) =
-  brackets (depend (do string n
-                       write "|")
-                   (do string s
-                       write "|"))
+exp (QuasiQuote _ n s) = quotation n (string s)
 exp (LCase _ alts) =
   do write "\\case"
      if null alts
@@ -1421,24 +1414,9 @@ cNameCompare (ConName _ (Symbol _ s1)) (ConName _ (Symbol _ s2)) = compare s1 s2
 instance Pretty Bracket where
   prettyInternal x =
     case x of
-      ExpBracket _ p ->
-        brackets
-          (depend
-             (write "|")
-             (do pretty p
-                 write "|"))
-      PatBracket _ p ->
-        brackets
-          (depend
-             (write "p|")
-             (do pretty p
-                 write "|"))
-      TypeBracket _ ty ->
-        brackets
-          (depend
-             (write "t|")
-             (do pretty ty
-                 write "|"))
+      ExpBracket _ p -> quotation "" (pretty p)
+      PatBracket _ p -> quotation "p" (pretty p)
+      TypeBracket _ ty -> quotation "t" (pretty ty)
       d@(DeclBracket _ _) -> pretty' d
 
 instance Pretty IPBind where
@@ -1880,11 +1858,7 @@ typ (TyWildCard _ name) =
     Just n ->
       do write "_"
          pretty n
-typ (TyQuasiQuote _ n s) =
-  brackets (depend (do string n
-                       write "|")
-                   (do string s
-                       write "|"))
+typ (TyQuasiQuote _ n s) = quotation n (string s)
 typ (TyUnboxedSum{}) = error "FIXME: No implementation for TyUnboxedSum."
 
 prettyTopName :: Name NodeInfo -> Printer ()
@@ -2168,3 +2142,16 @@ flattenOpChain (InfixApp _ left op right) =
   [OpChainLink op] <>
   flattenOpChain right
 flattenOpChain e = [OpChainExp e]
+
+-- | Write a Template Haskell quotation or a quasi-quotation.
+--
+-- >>> quotation "t" (string "Foo")
+-- > [t|Foo|]
+quotation :: String -> Printer () -> Printer ()
+quotation quoter body =
+  brackets
+    (depend
+       (do string quoter
+           write "|")
+       (do body
+           write "|"))
