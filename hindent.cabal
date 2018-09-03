@@ -33,6 +33,7 @@ library
                      HIndent.Types
                      HIndent.Pretty
                      HIndent.CabalFile
+                     HIndent.CodeBlock
   build-depends:     base >= 4.7 && <5
                    , containers
                    , Cabal

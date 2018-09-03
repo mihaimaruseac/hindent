@@ -15,6 +15,7 @@ import qualified Data.ByteString.UTF8 as UTF8
 import           Data.Function
 import           Data.Monoid
 import qualified HIndent
+import           HIndent.CodeBlock
 import           HIndent.Types
 import           Markdone
 import           Test.Hspec
@@ -25,6 +26,7 @@ main = do
     bytes <- S.readFile "TESTS.md"
     forest <- parse (tokenize bytes)
     hspec $ do
+      codeBlocksSpec
       markdoneSpec
       toSpec forest
 
@@ -99,6 +101,31 @@ diff x y = ppDiff (on getGroupedDiff (lines . LUTF8.toString) x y)
 skipEmptyLines :: [Markdone] -> [Markdone]
 skipEmptyLines (PlainText "":rest) = rest
 skipEmptyLines other = other
+
+codeBlocksSpec :: Spec
+codeBlocksSpec =
+  describe "splitting source into code blocks" $ do
+    it "should put just Haskell code in its own block" $ do
+      let input = "this is totally haskell code\n\nit deserves its own block!\n"
+      cppSplitBlocks input `shouldBe` [HaskellSource 0 input]
+    it "should put #if/#endif and Haskell code into separate blocks" $ do
+      cppSplitBlocks
+        "haskell code\n#if DEBUG\ndebug code\n#endif\nmore haskell code\n" `shouldBe`
+        [ HaskellSource 0 "haskell code"
+        , CPPDirectives "#if DEBUG"
+        , HaskellSource 2 "debug code"
+        , CPPDirectives "#endif"
+        , HaskellSource 4 "more haskell code\n"
+        ]
+    it "should put the shebang line into its own block" $ do
+      cppSplitBlocks
+        "#!/usr/bin/env runhaskell\n{-# LANGUAGE OverloadedStrings #-}\n" `shouldBe`
+        [ Shebang "#!/usr/bin/env runhaskell"
+        , HaskellSource 1 "{-# LANGUAGE OverloadedStrings #-}\n"
+        ]
+    it "should put adjacent #define lines into a single block" $ do
+      cppSplitBlocks "#define A\n#define B\n#define C\n" `shouldBe`
+        [CPPDirectives "#define A\n#define B\n#define C"]
 
 markdoneSpec :: Spec
 markdoneSpec = do
