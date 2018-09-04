@@ -1554,3 +1554,23 @@ exp = [name|exp|]
 
 f [qq|pattern|] = ()
 ```
+
+# C preprocessor
+
+Conditionals (`#if`)
+
+```haskell
+isDebug :: Bool
+#if DEBUG
+isDebug = True
+#else
+isDebug = False
+#endif
+```
+
+Macro definitions (`#define`)
+
+```haskell
+#define STRINGIFY(x) #x
+f = STRINGIFY (y)
+```

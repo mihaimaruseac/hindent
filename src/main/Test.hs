@@ -122,6 +122,11 @@ markdoneSpec = do
     it "should tokenize full code fences" $ do
       tokenize "```haskell\ncode goes here\n```" `shouldBe`
         [BeginFence "haskell", PlainLine "code goes here", EndFence]
+    it "should tokenize lines inside code fences as plain text" $ do
+      tokenize "```haskell\n#!/usr/bin/env stack\n```" `shouldBe`
+        [BeginFence "haskell", PlainLine "#!/usr/bin/env stack", EndFence]
+      tokenize "```haskell\n# not a heading\n```" `shouldBe`
+        [BeginFence "haskell", PlainLine "# not a heading", EndFence]
   describe "markdown parser" $ do
     it "should parse a heading followed by text as a section" $ do
       let input =

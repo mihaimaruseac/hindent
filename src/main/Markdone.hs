@@ -13,6 +13,7 @@ module Markdone where
 
 import           Control.DeepSeq
 import           Control.Monad.Catch
+import           Control.Monad.State.Strict (State, evalState, get, put)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as S8
 import           Data.Char
@@ -43,23 +44,39 @@ data MarkdownError = NoFenceEnd | ExpectedSection
   deriving (Typeable,Show)
 instance Exception MarkdownError
 
+data TokenizerMode
+  = Normal
+  | Fenced
+
 -- | Tokenize the bytestring.
 tokenize :: ByteString -> [Token]
-tokenize = map token . S8.lines
+tokenize input = evalState (mapM token (S8.lines input)) Normal
   where
-    token line =
-      if S8.isPrefixOf "#" line && not (S8.isPrefixOf "#!" line)
-        then let (hashes,title) = S8.span (== '#') line
-             in Heading (S8.length hashes) (S8.dropWhile isSpace title)
-        else if S8.isPrefixOf "```" line
-               then if line == "```"
-                      then EndFence
-                      else BeginFence
-                             (S8.dropWhile
-                                (\c ->
-                                    c == '`' || c == ' ')
-                                line)
-               else PlainLine line
+    token :: ByteString -> State TokenizerMode Token
+    token line = do
+      mode <- get
+      case mode of
+        Normal ->
+          if S8.isPrefixOf "#" line
+            then let (hashes,title) = S8.span (== '#') line
+                 in return $
+                      Heading (S8.length hashes) (S8.dropWhile isSpace title)
+            else if S8.isPrefixOf "```" line
+                   then do
+                     put Fenced
+                     return $
+                       BeginFence
+                         (S8.dropWhile
+                            (\c ->
+                                c == '`' || c == ' ')
+                            line)
+                   else return $ PlainLine line
+        Fenced ->
+          if line == "```"
+            then do
+              put Normal
+              return EndFence
+            else return $ PlainLine line
 
 -- | Parse into a forest.
 parse :: (Functor m,MonadThrow m) => [Token] -> m [Markdone]

@@ -105,3 +105,4 @@ benchmark hindent-bench
                    , criterion
                    , deepseq
                    , exceptions
+                   , mtl
