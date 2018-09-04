@@ -6,10 +6,7 @@ module HIndent.CodeBlock
   ) where
 
 import Data.ByteString (ByteString)
-import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
-import Data.Function
-import Data.List
 import Data.Monoid
 
 -- | A block of code.
@@ -36,12 +33,24 @@ data CodeBlock
 cppSplitBlocks :: ByteString -> [CodeBlock]
 cppSplitBlocks inp =
   modifyLast (inBlock (<> trailing)) .
-  map (classify . unlines') .
-  groupBy ((==) `on` nonHaskellLine) . zip [0 ..] . S8.lines $
+  groupLines . map classify . zip [0 ..] . S8.lines $
   inp
   where
-    nonHaskellLine :: (Int, ByteString) -> Bool
-    nonHaskellLine (_, src) = cppLine src || shebangLine src
+    groupLines :: [CodeBlock] -> [CodeBlock]
+    groupLines (line1:line2:remainingLines) =
+      case mergeLines line1 line2 of
+        Just line1And2 -> groupLines (line1And2 : remainingLines)
+        Nothing -> line1 : groupLines (line2 : remainingLines)
+    groupLines xs@[_] = xs
+    groupLines xs@[] = xs
+    mergeLines :: CodeBlock -> CodeBlock -> Maybe CodeBlock
+    mergeLines (CPPDirectives src1) (CPPDirectives src2) =
+      Just $ CPPDirectives (src1 <> "\n" <> src2)
+    mergeLines (Shebang src1) (Shebang src2) =
+      Just $ Shebang (src1 <> "\n" <> src2)
+    mergeLines (HaskellSource lineNumber1 src1) (HaskellSource _lineNumber2 src2) =
+      Just $ HaskellSource lineNumber1 (src1 <> "\n" <> src2)
+    mergeLines _ _ = Nothing
     shebangLine :: ByteString -> Bool
     shebangLine = S8.isPrefixOf "#!"
     cppLine :: ByteString -> Bool
@@ -50,10 +59,6 @@ cppSplitBlocks inp =
         (`S8.isPrefixOf` src)
         ["#if", "#end", "#else", "#define", "#undef", "#elif", "#include", "#error", "#warning"]
         -- Note: #ifdef and #ifndef are handled by #if
-    unlines' :: [(Int, ByteString)] -> (Int, ByteString)
-    unlines' [] = (0, S.empty)
-    unlines' srcs@((line, _):_) =
-      (line, mconcat . intersperse "\n" $ map snd srcs)
     classify :: (Int, ByteString) -> CodeBlock
     classify (line, text)
       | shebangLine text = Shebang text
