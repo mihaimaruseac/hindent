@@ -26,7 +26,7 @@ data Token
   | PlainLine !ByteString
   | BeginFence !ByteString
   | EndFence
-  deriving (Show)
+  deriving (Eq, Show)
 
 -- | A markdone document.
 data Markdone
@@ -35,7 +35,7 @@ data Markdone
   | CodeFence !ByteString
               !ByteString
   | PlainText !ByteString
-  deriving (Show,Generic)
+  deriving (Eq,Show,Generic)
 instance NFData Markdone
 
 -- | Parse error.
