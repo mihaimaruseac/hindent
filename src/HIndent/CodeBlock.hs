@@ -33,7 +33,7 @@ data CodeBlock
 cppSplitBlocks :: ByteString -> [CodeBlock]
 cppSplitBlocks inp =
   modifyLast (inBlock (<> trailing)) .
-  groupLines . map classify . zip [0 ..] . S8.lines $
+  groupLines . classifyLines . zip [0 ..] . S8.lines $
   inp
   where
     groupLines :: [CodeBlock] -> [CodeBlock]
@@ -59,11 +59,25 @@ cppSplitBlocks inp =
         (`S8.isPrefixOf` src)
         ["#if", "#end", "#else", "#define", "#undef", "#elif", "#include", "#error", "#warning"]
         -- Note: #ifdef and #ifndef are handled by #if
-    classify :: (Int, ByteString) -> CodeBlock
-    classify (line, text)
-      | shebangLine text = Shebang text
-      | cppLine text = CPPDirectives text
-      | otherwise = HaskellSource line text
+    hasEscapedTrailingNewline :: ByteString -> Bool
+    hasEscapedTrailingNewline src = "\\" `S8.isSuffixOf` src
+    classifyLines :: [(Int, ByteString)] -> [CodeBlock]
+    classifyLines allLines@((lineIndex, src):nextLines)
+      | cppLine src =
+        let (cppLines, nextLines') = spanCPPLines allLines
+         in CPPDirectives (S8.intercalate "\n" (map snd cppLines)) :
+            classifyLines nextLines'
+      | shebangLine src = Shebang src : classifyLines nextLines
+      | otherwise = HaskellSource lineIndex src : classifyLines nextLines
+    classifyLines [] = []
+    spanCPPLines ::
+         [(Int, ByteString)] -> ([(Int, ByteString)], [(Int, ByteString)])
+    spanCPPLines (line@(_, src):nextLines)
+      | hasEscapedTrailingNewline src =
+        let (cppLines, nextLines') = spanCPPLines nextLines
+         in (line : cppLines, nextLines')
+      | otherwise = ([line], nextLines)
+    spanCPPLines [] = ([], [])
     -- Hack to work around some parser issues in haskell-src-exts: Some pragmas
     -- need to have a newline following them in order to parse properly, so we include
     -- the trailing newline in the code block if it existed.

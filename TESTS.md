@@ -1574,3 +1574,15 @@ Macro definitions (`#define`)
 #define STRINGIFY(x) #x
 f = STRINGIFY (y)
 ```
+
+Escaped newlines
+
+```haskell
+#define LONG_MACRO_DEFINITION \
+  data Pair a b = Pair \
+    { first :: a \
+    , second :: b \
+    }
+#define SHORT_MACRO_DEFINITION \
+  x
+```
