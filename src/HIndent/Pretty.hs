@@ -445,6 +445,7 @@ prettyQuoteQName x =
       case n of
         Ident _ i -> string i
         Symbol _ s -> do write "("; string s; write ")";
+    Special _ s@Cons{} -> parens (pretty s)
     Special _ s -> pretty s
 
 instance Pretty Type where
