@@ -354,7 +354,7 @@ instance Pretty Pat where
                                space)
                            (pretty b))
       PApp _ f args ->
-        depend (do prettyQuoteQName f
+        depend (do pretty f
                    unless (null args) space)
                (spaced (map pretty args))
       PTuple _ boxed pats ->
@@ -370,11 +370,11 @@ instance Pretty Pat where
       PParen _ e -> parens (pretty e)
       PRec _ qname fields -> do
         let horVariant = do
-              prettyQuoteQName qname
+              pretty qname
               space
               braces $ commas $ map pretty fields
             verVariant =
-              depend (prettyQuoteQName qname >> space) $ do
+              depend (pretty qname >> space) $ do
                 case fields of
                   [] -> write "{}"
                   [field] -> braces $ pretty field
@@ -433,21 +433,6 @@ prettyQuoteName x =
   case x of
     Ident _ i -> string i
     Symbol _ s -> string ("(" ++ s ++ ")")
-
-prettyQuoteQName :: QName NodeInfo -> Printer ()
-prettyQuoteQName x =
-  case x of
-    Qual _ mn n ->
-      case n of
-        Ident _ i -> do pretty mn; write "."; string i;
-        Symbol _ s -> do write "("; pretty mn; write "."; string s; write ")";
-    UnQual _ n ->
-      case n of
-        Ident _ i -> string i
-        Symbol _ s -> do write "("; string s; write ")";
-    Special _ s@Cons{} -> parens (pretty s)
-    Special _ s@FunCon{} -> parens (pretty s)
-    Special _ s -> pretty s
 
 instance Pretty Type where
   prettyInternal = typ
@@ -566,7 +551,7 @@ exp (List _ es) =
           brackets (inter (write ", ")
                           (map pretty es))
 exp (RecUpdate _ exp' updates) = recUpdateExpr (pretty exp') updates
-exp (RecConstr _ qname updates) = recUpdateExpr (prettyQuoteQName qname) updates
+exp (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
 exp (Let _ binds e) =
   depend (write "let ")
          (do pretty binds
@@ -665,10 +650,10 @@ exp (ExpTypeSig _ e t) =
          (pretty t)
 exp (VarQuote _ x) =
   depend (write "'")
-         (prettyQuoteQName x)
+         (pretty x)
 exp (TypQuote _ x) =
   depend (write "''")
-         (prettyQuoteQName x)
+         (pretty x)
 exp (BracketExp _ b) = pretty b
 exp (SpliceExp _ s) = pretty s
 exp (QuasiQuote _ n s) = quotation n (string s)
@@ -703,9 +688,9 @@ exp (MultiIf _ alts) =
                          (zip [1..] stmts))))
       swing (write " " >> rhsSeparator) (pretty e)
 exp (Lit _ lit) = prettyInternal lit
-exp (Var _ q) = prettyQuoteQName q
+exp (Var _ q) = pretty q
 exp (IPVar _ q) = pretty q
-exp (Con _ q) = prettyQuoteQName q
+exp (Con _ q) = pretty q
 
 exp x@XTag{} = pretty' x
 exp x@XETag{} = pretty' x
@@ -878,7 +863,7 @@ decl (InlineSig _ inline active name) = do
     Nothing -> return ()
     Just (ActiveFrom _ x) -> write ("[" ++ show x ++ "] ")
     Just (ActiveUntil _ x) -> write ("[~" ++ show x ++ "] ")
-  prettyQuoteQName name
+  pretty name
 
   write " #-}"
 decl (MinimalPragma _ (Just formula)) =
@@ -993,7 +978,7 @@ instance Pretty Alt where
 instance Pretty Asst where
   prettyInternal x =
     case x of
-      ClassA _ name types -> spaced (prettyQuoteQName name : map pretty types)
+      ClassA _ name types -> spaced (pretty name : map pretty types)
       i@InfixA {} -> pretty' i
       IParam _ name ty -> do
         pretty name
@@ -1074,10 +1059,10 @@ instance Pretty FieldUpdate where
   prettyInternal x =
     case x of
       FieldUpdate _ n e ->
-        swing (do prettyQuoteQName n
+        swing (do pretty n
                   write " =")
                (pretty e)
-      FieldPun _ n -> prettyQuoteQName n
+      FieldPun _ n -> pretty n
       FieldWildcard _ -> write ".."
 
 instance Pretty GuardedRhs where
@@ -1130,10 +1115,10 @@ instance Pretty PatField where
   prettyInternal x =
     case x of
       PFieldPat _ n p ->
-        depend (do prettyQuoteQName n
+        depend (do pretty n
                    write " = ")
                (pretty p)
-      PFieldPun _ n -> prettyQuoteQName n
+      PFieldPun _ n -> pretty n
       PFieldWildcard _ -> write ".."
 
 instance Pretty QualConDecl where
@@ -1213,7 +1198,7 @@ instance Pretty InstHead where
   prettyInternal x =
     case x of
       -- Base cases
-      IHCon _ name -> prettyQuoteQName name
+      IHCon _ name -> pretty name
       IHInfix _ typ' name ->
         depend (pretty typ')
                (do space
@@ -1487,12 +1472,18 @@ instance Pretty Name where
 instance Pretty QName where
   prettyInternal =
     \case
-      Qual _ m n -> do
-        pretty m
-        write "."
-        pretty n
-      UnQual _ n -> pretty n
-      Special _ c -> pretty c
+      Qual _ mn n ->
+        case n of
+          Ident _ i -> do pretty mn; write "."; string i;
+          Symbol _ s -> do write "("; pretty mn; write "."; string s; write ")";
+      UnQual _ n ->
+        case n of
+          Ident _ i -> string i
+          Symbol _ s -> do write "("; string s; write ")";
+      Special _ s@Cons{} -> parens (pretty s)
+      Special _ s@FunCon{} -> parens (pretty s)
+      Special _ s -> pretty s
+
 
 instance Pretty SpecialCon where
   prettyInternal s =
@@ -1778,7 +1769,7 @@ typ (TyParArray _ t) =
                write ":")
 typ (TyApp _ f a) = spaced [pretty f, pretty a]
 typ (TyVar _ n) = pretty n
-typ (TyCon _ p) = prettyQuoteQName p
+typ (TyCon _ p) = pretty p
 typ (TyParen _ e) = parens (pretty e)
 typ (TyInfix _ a promotedop b) = do
   -- Apply special rules to line-break operators.
@@ -1826,7 +1817,7 @@ typ (TyPromoted _ (PromotedTuple _ ts)) =
      write ")"
 typ (TyPromoted _ (PromotedCon _ _ tname)) =
   do write "'"
-     prettyQuoteQName tname
+     pretty tname
 typ (TyPromoted _ (PromotedString _ _ raw)) = do
   do write "\""
      string raw
