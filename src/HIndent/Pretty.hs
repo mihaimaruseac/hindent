@@ -446,6 +446,7 @@ prettyQuoteQName x =
         Ident _ i -> string i
         Symbol _ s -> do write "("; string s; write ")";
     Special _ s@Cons{} -> parens (pretty s)
+    Special _ s@FunCon{} -> parens (pretty s)
     Special _ s -> pretty s
 
 instance Pretty Type where
@@ -702,17 +703,9 @@ exp (MultiIf _ alts) =
                          (zip [1..] stmts))))
       swing (write " " >> rhsSeparator) (pretty e)
 exp (Lit _ lit) = prettyInternal lit
-exp (Var _ q) = case q of
-                  Special _ Cons{} -> parens (pretty q)
-                  Qual _ _ (Symbol _ _) -> parens (pretty q)
-                  UnQual _ (Symbol _ _) -> parens (pretty q)
-                  _ -> pretty q
+exp (Var _ q) = prettyQuoteQName q
 exp (IPVar _ q) = pretty q
-exp (Con _ q) = case q of
-                  Special _ Cons{} -> parens (pretty q)
-                  Qual _ _ (Symbol _ _) -> parens (pretty q)
-                  UnQual _ (Symbol _ _) -> parens (pretty q)
-                  _ -> pretty q
+exp (Con _ q) = prettyQuoteQName q
 
 exp x@XTag{} = pretty' x
 exp x@XETag{} = pretty' x
@@ -1785,20 +1778,7 @@ typ (TyParArray _ t) =
                write ":")
 typ (TyApp _ f a) = spaced [pretty f, pretty a]
 typ (TyVar _ n) = pretty n
-typ (TyCon _ p) =
-  case p of
-    Qual _ _ name ->
-      case name of
-        Ident _ _ -> pretty p
-        Symbol _ _ -> parens (pretty p)
-    UnQual _ name ->
-      case name of
-        Ident _ _ -> pretty p
-        Symbol _ _ -> parens (pretty p)
-    Special _ con ->
-      case con of
-        FunCon _ -> parens (pretty p)
-        _ -> pretty p
+typ (TyCon _ p) = prettyQuoteQName p
 typ (TyParen _ e) = parens (pretty e)
 typ (TyInfix _ a promotedop b) = do
   -- Apply special rules to line-break operators.

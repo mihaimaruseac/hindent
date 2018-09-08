@@ -321,6 +321,20 @@ for xs $ \case
   Left x -> x
 ```
 
+Operator in parentheses
+
+```haskell
+cat = (++)
+```
+
+Symbol data constructor in parentheses
+
+```haskell
+cons = (:)
+
+cons' = (:|)
+```
+
 Binary symbol data constructor in pattern
 
 ```haskell
