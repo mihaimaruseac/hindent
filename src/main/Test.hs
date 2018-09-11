@@ -123,9 +123,17 @@ codeBlocksSpec =
         [ Shebang "#!/usr/bin/env runhaskell"
         , HaskellSource 1 "{-# LANGUAGE OverloadedStrings #-}\n"
         ]
-    it "should put adjacent #define lines into a single block" $ do
-      cppSplitBlocks "#define A\n#define B\n#define C\n" `shouldBe`
-        [CPPDirectives "#define A\n#define B\n#define C"]
+    it "should put a multi-line #define into its own block" $ do
+      let input = "#define A \\\n  macro contents \\\n  go here\nhaskell code\n"
+      cppSplitBlocks input `shouldBe`
+        [ CPPDirectives "#define A \\\n  macro contents \\\n  go here"
+        , HaskellSource 3 "haskell code\n"
+        ]
+    it "should put an unterminated multi-line #define into its own block" $ do
+      cppSplitBlocks "#define A \\" `shouldBe` [CPPDirectives "#define A \\"]
+      cppSplitBlocks "#define A \\\n" `shouldBe` [CPPDirectives "#define A \\"]
+      cppSplitBlocks "#define A \\\n.\\" `shouldBe`
+        [CPPDirectives "#define A \\\n.\\"]
 
 markdoneSpec :: Spec
 markdoneSpec = do
