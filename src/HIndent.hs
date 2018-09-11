@@ -65,10 +65,16 @@ reformat config mexts mfilepath =
             mode'' = case exts of
                        Nothing -> mode'
                        Just (Nothing, exts') ->
-                         mode' { extensions = exts' ++ extensions mode' }
+                         mode' { extensions =
+                                   exts'
+                                   ++ configExtensions config
+                                   ++ extensions mode' }
                        Just (Just lang, exts') ->
                          mode' { baseLanguage = lang
-                               , extensions = exts' ++ extensions mode' }
+                               , extensions =
+                                   exts'
+                                   ++ configExtensions config
+                                   ++ extensions mode' }
         in case parseModuleWithComments mode'' (UTF8.toString code) of
                ParseOk (m, comments) ->
                    fmap
@@ -256,14 +262,6 @@ getExtensions = foldl f defaultExtensions . map T.unpack
             x' :
             delete x' a
         f _ x = error $ "Unknown extension: " ++ x
-
--- | Parse an extension.
-readExtension :: String -> Maybe Extension
-readExtension x =
-  case classifyExtension x -- Foo
-       of
-    UnknownExtension _ -> Nothing
-    x' -> Just x'
 
 --------------------------------------------------------------------------------
 -- Comments
