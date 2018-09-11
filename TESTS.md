@@ -382,6 +382,12 @@ Type brackets
 foo :: $([t|Bool|]) -> a
 ```
 
+Quoted data constructors
+
+```haskell
+cons = '(:)
+```
+
 # Type signatures
 
 Long argument list should line break
