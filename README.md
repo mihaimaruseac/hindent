@@ -1,4 +1,4 @@
-# hindent [![Hackage](https://img.shields.io/hackage/v/hindent.svg?style=flat)](https://hackage.haskell.org/package/hindent) [![Build Status](https://travis-ci.org/commercialhaskell/hindent.png)](https://travis-ci.org/commercialhaskell/hindent)
+# hindent [![Hackage](https://img.shields.io/hackage/v/hindent.svg?style=flat)](https://hackage.haskell.org/package/hindent) [![Build Status](https://travis-ci.org/commercialhaskell/hindent.svg)](https://travis-ci.org/commercialhaskell/hindent)
 
 Haskell pretty printer
 
