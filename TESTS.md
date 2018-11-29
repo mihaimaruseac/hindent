@@ -1558,6 +1558,14 @@ cdsmith Quotes are dropped from package imports #480
 import qualified "base" Prelude as P
 ```
 
+alexwl Hindent breaks associated type families annotated with injectivity information #528
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/528
+class C a where
+  type F a = b | b -> a
+```
+
 # MINIMAL pragma
 
 Monad example
