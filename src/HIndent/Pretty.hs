@@ -1021,29 +1021,38 @@ instance Pretty ClassDecl where
     case x of
       ClsDecl _ d -> pretty d
       ClsDataFam _ ctx h mkind ->
-        depend (write "data ")
-               (withCtx ctx
-                        (do pretty h
-                            (case mkind of
-                               Nothing -> return ()
-                               Just kind ->
-                                 do write " :: "
-                                    pretty kind)))
-      ClsTyFam _ h mkind minj ->
-        depend (write "type ")
-               (depend (pretty h)
-                       (depend (traverse_ (\kind -> write " :: " >> pretty kind) mkind)
-                               (traverse_ pretty minj)))
-      ClsTyDef _ (TypeEqn _ this that) ->
-        do write "type "
-           pretty this
-           write " = "
-           pretty that
-      ClsDefSig _ name ty ->
-        do write "default "
-           pretty name
-           write " :: "
-           pretty ty
+        depend
+          (write "data ")
+          (withCtx
+             ctx
+             (do pretty h
+                 (case mkind of
+                    Nothing -> return ()
+                    Just kind -> do
+                      write " :: "
+                      pretty kind)))
+      ClsTyFam _ h msig minj ->
+        depend
+          (write "type ")
+          (depend
+             (pretty h)
+             (depend
+                (traverse_
+                   (\case
+                      KindSig _ kind -> write " :: " >> pretty kind
+                      TyVarSig _ tyVarBind -> write " = " >> pretty tyVarBind)
+                   msig)
+                (traverse_ (\inj -> space >> pretty inj) minj)))
+      ClsTyDef _ (TypeEqn _ this that) -> do
+        write "type "
+        pretty this
+        write " = "
+        pretty that
+      ClsDefSig _ name ty -> do
+        write "default "
+        pretty name
+        write " :: "
+        pretty ty
 
 instance Pretty ConDecl where
   prettyInternal x =
