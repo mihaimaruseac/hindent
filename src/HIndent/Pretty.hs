@@ -411,6 +411,7 @@ instance Pretty Pat where
       PXPatTag{} -> pretty' x
       PXRPats{} -> pretty' x
       PVar{} -> pretty' x
+      PSplice _ s -> pretty s
 
 -- | Pretty infix application of a name (identifier or symbol).
 prettyInfixName :: Name NodeInfo -> Printer ()
