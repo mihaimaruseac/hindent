@@ -968,6 +968,145 @@ main = putStrLn "Hello, World!"
 {- This is another random comment. -}
 ```
 
+# MINIMAL pragma
+
+Monad example
+
+```haskell
+class A where
+  {-# MINIMAL return, ((>>=) | (join, fmap)) #-}
+```
+
+Very long names #310
+
+```haskell
+class A where
+  {-# MINIMAL averylongnamewithnoparticularmeaning
+            | ananotherverylongnamewithnomoremeaning #-}
+```
+
+# Behaviour checks
+
+Unicode
+
+``` haskell
+α = γ * "ω"
+-- υ
+```
+
+Empty module
+
+``` haskell
+```
+
+Trailing newline is preserved
+
+``` haskell
+module X where
+
+foo = 123
+```
+
+# Complex input
+
+A complex, slow-to-print decl
+
+``` haskell
+quasiQuotes =
+  [ ( ''[]
+    , \(typeVariable:_) _automaticPrinter ->
+        (let presentVar = varE (presentVarName typeVariable)
+          in lamE
+               [varP (presentVarName typeVariable)]
+               [|(let typeString = "[" ++ fst $(presentVar) ++ "]"
+                   in ( typeString
+                      , \xs ->
+                          case fst $(presentVar) of
+                            "GHC.Types.Char" ->
+                              ChoicePresentation
+                                "String"
+                                [ ( "String"
+                                  , StringPresentation
+                                      "String"
+                                      (concatMap
+                                         getCh
+                                         (map (snd $(presentVar)) xs)))
+                                , ( "List of characters"
+                                  , ListPresentation
+                                      typeString
+                                      (map (snd $(presentVar)) xs))
+                                ]
+                              where getCh (CharPresentation "GHC.Types.Char" ch) =
+                                      ch
+                                    getCh (ChoicePresentation _ ((_, CharPresentation _ ch):_)) =
+                                      ch
+                                    getCh _ = ""
+                            _ ->
+                              ListPresentation
+                                typeString
+                                (map (snd $(presentVar)) xs)))|]))
+  ]
+```
+
+Random snippet from hindent itself
+
+``` haskell
+exp' (App _ op a) = do
+  (fits, st) <- fitsOnOneLine (spaced (map pretty (f : args)))
+  if fits
+    then put st
+    else do
+      pretty f
+      newline
+      spaces <- getIndentSpaces
+      indented spaces (lined (map pretty args))
+  where
+    (f, args) = flatten op [a]
+    flatten :: Exp NodeInfo -> [Exp NodeInfo] -> (Exp NodeInfo, [Exp NodeInfo])
+    flatten (App _ f' a') b = flatten f' (a' : b)
+    flatten f' as = (f', as)
+```
+
+Quasi quotes
+
+```haskell
+exp = [name|exp|]
+
+f [qq|pattern|] = ()
+```
+
+# C preprocessor
+
+Conditionals (`#if`)
+
+```haskell
+isDebug :: Bool
+#if DEBUG
+isDebug = True
+#else
+isDebug = False
+#endif
+```
+
+Macro definitions (`#define`)
+
+```haskell
+#define STRINGIFY(x) #x
+f = STRINGIFY (y)
+```
+
+Escaped newlines
+
+```haskell
+#define LONG_MACRO_DEFINITION \
+  data Pair a b = Pair \
+    { first :: a \
+    , second :: b \
+    }
+#define SHORT_MACRO_DEFINITION \
+  x
+```
+
 # Regression tests
 
 jml Adds trailing whitespace when wrapping #221
@@ -1573,143 +1712,4 @@ alexwl Hindent breaks associated type families annotated with injectivity inform
 -- https://github.com/commercialhaskell/hindent/issues/528
 class C a where
   type F a = b | b -> a
-```
-
-# MINIMAL pragma
-
-Monad example
-
-```haskell
-class A where
-  {-# MINIMAL return, ((>>=) | (join, fmap)) #-}
-```
-
-Very long names #310
-
-```haskell
-class A where
-  {-# MINIMAL averylongnamewithnoparticularmeaning
-            | ananotherverylongnamewithnomoremeaning #-}
-```
-
-# Behaviour checks
-
-Unicode
-
-``` haskell
-α = γ * "ω"
--- υ
-```
-
-Empty module
-
-``` haskell
-```
-
-Trailing newline is preserved
-
-``` haskell
-module X where
-
-foo = 123
-```
-
-# Complex input
-
-A complex, slow-to-print decl
-
-``` haskell
-quasiQuotes =
-  [ ( ''[]
-    , \(typeVariable:_) _automaticPrinter ->
-        (let presentVar = varE (presentVarName typeVariable)
-          in lamE
-               [varP (presentVarName typeVariable)]
-               [|(let typeString = "[" ++ fst $(presentVar) ++ "]"
-                   in ( typeString
-                      , \xs ->
-                          case fst $(presentVar) of
-                            "GHC.Types.Char" ->
-                              ChoicePresentation
-                                "String"
-                                [ ( "String"
-                                  , StringPresentation
-                                      "String"
-                                      (concatMap
-                                         getCh
-                                         (map (snd $(presentVar)) xs)))
-                                , ( "List of characters"
-                                  , ListPresentation
-                                      typeString
-                                      (map (snd $(presentVar)) xs))
-                                ]
-                              where getCh (CharPresentation "GHC.Types.Char" ch) =
-                                      ch
-                                    getCh (ChoicePresentation _ ((_, CharPresentation _ ch):_)) =
-                                      ch
-                                    getCh _ = ""
-                            _ ->
-                              ListPresentation
-                                typeString
-                                (map (snd $(presentVar)) xs)))|]))
-  ]
-```
-
-Random snippet from hindent itself
-
-``` haskell
-exp' (App _ op a) = do
-  (fits, st) <- fitsOnOneLine (spaced (map pretty (f : args)))
-  if fits
-    then put st
-    else do
-      pretty f
-      newline
-      spaces <- getIndentSpaces
-      indented spaces (lined (map pretty args))
-  where
-    (f, args) = flatten op [a]
-    flatten :: Exp NodeInfo -> [Exp NodeInfo] -> (Exp NodeInfo, [Exp NodeInfo])
-    flatten (App _ f' a') b = flatten f' (a' : b)
-    flatten f' as = (f', as)
-```
-
-Quasi quotes
-
-```haskell
-exp = [name|exp|]
-
-f [qq|pattern|] = ()
-```
-
-# C preprocessor
-
-Conditionals (`#if`)
-
-```haskell
-isDebug :: Bool
-#if DEBUG
-isDebug = True
-#else
-isDebug = False
-#endif
-```
-
-Macro definitions (`#define`)
-
-```haskell
-#define STRINGIFY(x) #x
-f = STRINGIFY (y)
-```
-
-Escaped newlines
-
-```haskell
-#define LONG_MACRO_DEFINITION \
-  data Pair a b = Pair \
-    { first :: a \
-    , second :: b \
-    }
-#define SHORT_MACRO_DEFINITION \
-  x
 ```
