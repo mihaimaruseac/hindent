@@ -1974,10 +1974,15 @@ conDecl (RecDecl _ name fields) =
                     (prefixedLined ","
                                    (map (depend space . pretty) fields))
              write " }")
-conDecl (ConDecl _ name bangty) =
-  depend (do prettyQuoteName name
-             unless (null bangty) space)
-         (lined (map pretty bangty))
+conDecl (ConDecl _ name bangty) = do
+  prettyQuoteName name
+  unless
+    (null bangty)
+    (ifFitsOnOneLineOrElse
+       (do space
+           spaced (map pretty bangty))
+       (do newline
+           indentedBlock (lined (map pretty bangty))))
 conDecl (InfixConDecl _ a f b) =
   inter space [pretty a, pretty f, pretty b]
 

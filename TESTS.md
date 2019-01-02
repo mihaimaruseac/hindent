@@ -758,9 +758,19 @@ Data declarations
 
 ``` haskell
 data Tree a
-  = Branch !a
-           !(Tree a)
-           !(Tree a)
+  = Branch !a !(Tree a) !(Tree a)
+  | Leaf
+
+data Tree a
+  = Branch
+      !a
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
   | Leaf
 
 data HttpException
@@ -1631,9 +1641,7 @@ DavidEichmann Existential Quantification reordered #443
 {-# LANGUAGE ExistentialQuantification #-}
 
 data D =
-  forall a b c. D a
-                  b
-                  c
+  forall a b c. D a b c
 ```
 
 sophie-h Regression: Breaks basic type class code by inserting "|" #459
