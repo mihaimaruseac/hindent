@@ -1226,8 +1226,6 @@ newtype Number a =
   deriving anyclass (Typeable)
 ```
 
-# MINIMAL pragma
-
 neongreen "{" is lost when formatting "Foo{}" #366
 
 ```haskell
