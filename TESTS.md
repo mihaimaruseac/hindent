@@ -1750,3 +1750,20 @@ alexwl Hindent breaks associated type families annotated with injectivity inform
 class C a where
   type F a = b | b -> a
 ```
+
+sophie-h Fails to create required indentation for infix #238
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/238
+{-# LANGUAGE ScopedTypeVariables #-}
+
+import Control.Exception
+
+x :: IO Int
+x =
+  do putStrLn "ok"
+     error "ok"
+     `catch` (\(_ :: IOException) -> pure 1) `catch`
+  (\(_ :: ErrorCall) -> pure 2)
+
+```
