@@ -1883,17 +1883,6 @@ decl' (PatBind _ pat rhs' mbinds) =
        for_ mbinds bindingGroup
 
 -- | Handle records specially for a prettier display (see guide).
-decl' (DataDecl _ dataornew ctx dhead [con] mderivs)
-  | isRecord con =
-    do depend (do pretty dataornew
-                  space)
-              (withCtx ctx
-                       (do pretty dhead
-                           singleCons con))
-       forM_ mderivs $ \deriv -> space >> pretty deriv
-  where singleCons x =
-          depend (write " =")
-                 ((depend space . qualConDecl) x)
 decl' e = decl e
 
 declTy :: Type NodeInfo -> Printer ()
@@ -1967,13 +1956,16 @@ qualConDecl (QualConDecl _ tyvars ctx d) =
 
 -- | Fields are preceded with a space.
 conDecl :: ConDecl NodeInfo -> Printer ()
-conDecl (RecDecl _ name fields) =
-  depend (do pretty name
-             write " ")
-         (do depend (write "{")
-                    (prefixedLined ","
-                                   (map (depend space . pretty) fields))
-             write " }")
+conDecl (RecDecl _ name fields) = do
+   pretty name
+   newline
+   indentedBlock
+    (do depend (write "{")
+               (prefixedLined ","
+                              (map (depend space . pretty) fields))
+        newline
+        write "}"
+        )
 conDecl (ConDecl _ name bangty) = do
   prettyQuoteName name
   unless
@@ -1995,7 +1987,7 @@ recDecl (RecDecl _ name fields) =
      indentSpaces <- getIndentSpaces
      newline
      column indentSpaces
-            (do depend (write "{")
+            (do depend (write "{!")
                        (prefixedLined ","
                                       (map (depend space . pretty) fields))
                 newline

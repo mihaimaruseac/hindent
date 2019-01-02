@@ -777,22 +777,45 @@ data HttpException
   = InvalidStatusCode Int
   | MissingContentHeader
 
-data Person = Person
-  { firstName :: !String -- ^ First name
-  , lastName :: !String -- ^ Last name
-  , age :: !Int -- ^ Age
-  }
+data Person =
+  Person
+    { firstName :: !String -- ^ First name
+    , lastName :: !String -- ^ Last name
+    , age :: !Int -- ^ Age
+    }
+
+data Expression a
+  = VariableExpression
+      { id :: Id Expression
+      , label :: a
+      }
+  | FunctionExpression
+      { var :: Id Expression
+      , body :: Expression a
+      , label :: a
+      }
+  | ApplyExpression
+      { func :: Expression a
+      , arg :: Expression a
+      , label :: a
+      }
+  | ConstructorExpression
+      { id :: Id Constructor
+      , label :: a
+      }
 ```
 
 Spaces between deriving classes
 
 ``` haskell
 -- From https://github.com/chrisdone/hindent/issues/167
-data Person = Person
-  { firstName :: !String -- ^ First name
-  , lastName :: !String -- ^ Last name
-  , age :: !Int -- ^ Age
-  } deriving (Eq, Show)
+data Person =
+  Person
+    { firstName :: !String -- ^ First name
+    , lastName :: !String -- ^ Last name
+    , age :: !Int -- ^ Age
+    }
+  deriving (Eq, Show)
 ```
 
 Hanging lambdas
@@ -899,18 +922,19 @@ data X
   = X -- ^ X is for xylophone.
   | Y -- ^ Y is for why did I eat that pizza.
 
-data X = X
-  { field1 :: Int -- ^ Field1 is the first field.
-  , field11 :: Char
-    -- ^ This field comment is on its own line.
-  , field2 :: Int -- ^ Field2 is the second field.
-  , field3 :: Char -- ^ This is a long comment which starts next to
-    -- the field but continues onto the next line, it aligns exactly
-    -- with the field name.
-  , field4 :: Char
-    -- ^ This is a long comment which starts on the following line
-    -- from from the field, lines continue at the sme column.
-  }
+data X =
+  X
+    { field1 :: Int -- ^ Field1 is the first field.
+    , field11 :: Char
+      -- ^ This field comment is on its own line.
+    , field2 :: Int -- ^ Field2 is the second field.
+    , field3 :: Char -- ^ This is a long comment which starts next to
+      -- the field but continues onto the next line, it aligns exactly
+      -- with the field name.
+    , field4 :: Char
+      -- ^ This is a long comment which starts on the following line
+      -- from from the field, lines continue at the sme column.
+    }
 ```
 
 Comments around regular declarations
@@ -1419,17 +1443,22 @@ sophie-h Record syntax change in 5.2.2 #393
 ```haskell
 -- https://github.com/commercialhaskell/hindent/issues/393
 data X
-  = X { x :: Int }
+  = X
+      { x :: Int
+      }
   | X'
 
-data X = X
-  { x :: Int
-  , x' :: Int
-  }
+data X =
+  X
+    { x :: Int
+    , x' :: Int
+    }
 
 data X
-  = X { x :: Int
-      , x' :: Int }
+  = X
+      { x :: Int
+      , x' :: Int
+      }
   | X'
 ```
 
