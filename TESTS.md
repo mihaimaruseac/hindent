@@ -9,6 +9,19 @@ like, or contribute additional sections to it, or regression tests.
 
 # Modules
 
+Empty module
+
+``` haskell
+```
+
+Double shebangs
+
+``` haskell
+#!/usr/bin/env stack
+#!/usr/bin/env stack
+main = pure ()
+```
+
 Extension pragmas
 
 ```haskell
