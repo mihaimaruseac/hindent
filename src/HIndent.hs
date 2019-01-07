@@ -178,7 +178,7 @@ runPrinterStyle config m =
               , psLine = 1
               , psConfig = config
               , psInsideCase = False
-              , psHardLimit = False
+              , psFitOnOneLine = False
               , psEolComment = False
               }))))
 
