@@ -2034,6 +2034,7 @@ fitsOnOneLine p =
      ok <- fmap (const True) p <|> return False
      st' <- get
      put st
+     guard $ ok || not (psFitOnOneLine st)
      return (if ok
                 then Just st' { psFitOnOneLine = psFitOnOneLine st }
                 else Nothing)
@@ -2050,6 +2051,7 @@ ifFitsOnOneLineOrElse a b = do
       return r
     Nothing -> do
       put stOrig
+      guard $ not (psFitOnOneLine stOrig)
       b
 
 bindingGroup :: Binds NodeInfo -> Printer ()
