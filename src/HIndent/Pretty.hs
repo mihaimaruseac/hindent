@@ -231,7 +231,7 @@ int = write . show
 write :: String -> Printer ()
 write x =
   do eol <- gets psEolComment
-     hardFail <- gets psHardLimit
+     hardFail <- gets psFitOnOneLine
      let addingNewline = eol && x /= "\n"
      when addingNewline newline
      state <- get
@@ -2030,26 +2030,28 @@ isLineBreak _ = return False
 fitsOnOneLine :: Printer a -> Printer (Maybe PrintState)
 fitsOnOneLine p =
   do st <- get
-     put st { psHardLimit = True}
+     put st { psFitOnOneLine = True}
      ok <- fmap (const True) p <|> return False
      st' <- get
      put st
+     guard $ ok || not (psFitOnOneLine st)
      return (if ok
-                then Just st' { psHardLimit = psHardLimit st }
+                then Just st' { psFitOnOneLine = psFitOnOneLine st }
                 else Nothing)
 
 -- | If first printer fits, use it, else use the second one.
 ifFitsOnOneLineOrElse :: Printer a -> Printer a -> Printer a
 ifFitsOnOneLineOrElse a b = do
   stOrig <- get
-  put stOrig{psHardLimit = True}
+  put stOrig{psFitOnOneLine = True}
   res <- fmap Just a <|> return Nothing
   case res of
     Just r -> do
-      modify $ \st -> st{psHardLimit = psHardLimit stOrig}
+      modify $ \st -> st{psFitOnOneLine = psFitOnOneLine stOrig}
       return r
     Nothing -> do
       put stOrig
+      guard $ not (psFitOnOneLine stOrig)
       b
 
 bindingGroup :: Binds NodeInfo -> Printer ()

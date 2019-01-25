@@ -52,8 +52,9 @@ data PrintState = PrintState
     -- ^ Configuration of max colums and indentation style.
   , psInsideCase :: !Bool
     -- ^ Whether we're in a case statement, used for Rhs printing.
-  , psHardLimit :: !Bool
-    -- ^ Bail out if we exceed current column.
+  , psFitOnOneLine :: !Bool
+    -- ^ Bail out if we need to print beyond the current line or
+    -- the maximum column.
   , psEolComment :: !Bool
   }
 
