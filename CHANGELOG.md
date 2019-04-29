@@ -1,3 +1,18 @@
+5.3.0:
+    * Handle multiple deriving clauses in a DerivingStrategies scenario
+    * Ignore non-files in findCabalFiles
+    * Allow batch processing of multiple files
+    * Prevent hindent from trying to open non-files when searching for
+      .cabal files
+    * Specify default extensions in configuration file
+    * Fix bad output for [p|Foo|] pattern quasi-quotes
+    * Parse C preprocessor line continuations
+    * Fix pretty printing of '(:)
+    * Add parens around symbols (:|) when required
+    * Support $p pattern splices
+    * Fix associated type families
+    * Non-dependent record constructor formatting
+
 5.2.7:
     * Fix -X option bug
 
