@@ -1786,3 +1786,23 @@ x =
   (\(_ :: ErrorCall) -> pure 2)
 
 ```
+
+lippirk Comments on functions in where clause not quite right #540
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/540
+topLevelFunc1 = f
+  where
+    -- comment on func in where clause
+    -- stays in the where clause
+    f = undefined
+
+topLevelFunc2 = f . g
+  where
+    {- multi
+       line
+       comment -}
+    f = undefined
+    -- single line comment
+    g = undefined
+```

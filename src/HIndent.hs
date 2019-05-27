@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE OverloadedStrings, TupleSections, ScopedTypeVariables, PatternGuards #-}
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables, PatternGuards #-}
 
 -- | Haskell indenter.
 
@@ -32,6 +32,7 @@ import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.UTF8 as UTF8
 import qualified Data.ByteString.Unsafe as S
 import           Data.Char
+import           Data.Foldable (foldr')
 import           Data.Either
 import           Data.Function
 import           Data.Functor.Identity
@@ -299,17 +300,16 @@ collectAllComments =
     (traverseBackwards
      -- Finally, collect backwards comments which come after each node.
        (collectCommentsBy
-          (<>)
           CommentAfterLine
           (\nodeSpan commentSpan ->
               fst (srcSpanStart commentSpan) >= fst (srcSpanEnd nodeSpan)))) <=<
+  shortCircuit addCommentsToTopLevelWhereClauses <=<
   shortCircuit
     (traverse
      -- Collect forwards comments which start at the end line of a
      -- node: Does the start line of the comment match the end-line
      -- of the node?
        (collectCommentsBy
-          (<>)
           CommentSameLine
           (\nodeSpan commentSpan ->
               fst (srcSpanStart commentSpan) == fst (srcSpanEnd nodeSpan)))) <=<
@@ -319,7 +319,6 @@ collectAllComments =
      -- node: Does the start line & end line of the comment match
      -- that of the node?
        (collectCommentsBy
-          (<>)
           CommentSameLine
           (\nodeSpan commentSpan ->
               fst (srcSpanStart commentSpan) == fst (srcSpanStart nodeSpan) &&
@@ -329,7 +328,6 @@ collectAllComments =
      -- First, collect forwards comments for declarations which both
      -- start on column 1 and occur before the declaration.
        (collectCommentsBy
-          (<>)
           CommentBeforeLine
           (\nodeSpan commentSpan ->
               (snd (srcSpanStart nodeSpan) == 1 &&
@@ -353,34 +351,84 @@ collectAllComments =
 -- comment means to remove it from the pool of available comments in
 -- the State. This allows for a multiple pass approach.
 collectCommentsBy
-  :: ([NodeComment] -> [NodeComment] -> [NodeComment])
-  -> (SrcSpan -> SomeComment -> NodeComment)
+  :: (SrcSpan -> SomeComment -> NodeComment)
   -> (SrcSpan -> SrcSpan -> Bool)
   -> NodeInfo
   -> State [Comment] NodeInfo
-collectCommentsBy append cons predicate nodeInfo@(NodeInfo (SrcSpanInfo nodeSpan _) _) = do
+collectCommentsBy cons predicate nodeInfo@(NodeInfo (SrcSpanInfo nodeSpan _) _) = do
   comments <- get
   let (others, mine) =
         partitionEithers
           (map
-             (\comment@(Comment multiLine commentSpan commentString) ->
-                 if predicate nodeSpan (setFilename commentString commentSpan)
-                   then Right
-                          (cons
-                             commentSpan
-                             ((if multiLine
-                                 then MultiLine
-                                 else EndOfLine)
-                                commentString))
+             (\comment@(Comment _ commentSpan _) ->
+                 if predicate nodeSpan commentSpan
+                   then Right comment
                    else Left comment)
              comments)
   put others
-  return
-    (nodeInfo
-     { nodeInfoComments = append (nodeInfoComments nodeInfo) mine
-     })
+  return $ addCommentsToNode cons mine nodeInfo
+
+-- | Reintroduce comments which were immediately above declarations in where clauses.
+-- Affects where clauses of top level declarations only.
+addCommentsToTopLevelWhereClauses ::
+     Module NodeInfo -> State [Comment] (Module NodeInfo)
+addCommentsToTopLevelWhereClauses (Module x x' x'' x''' topLevelDecls) =
+  Module x x' x'' x''' <$>
+  traverse addCommentsToWhereClauses topLevelDecls
   where
-    setFilename cs sp =
-      sp
-      { srcSpanFilename = cs
-      }
+    addCommentsToWhereClauses ::
+         Decl NodeInfo -> State [Comment] (Decl NodeInfo)
+    addCommentsToWhereClauses (PatBind x x' x'' (Just (BDecls x''' whereDecls))) = do
+      newWhereDecls <- traverse addCommentsToPatBind whereDecls
+      return $ PatBind x x' x'' (Just (BDecls x''' newWhereDecls))
+    addCommentsToWhereClauses other = return other
+    addCommentsToPatBind :: Decl NodeInfo -> State [Comment] (Decl NodeInfo)
+    addCommentsToPatBind (PatBind bindInfo (PVar x (Ident declNodeInfo declString)) x' x'') = do
+      bindInfoWithComments <- addCommentsBeforeNode bindInfo
+      return $
+        PatBind
+          bindInfoWithComments
+          (PVar x (Ident declNodeInfo declString))
+          x'
+          x''
+    addCommentsToPatBind other = return other
+    addCommentsBeforeNode :: NodeInfo -> State [Comment] NodeInfo
+    addCommentsBeforeNode nodeInfo = do
+      comments <- get
+      let (notAbove, above) = partitionAboveNotAbove comments nodeInfo
+      put notAbove
+      return $ addCommentsToNode CommentBeforeLine above nodeInfo
+    partitionAboveNotAbove :: [Comment] -> NodeInfo -> ([Comment], [Comment])
+    partitionAboveNotAbove cs (NodeInfo (SrcSpanInfo nodeSpan _) _) =
+      fst $
+      foldr'
+        (\comment@(Comment _ commentSpan _) ((ls, rs), lastSpan) ->
+           if comment `isAbove` lastSpan
+             then ((ls, comment : rs), commentSpan)
+             else ((comment : ls, rs), lastSpan))
+        (([], []), nodeSpan)
+        cs
+    isAbove :: Comment -> SrcSpan -> Bool
+    isAbove (Comment _ commentSpan _) span =
+      let (_, commentColStart) = srcSpanStart commentSpan
+          (commentLnEnd, _) = srcSpanEnd commentSpan
+          (lnStart, colStart) = srcSpanStart span
+       in commentColStart == colStart && commentLnEnd + 1 == lnStart
+addCommentsToTopLevelWhereClauses other = return other
+
+addCommentsToNode :: (SrcSpan -> SomeComment -> NodeComment)
+                  -> [Comment]
+                  -> NodeInfo
+                  -> NodeInfo
+addCommentsToNode mkNodeComment newComments nodeInfo@(NodeInfo (SrcSpanInfo _ _) existingComments) =
+  nodeInfo
+    {nodeInfoComments = existingComments <> map mkBeforeNodeComment newComments}
+  where
+    mkBeforeNodeComment :: Comment -> NodeComment
+    mkBeforeNodeComment (Comment multiLine commentSpan commentString) =
+      mkNodeComment
+        commentSpan
+        ((if multiLine
+            then MultiLine
+            else EndOfLine)
+           commentString)
