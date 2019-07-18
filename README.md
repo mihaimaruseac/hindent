@@ -44,11 +44,17 @@ indent-size: 2
 line-length: 80
 force-trailing-newline: true
 line-breaks: [":>", ":<|>"]
+extensions:
+  - DataKinds
+  - GADTs
+  - TypeApplications
 ```
 
 By default, HIndent preserves the newline or lack of newline in your input. With `force-trailing-newline`, it will make sure there is always a trailing newline.
 
 hindent can be forced to insert a newline before specific operators and tokens with `line-breaks`. This is especially useful when utilizing libraries like [`servant`](https://www.servant.dev/) which use long type aliases.
+
+Using `extensions`, hindent can be made aware of valid syntactic compiler extensions that would normally be considered invalid syntax.
 
 ## Emacs
 
