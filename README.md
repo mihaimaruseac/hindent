@@ -1,8 +1,8 @@
-# hindent [![Hackage](https://img.shields.io/hackage/v/hindent.svg?style=flat)](https://hackage.haskell.org/package/hindent) [![Build Status](https://travis-ci.org/commercialhaskell/hindent.svg)](https://travis-ci.org/commercialhaskell/hindent)
+# hindent [![Hackage](https://img.shields.io/hackage/v/hindent.svg?style=flat)](https://hackage.haskell.org/package/hindent) [![Build Status](https://travis-ci.org/chrisdone/hindent.svg)](https://travis-ci.org/chrisdone/hindent)
 
 Haskell pretty printer
 
-[Examples](https://github.com/commercialhaskell/hindent/blob/master/TESTS.md)
+[Examples](https://github.com/chrisdone/hindent/blob/master/TESTS.md)
 
 ## Install
 
@@ -50,7 +50,7 @@ By default, HIndent preserves the newline or lack of newline in your input. With
 ## Emacs
 
 In
-[elisp/hindent.el](https://github.com/commercialhaskell/hindent/blob/master/elisp/hindent.el)
+[elisp/hindent.el](https://github.com/chrisdone/hindent/blob/master/elisp/hindent.el)
 there is `hindent-mode`, which provides keybindings to reindent parts of the
 buffer:
 
