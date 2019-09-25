@@ -71,7 +71,7 @@ data Config = Config
     }
 
 -- | Parse an extension.
-readExtension :: Monad m => String -> m Extension
+readExtension :: MonadFail m => String -> m Extension
 readExtension x =
   case classifyExtension x -- Foo
        of
