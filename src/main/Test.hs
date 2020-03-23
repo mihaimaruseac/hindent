@@ -61,7 +61,7 @@ toSpec = go
                 shouldBeReadable (reformat cfg code) (L.fromStrict codeExpect)
               go next'
             _ ->
-              fail
+              error
                 "'haskell given' block must be followed by a 'haskell expect' block"
         "haskell pending" -> do
           it (UTF8.toString desc) pending

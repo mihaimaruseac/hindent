@@ -1,9 +1,6 @@
-resolver: lts-11.8
+resolver: lts-15.5
 packages:
 - '.'
 extra-deps:
-- haskell-src-exts-1.20.2
-- path-0.5.9
-- path-io-1.2.0
 
 allow-newer: True

@@ -4,6 +4,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE CPP #-}
 
 -- | All types.
 
@@ -70,8 +71,12 @@ data Config = Config
       -- ^ Extra language extensions enabled by default.
     }
 
+#if __GLASGOW_HASKELL__ >= 808
 -- | Parse an extension.
+readExtension :: MonadFail m => String -> m Extension
+#else
 readExtension :: Monad m => String -> m Extension
+#endif
 readExtension x =
   case classifyExtension x -- Foo
        of
