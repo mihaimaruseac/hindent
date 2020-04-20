@@ -27,13 +27,12 @@ jobs:
         ghc-version: ${{ matrix.ghc }}
         enable-stack: true
         stack-version: 'latest'
-    - name: Get location of stack folder
-      id: get-stack-location
-      run: echo "::set-output name=stack-root::$(stack path --stack-root)"
     - name: Cache (Unix platform)
       uses: actions/cache@v2
       with:
-        path: ${{ steps.get-stack-location.outputs.stack-root }}
+        path: |
+          ~/.stack
+          C:\Users\runneradmin\AppData\Roaming\stack
         key: stack-cache-v2-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
         restore-keys: |
           stack-cache-v2-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}
