@@ -47,6 +47,15 @@ force-trailing-newline: true
 
 By default, HIndent preserves the newline or lack of newline in your input. With `force-trailing-newline`, it will make sure there is always a trailing newline.
 
+It is also possible to specify which extensions HIndent runs
+with in your `.hindent.yaml`:
+
+```yaml
+extensions:
+  - MagicHash
+  - RecursiveDo
+```
+
 ## Emacs
 
 In
