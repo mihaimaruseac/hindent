@@ -42,7 +42,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest] # macOS-latest, windows-latest]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
         stack: ["2.3.1"]
 
     steps:
