@@ -3,10 +3,10 @@ name: CI
 on:
   push:
     branches: [master]
-    paths-ignore: ['**.md']
+    #paths-ignore: ['**.md']
   pull_request:
     branches: [master]
-    paths-ignore: ['**.md']
+    #paths-ignore: ['**.md']
 
 jobs:
   test_with_cabal:
@@ -14,10 +14,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest] #, macOS-latest, windows-latest]
         cabal: ["3.4"]
-        ghc: ["8.6.5", "8.8.3", "8.10.1"]
-        
+        ghc: ["8.6.5"] #, "8.8.3", "8.10.1"]
+
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-haskell@v1.1.2
@@ -42,9 +42,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest] # macOS-latest, windows-latest]
         stack: ["2.3.1"]
-        
+
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-haskell@v1.1.2
