@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -cpp #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GADTs #-}
