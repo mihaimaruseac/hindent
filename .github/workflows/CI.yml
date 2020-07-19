@@ -8,9 +8,11 @@ on:
     branches: [master]
     #paths-ignore: ['**.md']
 
+# TODO(mihaimaruseac): Full matrix on Linux, linearize/trim on the other
+# operating systems
 jobs:
   test_with_cabal:
-    name: Testing with GHC-${{ matrix.ghc }} (cabal-${{ matrix.cabal }}), on ${{ matrix.os }}
+    name: Testing with GHC-${{ matrix.ghc }}, on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
