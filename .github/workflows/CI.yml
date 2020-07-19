@@ -63,10 +63,10 @@ jobs:
       if: matrix.os != 'windows-latest'
       with:
         path: ~/.stack
-        key: stack-cache-${{ runner.os }}-${{ hashFiles(stack.yaml.lock) }}-${{ hashFiles(stack.yaml) }}-$${{ hashFiles(hindent.cabal) }}
+        key: stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}-$${{ hashFiles('hindent.cabal') }}
         restore-keys: |
-          stack-cache-${{ runner.os }}-${{ hashFiles(stack.yaml.lock) }}-${{ hashFiles(stack.yaml) }}
-          stack-cache-${{ runner.os }}-${{ hashFiles(stack.yaml.lock) }}
+          stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}
+          stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
           stack-cache-${{ runner.os }}
     - name: Build
       run: stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
