@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+    paths-ignore: ['**.md']
+  pull_request:
+    branches: [master]
+    paths-ignore: ['**.md']
+
+jobs:
+  test_with_cabal:
+    name: Testing with GHC-${{ matrix.ghc }} (cabal-${{ matrix.cabal }}), on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        cabal: ["3.4"]
+        ghc: ["8.6.5", "8.8.3", "8.10.1"]
+        
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-haskell@v1.1.2
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: ${{ matrix.cabal }}
+    - name: Install dependencies
+      run: |
+        cabal update
+        cabal build --only-dependencies --enable-tests --enable-benchmarks
+    # TODO(mihaimaruseac): Add caching support
+    - name: Build
+      run: |
+        cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
+        cabal build all
+    - name: Run tests
+      run: cabal test all
+
+  test_with_stack:
+    # TODO(mihaimaruseac): Add support for multiple resolvers
+    name: Testing with Stack-${{ matrix.stack }}, on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        stack: ["2.3.1"]
+        
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-haskell@v1.1.2
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        stack-version: ${{ matrix.stack }}
+    # TODO(mihaimaruseac): Add caching support
+    - name: Build
+      run: stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
+    - name: Run tests
+      run: stack test
