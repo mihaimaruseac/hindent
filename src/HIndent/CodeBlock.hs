@@ -7,7 +7,6 @@ module HIndent.CodeBlock
 
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as S8
-import Data.Monoid
 
 -- | A block of code.
 data CodeBlock
