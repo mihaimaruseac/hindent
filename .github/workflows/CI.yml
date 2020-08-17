@@ -6,6 +6,7 @@ on:
     #paths-ignore: ['**.md']
   pull_request:
     branches: [master]
+    types: [opened, synchronize]
     #paths-ignore: ['**.md']
 
 # TODO(mihaimaruseac): Full matrix on Linux, linearize/trim on the other
