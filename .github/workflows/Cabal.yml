@@ -1,0 +1,33 @@
+name: Test with Cabal
+
+on:
+  push:
+    branches: [master]
+    #paths-ignore: ['**.md']
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize]
+    #paths-ignore: ['**.md']
+
+jobs:
+  build:
+    name: Testing with GHC-${{ matrix.ghc }}, on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        cabal: ["3.2"]
+        ghc: ["8.2.2"]
+    env:
+      CONFIG: "--enable-tests --enable-benchmarks"
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-haskell@v1.1.2
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: ${{ matrix.cabal }}
+      - run: cabal v2-update $CONFIG
+      - run: cabal v2-build $CONFIG
+      - run: cabal v2-test $CONFIG
+      - run: cabal v2-haddock $CONFIG
+      - run: cabal v2-sdist
