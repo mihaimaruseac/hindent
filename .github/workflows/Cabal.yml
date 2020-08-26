@@ -27,6 +27,18 @@ jobs:
           ghc-version: ${{ matrix.ghc }}
           cabal-version: ${{ matrix.cabal }}
       - run: cabal v2-update $CONFIG
+      - run: cabal freeze $CONFIG
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cabal/store
+            dist-newstyle
+          key: cabal-cache-${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('hindent.cabal') }}
+          restore-keys: |
+            cabal-cache-${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}-
+            cabal-cache-${{ runner.os }}-${{ matrix.ghc }}-
+            cabal-cache-${{ runner.os }}-
       - run: cabal v2-build $CONFIG
       - run: cabal v2-test $CONFIG
       - run: cabal v2-haddock $CONFIG
