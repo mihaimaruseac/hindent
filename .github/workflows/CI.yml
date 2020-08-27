@@ -60,7 +60,7 @@ jobs:
       if: matrix.os != 'windows-latest'
       with:
         path: ~/.stack
-        key: stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}-$${{ hashFiles('hindent.cabal') }}
+        key: stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
         restore-keys: |
           stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}
           stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
@@ -75,7 +75,7 @@ jobs:
       if: matrix.os != 'windows-latest'
       with:
         path: ~/.stack
-        key: stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}-$${{ hashFiles('hindent.cabal') }}
+        key: stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
         restore-keys: |
           stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}
           stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
