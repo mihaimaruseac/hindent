@@ -1,4 +1,4 @@
-name: Test with Cabal
+name: CI (Cabal)
 
 on:
   push:
