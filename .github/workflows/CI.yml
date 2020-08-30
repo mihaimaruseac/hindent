@@ -28,16 +28,6 @@ jobs:
       with:
         ghc-version: ${{ matrix.ghc }}
         stack-version: ${{ matrix.stack }}
-    - name: Restore cache (Unix platform)
-      uses: actions/cache@v2
-      if: matrix.os != 'windows-latest'
-      with:
-        path: ~/.stack
-        key: stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
-        restore-keys: |
-          stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}
-          stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
-          stack-cache-${{ runner.os }}
     - name: Install dependencies
       run: |
         stack update
