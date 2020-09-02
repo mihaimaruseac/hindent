@@ -28,10 +28,6 @@ jobs:
       with:
         ghc-version: ${{ matrix.ghc }}
         stack-version: ${{ matrix.stack }}
-    - name: Install dependencies
-      run: |
-        stack update
-        stack build --system-ghc --only-dependencies --test --bench --no-run-tests --no-run-benchmarks
     # TODO(mihaimaruseac): Add caching support for Windows, when building there
     - name: Cache (Unix platform)
       uses: actions/cache@v2
@@ -43,6 +39,10 @@ jobs:
           stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}
           stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
           stack-cache-${{ runner.os }}
+    - name: Install dependencies
+      run: |
+        stack update
+        stack build --system-ghc --only-dependencies --test --bench --no-run-tests --no-run-benchmarks
     - name: Build
       run: stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
     - name: Run tests
