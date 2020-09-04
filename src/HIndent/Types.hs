@@ -72,6 +72,7 @@ data Config = Config
     }
 
 -- | Parse an extension.
+
 #if __GLASGOW_HASKELL__ >= 808
 readExtension :: (Monad m, MonadFail m) => String -> m Extension
 #else
