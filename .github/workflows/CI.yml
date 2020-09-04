@@ -15,7 +15,7 @@ jobs:
 
   test_with_stack:
     # TODO(mihaimaruseac): Add support for multiple resolvers
-    name: Testing with Stack-${{ matrix.stack }}, on ${{ runner.os }}
+    name: Testing with Stack-${{ matrix.stack }}, on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
