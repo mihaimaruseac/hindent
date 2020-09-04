@@ -979,17 +979,20 @@ instance Pretty Alt where
 instance Pretty Asst where
   prettyInternal x =
     case x of
-      ClassA _ name types -> spaced (pretty name : map pretty types)
-      i@InfixA {} -> pretty' i
       IParam _ name ty -> do
         pretty name
         write " :: "
         pretty ty
+      ParenA _ asst -> parens (pretty asst)
+#if MIN_VERSION_haskell_src_exts(1,21,0)
+      TypeA _ ty -> pretty ty
+#else
+      ClassA _ name types -> spaced (pretty name : map pretty types)
+      i@InfixA {} -> pretty' i
       EqualP _ a b -> do
         pretty a
         write " ~ "
         pretty b
-      ParenA _ asst -> parens (pretty asst)
       AppA _ name tys ->
         spaced (pretty name : map pretty tys)
       WildCardA _ name ->
@@ -998,6 +1001,7 @@ instance Pretty Asst where
           Just n -> do
             write "_"
             pretty n
+#endif
 
 instance Pretty BangType where
   prettyInternal x =
