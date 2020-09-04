@@ -27,14 +27,6 @@ cache:
 matrix:
   include:
 
-  - env: BUILD=stack ARGS="--resolver lts-5" BUILDARGS=""
-    compiler: ": #stack 7.10.3"
-    addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
-
-  - env: BUILD=stack ARGS="--resolver lts-7" BUILDARGS=""
-    compiler: ": #stack 8.0.1"
-    addons: {apt: {packages: [ghc-8.0.1], sources: [hvr-ghc]}}
-
   - env: BUILD=stack ARGS="--resolver lts-9" BUILDARGS=""
     compiler: ": #stack 8.0.2"
     addons: {apt: {packages: [ghc-8.0.2], sources: [hvr-ghc]}}
