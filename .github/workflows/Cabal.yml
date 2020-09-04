@@ -41,5 +41,6 @@ jobs:
             cabal-cache-${{ runner.os }}-
       - run: cabal v2-build $CONFIG
       - run: cabal v2-test $CONFIG
+      - run: cabal v2-bench $CONFIG
       - run: cabal v2-haddock $CONFIG
       - run: cabal v2-sdist
