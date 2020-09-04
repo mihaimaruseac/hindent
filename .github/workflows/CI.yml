@@ -49,7 +49,8 @@ jobs:
       run: stack test
     - name: Run benchmarks
       run: stack bench
-    - name: Generate documentation
-      run: stack haddock
+    # We don't generate stack documentation as documentation for deps does not get cached
+    # name: Generate documentation
+    # run: stack haddock
     - name: Generate tarball
       run: stack sdist
