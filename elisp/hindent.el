@@ -213,22 +213,19 @@ the file."
                                   (goto-char (point-max))
                                   (when (looking-back "\n" (1- (point)))
                                     (delete-char -1)))
+				(delete-trailing-whitespace)
                                 (buffer-string))))
                 (if (not (string= new-str orig-str))
-                    (let ((line (line-number-at-pos))
-                          (col (current-column)))
-                      (delete-region beg
-                                     end)
-                      (let ((new-start (point)))
-                        (insert new-str)
-                        (let ((new-end (point)))
-                          (goto-char (point-min))
-                          (forward-line (1- line))
-                          (goto-char (+ (line-beginning-position) col))
-                          (when (looking-back "^[ ]+" (line-beginning-position))
-                            (back-to-indentation))
-                          (delete-trailing-whitespace new-start new-end)))
-                      (message "Formatted."))
+		    (progn
+		      (if (fboundp 'replace-region-contents)
+			  (replace-region-contents
+			   beg end (lambda () temp))
+			(let ((line (line-number-at-pos))
+			      (col (current-column)))
+			  (delete-region beg
+					 end)
+			  (insert new-str)))
+		      (message "Formatted."))
                   (message "Already formatted.")))))))))))
 
 (defun hindent-decl-points ()
