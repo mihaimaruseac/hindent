@@ -1,8 +1,8 @@
-# hindent [![Hackage](https://img.shields.io/hackage/v/hindent.svg?style=flat)](https://hackage.haskell.org/package/hindent) [![Build Status](https://travis-ci.org/chrisdone/hindent.svg)](https://travis-ci.org/chrisdone/hindent)
+# hindent [![Hackage](https://img.shields.io/hackage/v/hindent.svg?style=flat)](https://hackage.haskell.org/package/hindent) ![CI (Stack)](https://github.com/mihaimaruseac/hindent/workflows/CI%20(Stack)/badge.svg) ![CI (Cabal)](https://github.com/mihaimaruseac/hindent/workflows/CI%20(Cabal)/badge.svg)
 
 Haskell pretty printer
 
-[Examples](https://github.com/chrisdone/hindent/blob/master/TESTS.md)
+[Examples](https://github.com/mihaimaruseac/hindent/blob/master/TESTS.md)
 
 ## Install
 
@@ -47,10 +47,19 @@ force-trailing-newline: true
 
 By default, HIndent preserves the newline or lack of newline in your input. With `force-trailing-newline`, it will make sure there is always a trailing newline.
 
+It is also possible to specify which extensions HIndent runs
+with in your `.hindent.yaml`:
+
+```yaml
+extensions:
+  - MagicHash
+  - RecursiveDo
+```
+
 ## Emacs
 
 In
-[elisp/hindent.el](https://github.com/chrisdone/hindent/blob/master/elisp/hindent.el)
+[elisp/hindent.el](https://github.com/mihaimaruseac/hindent/blob/master/elisp/hindent.el)
 there is `hindent-mode`, which provides keybindings to reindent parts of the
 buffer:
 

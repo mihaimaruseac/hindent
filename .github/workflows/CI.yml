@@ -1,0 +1,58 @@
+name: CI (Stack)
+
+on:
+  push:
+    branches: [master]
+    #paths-ignore: ['**.md']
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize]
+    #paths-ignore: ['**.md']
+  pull_request_review:
+    types: [submitted]
+
+# TODO(mihaimaruseac): Full matrix on Linux, linearize/trim on the other
+# operating systems
+jobs:
+
+  test_with_stack:
+    # TODO(mihaimaruseac): Add support for multiple resolvers
+    name: Testing with Stack-${{ matrix.stack }}, on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest] # macOS-latest, windows-latest]
+        stack: ["2.3.1"]
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-haskell@v1.1.2
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        stack-version: ${{ matrix.stack }}
+    # TODO(mihaimaruseac): Add caching support for Windows, when building there
+    - name: Cache (Unix platform)
+      uses: actions/cache@v2
+      if: matrix.os != 'windows-latest'
+      with:
+        path: ~/.stack
+        key: stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
+        restore-keys: |
+          stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}
+          stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
+          stack-cache-${{ runner.os }}
+    - name: Install dependencies
+      run: |
+        stack update
+        stack build --system-ghc --only-dependencies --test --bench --no-run-tests --no-run-benchmarks
+    - name: Build
+      run: stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
+    - name: Run tests
+      run: stack test
+    - name: Run benchmarks
+      run: stack bench
+    # We don't generate stack documentation as documentation for deps does not get cached
+    # name: Generate documentation
+    # run: stack haddock
+    - name: Generate tarball
+      run: stack sdist

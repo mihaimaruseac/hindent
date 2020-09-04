@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -cpp #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GADTs #-}
@@ -71,7 +72,12 @@ data Config = Config
     }
 
 -- | Parse an extension.
+
+#if __GLASGOW_HASKELL__ >= 808
+readExtension :: (Monad m, MonadFail m) => String -> m Extension
+#else
 readExtension :: Monad m => String -> m Extension
+#endif
 readExtension x =
   case classifyExtension x -- Foo
        of
