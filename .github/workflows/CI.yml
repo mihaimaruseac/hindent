@@ -49,3 +49,7 @@ jobs:
       run: stack test
     - name: Run benchmarks
       run: stack bench
+    - name: Generate documentation
+      run: stack haddock
+    - name: Generate tarball
+      run: stack sdist
