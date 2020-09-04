@@ -8,6 +8,8 @@ on:
     branches: [master]
     types: [opened, synchronize]
     #paths-ignore: ['**.md']
+  pull_request_review:
+    types: [submitted]
 
 # TODO(mihaimaruseac): Full matrix on Linux, linearize/trim on the other
 # operating systems
