@@ -2,7 +2,7 @@
 
 Haskell pretty printer
 
-[Examples](https://github.com/commercialhaskell/hindent/blob/master/TESTS.md)
+[Examples](https://github.com/mihaimaruseac/hindent/blob/master/TESTS.md)
 
 ## Install
 
@@ -59,7 +59,7 @@ extensions:
 ## Emacs
 
 In
-[elisp/hindent.el](https://github.com/commercialhaskell/hindent/blob/master/elisp/hindent.el)
+[elisp/hindent.el](https://github.com/mihaimaruseac/hindent/blob/master/elisp/hindent.el)
 there is `hindent-mode`, which provides keybindings to reindent parts of the
 buffer:
 
