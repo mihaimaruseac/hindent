@@ -35,6 +35,12 @@ reformat cfg code =
   either (("-- " <>) . L8.pack) L.toLazyByteString $
   HIndent.reformat cfg (Just HIndent.defaultExtensions) Nothing code
 
+#if __GLASGOW_HASKELL__ >= 808
+-- Orphan instance for Spec
+-- TODO(mihaimaruseac): Rewrite to reduce preprocessing stuff
+deriving instance MonadFail Spec
+#endif
+
 -- | Convert the Markdone document to Spec benchmarks.
 toSpec :: [Markdone] -> Spec
 toSpec = go
