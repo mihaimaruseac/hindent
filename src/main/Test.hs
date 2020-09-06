@@ -21,7 +21,7 @@ import           HIndent.CodeBlock
 import           HIndent.Types
 import           Markdone
 import           Test.Hspec
-import           Test.Hspec.Core.Spec.Monad (SpecM)
+import           Test.Hspec.Core (SpecM)
 
 -- | Main benchmarks.
 main :: IO ()
