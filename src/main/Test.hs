@@ -40,11 +40,11 @@ reformat cfg code =
 #if __GLASGOW_HASKELL__ >= 808
 -- Orphan instance for Spec
 -- TODO(mihaimaruseac): Rewrite to reduce preprocessing stuff
-deriving instance MonadFail Spec
+deriving instance MonadFail SpecM
 #endif
 
 -- | Convert the Markdone document to Spec benchmarks.
-toSpec :: [Markdone] -> SpecM
+toSpec :: [Markdone] -> Spec
 toSpec = go
   where
     cfg = HIndent.Types.defaultConfig {configTrailingNewline = False}
