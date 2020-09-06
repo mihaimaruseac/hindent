@@ -21,7 +21,6 @@ import           HIndent.CodeBlock
 import           HIndent.Types
 import           Markdone
 import           Test.Hspec
-import           Test.Hspec.Core (SpecM)
 
 -- | Main benchmarks.
 main :: IO ()
@@ -37,12 +36,6 @@ reformat :: Config -> S.ByteString -> ByteString
 reformat cfg code =
   either (("-- " <>) . L8.pack) L.toLazyByteString $
   HIndent.reformat cfg (Just HIndent.defaultExtensions) Nothing code
-
-#if __GLASGOW_HASKELL__ >= 808
--- Orphan instance for Spec
--- TODO(mihaimaruseac): Rewrite to reduce preprocessing stuff
-deriving instance MonadFail SpecM
-#endif
 
 -- | Convert the Markdone document to Spec benchmarks.
 toSpec :: [Markdone] -> Spec
@@ -70,7 +63,7 @@ toSpec = go
                 shouldBeReadable (reformat cfg code) (L.fromStrict codeExpect)
               go next'
             _ ->
-              fail
+              error
                 "'haskell given' block must be followed by a 'haskell expect' block"
         "haskell pending" -> do
           it (UTF8.toString desc) pending
