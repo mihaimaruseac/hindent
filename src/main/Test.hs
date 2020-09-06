@@ -44,7 +44,7 @@ deriving instance MonadFail Spec
 #endif
 
 -- | Convert the Markdone document to Spec benchmarks.
-toSpec :: [Markdone] -> Spec
+toSpec :: [Markdone] -> SpecM
 toSpec = go
   where
     cfg = HIndent.Types.defaultConfig {configTrailingNewline = False}
