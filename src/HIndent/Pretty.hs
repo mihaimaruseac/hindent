@@ -1022,6 +1022,7 @@ instance Pretty Asst where
             write "_"
             pretty n
 #endif
+#endif
 
 instance Pretty BangType where
   prettyInternal x =
