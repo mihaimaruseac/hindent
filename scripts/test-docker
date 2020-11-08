@@ -1,0 +1,42 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+lint_dockerfile() {
+  local -r dockerfile_path="$1"
+  docker run --interactive --rm hadolint/hadolint:v1.18.2 < "${dockerfile_path}"
+}
+
+build_image() {
+  DOCKER_TAG="$1" DOCKERFILE_PATH="$2" IMAGE_NAME="$3" hooks/build
+}
+
+test_image() {
+  local -r hindent_version="$1"
+  local -r image_name="$2"
+
+  diff <(docker run --rm "${image_name}" --version) \
+    <(echo "hindent ${hindent_version}")
+
+  diff <(echo 'example = case x of Just p -> foo bar' \
+    | docker run --interactive --rm "${image_name}" --indent-size 2) \
+    <(printf "example =\n  case x of\n    Just p -> foo bar\n")
+}
+
+main() {
+  local -r script_folder="$(dirname "$(readlink --canonicalize "$0")")"
+  local -r project_folder="$(dirname "${script_folder}")"
+  pushd "${project_folder}"
+
+  local -r hindent_version=5.3.1
+  local -r dockerfile_path=Dockerfile
+  local -r image_name=hindent:dirty
+
+  lint_dockerfile "${dockerfile_path}"
+  build_image "${hindent_version}" "${dockerfile_path}" "${image_name}"
+  test_image "${hindent_version}" "${image_name}"
+}
+
+main "$@"
