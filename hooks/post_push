@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+readonly latest_image="${DOCKER_REPO}:latest"
+docker tag "${IMAGE_NAME}" "${latest_image}"
+docker push "${latest_image}"

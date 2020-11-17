@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+docker build \
+  --build-arg "hindent_version=${DOCKER_TAG}" \
+  --file "${DOCKERFILE_PATH}" \
+  --tag "${IMAGE_NAME}" \
+  .
