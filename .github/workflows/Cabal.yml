@@ -3,12 +3,11 @@ name: CI (Cabal)
 on:
   push:
     branches: [master]
-    #paths-ignore: ['**.md']
   pull_request:
     branches: [master]
     types: [opened, synchronize]
-    #paths-ignore: ['**.md']
   pull_request_review:
+    branches: [master]
     types: [submitted]
 
 jobs:
