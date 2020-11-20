@@ -13,8 +13,7 @@ on:
 # TODO(mihaimaruseac): Full matrix on Linux, linearize/trim on the other
 # operating systems
 jobs:
-
-  test_with_stack:
+  build:
     # TODO(mihaimaruseac): Add support for multiple resolvers
     name: Testing with Stack-${{ matrix.stack }}, on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -25,7 +24,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/setup-haskell@v1.1.3
+    - uses: actions/setup-haskell@v1
       with:
         ghc-version: ${{ matrix.ghc }}
         stack-version: ${{ matrix.stack }}
