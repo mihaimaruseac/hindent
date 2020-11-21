@@ -22,33 +22,33 @@ jobs:
     env:
       CONFIG: "--enable-tests --enable-benchmarks"
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-haskell@v1
-        with:
-          ghc-version: ${{ matrix.ghc }}
-          cabal-version: ${{ matrix.cabal }}
-      - name: Update dependencies
-        run: cabal v2-update $CONFIG
-      - name: Freeze dependencies
-        run: cabal freeze $CONFIG
-      - name: Cache
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cabal/store
-            dist-newstyle
-          key: cabal-cache-${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('hindent.cabal') }}
-          restore-keys: |
-            cabal-cache-${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}-
-            cabal-cache-${{ runner.os }}-${{ matrix.ghc }}-
-            cabal-cache-${{ runner.os }}-
-      - name: Build
-        run: cabal v2-build $CONFIG
-      - name: Run tests
-        run: cabal v2-test $CONFIG
-      - name: Run benchmarks
-        run: cabal v2-bench $CONFIG
-      - name: Generate documentation
-        run: cabal v2-haddock $CONFIG
-      - name: Generate tarball
-        run: cabal v2-sdist
+    - uses: actions/checkout@v2
+    - uses: actions/setup-haskell@v1
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: ${{ matrix.cabal }}
+    - name: Update dependencies
+      run: cabal v2-update $CONFIG
+    - name: Freeze dependencies
+      run: cabal freeze $CONFIG
+    - name: Cache (Unix platform)
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cabal/store
+          dist-newstyle
+        key: cabal-cache-${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('hindent.cabal') }}
+        restore-keys: |
+          cabal-cache-${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}-
+          cabal-cache-${{ runner.os }}-${{ matrix.ghc }}-
+          cabal-cache-${{ runner.os }}-
+    - name: Build
+      run: cabal v2-build $CONFIG
+    - name: Run tests
+      run: cabal v2-test $CONFIG
+    - name: Run benchmarks
+      run: cabal v2-bench $CONFIG
+    - name: Generate documentation
+      run: cabal v2-haddock $CONFIG
+    - name: Generate tarball
+      run: cabal v2-sdist
