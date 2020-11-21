@@ -38,17 +38,28 @@ jobs:
           stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}
           stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
           stack-cache-${{ runner.os }}
+    # TODO(mihaimaruseac): Merge these, maybe use output of stack path --stack-root or something
+    - name: Cache (Windows platform)
+      uses: actions/cache@v2
+      if: matrix.os == 'windows-latest'
+      with:
+        path:  C:\Users\runneradmin\AppData\Roaming\stack
+        key: stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
+        restore-keys: |
+          stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}
+          stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
+          stack-cache-${{ runner.os }}
     - name: Install dependencies
       run: |
         stack update
         stack build --system-ghc --only-dependencies --test --bench --no-run-tests --no-run-benchmarks
-    - name: DEBUG
-      run: stack path --stack-root
     - name: Build
       run: stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
     - name: Run tests
+      if: matrix.os != 'windows-latest'
       run: stack test
     - name: Run benchmarks
+      if: matrix.os != 'windows-latest'
       run: stack bench
     # We don't generate stack documentation as documentation for deps does not get cached
     # name: Generate documentation
