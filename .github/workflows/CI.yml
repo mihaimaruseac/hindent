@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
         stack: ["2.3.1"]
     steps:
     - uses: actions/checkout@v2
@@ -42,6 +42,8 @@ jobs:
       run: |
         stack update
         stack build --system-ghc --only-dependencies --test --bench --no-run-tests --no-run-benchmarks
+    - name: DEBUG
+      run: stack path --stack-root
     - name: Build
       run: stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
     - name: Run tests
