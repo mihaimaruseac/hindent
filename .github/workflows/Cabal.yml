@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
         cabal: ["3.2"]
         ghc: ["8.2.2", "8.4.4", "8.6.5", "8.8.4", "8.10.2"]
     env:
@@ -24,6 +24,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-haskell@v1
+      id: setup-haskell-cabal
       with:
         ghc-version: ${{ matrix.ghc }}
         cabal-version: ${{ matrix.cabal }}
@@ -35,7 +36,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: |
-          ~/.cabal/store
+          ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
           dist-newstyle
         key: cabal-cache-${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('hindent.cabal') }}
         restore-keys: |
