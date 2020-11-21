@@ -49,6 +49,7 @@ jobs:
       if: matrix.os != 'windows-latest'
       run: cabal v2-test $CONFIG
     - name: Run benchmarks
+      if: matrix.os != 'windows-latest'
       run: cabal v2-bench $CONFIG
     - name: Generate documentation
       run: cabal v2-haddock $CONFIG
