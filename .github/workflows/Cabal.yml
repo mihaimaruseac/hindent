@@ -15,6 +15,7 @@ jobs:
     name: Testing with GHC-${{ matrix.ghc }}, on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false  # Windows builds randomly fail
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         ghc: ["8.2.2", "8.4.4", "8.6.5", "8.8.4", "8.10.2"]

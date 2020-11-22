@@ -33,10 +33,9 @@ jobs:
         path: |
           ~/.stack
           C:\Users\runneradmin\AppData\Roaming\stack
-        key: stack-cache-v2-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
+        key: stack-cache-v2-${{ runner.os }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
         restore-keys: |
-          stack-cache-v2-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}
-          stack-cache-v2-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
+          stack-cache-v2-${{ runner.os }}-${{ hashFiles('stack.yaml') }}
           stack-cache-v2-${{ runner.os }}
     - name: Install dependencies
       run: |
