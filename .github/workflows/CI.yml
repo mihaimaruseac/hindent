@@ -30,6 +30,7 @@ jobs:
     - name: Cache (Unix platform)
       uses: actions/cache@v2
       with:
+        # TODO(mihaimaruseac): Merge to one path, after https://github.com/actions/setup-haskell/pull/35
         path: |
           ~/.stack
           C:\Users\runneradmin\AppData\Roaming\stack
