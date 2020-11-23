@@ -17,7 +17,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        cabal: ["3.2"]
         ghc: ["8.2.2", "8.4.4", "8.6.5", "8.8.4", "8.10.2"]
     env:
       CONFIG: "--enable-tests --enable-benchmarks"
@@ -27,7 +26,7 @@ jobs:
       id: setup-haskell-cabal
       with:
         ghc-version: ${{ matrix.ghc }}
-        cabal-version: ${{ matrix.cabal }}
+        cabal-version: 'latest'
     - name: Update dependencies
       run: cabal v2-update $CONFIG
     - name: Freeze dependencies
@@ -35,21 +34,17 @@ jobs:
     - name: Cache (Unix platform)
       uses: actions/cache@v2
       with:
-        path: |
-          ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-          dist-newstyle
-        key: cabal-cache-${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('hindent.cabal') }}
+        path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+        key: cabal-cache-v2-${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}-${{ hashFiles('hindent.cabal') }}
         restore-keys: |
-          cabal-cache-${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}-
-          cabal-cache-${{ runner.os }}-${{ matrix.ghc }}-
-          cabal-cache-${{ runner.os }}-
+          cabal-cache-v2-${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}-
+          cabal-cache-v2-${{ runner.os }}-${{ matrix.ghc }}-
+          cabal-cache-v2-${{ runner.os }}-
     - name: Build
       run: cabal v2-build $CONFIG
     - name: Run tests
-      if: matrix.os != 'windows-latest'
       run: cabal v2-test $CONFIG
     - name: Run benchmarks
-      if: matrix.os != 'windows-latest'
       run: cabal v2-bench $CONFIG
     - name: Generate documentation
       run: cabal v2-haddock $CONFIG

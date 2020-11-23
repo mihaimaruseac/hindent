@@ -15,40 +15,30 @@ on:
 jobs:
   build:
     # TODO(mihaimaruseac): Add support for multiple resolvers
-    name: Testing with Stack-${{ matrix.stack }}, on ${{ matrix.os }}
+    name: Testing with Stack, on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        stack: ["2.3.1"]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-haskell@v1
       with:
         ghc-version: ${{ matrix.ghc }}
-        stack-version: ${{ matrix.stack }}
-    # TODO(mihaimaruseac): Add caching support for Windows, when building there
+        enable-stack: true
+        stack-version: 'latest'
+    - name: Get location of stack folder
+      id: get-stack-location
+      run: echo "::set-output name=stack-root::$(stack path --stack-root)"
     - name: Cache (Unix platform)
       uses: actions/cache@v2
-      if: matrix.os != 'windows-latest'
       with:
-        path: ~/.stack
-        key: stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
+        path: ${{ steps.get-stack-location.outputs.stack-root }}
+        key: stack-cache-v2-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
         restore-keys: |
-          stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}
-          stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
-          stack-cache-${{ runner.os }}
-    # TODO(mihaimaruseac): Merge these, maybe use output of stack path --stack-root or something
-    - name: Cache (Windows platform)
-      uses: actions/cache@v2
-      if: matrix.os == 'windows-latest'
-      with:
-        path:  C:\Users\runneradmin\AppData\Roaming\stack
-        key: stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
-        restore-keys: |
-          stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}
-          stack-cache-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
-          stack-cache-${{ runner.os }}
+          stack-cache-v2-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('stack.yaml') }}
+          stack-cache-v2-${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
+          stack-cache-v2-${{ runner.os }}
     - name: Install dependencies
       run: |
         stack update
@@ -56,10 +46,8 @@ jobs:
     - name: Build
       run: stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
     - name: Run tests
-      if: matrix.os != 'windows-latest'
       run: stack test
     - name: Run benchmarks
-      if: matrix.os != 'windows-latest'
       run: stack bench
     # We don't generate stack documentation as documentation for deps does not get cached
     # name: Generate documentation
