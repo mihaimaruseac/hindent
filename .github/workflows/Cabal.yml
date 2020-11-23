@@ -32,7 +32,7 @@ jobs:
       run: cabal v2-update $CONFIG
     - name: Freeze dependencies
       run: cabal freeze $CONFIG
-    - name: Cache (Unix platform)
+    - name: Cache
       uses: actions/cache@v2
       with:
         path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}

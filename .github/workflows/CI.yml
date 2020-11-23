@@ -19,7 +19,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        # TODO(mihaimaruseac): MacOS fails to restore cache, disabling
+        os: [ubuntu-latest, windows-latest]
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-haskell@v1
@@ -27,7 +28,7 @@ jobs:
         ghc-version: ${{ matrix.ghc }}
         enable-stack: true
         stack-version: 'latest'
-    - name: Cache (Unix platform)
+    - name: Cache
       uses: actions/cache@v2
       with:
         # TODO(mihaimaruseac): Merge to one path, after https://github.com/actions/setup-haskell/pull/35
