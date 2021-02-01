@@ -28,7 +28,7 @@ jobs:
     - name: Cache
       uses: actions/cache@v2
       with:
-        path: ${{ stack_root }}
+        path: |
           ~/.stack
           C:\sr
         key: stack-cache-v3-${{ runner.os }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
