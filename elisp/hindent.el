@@ -169,7 +169,7 @@ the file."
           (insert new-string))))))
 
 ;;;###autoload
-(define-obsolete-function-alias 'hindent/reformat-decl 'hindent-reformat-decl)
+(define-obsolete-function-alias 'hindent/reformat-decl 'hindent-reformat-decl "hindent 5.2.2")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
