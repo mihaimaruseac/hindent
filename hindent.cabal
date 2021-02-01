@@ -12,7 +12,7 @@ maintainer:          chrisdone@gmail.com
 copyright:           2014 Chris Done, 2015 Andrew Gibiansky
 category:            Development
 build-type:          Simple
-cabal-version:       >=1.8
+cabal-version:       >=1.10
 homepage:            https://github.com/commercialhaskell/hindent
 bug-reports:         https://github.com/commercialhaskell/hindent/issues
 data-files:          elisp/hindent.el
