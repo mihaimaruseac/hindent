@@ -25,17 +25,29 @@ jobs:
         ghc-version: ${{ matrix.ghc }}
         enable-stack: true
         stack-version: 'latest'
+    - name: Dump contexts
+      env:
+        CTX_GITHUB: ${{ toJson(github) }}
+        CTX_STEPS: ${{ toJson(steps) }}
+        CTX_ENV: ${{ toJson(env) }}
+      run: true
+    - name: Get Stack root
+      id: get-stack-root
+      run: echo "::set output name=path::$STACK_ROOT"
+    - name: Dump contexts
+      env:
+        CTX_GITHUB: ${{ toJson(github) }}
+        CTX_STEPS: ${{ toJson(steps) }}
+        CTX_ENV: ${{ toJson(env) }}
+      run: true
     - name: Cache
       uses: actions/cache@v2
       with:
-        # TODO(mihaimaruseac): Merge to one path, after https://github.com/actions/setup-haskell/pull/35
-        path: |
-          ~/.stack
-          C:\Users\runneradmin\AppData\Roaming\stack
-        key: stack-cache-v2-${{ runner.os }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
+        path: ${{ steps.get-stack-root.path }}
+        key: stack-cache-v3-${{ runner.os }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
         restore-keys: |
-          stack-cache-v2-${{ runner.os }}-${{ hashFiles('stack.yaml') }}
-          stack-cache-v2-${{ runner.os }}
+          stack-cache-v3-${{ runner.os }}-${{ hashFiles('stack.yaml') }}
+          stack-cache-v3-${{ runner.os }}
     - name: Install dependencies
       run: |
         stack update
