@@ -25,25 +25,12 @@ jobs:
         ghc-version: ${{ matrix.ghc }}
         enable-stack: true
         stack-version: 'latest'
-    - name: Dump contexts
-      env:
-        CTX_GITHUB: ${{ toJson(github) }}
-        CTX_STEPS: ${{ toJson(steps) }}
-        CTX_ENV: ${{ toJson(env) }}
-      run: true
-    - name: Get Stack root
-      id: get-stack-root
-      run: echo "::set output name=path::$STACK_ROOT"
-    - name: Dump contexts
-      env:
-        CTX_GITHUB: ${{ toJson(github) }}
-        CTX_STEPS: ${{ toJson(steps) }}
-        CTX_ENV: ${{ toJson(env) }}
-      run: true
     - name: Cache
       uses: actions/cache@v2
       with:
-        path: ${{ steps.get-stack-root.path }}
+        path: ${{ stack_root }}
+          ~/.stack
+          C:\sr
         key: stack-cache-v3-${{ runner.os }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('hindent.cabal') }}
         restore-keys: |
           stack-cache-v3-${{ runner.os }}-${{ hashFiles('stack.yaml') }}
