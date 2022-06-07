@@ -17,7 +17,8 @@ jobs:
     strategy:
       matrix:
         # TODO(mihaimaruseac): MacOS fails to restore cache, disabling
-        os: [ubuntu-latest, windows-latest]
+        # TODO(mihaimaruseac): Fully disabling windows for now
+        os: [ubuntu-latest]
     steps:
     - uses: actions/checkout@v2
     - uses: haskell/actions/setup@v1
