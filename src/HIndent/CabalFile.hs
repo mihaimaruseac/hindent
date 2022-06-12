@@ -12,6 +12,9 @@ import Data.Traversable
 import Distribution.ModuleName
 import Distribution.PackageDescription
 import Distribution.PackageDescription.Configuration
+#if MIN_VERSION_Cabal(3, 6, 0)
+import Distribution.Utils.Path (getSymbolicPath)
+#endif
 #if MIN_VERSION_Cabal(2, 2, 0)
 import Distribution.PackageDescription.Parsec
 #else
@@ -47,7 +50,13 @@ mkStanza bi mnames fpaths =
         Just relpath ->
           any (equalFilePath $ dropExtension relpath) modpaths ||
           any (equalFilePath relpath) fpaths
-    in any inDir $ hsSourceDirs bi
+    in any inDir $ hsSourceDirs' bi
+      where
+#if MIN_VERSION_Cabal(3, 6, 0)
+        hsSourceDirs' =  (map getSymbolicPath) . hsSourceDirs
+#else
+        hsSourceDirs' = hsSourceDirs
+#endif
 
 -- | Extract `Stanza`s from a package
 packageStanzas :: PackageDescription -> [Stanza]
