@@ -9,8 +9,8 @@ import           Control.DeepSeq
 import           Criterion
 import           Criterion.Main
 import qualified Data.ByteString as S
+import qualified Data.ByteString.Builder as S
 import qualified Data.ByteString.Char8 as S8
-import qualified Data.ByteString.Lazy.Builder as L
 import qualified Data.ByteString.UTF8 as UTF8
 import           HIndent
 import           HIndent.Types
@@ -34,7 +34,7 @@ toCriterion = go
         then (bench
                 (UTF8.toString desc)
                 (nf
-                   (either error L.toLazyByteString .
+                   (either error S.toLazyByteString .
                     reformat
                       HIndent.Types.defaultConfig
                       (Just defaultExtensions)
