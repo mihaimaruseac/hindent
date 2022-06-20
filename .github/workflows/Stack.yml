@@ -43,12 +43,8 @@ jobs:
     - name: Build
       run: stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
     - name: Run tests
-      # TODO(mihaimaruseac): fix tests on windows, currently fail with `NoFenceEnd`
-      if: matrix.os != 'windows-latest'
       run: stack test
     - name: Run benchmarks
-      # TODO(mihaimaruseac): fix benchmakrs on windows, currently fail with `NoFenceEnd`
-      if: matrix.os != 'windows-latest'
       run: stack bench
     # We don't generate stack documentation as documentation for deps does not get cached
     # name: Generate documentation
