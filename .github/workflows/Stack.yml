@@ -47,7 +47,7 @@ jobs:
       run: stack test
     - name: Run benchmarks
       # TODO(mihaimaruseac): fix benchmakrs on windows, currently fail with `NoFenceEnd`
-      #if: matrix.os != 'windows-latest'
+      if: matrix.os != 'windows-latest'
       run: stack bench
     # We don't generate stack documentation as documentation for deps does not get cached
     # name: Generate documentation
