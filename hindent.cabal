@@ -8,7 +8,7 @@ license:             BSD3
 stability:           Unstable
 license-file:        LICENSE.md
 author:              Mihai Maruseac, Chris Done, Andrew Gibiansky, Tobias Pflug, Pierre Radermecker
-maintainer:          mihaimaruseac@gmail.com
+maintainer:          Mihai Maruseac
 copyright:           2014 Chris Done, 2015 Andrew Gibiansky, 2021 Mihai Maruseac
 category:            Development
 build-type:          Simple
