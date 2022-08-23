@@ -72,7 +72,7 @@ tokenize input = evalState (mapM token (S8.lines input)) Normal
                             line)
                    else return $ PlainLine line
         Fenced ->
-          if line == "```"
+          if line == "```" || line=="```\r"
             then do
               put Normal
               return EndFence
