@@ -44,12 +44,8 @@ jobs:
     - name: Build
       run: cabal v2-build $CONFIG
     - name: Run tests
-      # TODO(mihaimaruseac): fix tests on windows, currently fail with `NoFenceEnd`
-      if: matrix.os != 'windows-latest'
       run: cabal v2-test $CONFIG
     - name: Run benchmarks
-      # TODO(mihaimaruseac): fix benchmakrs on windows, currently fail with `NoFenceEnd`
-      if: matrix.os != 'windows-latest'
       run: cabal v2-bench $CONFIG
     - name: Generate documentation
       run: cabal v2-haddock $CONFIG
