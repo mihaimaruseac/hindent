@@ -50,7 +50,7 @@ data TokenizerMode
 
 -- | Tokenize the bytestring.
 tokenize :: ByteString -> [Token]
-tokenize input = evalState (mapM token (S8.lines input)) Normal
+tokenize input = evalState (mapM token (S8.filter (/= '\r') <$> S8.lines input)) Normal
   where
     token :: ByteString -> State TokenizerMode Token
     token line = do
@@ -72,7 +72,7 @@ tokenize input = evalState (mapM token (S8.lines input)) Normal
                             line)
                    else return $ PlainLine line
         Fenced ->
-          if line == "```" || line == "```\r"
+          if line == "```"
             then do
               put Normal
               return EndFence
