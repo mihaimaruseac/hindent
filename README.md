@@ -1,4 +1,4 @@
-# hindent [![Hackage](https://img.shields.io/hackage/v/hindent.svg?style=flat)](https://hackage.haskell.org/package/hindent) ![CI (Stack)](https://github.com/mihaimaruseac/hindent/workflows/CI%20(Stack)/badge.svg) ![CI (Cabal)](https://github.com/mihaimaruseac/hindent/workflows/CI%20(Cabal)/badge.svg) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/joycebrum/hindent/badge)](https://api.securityscorecards.dev/projects/github.com/joycebrum/hindent)
+# hindent [![Hackage](https://img.shields.io/hackage/v/hindent.svg?style=flat)](https://hackage.haskell.org/package/hindent) ![CI (Stack)](https://github.com/mihaimaruseac/hindent/workflows/CI%20(Stack)/badge.svg) ![CI (Cabal)](https://github.com/mihaimaruseac/hindent/workflows/CI%20(Cabal)/badge.svg) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/mihaimaruseac/hindent/badge)](https://api.securityscorecards.dev/projects/github.com/mihaimaruseac/hindent)
 
 
 Haskell pretty printer
