@@ -11,11 +11,11 @@ import Data.Monoid
 
 -- | A block of code.
 data CodeBlock
-    = Shebang ByteString
-    | HaskellSource Int ByteString
+  = Shebang ByteString
+  | HaskellSource Int ByteString
     -- ^ Includes the starting line (indexed from 0) for error reporting
-    | CPPDirectives ByteString
-     deriving (Show, Eq)
+  | CPPDirectives ByteString
+  deriving (Show, Eq)
 
 -- | Break a Haskell code string into chunks, using CPP as a delimiter.
 -- Lines that start with '#if', '#end', or '#else' are their own chunks, and
@@ -57,7 +57,16 @@ cppSplitBlocks inp =
     cppLine src =
       any
         (`S8.isPrefixOf` src)
-        ["#if", "#end", "#else", "#define", "#undef", "#elif", "#include", "#error", "#warning"]
+        [ "#if"
+        , "#end"
+        , "#else"
+        , "#define"
+        , "#undef"
+        , "#elif"
+        , "#include"
+        , "#error"
+        , "#warning"
+        ]
         -- Note: #ifdef and #ifndef are handled by #if
     hasEscapedTrailingNewline :: ByteString -> Bool
     hasEscapedTrailingNewline src = "\\" `S8.isSuffixOf` src

@@ -8,36 +8,35 @@
 {-# LANGUAGE CPP #-}
 
 -- | Pretty printing.
-
 module HIndent.Pretty
-  (pretty)
-  where
+  ( pretty
+  ) where
 
-import           Control.Applicative
-import           Control.Monad.State.Strict hiding (state)
+import Control.Applicative
+import Control.Monad.State.Strict hiding (state)
 import qualified Data.ByteString.Builder as S
-import           Data.Foldable (for_, forM_, traverse_)
-import           Data.Int
-import           Data.List
-import           Data.Maybe
-import           Data.Monoid ((<>))
-import           Data.Typeable
-import           HIndent.Types
+import Data.Foldable (forM_, for_, traverse_)
+import Data.Int
+import Data.List
+import Data.Maybe
+import Data.Monoid ((<>))
+import Data.Typeable
+import HIndent.Types
 import qualified Language.Haskell.Exts as P
-import           Language.Haskell.Exts.SrcLoc
-import           Language.Haskell.Exts.Syntax
-import           Prelude hiding (exp)
+import Language.Haskell.Exts.SrcLoc
+import Language.Haskell.Exts.Syntax
+import Prelude hiding (exp)
 
 --------------------------------------------------------------------------------
 -- * Pretty printing class
-
 -- | Pretty printing class.
-class (Annotated ast,Typeable ast) => Pretty ast where
+class (Annotated ast, Typeable ast) =>
+      Pretty ast
+  where
   prettyInternal :: ast NodeInfo -> Printer ()
 
 -- | Pretty print including comments.
-pretty :: (Pretty ast,Show (ast NodeInfo))
-       => ast NodeInfo -> Printer ()
+pretty :: (Pretty ast, Show (ast NodeInfo)) => ast NodeInfo -> Printer ()
 pretty a = do
   mapM_
     (\c' -> do
@@ -56,8 +55,8 @@ pretty a = do
          CommentSameLine spn c -> do
            col <- gets psColumn
            if col == 0
-             then do
                -- write comment keeping original indentation
+             then do
                let col' = fromIntegral $ srcSpanStartColumn spn - 1
                column col' $ writeComment c
              else do
@@ -76,41 +75,32 @@ pretty a = do
       \case
         EndOfLine cs -> do
           write ("--" ++ cs)
-          modify
-            (\s ->
-                s
-                { psEolComment = True
-                })
+          modify (\s -> s {psEolComment = True})
         MultiLine cs -> do
           write ("{-" ++ cs ++ "-}")
-          modify
-            (\s ->
-                s
-                { psEolComment = True
-                })
+          modify (\s -> s {psEolComment = True})
 
 -- | Pretty print using HSE's own printer. The 'P.Pretty' class here
 -- is HSE's.
-pretty' :: (Pretty ast,P.Pretty (ast SrcSpanInfo))
-        => ast NodeInfo -> Printer ()
+pretty' ::
+     (Pretty ast, P.Pretty (ast SrcSpanInfo)) => ast NodeInfo -> Printer ()
 pretty' = write . P.prettyPrint . fmap nodeInfoSpan
 
 --------------------------------------------------------------------------------
 -- * Combinators
-
 -- | Increase indentation level by n spaces for the given printer.
 indented :: Int64 -> Printer a -> Printer a
-indented i p =
-  do level <- gets psIndentLevel
-     modify (\s -> s {psIndentLevel = level + i})
-     m <- p
-     modify (\s -> s {psIndentLevel = level})
-     return m
+indented i p = do
+  level <- gets psIndentLevel
+  modify (\s -> s {psIndentLevel = level + i})
+  m <- p
+  modify (\s -> s {psIndentLevel = level})
+  return m
 
 indentedBlock :: Printer a -> Printer a
-indentedBlock p =
-  do indentSpaces <- getIndentSpaces
-     indented indentSpaces p
+indentedBlock p = do
+  indentSpaces <- getIndentSpaces
+  indented indentSpaces p
 
 -- | Print all the printers separated by spaces.
 spaced :: [Printer ()] -> Printer ()
@@ -124,13 +114,13 @@ commas = inter (write ", ")
 inter :: Printer () -> [Printer ()] -> Printer ()
 inter sep ps =
   foldr
-    (\(i,p) next ->
-        depend
-          (do p
-              if i < length ps
-                then sep
-                else return ())
-          next)
+    (\(i, p) next ->
+       depend
+         (do p
+             if i < length ps
+               then sep
+               else return ())
+         next)
     (return ())
     (zip [1 ..] ps)
 
@@ -144,60 +134,60 @@ prefixedLined :: String -> [Printer ()] -> Printer ()
 prefixedLined pref ps' =
   case ps' of
     [] -> return ()
-    (p:ps) ->
-      do p
-         indented (fromIntegral
-                     (length pref *
-                      (-1)))
-                  (mapM_ (\p' ->
-                            do newline
-                               depend (write pref) p')
-                         ps)
+    (p:ps) -> do
+      p
+      indented
+        (fromIntegral (length pref * (-1)))
+        (mapM_
+           (\p' -> do
+              newline
+              depend (write pref) p')
+           ps)
 
 -- | Set the (newline-) indent level to the given column for the given
 -- printer.
 column :: Int64 -> Printer a -> Printer a
-column i p =
-  do level <- gets psIndentLevel
-     modify (\s -> s {psIndentLevel = i})
-     m <- p
-     modify (\s -> s {psIndentLevel = level})
-     return m
+column i p = do
+  level <- gets psIndentLevel
+  modify (\s -> s {psIndentLevel = i})
+  m <- p
+  modify (\s -> s {psIndentLevel = level})
+  return m
 
 -- | Output a newline.
 newline :: Printer ()
-newline =
-  do write "\n"
-     modify (\s -> s {psNewline = True})
+newline = do
+  write "\n"
+  modify (\s -> s {psNewline = True})
 
 -- | Set the context to a case context, where RHS is printed with -> .
 withCaseContext :: Bool -> Printer a -> Printer a
-withCaseContext bool pr =
-  do original <- gets psInsideCase
-     modify (\s -> s {psInsideCase = bool})
-     result <- pr
-     modify (\s -> s {psInsideCase = original})
-     return result
+withCaseContext bool pr = do
+  original <- gets psInsideCase
+  modify (\s -> s {psInsideCase = bool})
+  result <- pr
+  modify (\s -> s {psInsideCase = original})
+  return result
 
 -- | Get the current RHS separator, either = or -> .
 rhsSeparator :: Printer ()
-rhsSeparator =
-  do inCase <- gets psInsideCase
-     if inCase
-        then write "->"
-        else write "="
+rhsSeparator = do
+  inCase <- gets psInsideCase
+  if inCase
+    then write "->"
+    else write "="
 
 -- | Make the latter's indentation depend upon the end column of the
 -- former.
 depend :: Printer () -> Printer b -> Printer b
-depend maker dependent =
-  do state' <- get
-     maker
-     st <- get
-     col <- gets psColumn
-     if psLine state' /= psLine st || psColumn state' /= psColumn st
-        then column col dependent
-        else dependent
+depend maker dependent = do
+  state' <- get
+  maker
+  st <- get
+  col <- gets psColumn
+  if psLine state' /= psLine st || psColumn state' /= psColumn st
+    then column col dependent
+    else dependent
 
 -- | Wrap.
 wrap :: String -> String -> Printer a -> Printer a
@@ -229,38 +219,38 @@ int = write . show
 
 -- | Write out a string, updating the current position information.
 write :: String -> Printer ()
-write x =
-  do eol <- gets psEolComment
-     hardFail <- gets psFitOnOneLine
-     let addingNewline = eol && x /= "\n"
-     when addingNewline newline
-     state <- get
-     let writingNewline = x == "\n"
-         out :: String
-         out =
-           if psNewline state && not writingNewline
-              then (replicate (fromIntegral (psIndentLevel state))
-                               ' ') <>
-                   x
-              else x
-         psColumn' =
-            if additionalLines > 0
-               then fromIntegral (length (concat (take 1 (reverse srclines))))
-               else psColumn state + fromIntegral (length out)
-     when
-       hardFail
-       (guard
-          (additionalLines == 0 &&
-           (psColumn' <= configMaxColumns (psConfig state))))
-     modify (\s ->
-               s {psOutput = psOutput state <> S.stringUtf8 out
-                 ,psNewline = False
-                 ,psLine = psLine state + fromIntegral additionalLines
-                 ,psEolComment= False
-                 ,psColumn = psColumn'})
-  where srclines = lines x
-        additionalLines =
-          length (filter (== '\n') x)
+write x = do
+  eol <- gets psEolComment
+  hardFail <- gets psFitOnOneLine
+  let addingNewline = eol && x /= "\n"
+  when addingNewline newline
+  state <- get
+  let writingNewline = x == "\n"
+      out :: String
+      out =
+        if psNewline state && not writingNewline
+          then (replicate (fromIntegral (psIndentLevel state)) ' ') <> x
+          else x
+      psColumn' =
+        if additionalLines > 0
+          then fromIntegral (length (concat (take 1 (reverse srclines))))
+          else psColumn state + fromIntegral (length out)
+  when
+    hardFail
+    (guard
+       (additionalLines == 0 && (psColumn' <= configMaxColumns (psConfig state))))
+  modify
+    (\s ->
+       s
+         { psOutput = psOutput state <> S.stringUtf8 out
+         , psNewline = False
+         , psLine = psLine state + fromIntegral additionalLines
+         , psEolComment = False
+         , psColumn = psColumn'
+         })
+  where
+    srclines = lines x
+    additionalLines = length (filter (== '\n') x)
 
 -- | Write a string.
 string :: String -> Printer ()
@@ -268,63 +258,63 @@ string = write
 
 -- | Indent spaces, e.g. 2.
 getIndentSpaces :: Printer Int64
-getIndentSpaces =
-  gets (configIndentSpaces . psConfig)
+getIndentSpaces = gets (configIndentSpaces . psConfig)
 
 -- | Play with a printer and then restore the state to what it was
 -- before.
-sandbox :: Printer a -> Printer (a,PrintState)
-sandbox p =
-  do orig <- get
-     a <- p
-     new <- get
-     put orig
-     return (a,new)
+sandbox :: Printer a -> Printer (a, PrintState)
+sandbox p = do
+  orig <- get
+  a <- p
+  new <- get
+  put orig
+  return (a, new)
 
 -- | Render a type with a context, or not.
-withCtx :: (Pretty ast,Show (ast NodeInfo))
-        => Maybe (ast NodeInfo) -> Printer b -> Printer b
+withCtx ::
+     (Pretty ast, Show (ast NodeInfo))
+  => Maybe (ast NodeInfo)
+  -> Printer b
+  -> Printer b
 withCtx Nothing m = m
-withCtx (Just ctx) m =
-  do pretty ctx
-     write " =>"
-     newline
-     m
+withCtx (Just ctx) m = do
+  pretty ctx
+  write " =>"
+  newline
+  m
 
 -- | Maybe render an overlap definition.
-maybeOverlap ::  Maybe (Overlap NodeInfo) -> Printer ()
-maybeOverlap =
-  maybe (return ())
-        (\p ->
-           pretty p >>
-           space)
+maybeOverlap :: Maybe (Overlap NodeInfo) -> Printer ()
+maybeOverlap = maybe (return ()) (\p -> pretty p >> space)
 
 -- | Swing the second printer below and indented with respect to the first.
 swing :: Printer () -> Printer b -> Printer ()
-swing a b =
-  do orig <- gets psIndentLevel
-     a
-     mst <- fitsOnOneLine (do space
-                              b)
-     case mst of
-       Just st -> put st
-       Nothing -> do newline
-                     indentSpaces <- getIndentSpaces
-                     _ <- column (orig + indentSpaces) b
-                     return ()
+swing a b = do
+  orig <- gets psIndentLevel
+  a
+  mst <-
+    fitsOnOneLine
+      (do space
+          b)
+  case mst of
+    Just st -> put st
+    Nothing -> do
+      newline
+      indentSpaces <- getIndentSpaces
+      _ <- column (orig + indentSpaces) b
+      return ()
 
 -- | Swing the second printer below and indented with respect to the first by
 -- the specified amount.
-swingBy :: Int64 -> Printer() -> Printer b -> Printer b
-swingBy i a b =
-  do orig <- gets psIndentLevel
-     a
-     newline
-     column (orig + i) b
+swingBy :: Int64 -> Printer () -> Printer b -> Printer b
+swingBy i a b = do
+  orig <- gets psIndentLevel
+  a
+  newline
+  column (orig + i) b
 
 --------------------------------------------------------------------------------
 -- * Instances
-
 instance Pretty Context where
   prettyInternal ctx@(CxTuple _ asserts) = do
     mst <- fitsOnOneLine (parens (inter (comma >> space) (map pretty asserts)))
@@ -338,35 +328,38 @@ instance Pretty Pat where
     case x of
       PLit _ sign l -> pretty sign >> pretty l
       PNPlusK _ n k ->
-        depend (do pretty n
-                   write "+")
-               (int k)
+        depend
+          (do pretty n
+              write "+")
+          (int k)
       PInfixApp _ a op b ->
         case op of
-          Special{} ->
-            depend (pretty a)
-                   (depend (prettyInfixOp op)
-                           (pretty b))
+          Special {} -> depend (pretty a) (depend (prettyInfixOp op) (pretty b))
           _ ->
-            depend (do pretty a
-                       space)
-                   (depend (do prettyInfixOp op
-                               space)
-                           (pretty b))
+            depend
+              (do pretty a
+                  space)
+              (depend
+                 (do prettyInfixOp op
+                     space)
+                 (pretty b))
       PApp _ f args ->
-        depend (do pretty f
-                   unless (null args) space)
-               (spaced (map pretty args))
+        depend
+          (do pretty f
+              unless (null args) space)
+          (spaced (map pretty args))
       PTuple _ boxed pats ->
-        depend (write (case boxed of
-                         Unboxed -> "(# "
-                         Boxed -> "("))
-               (do commas (map pretty pats)
-                   write (case boxed of
-                            Unboxed -> " #)"
-                            Boxed -> ")"))
-      PList _ ps ->
-        brackets (commas (map pretty ps))
+        depend
+          (write
+             (case boxed of
+                Unboxed -> "(# "
+                Boxed -> "("))
+          (do commas (map pretty pats)
+              write
+                (case boxed of
+                   Unboxed -> " #)"
+                   Boxed -> ")"))
+      PList _ ps -> brackets (commas (map pretty ps))
       PParen _ e -> parens (pretty e)
       PRec _ qname fields -> do
         let horVariant = do
@@ -385,47 +378,57 @@ instance Pretty Pat where
                     write "}"
         horVariant `ifFitsOnOneLineOrElse` verVariant
       PAsPat _ n p ->
-        depend (do pretty n
-                   write "@")
-               (pretty p)
+        depend
+          (do pretty n
+              write "@")
+          (pretty p)
       PWildCard _ -> write "_"
-      PIrrPat _ p ->
-        depend (write "~")
-               (pretty p)
+      PIrrPat _ p -> depend (write "~") (pretty p)
       PatTypeSig _ p ty ->
-        depend (do pretty p
-                   write " :: ")
-               (pretty ty)
+        depend
+          (do pretty p
+              write " :: ")
+          (pretty ty)
       PViewPat _ e p ->
-        depend (do pretty e
-                   write " -> ")
-               (pretty p)
+        depend
+          (do pretty e
+              write " -> ")
+          (pretty p)
       PQuasiQuote _ name str -> quotation name (string str)
-      PBangPat _ p ->
-        depend (write "!")
-               (pretty p)
-      PRPat{} -> pretty' x
-      PXTag{} -> pretty' x
-      PXETag{} -> pretty' x
-      PXPcdata{} -> pretty' x
-      PXPatTag{} -> pretty' x
-      PXRPats{} -> pretty' x
-      PVar{} -> pretty' x
+      PBangPat _ p -> depend (write "!") (pretty p)
+      PRPat {} -> pretty' x
+      PXTag {} -> pretty' x
+      PXETag {} -> pretty' x
+      PXPcdata {} -> pretty' x
+      PXPatTag {} -> pretty' x
+      PXRPats {} -> pretty' x
+      PVar {} -> pretty' x
       PSplice _ s -> pretty s
 
 -- | Pretty infix application of a name (identifier or symbol).
 prettyInfixName :: Name NodeInfo -> Printer ()
-prettyInfixName (Ident _ n) = do write "`"; string n; write "`";
+prettyInfixName (Ident _ n) = do
+  write "`"
+  string n
+  write "`"
 prettyInfixName (Symbol _ s) = string s
 
 -- | Pretty print a name for being an infix operator.
-prettyInfixOp ::  QName NodeInfo -> Printer ()
+prettyInfixOp :: QName NodeInfo -> Printer ()
 prettyInfixOp x =
   case x of
     Qual _ mn n ->
       case n of
-        Ident _ i -> do write "`"; pretty mn; write "."; string i; write "`";
-        Symbol _ s -> do pretty mn; write "."; string s;
+        Ident _ i -> do
+          write "`"
+          pretty mn
+          write "."
+          string i
+          write "`"
+        Symbol _ s -> do
+          pretty mn
+          write "."
+          string s
     UnQual _ n -> prettyInfixName n
     Special _ s -> pretty s
 
@@ -444,24 +447,26 @@ instance Pretty Exp where
 -- | Render an expression.
 exp :: Exp NodeInfo -> Printer ()
 -- | Do after lambda should swing.
-exp (Lambda _ pats (Do l stmts)) =
-  do
-     mst <-
-          fitsOnOneLine
-            (do write "\\"
-                spaced (map pretty pats)
-                write " -> "
-                pretty (Do l stmts))
-     case mst of
-       Nothing -> swing (do write "\\"
-                            spaced (map pretty pats)
-                            write " -> do")
-                         (lined (map pretty stmts))
-       Just st -> put st
+exp (Lambda _ pats (Do l stmts)) = do
+  mst <-
+    fitsOnOneLine
+      (do write "\\"
+          spaced (map pretty pats)
+          write " -> "
+          pretty (Do l stmts))
+  case mst of
+    Nothing ->
+      swing
+        (do write "\\"
+            spaced (map pretty pats)
+            write " -> do")
+        (lined (map pretty stmts))
+    Just st -> put st
 -- | Space out tuples.
 exp (Tuple _ boxed exps) = do
   let horVariant = parensHorB boxed $ inter (write ", ") (map pretty exps)
-      verVariant = parensVerB boxed $ prefixedLined "," (map (depend space . pretty) exps)
+      verVariant =
+        parensVerB boxed $ prefixedLined "," (map (depend space . pretty) exps)
   mst <- fitsOnOneLine horVariant
   case mst of
     Nothing -> verVariant
@@ -473,9 +478,14 @@ exp (Tuple _ boxed exps) = do
     parensVerB Unboxed = wrap "(#" "#)"
 -- | Space out tuples.
 exp (TupleSection _ boxed mexps) = do
-  let horVariant = parensHorB boxed $ inter (write ", ") (map (maybe (return ()) pretty) mexps)
+  let horVariant =
+        parensHorB boxed $
+        inter (write ", ") (map (maybe (return ()) pretty) mexps)
       verVariant =
-        parensVerB boxed $ prefixedLined "," (map (maybe (return ()) (depend space . pretty)) mexps)
+        parensVerB boxed $
+        prefixedLined
+          ","
+          (map (maybe (return ()) (depend space . pretty)) mexps)
   mst <- fitsOnOneLine horVariant
   case mst of
     Nothing -> verVariant
@@ -485,32 +495,30 @@ exp (TupleSection _ boxed mexps) = do
     parensHorB Unboxed = wrap "(# " " #)"
     parensVerB Boxed = parens
     parensVerB Unboxed = wrap "(#" "#)"
-exp (UnboxedSum{}) = error "FIXME: No implementation for UnboxedSum."
+exp (UnboxedSum {}) = error "FIXME: No implementation for UnboxedSum."
 -- | Infix apps, same algorithm as ChrisDone at the moment.
-exp e@(InfixApp _ a op b) =
-  infixApp e a op b Nothing
+exp e@(InfixApp _ a op b) = infixApp e a op b Nothing
 -- | If bodies are indented 4 spaces. Handle also do-notation.
-exp (If _ if' then' else') =
-  do depend (write "if ")
-            (pretty if')
-     newline
-     indentSpaces <- getIndentSpaces
-     indented indentSpaces
-              (do branch "then " then'
-                  newline
-                  branch "else " else')
+exp (If _ if' then' else') = do
+  depend (write "if ") (pretty if')
+  newline
+  indentSpaces <- getIndentSpaces
+  indented
+    indentSpaces
+    (do branch "then " then'
+        newline
+        branch "else " else')
      -- Special handling for do.
-  where branch str e =
-          case e of
-            Do _ stmts ->
-              do write str
-                 write "do"
-                 newline
-                 indentSpaces <- getIndentSpaces
-                 indented indentSpaces (lined (map pretty stmts))
-            _ ->
-              depend (write str)
-                     (pretty e)
+  where
+    branch str e =
+      case e of
+        Do _ stmts -> do
+          write str
+          write "do"
+          newline
+          indentSpaces <- getIndentSpaces
+          indented indentSpaces (lined (map pretty stmts))
+        _ -> depend (write str) (pretty e)
 -- | Render on one line, or otherwise render the op with the arguments
 -- listed line by line.
 exp (App _ op arg) = do
@@ -523,7 +531,11 @@ exp (App _ op arg) = do
       spaces <- getIndentSpaces
       pretty f
       col' <- gets psColumn
-      let diff = col' - col - if col == 0 then spaces else 0
+      let diff =
+            col' - col -
+            if col == 0
+              then spaces
+              else 0
       if diff + 1 <= spaces
         then space
         else newline
@@ -531,39 +543,36 @@ exp (App _ op arg) = do
       indented spaces' (lined (map pretty args))
     Just st -> put st
   where
-    flatten (App label' op' arg') = flatten op' ++ [amap (addComments label') arg']
+    flatten (App label' op' arg') =
+      flatten op' ++ [amap (addComments label') arg']
     flatten x = [x]
     addComments n1 n2 =
-      n2
-      { nodeInfoComments = nub (nodeInfoComments n2 ++ nodeInfoComments n1)
-      }
+      n2 {nodeInfoComments = nub (nodeInfoComments n2 ++ nodeInfoComments n1)}
 -- | Space out commas in list.
-exp (List _ es) =
-  do mst <- fitsOnOneLine p
-     case mst of
-       Nothing -> do
-         depend
-           (write "[")
-           (prefixedLined "," (map (depend space . pretty) es))
-         newline
-         write "]"
-       Just st -> put st
-  where p =
-          brackets (inter (write ", ")
-                          (map pretty es))
+exp (List _ es) = do
+  mst <- fitsOnOneLine p
+  case mst of
+    Nothing -> do
+      depend (write "[") (prefixedLined "," (map (depend space . pretty) es))
+      newline
+      write "]"
+    Just st -> put st
+  where
+    p = brackets (inter (write ", ") (map pretty es))
 exp (RecUpdate _ exp' updates) = recUpdateExpr (pretty exp') updates
 exp (RecConstr _ qname updates) = recUpdateExpr (pretty qname) updates
 exp (Let _ binds e) =
-  depend (write "let ")
-         (do pretty binds
-             newline
-             indented (-3) (depend (write "in ")
-                                   (pretty e)))
+  depend
+    (write "let ")
+    (do pretty binds
+        newline
+        indented (-3) (depend (write "in ") (pretty e)))
 exp (ListComp _ e qstmt) = do
-  let horVariant = brackets $ do
-        pretty e
-        write " | "
-        commas $ map pretty qstmt
+  let horVariant =
+        brackets $ do
+          pretty e
+          write " | "
+          commas $ map pretty qstmt
       verVariant = do
         write "[ "
         pretty e
@@ -572,13 +581,13 @@ exp (ListComp _ e qstmt) = do
         newline
         write "]"
   horVariant `ifFitsOnOneLineOrElse` verVariant
-
 exp (ParComp _ e qstmts) = do
-  let horVariant = brackets $ do
-        pretty e
-        for_ qstmts $ \qstmt -> do
-          write " | "
-          commas $ map pretty qstmt
+  let horVariant =
+        brackets $ do
+          pretty e
+          for_ qstmts $ \qstmt -> do
+            write " | "
+            commas $ map pretty qstmt
       verVariant = do
         depend (write "[ ") $ pretty e
         newline
@@ -587,83 +596,89 @@ exp (ParComp _ e qstmts) = do
           newline
         write "]"
   horVariant `ifFitsOnOneLineOrElse` verVariant
-
 exp (TypeApp _ t) = do
   write "@"
   pretty t
-exp (NegApp _ e) =
-  depend (write "-")
-         (pretty e)
+exp (NegApp _ e) = depend (write "-") (pretty e)
 exp (Lambda _ ps e) = do
   write "\\"
-  spaced [ do case (i, x) of
-                (0, PIrrPat {}) -> space
-                (0, PBangPat {}) -> space
-                _ -> return ()
-              pretty x
-         | (i, x) <- zip [0 :: Int ..] ps
-         ]
+  spaced
+    [ do case (i, x) of
+           (0, PIrrPat {}) -> space
+           (0, PBangPat {}) -> space
+           _ -> return ()
+         pretty x
+    | (i, x) <- zip [0 :: Int ..] ps
+    ]
   swing (write " ->") $ pretty e
 exp (Paren _ e) = parens (pretty e)
-exp (Case _ e alts) =
-  do depend (write "case ")
-            (do pretty e
-                write " of")
-     if null alts
-       then write " {}"
-       else do newline
-               indentedBlock (lined (map (withCaseContext True . pretty) alts))
-exp (Do _ stmts) =
-  depend (write "do ")
-         (lined (map pretty stmts))
-exp (MDo _ stmts) =
-  depend (write "mdo ")
-         (lined (map pretty stmts))
+exp (Case _ e alts) = do
+  depend
+    (write "case ")
+    (do pretty e
+        write " of")
+  if null alts
+    then write " {}"
+    else do
+      newline
+      indentedBlock (lined (map (withCaseContext True . pretty) alts))
+exp (Do _ stmts) = depend (write "do ") (lined (map pretty stmts))
+exp (MDo _ stmts) = depend (write "mdo ") (lined (map pretty stmts))
 exp (LeftSection _ e op) =
-  parens (depend (do pretty e
-                     space)
-                 (pretty op))
+  parens
+    (depend
+       (do pretty e
+           space)
+       (pretty op))
 exp (RightSection _ e op) =
-  parens (depend (do pretty e
-                     space)
-                 (pretty op))
+  parens
+    (depend
+       (do pretty e
+           space)
+       (pretty op))
 exp (EnumFrom _ e) =
-  brackets (do pretty e
-               write " ..")
+  brackets
+    (do pretty e
+        write " ..")
 exp (EnumFromTo _ e f) =
-  brackets (depend (do pretty e
-                       write " .. ")
-                   (pretty f))
+  brackets
+    (depend
+       (do pretty e
+           write " .. ")
+       (pretty f))
 exp (EnumFromThen _ e t) =
-  brackets (depend (do pretty e
-                       write ",")
-                   (do pretty t
-                       write " .."))
+  brackets
+    (depend
+       (do pretty e
+           write ",")
+       (do pretty t
+           write " .."))
 exp (EnumFromThenTo _ e t f) =
-  brackets (depend (do pretty e
-                       write ",")
-                   (depend (do pretty t
-                               write " .. ")
-                           (pretty f)))
+  brackets
+    (depend
+       (do pretty e
+           write ",")
+       (depend
+          (do pretty t
+              write " .. ")
+          (pretty f)))
 exp (ExpTypeSig _ e t) =
-  depend (do pretty e
-             write " :: ")
-         (pretty t)
-exp (VarQuote _ x) =
-  depend (write "'")
-         (pretty x)
-exp (TypQuote _ x) =
-  depend (write "''")
-         (pretty x)
+  depend
+    (do pretty e
+        write " :: ")
+    (pretty t)
+exp (VarQuote _ x) = depend (write "'") (pretty x)
+exp (TypQuote _ x) = depend (write "''") (pretty x)
 exp (BracketExp _ b) = pretty b
 exp (SpliceExp _ s) = pretty s
 exp (QuasiQuote _ n s) = quotation n (string s)
-exp (LCase _ alts) =
-  do write "\\case"
-     if null alts
-       then write " {}"
-       else do newline
-               indentedBlock (lined (map (withCaseContext True . pretty) alts))
+exp (LCase _ alts) = do
+  write "\\case"
+  if null alts
+    then write " {}"
+    else do
+      newline
+      indentedBlock (lined (map (withCaseContext True . pretty) alts))
 exp (MultiIf _ alts) =
   withCaseContext
     True
@@ -679,45 +694,42 @@ exp (MultiIf _ alts) =
     prettyG (GuardedRhs _ stmts e) = do
       indented
         1
-        (do (lined (map
-                         (\(i,p) -> do
-                            unless (i == 1)
-                                   space
-                            pretty p
-                            unless (i == length stmts)
-                                   (write ","))
-                         (zip [1..] stmts))))
+        (do (lined
+               (map
+                  (\(i, p) -> do
+                     unless (i == 1) space
+                     pretty p
+                     unless (i == length stmts) (write ","))
+                  (zip [1 ..] stmts))))
       swing (write " " >> rhsSeparator) (pretty e)
 exp (Lit _ lit) = prettyInternal lit
 exp (Var _ q) = pretty q
 exp (IPVar _ q) = pretty q
 exp (Con _ q) = pretty q
-
-exp x@XTag{} = pretty' x
-exp x@XETag{} = pretty' x
-exp x@XPcdata{} = pretty' x
-exp x@XExpTag{} = pretty' x
-exp x@XChildTag{} = pretty' x
-exp x@CorePragma{} = pretty' x
-exp x@SCCPragma{} = pretty' x
-exp x@GenPragma{} = pretty' x
-exp x@Proc{} = pretty' x
-exp x@LeftArrApp{} = pretty' x
-exp x@RightArrApp{} = pretty' x
-exp x@LeftArrHighApp{} = pretty' x
-exp x@RightArrHighApp{} = pretty' x
-exp x@ParArray{} = pretty' x
-exp x@ParArrayFromTo{} = pretty' x
-exp x@ParArrayFromThenTo{} = pretty' x
-exp x@ParArrayComp{} = pretty' x
+exp x@XTag {} = pretty' x
+exp x@XETag {} = pretty' x
+exp x@XPcdata {} = pretty' x
+exp x@XExpTag {} = pretty' x
+exp x@XChildTag {} = pretty' x
+exp x@CorePragma {} = pretty' x
+exp x@SCCPragma {} = pretty' x
+exp x@GenPragma {} = pretty' x
+exp x@Proc {} = pretty' x
+exp x@LeftArrApp {} = pretty' x
+exp x@RightArrApp {} = pretty' x
+exp x@LeftArrHighApp {} = pretty' x
+exp x@RightArrHighApp {} = pretty' x
+exp x@ParArray {} = pretty' x
+exp x@ParArrayFromTo {} = pretty' x
+exp x@ParArrayFromThenTo {} = pretty' x
+exp x@ParArrayComp {} = pretty' x
 exp (OverloadedLabel _ label) = string ('#' : label)
 
 instance Pretty IPName where
- prettyInternal = pretty'
+  prettyInternal = pretty'
 
 instance Pretty Stmt where
-  prettyInternal =
-    stmt
+  prettyInternal = stmt
 
 instance Pretty QualStmt where
   prettyInternal x =
@@ -747,29 +759,32 @@ instance Pretty Decl where
   prettyInternal = decl'
 
 -- | Render a declaration.
-decl ::  Decl NodeInfo -> Printer ()
-decl (InstDecl _ moverlap dhead decls) =
-  do depend (write "instance ")
-            (depend (maybeOverlap moverlap)
-                    (depend (pretty dhead)
-                            (unless (null (fromMaybe [] decls))
-                                    (write " where"))))
-     unless (null (fromMaybe [] decls))
-            (do newline
-                indentedBlock (lined (map pretty (fromMaybe [] decls))))
+decl :: Decl NodeInfo -> Printer ()
+decl (InstDecl _ moverlap dhead decls) = do
+  depend
+    (write "instance ")
+    (depend
+       (maybeOverlap moverlap)
+       (depend
+          (pretty dhead)
+          (unless (null (fromMaybe [] decls)) (write " where"))))
+  unless
+    (null (fromMaybe [] decls))
+    (do newline
+        indentedBlock (lined (map pretty (fromMaybe [] decls))))
 decl (SpliceDecl _ e) = pretty e
 decl (TypeSig _ names ty) =
-  depend (do inter (write ", ")
-                   (map pretty names)
-             write " :: ")
-         (pretty ty)
-decl (FunBind _ matches) =
-  lined (map pretty matches)
-decl (ClassDecl _ ctx dhead fundeps decls) =
-  do classHead ctx dhead fundeps decls
-     unless (null (fromMaybe [] decls))
-            (do newline
-                indentedBlock (lined (map pretty (fromMaybe [] decls))))
+  depend
+    (do inter (write ", ") (map pretty names)
+        write " :: ")
+    (pretty ty)
+decl (FunBind _ matches) = lined (map pretty matches)
+decl (ClassDecl _ ctx dhead fundeps decls) = do
+  classHead ctx dhead fundeps decls
+  unless
+    (null (fromMaybe [] decls))
+    (do newline
+        indentedBlock (lined (map pretty (fromMaybe [] decls))))
 decl (TypeDecl _ typehead typ') = do
   write "type "
   pretty typehead
@@ -783,9 +798,10 @@ decl (TypeFamDecl _ declhead result injectivity) = do
   case result of
     Just r -> do
       space
-      let sep = case r of
-                  KindSig _ _ -> "::"
-                  TyVarSig _ _ -> "="
+      let sep =
+            case r of
+              KindSig _ _ -> "::"
+              TyVarSig _ _ -> "="
       write sep
       space
       pretty r
@@ -800,9 +816,10 @@ decl (ClosedTypeFamDecl _ declhead result injectivity instances) = do
   pretty declhead
   for_ result $ \r -> do
     space
-    let sep = case r of
-                KindSig _ _ -> "::"
-                TyVarSig _ _ -> "="
+    let sep =
+          case r of
+            KindSig _ _ -> "::"
+            TyVarSig _ _ -> "="
     write sep
     space
     pretty r
@@ -813,51 +830,54 @@ decl (ClosedTypeFamDecl _ declhead result injectivity instances) = do
   write "where"
   newline
   indentedBlock (lined (map pretty instances))
-decl (DataDecl _ dataornew ctx dhead condecls mderivs) =
-  do depend (do pretty dataornew
-                space)
-            (withCtx ctx
-                     (do pretty dhead
-                         case condecls of
-                           [] -> return ()
-                           [x] -> singleCons x
-                           xs -> multiCons xs))
-     indentSpaces <- getIndentSpaces
-     forM_ mderivs $ \deriv -> newline >> column indentSpaces (pretty deriv)
-  where singleCons x =
-          do write " ="
-             indentSpaces <- getIndentSpaces
-             column indentSpaces
-                    (do newline
-                        pretty x)
-        multiCons xs =
-          do newline
-             indentSpaces <- getIndentSpaces
-             column indentSpaces
-                    (depend (write "=")
-                            (prefixedLined "|"
-                                           (map (depend space . pretty) xs)))
-
-decl (GDataDecl _ dataornew ctx dhead mkind condecls mderivs) =
-  do depend (pretty dataornew >> space)
-       (withCtx ctx
-         (do pretty dhead
-             case mkind of
-               Nothing -> return ()
-               Just kind -> do write " :: "
-                               pretty kind
-             write " where"))
-     indentedBlock $ do
-       case condecls of
-         [] -> return ()
-         _ -> do
-           newline
-           lined (map pretty condecls)
-       forM_ mderivs $ \deriv -> newline >> pretty deriv
-
+decl (DataDecl _ dataornew ctx dhead condecls mderivs) = do
+  depend
+    (do pretty dataornew
+        space)
+    (withCtx
+       ctx
+       (do pretty dhead
+           case condecls of
+             [] -> return ()
+             [x] -> singleCons x
+             xs -> multiCons xs))
+  indentSpaces <- getIndentSpaces
+  forM_ mderivs $ \deriv -> newline >> column indentSpaces (pretty deriv)
+  where
+    singleCons x = do
+      write " ="
+      indentSpaces <- getIndentSpaces
+      column
+        indentSpaces
+        (do newline
+            pretty x)
+    multiCons xs = do
+      newline
+      indentSpaces <- getIndentSpaces
+      column
+        indentSpaces
+        (depend (write "=") (prefixedLined "|" (map (depend space . pretty) xs)))
+decl (GDataDecl _ dataornew ctx dhead mkind condecls mderivs) = do
+  depend
+    (pretty dataornew >> space)
+    (withCtx
+       ctx
+       (do pretty dhead
+           case mkind of
+             Nothing -> return ()
+             Just kind -> do
+               write " :: "
+               pretty kind
+           write " where"))
+  indentedBlock $ do
+    case condecls of
+      [] -> return ()
+      _ -> do
+        newline
+        lined (map pretty condecls)
+    forM_ mderivs $ \deriv -> newline >> pretty deriv
 decl (InlineSig _ inline active name) = do
   write "{-# "
-
   unless inline $ write "NO"
   write "INLINE "
   case active of
@@ -865,11 +885,9 @@ decl (InlineSig _ inline active name) = do
     Just (ActiveFrom _ x) -> write ("[" ++ show x ++ "] ")
     Just (ActiveUntil _ x) -> write ("[~" ++ show x ++ "] ")
   pretty name
-
   write " #-}"
 decl (MinimalPragma _ (Just formula)) =
-  wrap "{-# " " #-}" $ do
-    depend (write "MINIMAL ") $ pretty formula
+  wrap "{-# " " #-}" $ do depend (write "MINIMAL ") $ pretty formula
 decl (ForImp _ callconv maybeSafety maybeName name ty) = do
   string "foreign import "
   pretty' callconv >> space
@@ -880,13 +898,17 @@ decl (ForImp _ callconv maybeSafety maybeName name ty) = do
     Just namestr -> string (show namestr) >> space
     Nothing -> return ()
   pretty' name
-  tyline <- fitsOnOneLine $ do string " :: "
-                               pretty' ty
+  tyline <-
+    fitsOnOneLine $ do
+      string " :: "
+      pretty' ty
   case tyline of
     Just line -> put line
-    Nothing -> do newline
-                  indentedBlock $ do string ":: "
-                                     pretty' ty
+    Nothing -> do
+      newline
+      indentedBlock $ do
+        string ":: "
+        pretty' ty
 decl (ForExp _ callconv maybeName name ty) = do
   string "foreign export "
   pretty' callconv >> space
@@ -894,17 +916,21 @@ decl (ForExp _ callconv maybeName name ty) = do
     Just namestr -> string (show namestr) >> space
     Nothing -> return ()
   pretty' name
-  tyline <- fitsOnOneLine $ do string " :: "
-                               pretty' ty
+  tyline <-
+    fitsOnOneLine $ do
+      string " :: "
+      pretty' ty
   case tyline of
     Just line -> put line
-    Nothing -> do newline
-                  indentedBlock $ do string ":: "
-                                     pretty' ty
+    Nothing -> do
+      newline
+      indentedBlock $ do
+        string ":: "
+        pretty' ty
 decl x' = pretty' x'
 
-classHead
-  :: Maybe (Context NodeInfo)
+classHead ::
+     Maybe (Context NodeInfo)
   -> DeclHead NodeInfo
   -> [FunDep NodeInfo]
   -> Maybe [ClassDecl NodeInfo]
@@ -917,7 +943,10 @@ classHead ctx dhead fundeps decls = shortHead `ifFitsOnOneLineOrElse` longHead
         (withCtx ctx $
          depend
            (pretty dhead)
-           (depend (unless (null fundeps) (write " | " >> commas (map pretty fundeps)))
+           (depend
+              (unless
+                 (null fundeps)
+                 (write " | " >> commas (map pretty fundeps)))
               (unless (null (fromMaybe [] decls)) (write " where"))))
     longHead = do
       depend (write "class ") (withCtx ctx $ pretty dhead)
@@ -946,9 +975,10 @@ instance Pretty Deriving where
         Nothing -> formatMultiLine heads'
         Just derives -> put derives
     where
-      writeStrategy = case strategy of
-        Nothing -> return ()
-        Just st -> pretty st >> space
+      writeStrategy =
+        case strategy of
+          Nothing -> return ()
+          Just st -> pretty st >> space
       stripParens (IParen _ iRule) = stripParens iRule
       stripParens x = x
       formatMultiLine derives = do
@@ -966,16 +996,15 @@ instance Pretty DerivStrategy where
 instance Pretty Alt where
   prettyInternal x =
     case x of
-      Alt _ p galts mbinds ->
-        do pretty p
-           pretty galts
-           case mbinds of
-             Nothing -> return ()
-             Just binds ->
-               do newline
-                  indentedBlock (depend (write "where ")
-                                (pretty binds))
-
+      Alt _ p galts mbinds -> do
+        pretty p
+        pretty galts
+        case mbinds of
+          Nothing -> return ()
+          Just binds -> do
+            newline
+            indentedBlock (depend (write "where ") (pretty binds))
+#if MIN_VERSION_haskell_src_exts(1,21,0)
 instance Pretty Asst where
   prettyInternal x =
     case x of
@@ -984,17 +1013,23 @@ instance Pretty Asst where
         write " :: "
         pretty ty
       ParenA _ asst -> parens (pretty asst)
-#if MIN_VERSION_haskell_src_exts(1,21,0)
       TypeA _ ty -> pretty ty
 #else
+instance Pretty Asst where
+  prettyInternal x =
+    case x of
+      IParam _ name ty -> do
+        pretty name
+        write " :: "
+        pretty ty
+      ParenA _ asst -> parens (pretty asst)
       ClassA _ name types -> spaced (pretty name : map pretty types)
       i@InfixA {} -> pretty' i
       EqualP _ a b -> do
         pretty a
         write " ~ "
         pretty b
-      AppA _ name tys ->
-        spaced (pretty name : map pretty tys)
+      AppA _ name tys -> spaced (pretty name : map pretty tys)
       WildCardA _ name ->
         case name of
           Nothing -> write "_"
@@ -1002,7 +1037,6 @@ instance Pretty Asst where
             write "_"
             pretty n
 #endif
-
 instance Pretty BangType where
   prettyInternal x =
     case x of
@@ -1060,28 +1094,28 @@ instance Pretty ClassDecl where
         pretty ty
 
 instance Pretty ConDecl where
-  prettyInternal x =
-    conDecl x
+  prettyInternal x = conDecl x
 
 instance Pretty FieldDecl where
   prettyInternal (FieldDecl _ names ty) =
-    depend (do commas (map pretty names)
-               write " :: ")
-           (pretty ty)
+    depend
+      (do commas (map pretty names)
+          write " :: ")
+      (pretty ty)
 
 instance Pretty FieldUpdate where
   prettyInternal x =
     case x of
       FieldUpdate _ n e ->
-        swing (do pretty n
-                  write " =")
-               (pretty e)
+        swing
+          (do pretty n
+              write " =")
+          (pretty e)
       FieldPun _ n -> pretty n
       FieldWildcard _ -> write ".."
 
 instance Pretty GuardedRhs where
-  prettyInternal  =
-    guardedRhs
+  prettyInternal = guardedRhs
 
 instance Pretty InjectivityInfo where
   prettyInternal x = pretty' x
@@ -1091,10 +1125,11 @@ instance Pretty InstDecl where
     case i of
       InsDecl _ d -> pretty d
       InsType _ name ty ->
-        depend (do write "type "
-                   pretty name
-                   write " = ")
-               (pretty ty)
+        depend
+          (do write "type "
+              pretty name
+              write " = ")
+          (pretty ty)
       _ -> pretty' i
 
 instance Pretty Match where
@@ -1129,9 +1164,10 @@ instance Pretty PatField where
   prettyInternal x =
     case x of
       PFieldPat _ n p ->
-        depend (do pretty n
-                   write " = ")
-               (pretty p)
+        depend
+          (do pretty n
+              write " = ")
+          (pretty p)
       PFieldPun _ n -> pretty n
       PFieldWildcard _ -> write ".."
 
@@ -1139,19 +1175,16 @@ instance Pretty QualConDecl where
   prettyInternal x =
     case x of
       QualConDecl _ tyvars ctx d ->
-        depend (unless (null (fromMaybe [] tyvars))
-                       (do write "forall "
-                           spaced (map pretty (reverse (fromMaybe [] tyvars)))
-                           write ". "))
-               (withCtx ctx
-                       (pretty d))
-
-instance Pretty GadtDecl where
+        depend
+          (unless
+             (null (fromMaybe [] tyvars))
+             (do write "forall "
+                 spaced (map pretty (reverse (fromMaybe [] tyvars)))
+                 write ". "))
+          (withCtx ctx (pretty d))
 #if MIN_VERSION_haskell_src_exts(1,21,0)
+instance Pretty GadtDecl where
   prettyInternal (GadtDecl _ name _ _ fields t) =
-#else
-  prettyInternal (GadtDecl _ name fields t) =
-#endif
     horVar `ifFitsOnOneLineOrElse` verVar
     where
       fields' p =
@@ -1175,57 +1208,86 @@ instance Pretty GadtDecl where
               newline
               indented (-3) (write "-> ")
             declTy t
-
+#else
+instance Pretty GadtDecl where
+  prettyInternal (GadtDecl _ name fields t) =
+    horVar `ifFitsOnOneLineOrElse` verVar
+    where
+      fields' p =
+        case fromMaybe [] fields of
+          [] -> return ()
+          fs -> do
+            depend (write "{") $ do
+              prefixedLined "," (map (depend space . pretty) fs)
+            write "}"
+            p
+      horVar =
+        depend (pretty name >> write " :: ") $ do
+          fields' (write " -> ")
+          declTy t
+      verVar = do
+        pretty name
+        newline
+        indentedBlock $
+          depend (write ":: ") $ do
+            fields' $ do
+              newline
+              indented (-3) (write "-> ")
+            declTy t
+#endif
 instance Pretty Rhs where
-  prettyInternal =
-    rhs
+  prettyInternal = rhs
 
 instance Pretty Splice where
   prettyInternal x =
     case x of
-      IdSplice _ str ->
-        do write "$"
-           string str
-      ParenSplice _ e ->
-        depend (write "$")
-               (parens (pretty e))
+      IdSplice _ str -> do
+        write "$"
+        string str
+      ParenSplice _ e -> depend (write "$") (parens (pretty e))
 
 instance Pretty InstRule where
   prettyInternal (IParen _ rule) = parens $ pretty rule
-  prettyInternal (IRule _ mvarbinds mctx ihead) =
-    do case mvarbinds of
-         Nothing -> return ()
-         Just xs -> do write "forall "
-                       spaced (map pretty xs)
-                       write ". "
-       case mctx of
-         Nothing -> pretty ihead
-         Just ctx -> do
-           mst <- fitsOnOneLine (do pretty ctx
-                                    write " => "
-                                    pretty ihead
-                                    write " where")
-           case mst of
-             Nothing -> withCtx mctx (pretty ihead)
-             Just {} -> do
-               pretty ctx
-               write " => "
-               pretty ihead
+  prettyInternal (IRule _ mvarbinds mctx ihead) = do
+    case mvarbinds of
+      Nothing -> return ()
+      Just xs -> do
+        write "forall "
+        spaced (map pretty xs)
+        write ". "
+    case mctx of
+      Nothing -> pretty ihead
+      Just ctx -> do
+        mst <-
+          fitsOnOneLine
+            (do pretty ctx
+                write " => "
+                pretty ihead
+                write " where")
+        case mst of
+          Nothing -> withCtx mctx (pretty ihead)
+          Just {} -> do
+            pretty ctx
+            write " => "
+            pretty ihead
 
 instance Pretty InstHead where
   prettyInternal x =
-    case x of
+    case x
       -- Base cases
+          of
       IHCon _ name -> pretty name
       IHInfix _ typ' name ->
-        depend (pretty typ')
-               (do space
-                   prettyInfixOp name)
+        depend
+          (pretty typ')
+          (do space
+              prettyInfixOp name)
       -- Recursive application
       IHApp _ ihead typ' ->
-        depend (pretty ihead)
-               (do space
-                   pretty typ')
+        depend
+          (pretty ihead)
+          (do space
+              pretty typ')
       -- Wrapping in parens
       IHParen _ h -> parens (pretty h)
 
@@ -1234,14 +1296,15 @@ instance Pretty DeclHead where
     case x of
       DHead _ name -> prettyQuoteName name
       DHParen _ h -> parens (pretty h)
-      DHInfix _ var name ->
-        do pretty var
-           space
-           prettyInfixName name
+      DHInfix _ var name -> do
+        pretty var
+        space
+        prettyInfixName name
       DHApp _ dhead var ->
-        depend (pretty dhead)
-               (do space
-                   pretty var)
+        depend
+          (pretty dhead)
+          (do space
+              pretty var)
 
 instance Pretty Overlap where
   prettyInternal (Overlap _) = write "{-# OVERLAP #-}"
@@ -1263,40 +1326,44 @@ instance Pretty Safety where
 
 --------------------------------------------------------------------------------
 -- * Unimplemented or incomplete printers
-
 instance Pretty Module where
   prettyInternal x =
     case x of
-      Module _ mayModHead pragmas imps decls ->
-        do inter (do newline
-                     newline)
-                 (mapMaybe (\(isNull,r) ->
-                              if isNull
-                                 then Nothing
-                                 else Just r)
-                           [(null pragmas,inter newline (map pretty pragmas))
-                           ,(case mayModHead of
-                               Nothing -> (True,return ())
-                               Just modHead -> (False,pretty modHead))
-                           ,(null imps,formatImports imps)
-                           ,(null decls
-                            ,interOf newline
-                                     (map (\case
-                                             r@TypeSig{} -> (1,pretty r)
-                                             r@InlineSig{} -> (1, pretty r)
-                                             r -> (2,pretty r))
-                                          decls))])
-           newline
-        where interOf i ((c,p):ps) =
+      Module _ mayModHead pragmas imps decls -> do
+        inter
+          (do newline
+              newline)
+          (mapMaybe
+             (\(isNull, r) ->
+                if isNull
+                  then Nothing
+                  else Just r)
+             [ (null pragmas, inter newline (map pretty pragmas))
+             , (case mayModHead of
+                  Nothing -> (True, return ())
+                  Just modHead -> (False, pretty modHead))
+             , (null imps, formatImports imps)
+             , ( null decls
+               , interOf
+                   newline
+                   (map
+                      (\case
+                         r@TypeSig {} -> (1, pretty r)
+                         r@InlineSig {} -> (1, pretty r)
+                         r -> (2, pretty r))
+                      decls))
+             ])
+        newline
+        where interOf i ((c, p):ps) =
                 case ps of
                   [] -> p
-                  _ ->
-                    do p
-                       replicateM_ c i
-                       interOf i ps
+                  _ -> do
+                    p
+                    replicateM_ c i
+                    interOf i ps
               interOf _ [] = return ()
-      XmlPage{} -> error "FIXME: No implementation for XmlPage."
-      XmlHybrid{} -> error "FIXME: No implementation for XmlHybrid."
+      XmlPage {} -> error "FIXME: No implementation for XmlPage."
+      XmlHybrid {} -> error "FIXME: No implementation for XmlHybrid."
 
 -- | Format imports, preserving empty newlines between groups.
 formatImports :: [ImportDecl NodeInfo] -> Printer ()
@@ -1308,7 +1375,7 @@ formatImports =
     atNextLine import1 import2 =
       let end1 = srcSpanEndLine (srcInfoSpan (nodeInfoSpan (ann import1)))
           start2 = srcSpanStartLine (srcInfoSpan (nodeInfoSpan (ann import2)))
-      in start2 - end1 <= 1
+       in start2 - end1 <= 1
     formatImportGroup imps = do
       shouldSortImports <- gets $ configSortImports . psConfig
       let imps1 =
@@ -1318,15 +1385,18 @@ formatImports =
       sequence_ . intersperse newline $ map formatImport imps1
     moduleVisibleName idecl =
       let ModuleName _ name = importModule idecl
-      in name
+       in name
     formatImport = pretty
-    sortImports imps = sortOn moduleVisibleName . map sortImportSpecsOnImport $ imps
-    sortImportSpecsOnImport imp = imp { importSpecs = fmap sortImportSpecs (importSpecs imp) }
-    sortImportSpecs (ImportSpecList l hiding specs) = ImportSpecList l hiding sortedSpecs
+    sortImports imps =
+      sortOn moduleVisibleName . map sortImportSpecsOnImport $ imps
+    sortImportSpecsOnImport imp =
+      imp {importSpecs = fmap sortImportSpecs (importSpecs imp)}
+    sortImportSpecs (ImportSpecList l hiding specs) =
+      ImportSpecList l hiding sortedSpecs
       where
         sortedSpecs = sortBy importSpecCompare . map sortCNames $ specs
-
-        sortCNames (IThingWith l2 name cNames) = IThingWith l2 name . sortBy cNameCompare $ cNames
+        sortCNames (IThingWith l2 name cNames) =
+          IThingWith l2 name . sortBy cNameCompare $ cNames
         sortCNames is = is
 
 groupAdjacentBy :: (a -> a -> Bool) -> [a] -> [[a]]
@@ -1341,48 +1411,68 @@ spanAdjacentBy _ [x] = ([x], [])
 spanAdjacentBy adj (x:xs@(y:_))
   | adj x y =
     let (xs', rest') = spanAdjacentBy adj xs
-    in (x : xs', rest')
+     in (x : xs', rest')
   | otherwise = ([x], xs)
 
 importSpecCompare :: ImportSpec l -> ImportSpec l -> Ordering
-importSpecCompare (IAbs _ _ (Ident _ s1)) (IAbs _ _ (Ident _ s2)) = compare s1 s2
+importSpecCompare (IAbs _ _ (Ident _ s1)) (IAbs _ _ (Ident _ s2)) =
+  compare s1 s2
 importSpecCompare (IAbs _ _ (Ident _ _)) (IAbs _ _ (Symbol _ _)) = GT
-importSpecCompare (IAbs _ _ (Ident _ s1)) (IThingAll _ (Ident _ s2)) = compare s1 s2
+importSpecCompare (IAbs _ _ (Ident _ s1)) (IThingAll _ (Ident _ s2)) =
+  compare s1 s2
 importSpecCompare (IAbs _ _ (Ident _ _)) (IThingAll _ (Symbol _ _)) = GT
-importSpecCompare (IAbs _ _ (Ident _ s1)) (IThingWith _ (Ident _ s2) _) = compare s1 s2
+importSpecCompare (IAbs _ _ (Ident _ s1)) (IThingWith _ (Ident _ s2) _) =
+  compare s1 s2
 importSpecCompare (IAbs _ _ (Ident _ _)) (IThingWith _ (Symbol _ _) _) = GT
 importSpecCompare (IAbs _ _ (Symbol _ _)) (IAbs _ _ (Ident _ _)) = LT
-importSpecCompare (IAbs _ _ (Symbol _ s1)) (IAbs _ _ (Symbol _ s2)) = compare s1 s2
+importSpecCompare (IAbs _ _ (Symbol _ s1)) (IAbs _ _ (Symbol _ s2)) =
+  compare s1 s2
 importSpecCompare (IAbs _ _ (Symbol _ _)) (IThingAll _ (Ident _ _)) = LT
-importSpecCompare (IAbs _ _ (Symbol _ s1)) (IThingAll _ (Symbol _ s2)) = compare s1 s2
+importSpecCompare (IAbs _ _ (Symbol _ s1)) (IThingAll _ (Symbol _ s2)) =
+  compare s1 s2
 importSpecCompare (IAbs _ _ (Symbol _ _)) (IThingWith _ (Ident _ _) _) = LT
-importSpecCompare (IAbs _ _ (Symbol _ s1)) (IThingWith _ (Symbol _ s2) _) = compare s1 s2
+importSpecCompare (IAbs _ _ (Symbol _ s1)) (IThingWith _ (Symbol _ s2) _) =
+  compare s1 s2
 importSpecCompare (IAbs _ _ _) (IVar _ _) = LT
-importSpecCompare (IThingAll _ (Ident _ s1)) (IAbs _ _ (Ident _ s2)) = compare s1 s2
+importSpecCompare (IThingAll _ (Ident _ s1)) (IAbs _ _ (Ident _ s2)) =
+  compare s1 s2
 importSpecCompare (IThingAll _ (Ident _ _)) (IAbs _ _ (Symbol _ _)) = GT
-importSpecCompare (IThingAll _ (Ident _ s1)) (IThingAll _ (Ident _ s2)) = compare s1 s2
+importSpecCompare (IThingAll _ (Ident _ s1)) (IThingAll _ (Ident _ s2)) =
+  compare s1 s2
 importSpecCompare (IThingAll _ (Ident _ _)) (IThingAll _ (Symbol _ _)) = GT
-importSpecCompare (IThingAll _ (Ident _ s1)) (IThingWith _ (Ident _ s2) _) = compare s1 s2
+importSpecCompare (IThingAll _ (Ident _ s1)) (IThingWith _ (Ident _ s2) _) =
+  compare s1 s2
 importSpecCompare (IThingAll _ (Ident _ _)) (IThingWith _ (Symbol _ _) _) = GT
 importSpecCompare (IThingAll _ (Symbol _ _)) (IAbs _ _ (Ident _ _)) = LT
-importSpecCompare (IThingAll _ (Symbol _ s1)) (IAbs _ _ (Symbol _ s2)) = compare s1 s2
+importSpecCompare (IThingAll _ (Symbol _ s1)) (IAbs _ _ (Symbol _ s2)) =
+  compare s1 s2
 importSpecCompare (IThingAll _ (Symbol _ _)) (IThingAll _ (Ident _ _)) = LT
-importSpecCompare (IThingAll _ (Symbol _ s1)) (IThingAll _ (Symbol _ s2)) = compare s1 s2
+importSpecCompare (IThingAll _ (Symbol _ s1)) (IThingAll _ (Symbol _ s2)) =
+  compare s1 s2
 importSpecCompare (IThingAll _ (Symbol _ _)) (IThingWith _ (Ident _ _) _) = LT
-importSpecCompare (IThingAll _ (Symbol _ s1)) (IThingWith _ (Symbol _ s2) _) = compare s1 s2
+importSpecCompare (IThingAll _ (Symbol _ s1)) (IThingWith _ (Symbol _ s2) _) =
+  compare s1 s2
 importSpecCompare (IThingAll _ _) (IVar _ _) = LT
-importSpecCompare (IThingWith _ (Ident _ s1) _) (IAbs _ _ (Ident _ s2)) = compare s1 s2
+importSpecCompare (IThingWith _ (Ident _ s1) _) (IAbs _ _ (Ident _ s2)) =
+  compare s1 s2
 importSpecCompare (IThingWith _ (Ident _ _) _) (IAbs _ _ (Symbol _ _)) = GT
-importSpecCompare (IThingWith _ (Ident _ s1) _) (IThingAll _ (Ident _ s2)) = compare s1 s2
+importSpecCompare (IThingWith _ (Ident _ s1) _) (IThingAll _ (Ident _ s2)) =
+  compare s1 s2
 importSpecCompare (IThingWith _ (Ident _ _) _) (IThingAll _ (Symbol _ _)) = GT
-importSpecCompare (IThingWith _ (Ident _ s1) _) (IThingWith _ (Ident _ s2) _) = compare s1 s2
-importSpecCompare (IThingWith _ (Ident _ _) _) (IThingWith _ (Symbol _ _) _) = GT
+importSpecCompare (IThingWith _ (Ident _ s1) _) (IThingWith _ (Ident _ s2) _) =
+  compare s1 s2
+importSpecCompare (IThingWith _ (Ident _ _) _) (IThingWith _ (Symbol _ _) _) =
+  GT
 importSpecCompare (IThingWith _ (Symbol _ _) _) (IAbs _ _ (Ident _ _)) = LT
-importSpecCompare (IThingWith _ (Symbol _ s1) _) (IAbs _ _ (Symbol _ s2)) = compare s1 s2
+importSpecCompare (IThingWith _ (Symbol _ s1) _) (IAbs _ _ (Symbol _ s2)) =
+  compare s1 s2
 importSpecCompare (IThingWith _ (Symbol _ _) _) (IThingAll _ (Ident _ _)) = LT
-importSpecCompare (IThingWith _ (Symbol _ s1) _) (IThingAll _ (Symbol _ s2)) = compare s1 s2
-importSpecCompare (IThingWith _ (Symbol _ _) _) (IThingWith _ (Ident _ _) _) = LT
-importSpecCompare (IThingWith _ (Symbol _ s1) _) (IThingWith _ (Symbol _ s2) _) = compare s1 s2
+importSpecCompare (IThingWith _ (Symbol _ s1) _) (IThingAll _ (Symbol _ s2)) =
+  compare s1 s2
+importSpecCompare (IThingWith _ (Symbol _ _) _) (IThingWith _ (Ident _ _) _) =
+  LT
+importSpecCompare (IThingWith _ (Symbol _ s1) _) (IThingWith _ (Symbol _ s2) _) =
+  compare s1 s2
 importSpecCompare (IThingWith _ _ _) (IVar _ _) = LT
 importSpecCompare (IVar _ (Ident _ s1)) (IVar _ (Ident _ s2)) = compare s1 s2
 importSpecCompare (IVar _ (Ident _ _)) (IVar _ (Symbol _ _)) = GT
@@ -1428,33 +1518,31 @@ instance Pretty IPBind where
 
 instance Pretty BooleanFormula where
   prettyInternal (VarFormula _ i@(Ident _ _)) = pretty' i
-  prettyInternal (VarFormula _ (Symbol _ s)) = write "(" >> string s >> write ")"
+  prettyInternal (VarFormula _ (Symbol _ s)) =
+    write "(" >> string s >> write ")"
   prettyInternal (AndFormula _ fs) = do
-      maybeFormulas <- fitsOnOneLine $ inter (write ", ") $ map pretty fs
-      case maybeFormulas of
-        Nothing -> prefixedLined ", " (map pretty fs)
-        Just formulas -> put formulas
+    maybeFormulas <- fitsOnOneLine $ inter (write ", ") $ map pretty fs
+    case maybeFormulas of
+      Nothing -> prefixedLined ", " (map pretty fs)
+      Just formulas -> put formulas
   prettyInternal (OrFormula _ fs) = do
-      maybeFormulas <- fitsOnOneLine $ inter (write " | ") $ map pretty fs
-      case maybeFormulas of
-        Nothing -> prefixedLined "| " (map pretty fs)
-        Just formulas -> put formulas
+    maybeFormulas <- fitsOnOneLine $ inter (write " | ") $ map pretty fs
+    case maybeFormulas of
+      Nothing -> prefixedLined "| " (map pretty fs)
+      Just formulas -> put formulas
   prettyInternal (ParenFormula _ f) = parens $ pretty f
 
 --------------------------------------------------------------------------------
 -- * Fallback printers
-
 instance Pretty DataOrNew where
   prettyInternal = pretty'
 
 instance Pretty FunDep where
   prettyInternal = pretty'
-
 #if !MIN_VERSION_haskell_src_exts(1,21,0)
 instance Pretty Kind where
   prettyInternal = pretty'
 #endif
-
 instance Pretty ResultSig where
   prettyInternal (KindSig _ kind) = pretty kind
   prettyInternal (TyVarSig _ tyVarBind) = pretty tyVarBind
@@ -1478,32 +1566,41 @@ instance Pretty Literal where
     write "'#"
   -- We print the original notation (because HSE doesn't track Hex
   -- vs binary vs decimal notation).
-  prettyInternal (Int _l _i originalString) =
-    string originalString
-  prettyInternal (Frac _l _r originalString) =
-    string originalString
+  prettyInternal (Int _l _i originalString) = string originalString
+  prettyInternal (Frac _l _r originalString) = string originalString
   prettyInternal x = pretty' x
 
 instance Pretty Name where
-  prettyInternal x = case x of
-                          Ident _ _ -> pretty' x -- Identifiers.
-                          Symbol _ s -> string s -- Symbols
+  prettyInternal x =
+    case x of
+      Ident _ _ -> pretty' x -- Identifiers.
+      Symbol _ s -> string s -- Symbols
 
 instance Pretty QName where
   prettyInternal =
     \case
       Qual _ mn n ->
         case n of
-          Ident _ i -> do pretty mn; write "."; string i;
-          Symbol _ s -> do write "("; pretty mn; write "."; string s; write ")";
+          Ident _ i -> do
+            pretty mn
+            write "."
+            string i
+          Symbol _ s -> do
+            write "("
+            pretty mn
+            write "."
+            string s
+            write ")"
       UnQual _ n ->
         case n of
           Ident _ i -> string i
-          Symbol _ s -> do write "("; string s; write ")";
-      Special _ s@Cons{} -> parens (pretty s)
-      Special _ s@FunCon{} -> parens (pretty s)
+          Symbol _ s -> do
+            write "("
+            string s
+            write ")"
+      Special _ s@Cons {} -> parens (pretty s)
+      Special _ s@FunCon {} -> parens (pretty s)
       Special _ s -> pretty s
-
 
 instance Pretty SpecialCon where
   prettyInternal s =
@@ -1511,14 +1608,8 @@ instance Pretty SpecialCon where
       UnitCon _ -> write "()"
       ListCon _ -> write "[]"
       FunCon _ -> write "->"
-      TupleCon _ Boxed i ->
-        string ("(" ++
-                replicate (i - 1) ',' ++
-                ")")
-      TupleCon _ Unboxed i ->
-        string ("(# " ++
-                replicate (i - 1) ',' ++
-                " #)")
+      TupleCon _ Boxed i -> string ("(" ++ replicate (i - 1) ',' ++ ")")
+      TupleCon _ Unboxed i -> string ("(# " ++ replicate (i - 1) ',' ++ " #)")
       Cons _ -> write ":"
       UnboxedSingleCon _ -> write "(##)"
       ExprHole _ -> write "_"
@@ -1530,17 +1621,18 @@ instance Pretty TyVarBind where
   prettyInternal = pretty'
 
 instance Pretty ModuleHead where
-  prettyInternal (ModuleHead _ name mwarnings mexports) =
-    do write "module "
-       pretty name
-       maybe (return ()) pretty mwarnings
-       maybe (return ())
-             (\exports ->
-                do newline
-                   indentSpaces <- getIndentSpaces
-                   indented indentSpaces (pretty exports))
-             mexports
-       write " where"
+  prettyInternal (ModuleHead _ name mwarnings mexports) = do
+    write "module "
+    pretty name
+    maybe (return ()) pretty mwarnings
+    maybe
+      (return ())
+      (\exports -> do
+         newline
+         indentSpaces <- getIndentSpaces
+         indented indentSpaces (pretty exports))
+      mexports
+    write " where"
 
 instance Pretty ModulePragma where
   prettyInternal = pretty'
@@ -1567,8 +1659,7 @@ instance Pretty ImportDecl where
       Just spec -> pretty spec
 
 instance Pretty ModuleName where
-  prettyInternal (ModuleName _ name) =
-    write name
+  prettyInternal (ModuleName _ name) = write name
 
 instance Pretty ImportSpecList where
   prettyInternal (ImportSpecList _ hiding spec) = do
@@ -1595,8 +1686,7 @@ instance Pretty WarningText where
 
 instance Pretty ExportSpecList where
   prettyInternal (ExportSpecList _ es) = do
-    depend (write "(")
-           (prefixedLined "," (map pretty es))
+    depend (write "(") (prefixedLined "," (map pretty es))
     newline
     write ")"
 
@@ -1608,60 +1698,60 @@ instance Pretty ExportSpec where
 --    y
 -- is two invalid statements, not one valid infix op.
 stmt :: Stmt NodeInfo -> Printer ()
-stmt (Qualifier _ e@(InfixApp _ a op b)) =
-  do col <- fmap (psColumn . snd)
-                 (sandbox (write ""))
-     infixApp e a op b (Just col)
-stmt (Generator _ p e) =
-  do indentSpaces <- getIndentSpaces
-     pretty p
-     indented indentSpaces
-              (dependOrNewline
-                 (write " <-")
-                 space
-                 e
-                 pretty)
-stmt x = case x of
-           Generator _ p e ->
-             depend (do pretty p
-                        write " <- ")
-                    (pretty e)
-           Qualifier _ e -> pretty e
-           LetStmt _ binds ->
-             depend (write "let ")
-                    (pretty binds)
-           RecStmt _ es ->
-             depend (write "rec ")
-                    (lined (map pretty es))
+stmt (Qualifier _ e@(InfixApp _ a op b)) = do
+  col <- fmap (psColumn . snd) (sandbox (write ""))
+  infixApp e a op b (Just col)
+stmt (Generator _ p e) = do
+  indentSpaces <- getIndentSpaces
+  pretty p
+  indented indentSpaces (dependOrNewline (write " <-") space e pretty)
+stmt x =
+  case x of
+    Generator _ p e ->
+      depend
+        (do pretty p
+            write " <- ")
+        (pretty e)
+    Qualifier _ e -> pretty e
+    LetStmt _ binds -> depend (write "let ") (pretty binds)
+    RecStmt _ es -> depend (write "rec ") (lined (map pretty es))
 
 -- | Make the right hand side dependent if it fits on one line,
 -- otherwise send it to the next line.
-dependOrNewline
-  :: Printer ()
+dependOrNewline ::
+     Printer ()
   -> Printer ()
   -> Exp NodeInfo
   -> (Exp NodeInfo -> Printer ())
   -> Printer ()
-dependOrNewline left prefix right f =
-  do msg <- fitsOnOneLine renderDependent
-     case msg of
-       Nothing -> do left
-                     newline
-                     (f right)
-       Just st -> put st
-  where renderDependent = depend left (do prefix; f right)
+dependOrNewline left prefix right f = do
+  msg <- fitsOnOneLine renderDependent
+  case msg of
+    Nothing -> do
+      left
+      newline
+      (f right)
+    Just st -> put st
+  where
+    renderDependent =
+      depend
+        left
+        (do prefix
+            f right)
 
 -- | Handle do and case specially and also space out guards more.
 rhs :: Rhs NodeInfo -> Printer ()
-rhs (UnGuardedRhs _ (Do _ dos)) =
-  do inCase <- gets psInsideCase
-     write (if inCase then " -> " else " = ")
-     indentSpaces <- getIndentSpaces
-     let indentation | inCase = indentSpaces
-                     | otherwise = max 2 indentSpaces
-     swingBy indentation
-             (write "do")
-             (lined (map pretty dos))
+rhs (UnGuardedRhs _ (Do _ dos)) = do
+  inCase <- gets psInsideCase
+  write
+    (if inCase
+       then " -> "
+       else " = ")
+  indentSpaces <- getIndentSpaces
+  let indentation
+        | inCase = indentSpaces
+        | otherwise = max 2 indentSpaces
+  swingBy indentation (write "do") (lined (map pretty dos))
 rhs (UnGuardedRhs _ e) = do
   msg <-
     fitsOnOneLine
@@ -1672,48 +1762,54 @@ rhs (UnGuardedRhs _ e) = do
   case msg of
     Nothing -> swing (write " " >> rhsSeparator) (pretty e)
     Just st -> put st
-rhs (GuardedRhss _ gas) =
-  do newline
-     n <- getIndentSpaces
-     indented n
-              (lined (map (\p ->
-                             do write "|"
-                                pretty p)
-                          gas))
+rhs (GuardedRhss _ gas) = do
+  newline
+  n <- getIndentSpaces
+  indented
+    n
+    (lined
+       (map
+          (\p -> do
+             write "|"
+             pretty p)
+          gas))
 
 -- | Implement dangling right-hand-sides.
 guardedRhs :: GuardedRhs NodeInfo -> Printer ()
 -- | Handle do specially.
-
-guardedRhs (GuardedRhs _ stmts (Do _ dos)) =
-  do indented 1
-              (do prefixedLined
-                    ","
-                    (map (\p ->
-                            do space
-                               pretty p)
-                         stmts))
-     inCase <- gets psInsideCase
-     write (if inCase then " -> " else " = ")
-     swing (write "do")
-            (lined (map pretty dos))
+guardedRhs (GuardedRhs _ stmts (Do _ dos)) = do
+  indented
+    1
+    (do prefixedLined
+          ","
+          (map
+             (\p -> do
+                space
+                pretty p)
+             stmts))
+  inCase <- gets psInsideCase
+  write
+    (if inCase
+       then " -> "
+       else " = ")
+  swing (write "do") (lined (map pretty dos))
 guardedRhs (GuardedRhs _ stmts e) = do
-    mst <- fitsOnOneLine printStmts
-    case mst of
-      Just st -> do
-        put st
-        mst' <-
-          fitsOnOneLine
-            (do write " "
-                rhsSeparator
-                write " "
-                pretty e)
-        case mst' of
-          Just st' -> put st'
-          Nothing -> swingIt
-      Nothing -> do
-        printStmts
-        swingIt
+  mst <- fitsOnOneLine printStmts
+  case mst of
+    Just st -> do
+      put st
+      mst' <-
+        fitsOnOneLine
+          (do write " "
+              rhsSeparator
+              write " "
+              pretty e)
+      case mst' of
+        Just st' -> put st'
+        Nothing -> swingIt
+    Nothing -> do
+      printStmts
+      swingIt
   where
     printStmts =
       indented
@@ -1728,26 +1824,27 @@ guardedRhs (GuardedRhs _ stmts e) = do
     swingIt = swing (write " " >> rhsSeparator) (pretty e)
 
 match :: Match NodeInfo -> Printer ()
-match (Match _ name pats rhs' mbinds) =
-  do depend (do case name of
-                  Ident _ _ ->
-                    pretty name
-                  Symbol _ _ ->
-                    do write "("
-                       pretty name
-                       write ")"
-                space)
-       (spaced (map pretty pats))
-     withCaseContext False (pretty rhs')
-     for_ mbinds bindingGroup
-match (InfixMatch _ pat1 name pats rhs' mbinds) =
-  do depend (do pretty pat1
-                space
-                prettyInfixName name)
-            (do space
-                spaced (map pretty pats))
-     withCaseContext False (pretty rhs')
-     for_ mbinds bindingGroup
+match (Match _ name pats rhs' mbinds) = do
+  depend
+    (do case name of
+          Ident _ _ -> pretty name
+          Symbol _ _ -> do
+            write "("
+            pretty name
+            write ")"
+        space)
+    (spaced (map pretty pats))
+  withCaseContext False (pretty rhs')
+  for_ mbinds bindingGroup
+match (InfixMatch _ pat1 name pats rhs' mbinds) = do
+  depend
+    (do pretty pat1
+        space
+        prettyInfixName name)
+    (do space
+        spaced (map pretty pats))
+  withCaseContext False (pretty rhs')
+  for_ mbinds bindingGroup
 
 -- | Format contexts with spaces and commas between class constraints.
 context :: Context NodeInfo -> Printer ()
@@ -1767,32 +1864,37 @@ typ (TyTuple _ Boxed types) = do
   horVar `ifFitsOnOneLineOrElse` verVar
 typ (TyTuple _ Unboxed types) = do
   let horVar = wrap "(# " " #)" $ inter (write ", ") (map pretty types)
-  let verVar = wrap "(#" " #)" $ prefixedLined "," (map (depend space . pretty) types)
+  let verVar =
+        wrap "(#" " #)" $ prefixedLined "," (map (depend space . pretty) types)
   horVar `ifFitsOnOneLineOrElse` verVar
 typ (TyForall _ mbinds ctx ty) =
-  depend (case mbinds of
-            Nothing -> return ()
-            Just ts ->
-              do write "forall "
-                 spaced (map pretty ts)
-                 write ". ")
-         (do indentSpaces <- getIndentSpaces
-             withCtx ctx (indented indentSpaces (pretty ty)))
+  depend
+    (case mbinds of
+       Nothing -> return ()
+       Just ts -> do
+         write "forall "
+         spaced (map pretty ts)
+         write ". ")
+    (do indentSpaces <- getIndentSpaces
+        withCtx ctx (indented indentSpaces (pretty ty)))
 typ (TyFun _ a b) =
-  depend (do pretty a
-             write " -> ")
-         (pretty b)
+  depend
+    (do pretty a
+        write " -> ")
+    (pretty b)
 typ (TyList _ t) = brackets (pretty t)
 typ (TyParArray _ t) =
-  brackets (do write ":"
-               pretty t
-               write ":")
+  brackets
+    (do write ":"
+        pretty t
+        write ":")
 typ (TyApp _ f a) = spaced [pretty f, pretty a]
 typ (TyVar _ n) = pretty n
 typ (TyCon _ p) = pretty p
 typ (TyParen _ e) = parens (pretty e)
-typ (TyInfix _ a promotedop b) = do
+typ (TyInfix _ a promotedop b)
   -- Apply special rules to line-break operators.
+ = do
   let isLineBreak' op =
         case op of
           PromotedName _ op' -> isLineBreak op'
@@ -1803,62 +1905,64 @@ typ (TyInfix _ a promotedop b) = do
           UnpromotedName _ op' -> prettyInfixOp op'
   linebreak <- isLineBreak' promotedop
   if linebreak
-    then do pretty a
-            newline
-            prettyInfixOp' promotedop
-            space
-            pretty b
-    else do pretty a
-            space
-            prettyInfixOp' promotedop
-            space
-            pretty b
+    then do
+      pretty a
+      newline
+      prettyInfixOp' promotedop
+      space
+      pretty b
+    else do
+      pretty a
+      space
+      prettyInfixOp' promotedop
+      space
+      pretty b
 typ (TyKind _ ty k) =
-  parens (do pretty ty
-             write " :: "
-             pretty k)
-typ (TyBang _ bangty unpackty right) =
-  do pretty unpackty
-     pretty bangty
-     pretty right
-typ (TyEquals _ left right) =
-  do pretty left
-     write " ~ "
-     pretty right
-typ (TyPromoted _ (PromotedList _ _ ts)) =
-  do write "'["
-     unless (null ts) $ write " "
-     commas (map pretty ts)
-     write "]"
-typ (TyPromoted _ (PromotedTuple _ ts)) =
-  do write "'("
-     unless (null ts) $ write " "
-     commas (map pretty ts)
-     write ")"
-typ (TyPromoted _ (PromotedCon _ _ tname)) =
-  do write "'"
-     pretty tname
+  parens
+    (do pretty ty
+        write " :: "
+        pretty k)
+typ (TyBang _ bangty unpackty right) = do
+  pretty unpackty
+  pretty bangty
+  pretty right
+typ (TyEquals _ left right) = do
+  pretty left
+  write " ~ "
+  pretty right
+typ (TyPromoted _ (PromotedList _ _ ts)) = do
+  write "'["
+  unless (null ts) $ write " "
+  commas (map pretty ts)
+  write "]"
+typ (TyPromoted _ (PromotedTuple _ ts)) = do
+  write "'("
+  unless (null ts) $ write " "
+  commas (map pretty ts)
+  write ")"
+typ (TyPromoted _ (PromotedCon _ _ tname)) = do
+  write "'"
+  pretty tname
 typ (TyPromoted _ (PromotedString _ _ raw)) = do
   do write "\""
      string raw
      write "\""
-typ ty@TyPromoted{} = pretty' ty
+typ ty@TyPromoted {} = pretty' ty
 typ (TySplice _ splice) = pretty splice
 typ (TyWildCard _ name) =
   case name of
     Nothing -> write "_"
-    Just n ->
-      do write "_"
-         pretty n
+    Just n -> do
+      write "_"
+      pretty n
 typ (TyQuasiQuote _ n s) = quotation n (string s)
-typ (TyUnboxedSum{}) = error "FIXME: No implementation for TyUnboxedSum."
+typ (TyUnboxedSum {}) = error "FIXME: No implementation for TyUnboxedSum."
 #if MIN_VERSION_haskell_src_exts(1,21,0)
 typ (TyStar _) = write "*"
 #endif
-
 prettyTopName :: Name NodeInfo -> Printer ()
-prettyTopName x@Ident{} = pretty x
-prettyTopName x@Symbol{} = parens $ pretty x
+prettyTopName x@Ident {} = pretty x
+prettyTopName x@Symbol {} = parens $ pretty x
 
 -- | Specially format records. Indent where clauses only 2 spaces.
 decl' :: Decl NodeInfo -> Printer ()
@@ -1871,30 +1975,33 @@ decl' :: Decl NodeInfo -> Printer ()
 --     -> IO ()
 --
 decl' (TypeSig _ names ty') = do
-  mst <- fitsOnOneLine (depend (do commas (map prettyTopName names)
-                                   write " :: ")
-                               (declTy ty'))
+  mst <-
+    fitsOnOneLine
+      (depend
+         (do commas (map prettyTopName names)
+             write " :: ")
+         (declTy ty'))
   case mst of
     Nothing -> do
       commas (map prettyTopName names)
       indentSpaces <- getIndentSpaces
       if allNamesLength >= indentSpaces
-        then do write " ::"
-                newline
-                indented indentSpaces (depend (write "   ") (declTy ty'))
+        then do
+          write " ::"
+          newline
+          indented indentSpaces (depend (write "   ") (declTy ty'))
         else (depend (write " :: ") (declTy ty'))
     Just st -> put st
   where
     nameLength (Ident _ s) = length s
     nameLength (Symbol _ s) = length s + 2
-    allNamesLength = fromIntegral $ sum (map nameLength names) + 2 * (length names - 1)
-
+    allNamesLength =
+      fromIntegral $ sum (map nameLength names) + 2 * (length names - 1)
 decl' (PatBind _ pat rhs' mbinds) =
-  withCaseContext False $
-    do pretty pat
-       pretty rhs'
-       for_ mbinds bindingGroup
-
+  withCaseContext False $ do
+    pretty pat
+    pretty rhs'
+    for_ mbinds bindingGroup
 -- | Handle records specially for a prettier display (see guide).
 decl' e = decl e
 
@@ -1907,8 +2014,10 @@ declTy dty =
           case mctx of
             Nothing -> prettyTy False ty
             Just ctx -> do
-              mst <- fitsOnOneLine (do pretty ctx
-                                       depend (write " => ") (prettyTy False ty))
+              mst <-
+                fitsOnOneLine
+                  (do pretty ctx
+                      depend (write " => ") (prettyTy False ty))
               case mst of
                 Nothing -> do
                   pretty ctx
@@ -1945,10 +2054,9 @@ declTy dty =
     collapseFaps e = [e]
     prettyTy breakLine ty = do
       if breakLine
-        then
-          case collapseFaps ty of
-            [] -> pretty ty
-            tys -> prefixedLined "-> " (map pretty tys)
+        then case collapseFaps ty of
+               [] -> pretty ty
+               tys -> prefixedLined "-> " (map pretty tys)
         else do
           mst <- fitsOnOneLine (pretty ty)
           case mst of
@@ -1961,24 +2069,25 @@ declTy dty =
 -- | Use special record display, used by 'dataDecl' in a record scenario.
 qualConDecl :: QualConDecl NodeInfo -> Printer ()
 qualConDecl (QualConDecl _ tyvars ctx d) =
-  depend (unless (null (fromMaybe [] tyvars))
-                 (do write "forall "
-                     spaced (map pretty (fromMaybe [] tyvars))
-                     write ". "))
-         (withCtx ctx (recDecl d))
+  depend
+    (unless
+       (null (fromMaybe [] tyvars))
+       (do write "forall "
+           spaced (map pretty (fromMaybe [] tyvars))
+           write ". "))
+    (withCtx ctx (recDecl d))
 
 -- | Fields are preceded with a space.
 conDecl :: ConDecl NodeInfo -> Printer ()
 conDecl (RecDecl _ name fields) = do
-   pretty name
-   newline
-   indentedBlock
-    (do depend (write "{")
-               (prefixedLined ","
-                              (map (depend space . pretty) fields))
+  pretty name
+  newline
+  indentedBlock
+    (do depend
+          (write "{")
+          (prefixedLined "," (map (depend space . pretty) fields))
         newline
-        write "}"
-        )
+        write "}")
 conDecl (ConDecl _ name bangty) = do
   prettyQuoteName name
   unless
@@ -1988,23 +2097,23 @@ conDecl (ConDecl _ name bangty) = do
            spaced (map pretty bangty))
        (do newline
            indentedBlock (lined (map pretty bangty))))
-conDecl (InfixConDecl _ a f b) =
-  inter space [pretty a, pretty f, pretty b]
+conDecl (InfixConDecl _ a f b) = inter space [pretty a, pretty f, pretty b]
 
 -- | Record decls are formatted like: Foo
 -- { bar :: X
 -- }
 recDecl :: ConDecl NodeInfo -> Printer ()
-recDecl (RecDecl _ name fields) =
-  do pretty name
-     indentSpaces <- getIndentSpaces
-     newline
-     column indentSpaces
-            (do depend (write "{!")
-                       (prefixedLined ","
-                                      (map (depend space . pretty) fields))
-                newline
-                write "}")
+recDecl (RecDecl _ name fields) = do
+  pretty name
+  indentSpaces <- getIndentSpaces
+  newline
+  column
+    indentSpaces
+    (do depend
+          (write "{!")
+          (prefixedLined "," (map (depend space . pretty) fields))
+        newline
+        write "}")
 recDecl r = prettyInternal r
 
 recUpdateExpr :: Printer () -> [FieldUpdate NodeInfo] -> Printer ()
@@ -2026,10 +2135,9 @@ recUpdateExpr expWriter updates = do
 
 --------------------------------------------------------------------------------
 -- Predicates
-
 -- | Is the decl a record?
 isRecord :: QualConDecl t -> Bool
-isRecord (QualConDecl _ _ _ RecDecl{}) = True
+isRecord (QualConDecl _ _ _ RecDecl {}) = True
 isRecord _ = False
 
 -- | If the given operator is an element of line breaks in configuration.
@@ -2041,26 +2149,27 @@ isLineBreak _ = return False
 
 -- | Does printing the given thing overflow column limit? (e.g. 80)
 fitsOnOneLine :: Printer a -> Printer (Maybe PrintState)
-fitsOnOneLine p =
-  do st <- get
-     put st { psFitOnOneLine = True}
-     ok <- fmap (const True) p <|> return False
-     st' <- get
-     put st
-     guard $ ok || not (psFitOnOneLine st)
-     return (if ok
-                then Just st' { psFitOnOneLine = psFitOnOneLine st }
-                else Nothing)
+fitsOnOneLine p = do
+  st <- get
+  put st {psFitOnOneLine = True}
+  ok <- fmap (const True) p <|> return False
+  st' <- get
+  put st
+  guard $ ok || not (psFitOnOneLine st)
+  return
+    (if ok
+       then Just st' {psFitOnOneLine = psFitOnOneLine st}
+       else Nothing)
 
 -- | If first printer fits, use it, else use the second one.
 ifFitsOnOneLineOrElse :: Printer a -> Printer a -> Printer a
 ifFitsOnOneLineOrElse a b = do
   stOrig <- get
-  put stOrig{psFitOnOneLine = True}
+  put stOrig {psFitOnOneLine = True}
   res <- fmap Just a <|> return Nothing
   case res of
     Just r -> do
-      modify $ \st -> st{psFitOnOneLine = psFitOnOneLine stOrig}
+      modify $ \st -> st {psFitOnOneLine = psFitOnOneLine stOrig}
       return r
     Nothing -> do
       put stOrig
@@ -2068,21 +2177,22 @@ ifFitsOnOneLineOrElse a b = do
       b
 
 bindingGroup :: Binds NodeInfo -> Printer ()
-bindingGroup binds =
-  do newline
-     indented 2
-              (do write "where"
-                  newline
-                  indented 2 (pretty binds))
+bindingGroup binds = do
+  newline
+  indented
+    2
+    (do write "where"
+        newline
+        indented 2 (pretty binds))
 
-infixApp :: Exp NodeInfo
-         -> Exp NodeInfo
-         -> QOp NodeInfo
-         -> Exp NodeInfo
-         -> Maybe Int64
-         -> Printer ()
-infixApp e a op b indent =
-  hor `ifFitsOnOneLineOrElse` ver
+infixApp ::
+     Exp NodeInfo
+  -> Exp NodeInfo
+  -> QOp NodeInfo
+  -> Exp NodeInfo
+  -> Maybe Int64
+  -> Printer ()
+infixApp e a op b indent = hor `ifFitsOnOneLineOrElse` ver
   where
     hor =
       spaced
@@ -2093,26 +2203,29 @@ infixApp e a op b indent =
         ]
     ver = do
       prettyWithIndent a
-      beforeRhs <- case a of
-                     Do _ _ -> do
-                       indentSpaces <- getIndentSpaces
-                       column (fromMaybe 0 indent + indentSpaces + 3) (newline >> pretty op) -- 3 = "do "
-                       return space
-                     _ -> space >> pretty op >> return newline
+      beforeRhs <-
+        case a of
+          Do _ _ -> do
+            indentSpaces <- getIndentSpaces
+            column
+              (fromMaybe 0 indent + indentSpaces + 3)
+              (newline >> pretty op) -- 3 = "do "
+            return space
+          _ -> space >> pretty op >> return newline
       case b of
-        Lambda{} -> space >> pretty b
-        LCase{} -> space >> pretty b
+        Lambda {} -> space >> pretty b
+        LCase {} -> space >> pretty b
         Do _ stmts -> swing (write " do") $ lined (map pretty stmts)
         _ -> do
           beforeRhs
           case indent of
             Nothing -> do
-              col <- fmap (psColumn . snd)
-                          (sandbox (write ""))
+              col <- fmap (psColumn . snd) (sandbox (write ""))
               -- force indent for top-level template haskell expressions, #473.
               if col == 0
-                then do indentSpaces <- getIndentSpaces
-                        column indentSpaces (prettyWithIndent b)
+                then do
+                  indentSpaces <- getIndentSpaces
+                  column indentSpaces (prettyWithIndent b)
                 else prettyWithIndent b
             Just col -> do
               indentSpaces <- getIndentSpaces
@@ -2132,9 +2245,7 @@ data OpChainLink l
 -- links.
 flattenOpChain :: Exp l -> [OpChainLink l]
 flattenOpChain (InfixApp _ left op right) =
-  flattenOpChain left <>
-  [OpChainLink op] <>
-  flattenOpChain right
+  flattenOpChain left <> [OpChainLink op] <> flattenOpChain right
 flattenOpChain e = [OpChainExp e]
 
 -- | Write a Template Haskell quotation or a quasi-quotation.
