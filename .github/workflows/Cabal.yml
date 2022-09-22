@@ -18,7 +18,7 @@ jobs:
       fail-fast: false  # Windows builds randomly fail
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        ghc: ["8.2.2", "8.4.4", "8.6.5", "8.8.4", "8.10.2", "9.2.2"]
+        ghc: ["8.10.7", "9.2.2", "9.4.1"]
     env:
       CONFIG: "--enable-tests --enable-benchmarks"
     steps:
