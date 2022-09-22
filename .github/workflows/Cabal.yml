@@ -19,6 +19,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         ghc: ["8.10.7", "9.2.2", "9.4.1"]
+        exclude:
+        - os: windows-latest
+          ghc: "9.4.1"
     env:
       CONFIG: "--enable-tests --enable-benchmarks"
     steps:
