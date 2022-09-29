@@ -700,6 +700,9 @@ f :: (forall a. Data a =>
   -> (forall a. Data a =>
                   a -> a)
 f = undefined
+
+g :: forall a b. a -> b
+g = undefined
 ```
 
 # Function declarations
@@ -1753,7 +1756,10 @@ ttuegel Record formatting applied to expressions with RecordWildCards #274
 
 ```haskell
 -- https://github.com/chrisdone/hindent/issues/274
-foo (Bar {..}) = Bar {..}
+foo (bar@Bar {..}) = Bar {..}
+
+resetModuleNameColumn m@HsModule {hsmodName = Just (L (SrcSpanAnn epa@EpAnn {..} sp) name)} =
+  m
 ```
 
 RecursiveDo `rec` and `mdo` keyword #328
@@ -2108,7 +2114,9 @@ topLevelFunc2 = f . g
     {- multi
        line
        comment -}
-    f = undefined
+    f = undefined -- single line comment
     -- single line comment
+        -- Different size of indents
+    g :: a
     g = undefined
 ```
