@@ -1324,17 +1324,14 @@ main = putStrLn "Hello, World!"
 Comments in a 'where' clause
 
 ```haskell
-everywhereMEpAnnsInOrder cmp f hm = undefined
+foo = undefined
   where
-    collectEpAnnsInOrderEverywhereMTraverses
-      -- This function uses 'everywhereM' to collect 'EpAnn's because they
-      -- should be collected in the same order as 'putModifiedEpAnnsToModule'
-      -- puts them to the AST.
-     = reverse <$> execStateT (everywhereM collectEpAnnsST hm) []
+    bar
+      -- A comment
+     = undefined
       where
-        collectEpAnns x
-          -- If 'a' is 'EpAnn b' ('b' can be any type), wrap 'x' with a 'Wrapper'.
-          | otherwise = id
+        a = b
+    baz = undefined
 ```
 
 # MINIMAL pragma
