@@ -55,7 +55,8 @@ executable hindent
   ghc-options:       -Wall -O2
   default-language:  Haskell2010
   main-is:           Main.hs
-  other-modules: Path.Find
+  other-modules:     Path.Find
+                     Paths_hindent
   build-depends:     base >= 4 && < 5
                    , hindent
                    , bytestring
