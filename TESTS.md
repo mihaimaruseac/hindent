@@ -697,8 +697,8 @@ d :: (:->) 'True 'False
 ```haskell
 f :: (forall a. Data a =>
                   a -> a)
-  -> (forall a. Data a =>
-                  a -> a)
+  -> (forall a b. Data a =>
+                    a -> b)
 f = undefined
 
 g :: forall a b. a -> b
