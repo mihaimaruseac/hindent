@@ -955,6 +955,8 @@ Match against a list
 head [] = undefined
 head [x] = x
 head xs = head $ init xs
+
+foo [Coord _ _, Coord _ _] = undefined
 ```
 
 Range
