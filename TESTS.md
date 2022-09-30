@@ -1254,6 +1254,12 @@ data X =
       -- ^ This is a long comment which starts on the following line
       -- from from the field, lines continue at the sme column.
     }
+
+foo ::
+     String -- ^ Reason for eating pizza.
+  -> Int -- ^ How many did you eat pizza?
+  -> String -- ^ The report.
+foo = undefined
 ```
 
 Comments around regular declarations
