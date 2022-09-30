@@ -1773,6 +1773,8 @@ foo (bar@Bar {..}) = Bar {..}
 
 resetModuleNameColumn m@HsModule {hsmodName = Just (L (SrcSpanAnn epa@EpAnn {..} sp) name)} =
   m
+
+bar Bar {baz = before, ..} = Bar {baz = after, ..}
 ```
 
 RecursiveDo `rec` and `mdo` keyword #328
