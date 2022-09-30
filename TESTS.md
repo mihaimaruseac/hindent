@@ -561,6 +561,12 @@ g =
 
 # Type signatures
 
+Multiple function signatures at once
+
+```haskell
+a, b, c :: Int
+```
+
 A long signature inside a where clause
 
 ```haskell
