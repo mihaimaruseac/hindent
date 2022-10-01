@@ -2150,6 +2150,7 @@ topLevelFunc1 = f
     f = undefined
 
 topLevelFunc2 = f . g
+    -- Another comment
   where
     {- multi
        line
