@@ -146,6 +146,16 @@ import Name hiding ()
 import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
 ```
 
+An import declaration importing lots of data constructors
+
+```haskell
+import Direction
+  ( Direction(East, North, NorthEast, NorthWest, South, SouthEast,
+          SouthWest, West)
+  , allDirections
+  )
+```
+
 # Declarations
 
 Type declaration
