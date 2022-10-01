@@ -1113,6 +1113,15 @@ data Stanza =
     }
 ```
 
+Multiple constructors at once
+
+```haskell
+data Foo =
+  Foo
+    { foo, bar, baz, qux, quux :: Int
+    }
+```
+
 Spaces between deriving classes
 
 ``` haskell
