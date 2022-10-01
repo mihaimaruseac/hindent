@@ -30,15 +30,16 @@ Extension pragmas
 fun @Int 12
 ```
 
-Pragmas and GHC pragmas
+Pragmas, GHC options, and haddock options.
 
 ```haskell
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE NoRebindableSyntax #-}
 {-# OPTIONS_GHC -fno-warn-missing-import-lists #-}
 {-# OPTIONS_GHC -w #-}
+{-# OPTIONS_HADDOCK show-extensions #-}
 
-module Paths_hindent where
+module Foo where
 ```
 
 A pragma's length is adjusted automatically
