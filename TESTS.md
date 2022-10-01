@@ -782,6 +782,16 @@ instance Pretty HsModule where
   commentsBefore = Nothing
 ```
 
+A `DEPRECATED`.
+
+```haskell
+{-# DEPRECATED
+giveUp "Never give up."
+ #-}
+
+giveUp = undefined
+```
+
 Guards and pattern guards
 
 ``` haskell
