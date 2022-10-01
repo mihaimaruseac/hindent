@@ -1368,6 +1368,18 @@ foo = undefined
     baz = undefined
 ```
 
+Haddocks around data constructors
+
+```haskell
+data Foo
+    -- | A haddock comment for 'Bar'.
+  = Bar
+    -- | A haddock comment for 'Baz'.
+  | Baz
+    -- | A haddock comment for 'Baz'.
+  | Quuz
+```
+
 # MINIMAL pragma
 
 Monad example
