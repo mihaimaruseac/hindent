@@ -666,6 +666,13 @@ class Foo a where
   bar = mappend
 ```
 
+Class methods with constraints
+
+```haskell
+class Foo f where
+  myEq :: (Eq a) => f a -> f a -> Bool
+```
+
 Implicit parameters
 
 ```haskell
