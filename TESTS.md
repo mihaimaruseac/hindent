@@ -1376,7 +1376,7 @@ data Foo
   = Bar
     -- | A haddock comment for 'Baz'.
   | Baz
-    -- | A haddock comment for 'Baz'.
+    -- | A haddock comment for 'Quuz'.
   | Quuz
 ```
 
