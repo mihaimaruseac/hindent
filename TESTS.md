@@ -851,6 +851,16 @@ f
     b
 ```
 
+`if` having a long condition
+
+```haskell
+foo =
+  if fooooooo ||
+     baaaaaaaaaaaaaaaaaaaaa || apsdgiuhasdpfgiuahdfpgiuah || bazzzzzzzzzzzzz
+    then a
+    else b
+```
+
 Multi-way if
 
 ``` haskell
