@@ -531,6 +531,16 @@ double = (2 *)
 halve = (/ 2)
 ```
 
+A section with a large RHS.
+
+```haskell
+foo =
+  (`elem` concat
+            [ [20, 68, 92, 112, 28, 124, 116, 80]
+            , [21, 84, 87, 221, 127, 255, 241, 17]
+            ])
+```
+
 A field updater in a `do` inside a `let ... in`.
 
 ```haskell
