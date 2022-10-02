@@ -88,6 +88,7 @@ module X
 Import lists
 
 ``` haskell
+import Control.Lens (_2, _Just)
 import Data.Text
 import Data.Text
 import qualified Data.Text as T
