@@ -7,12 +7,7 @@ sure re-formatting that code snippet produces the same result.
 You can browse through this document to see what HIndent's style is
 like, or contribute additional sections to it, or regression tests.
 
-## Modules
-
-Empty module
-
-``` haskell
-```
+## Shebang
 
 Double shebangs
 
@@ -22,15 +17,16 @@ Double shebangs
 main = pure ()
 ```
 
-Extension pragmas
+## Module
 
-```haskell
-{-# LANGUAGE TypeApplications #-}
+Empty module
 
-fun @Int 12
+``` haskell
 ```
 
-Module header
+### Module header
+
+Without an export list
 
 ``` haskell
 module X where
@@ -38,7 +34,7 @@ module X where
 x = 1
 ```
 
-Exports
+With an export list
 
 ``` haskell
 module X
@@ -49,7 +45,7 @@ module X
   ) where
 ```
 
-Exports, indentation 4
+With an export list and indentation 4
 
 ``` haskell 4
 module X
@@ -58,6 +54,16 @@ module X
     , Z
     , P(x, z)
     ) where
+```
+
+### Module-level pragma
+
+Extension pragmas
+
+```haskell
+{-# LANGUAGE TypeApplications #-}
+
+fun @Int 12
 ```
 
 ## Imports
