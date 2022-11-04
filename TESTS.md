@@ -1383,6 +1383,7 @@ instance Foo (T.<^)
 ```
 
 Indents record constructions and updates #358
+
 ```haskell
 foo =
   assert
@@ -1399,6 +1400,7 @@ foo =
 ```
 
 paraseba Deriving strategies with multiple deriving clauses
+
 ```haskell
 -- https://github.com/commercialhaskell/hindent/issues/503
 {-# LANGUAGE DerivingStrategies #-}
