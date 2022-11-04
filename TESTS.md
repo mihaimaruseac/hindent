@@ -1712,7 +1712,7 @@ class (Eq a, Show a) =>
   fromInteger :: Integer -> a
 ```
 
-michalrus `let … in …` inside of `do` breaks compilation #467
+michalrus `let ... in ...` inside of `do` breaks compilation #467
 
 ```haskell
 -- https://github.com/commercialhaskell/hindent/issues/467
