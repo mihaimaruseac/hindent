@@ -1,4 +1,4 @@
-# Introduction
+# HIndent test codes
 
 This file is a test suite. Each section maps to an HSpec test, and
 each line that is followed by a Haskell code fence is tested to make
@@ -7,7 +7,7 @@ sure re-formatting that code snippet produces the same result.
 You can browse through this document to see what HIndent's style is
 like, or contribute additional sections to it, or regression tests.
 
-# Modules
+## Modules
 
 Empty module
 
@@ -60,7 +60,7 @@ module X
     ) where
 ```
 
-# Imports
+## Imports
 
 Import lists
 
@@ -124,7 +124,7 @@ import Name hiding ()
 import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
 ```
 
-# Declarations
+## Declarations
 
 Type declaration
 
@@ -176,7 +176,7 @@ data Ty :: (* -> *) where
   TCon' :: (a :: *) -> a -> Ty a
 ```
 
-# Expressions
+## Expressions
 
 Lazy patterns in a lambda
 
@@ -431,7 +431,7 @@ type family Closed (a :: k) :: Bool where
   Closed x = 'True
 ```
 
-# Template Haskell
+## Template Haskell
 
 Expression brackets
 
@@ -468,7 +468,7 @@ g =
     _ -> False
 ```
 
-# Type signatures
+## Type signatures
 
 Long argument list should line break
 
@@ -569,7 +569,7 @@ c :: '(:->) 'True 'False
 d :: (:->) 'True 'False
 ```
 
-# Function declarations
+## Function declarations
 
 Prefix notation for operators
 
@@ -701,7 +701,7 @@ test
   ,)
 ```
 
-# Record syntax
+## Record syntax
 
 Pattern matching, short
 
@@ -731,7 +731,7 @@ fun ((:..?) {}) = undefined
 
 Symbol constructor, long
 
-```
+```haskell
 fun (:..?) { alpha = beta
            , gamma = delta
            , epsilon = zeta
@@ -754,7 +754,7 @@ Punned symbol field
 f' (X {(..?)}) = (..?)
 ```
 
-# Johan Tibell compatibility checks
+## Johan Tibell compatibility checks
 
 Basic example from Tibbe's style
 
@@ -853,7 +853,7 @@ foo =
       cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
 ```
 
-# Comments
+## Comments
 
 Comments within a declaration
 
@@ -1021,7 +1021,7 @@ main = putStrLn "Hello, World!"
 {- This is another random comment. -}
 ```
 
-# MINIMAL pragma
+## MINIMAL pragma
 
 Monad example
 
@@ -1038,7 +1038,7 @@ class A where
             | ananotherverylongnamewithnomoremeaning #-}
 ```
 
-# Behaviour checks
+## Behaviour checks
 
 Unicode
 
@@ -1060,7 +1060,7 @@ module X where
 foo = 123
 ```
 
-# Complex input
+## Complex input
 
 A complex, slow-to-print decl
 
@@ -1128,7 +1128,7 @@ exp = [name|exp|]
 f [qq|pattern|] = ()
 ```
 
-# C preprocessor
+## C preprocessor
 
 Conditionals (`#if`)
 
@@ -1160,7 +1160,7 @@ Escaped newlines
   x
 ```
 
-# Regression tests
+## Regression tests
 
 jml Adds trailing whitespace when wrapping #221
 
@@ -1383,6 +1383,7 @@ instance Foo (T.<^)
 ```
 
 Indents record constructions and updates #358
+
 ```haskell
 foo =
   assert
@@ -1399,6 +1400,7 @@ foo =
 ```
 
 paraseba Deriving strategies with multiple deriving clauses
+
 ```haskell
 -- https://github.com/commercialhaskell/hindent/issues/503
 {-# LANGUAGE DerivingStrategies #-}
