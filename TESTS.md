@@ -132,6 +132,23 @@ import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
 
 ## Declarations
 
+### Class instance declarations
+
+Without declarations
+
+``` haskell
+instance C a
+```
+
+With declarations
+
+``` haskell
+instance C a where
+  foobar = do
+    x y
+    k p
+```
+
 ### Type synonyms
 
 Short
@@ -151,31 +168,6 @@ type MyContext m
      , MonadMask m
      , Monoid m
      , Functor m)
-```
-
-Type declaration with infix promoted type constructor
-
-```haskell
-fun1 :: Def ('[ Ref s (Stored Uint32), IBool] 'T.:-> IBool)
-fun1 = undefined
-
-fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
-fun2 = undefined
-```
-
-Instance declaration without decls
-
-``` haskell
-instance C a
-```
-
-Instance declaration with decls
-
-``` haskell
-instance C a where
-  foobar = do
-    x y
-    k p
 ```
 
 Symbol class constructor in instance declaration
@@ -489,7 +481,17 @@ g =
     _ -> False
 ```
 
-## Type signatures
+### Function signatures
+
+Type declaration with infix promoted type constructor
+
+```haskell
+fun1 :: Def ('[ Ref s (Stored Uint32), IBool] 'T.:-> IBool)
+fun1 = undefined
+
+fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
+fun2 = undefined
+```
 
 Long argument list should line break
 
