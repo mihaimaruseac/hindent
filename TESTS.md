@@ -149,6 +149,14 @@ instance C a where
     k p
 ```
 
+Symbol class constructor
+
+```haskell
+instance Bool :?: Bool
+
+instance (:?:) Int Bool
+```
+
 ### Type synonyms
 
 Short
@@ -168,14 +176,6 @@ type MyContext m
      , MonadMask m
      , Monoid m
      , Functor m)
-```
-
-Symbol class constructor in instance declaration
-
-```haskell
-instance Bool :?: Bool
-
-instance (:?:) Int Bool
 ```
 
 GADT declarations
