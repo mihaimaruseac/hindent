@@ -132,10 +132,25 @@ import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
 
 ## Declarations
 
-Type declaration
+### Type synonyms
 
-``` haskell
+Short
+
+```haskell
 type EventSource a = (AddHandler a, a -> IO ())
+```
+
+Long
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/290
+type MyContext m
+   = ( MonadState Int m
+     , MonadReader Int m
+     , MonadError Text m
+     , MonadMask m
+     , Monoid m
+     , Functor m)
 ```
 
 Type declaration with infix promoted type constructor
@@ -1526,19 +1541,6 @@ someFunctionSignature ::
   -> Enough
   -> (Arguments -> To ())
   -> Overflow (The Line Limit)
-```
-
-duog Long Type Constraint Synonyms are not reformatted #290
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/290
-type MyContext m
-   = ( MonadState Int m
-     , MonadReader Int m
-     , MonadError Text m
-     , MonadMask m
-     , Monoid m
-     , Functor m)
 ```
 
 ocharles Type application differs from function application (leading to long lines) #359
