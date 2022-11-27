@@ -378,6 +378,21 @@ x =
      | otherwise -> e
 ```
 
+Lists
+
+``` haskell
+exceptions = [InvalidStatusCode, MissingContentHeader, InternalServerError]
+
+exceptions =
+  [ InvalidStatusCode
+  , MissingContentHeader
+  , InternalServerError
+  , InvalidStatusCode
+  , MissingContentHeader
+  , InternalServerError
+  ]
+```
+
 ### List comprehensions
 
 Short
@@ -680,21 +695,6 @@ g x =
       let y = 2
           z = 3
        in y
-```
-
-Lists
-
-``` haskell
-exceptions = [InvalidStatusCode, MissingContentHeader, InternalServerError]
-
-exceptions =
-  [ InvalidStatusCode
-  , MissingContentHeader
-  , InternalServerError
-  , InvalidStatusCode
-  , MissingContentHeader
-  , InternalServerError
-  ]
 ```
 
 Long line, function application
