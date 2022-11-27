@@ -600,6 +600,59 @@ f =
    in f
 ```
 
+### Pattern matchings against records
+
+Short
+
+```haskell
+fun Rec {alpha = beta, gamma = delta, epsilon = zeta, eta = theta, iota = kappa} = do
+  beta + delta + zeta + theta + kappa
+```
+
+Long
+
+```haskell
+fun Rec { alpha = beta
+        , gamma = delta
+        , epsilon = zeta
+        , eta = theta
+        , iota = kappa
+        , lambda = mu
+        } =
+  beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
+```
+
+Symbol constructor, short
+
+```haskell
+fun ((:..?) {}) = undefined
+```
+
+Symbol constructor, long
+
+```haskell
+fun (:..?) { alpha = beta
+           , gamma = delta
+           , epsilon = zeta
+           , eta = theta
+           , iota = kappa
+           , lambda = mu
+           } =
+  beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
+```
+
+Symbol field
+
+```haskell
+f (X {(..?) = x}) = x
+```
+
+Punned symbol field
+
+```haskell
+f' (X {(..?)}) = (..?)
+```
+
 ## Template Haskell
 
 Expression brackets
@@ -740,59 +793,6 @@ test
   ,
   , nu81
   ,)
-```
-
-## Record syntax
-
-Pattern matching, short
-
-```haskell
-fun Rec {alpha = beta, gamma = delta, epsilon = zeta, eta = theta, iota = kappa} = do
-  beta + delta + zeta + theta + kappa
-```
-
-Pattern matching, long
-
-```haskell
-fun Rec { alpha = beta
-        , gamma = delta
-        , epsilon = zeta
-        , eta = theta
-        , iota = kappa
-        , lambda = mu
-        } =
-  beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
-```
-
-Symbol constructor, short
-
-```haskell
-fun ((:..?) {}) = undefined
-```
-
-Symbol constructor, long
-
-```haskell
-fun (:..?) { alpha = beta
-           , gamma = delta
-           , epsilon = zeta
-           , eta = theta
-           , iota = kappa
-           , lambda = mu
-           } =
-  beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
-```
-
-Symbol field
-
-```haskell
-f (X {(..?) = x}) = x
-```
-
-Punned symbol field
-
-```haskell
-f' (X {(..?)}) = (..?)
 ```
 
 ## Johan Tibell compatibility checks
