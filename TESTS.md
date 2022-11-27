@@ -193,49 +193,6 @@ type MyContext m
 
 ## Expressions
 
-Record, short
-
-``` haskell
-getGitProvider :: EventProvider GitRecord ()
-getGitProvider =
-  EventProvider {getModuleName = "Git", getEvents = getRepoCommits}
-```
-
-Record, medium
-
-``` haskell
-commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
-commitToEvent gitFolderPath timezone commit =
-  Event.Event
-    {pluginName = getModuleName getGitProvider, eventIcon = "glyphicon-cog"}
-```
-
-Record, long
-
-``` haskell
-commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
-commitToEvent gitFolderPath timezone commit =
-  Event.Event
-    { pluginName = getModuleName getGitProvider
-    , eventIcon = "glyphicon-cog"
-    , eventDate = localTimeToUTC timezone (commitDate commit)
-    }
-```
-
-Record with symbol constructor
-
-```haskell
-f = (:..?) {}
-```
-
-Record with symbol field
-
-```haskell
-f x = x {(..?) = wat}
-
-g x = Rec {(..?)}
-```
-
 Cases
 
 ``` haskell
@@ -487,6 +444,51 @@ g =
   case x of
     $(mkPat y z) -> True
     _ -> False
+```
+
+### Records
+
+Short
+
+``` haskell
+getGitProvider :: EventProvider GitRecord ()
+getGitProvider =
+  EventProvider {getModuleName = "Git", getEvents = getRepoCommits}
+```
+
+Medium
+
+``` haskell
+commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
+commitToEvent gitFolderPath timezone commit =
+  Event.Event
+    {pluginName = getModuleName getGitProvider, eventIcon = "glyphicon-cog"}
+```
+
+Long
+
+``` haskell
+commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
+commitToEvent gitFolderPath timezone commit =
+  Event.Event
+    { pluginName = getModuleName getGitProvider
+    , eventIcon = "glyphicon-cog"
+    , eventDate = localTimeToUTC timezone (commitDate commit)
+    }
+```
+
+With symbol constructor
+
+```haskell
+f = (:..?) {}
+```
+
+With symbol field
+
+```haskell
+f x = x {(..?) = wat}
+
+g x = Rec {(..?)}
 ```
 
 ### Function signatures
