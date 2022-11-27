@@ -253,14 +253,6 @@ Type family instances
 type instance Id Int = Int
 ```
 
-Binding implicit parameters
-
-```haskell
-f =
-  let ?x = 42
-   in f
-```
-
 ### List comprehensions
 
 Short
@@ -458,6 +450,14 @@ f'' ((Data.List.NonEmpty.:|) x _) = x
 g (x:xs) = x
 
 g' ((:) x _) = x
+```
+
+Binding implicit parameters
+
+```haskell
+f =
+  let ?x = 42
+   in f
 ```
 
 ## Template Haskell
