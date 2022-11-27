@@ -409,43 +409,6 @@ f = \ !a -> undefined
 -- \!a yields parse error on input ‘\!’
 ```
 
-## Template Haskell
-
-Expression brackets
-
-```haskell
-add1 x = [|x + 1|]
-```
-
-Pattern brackets
-
-```haskell
-mkPat = [p|(x, y)|]
-```
-
-Type brackets
-
-```haskell
-foo :: $([t|Bool|]) -> a
-```
-
-Quoted data constructors
-
-```haskell
-cons = '(:)
-```
-
-Pattern splices
-
-```haskell
-f $pat = ()
-
-g =
-  case x of
-    $(mkPat y z) -> True
-    _ -> False
-```
-
 ### Records
 
 Short
@@ -489,6 +452,43 @@ With symbol field
 f x = x {(..?) = wat}
 
 g x = Rec {(..?)}
+```
+
+## Template Haskell
+
+Expression brackets
+
+```haskell
+add1 x = [|x + 1|]
+```
+
+Pattern brackets
+
+```haskell
+mkPat = [p|(x, y)|]
+```
+
+Type brackets
+
+```haskell
+foo :: $([t|Bool|]) -> a
+```
+
+Quoted data constructors
+
+```haskell
+cons = '(:)
+```
+
+Pattern splices
+
+```haskell
+f $pat = ()
+
+g =
+  case x of
+    $(mkPat y z) -> True
+    _ -> False
 ```
 
 ### Function signatures
