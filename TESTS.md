@@ -132,6 +132,19 @@ import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
 
 ## Declarations
 
+### Class declarations
+
+Default signatures
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/283
+class Foo a where
+  bar :: a -> a -> a
+  default bar :: Monoid a =>
+    a -> a -> a
+  bar = mappend
+```
+
 ### Class instance declarations
 
 Without declarations
@@ -168,6 +181,106 @@ data Ty :: (* -> *) where
        , field2 :: Bool}
     -> Ty Bool
   TCon' :: (a :: *) -> a -> Ty a
+```
+
+### Function signatures
+
+Type declaration with infix promoted type constructor
+
+```haskell
+fun1 :: Def ('[ Ref s (Stored Uint32), IBool] 'T.:-> IBool)
+fun1 = undefined
+
+fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
+fun2 = undefined
+```
+
+Long argument list should line break
+
+```haskell
+longLongFunction ::
+     ReaderT r (WriterT w (StateT s m)) a
+  -> StateT s (WriterT w (ReaderT r m)) a
+```
+
+Class constraints should leave `::` on same line
+
+``` haskell
+-- see https://github.com/chrisdone/hindent/pull/266#issuecomment-244182805
+fun ::
+     (Class a, Class b)
+  => fooooooooooo bar mu zot
+  -> fooooooooooo bar mu zot
+  -> c
+```
+
+Class constraints
+
+``` haskell
+fun :: (Class a, Class b) => a -> b -> c
+```
+
+Symbol class constructor in class constraint
+
+```haskell
+f :: (a :?: b) => (a, b)
+f' :: ((:?:) a b) => (a, b)
+```
+
+Tuples
+
+``` haskell
+fun :: (a, b, c) -> (a, b)
+```
+
+Quasiquotes in types
+
+```haskell
+fun :: [a|bc|]
+```
+
+Implicit parameters
+
+```haskell
+f :: (?x :: Int) => Int
+```
+
+Symbol type constructor
+
+```haskell
+f :: a :?: b
+f' :: (:?:) a b
+```
+
+Promoted list (issue #348)
+
+```haskell
+a :: A '[ 'True]
+a = undefined
+
+-- nested promoted list with multiple elements.
+b :: A '[ '[ 'True, 'False], '[ 'False, 'True]]
+b = undefined
+```
+
+Promoted list with a tuple (issue #348)
+
+```haskell
+a :: A '[ '( a, b, c, d)]
+a = undefined
+
+-- nested promoted tuples.
+b :: A '[ '( 'True, 'False, '[], '( 'False, 'True))]
+b = undefined
+```
+
+Prefix promoted symbol type constructor
+
+```haskell
+a :: '(T.:->) 'True 'False
+b :: (T.:->) 'True 'False
+c :: '(:->) 'True 'False
+d :: (:->) 'True 'False
 ```
 
 ### Type families
@@ -495,117 +608,6 @@ g =
   case x of
     $(mkPat y z) -> True
     _ -> False
-```
-
-### Function signatures
-
-Type declaration with infix promoted type constructor
-
-```haskell
-fun1 :: Def ('[ Ref s (Stored Uint32), IBool] 'T.:-> IBool)
-fun1 = undefined
-
-fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
-fun2 = undefined
-```
-
-Long argument list should line break
-
-```haskell
-longLongFunction ::
-     ReaderT r (WriterT w (StateT s m)) a
-  -> StateT s (WriterT w (ReaderT r m)) a
-```
-
-Class constraints should leave `::` on same line
-
-``` haskell
--- see https://github.com/chrisdone/hindent/pull/266#issuecomment-244182805
-fun ::
-     (Class a, Class b)
-  => fooooooooooo bar mu zot
-  -> fooooooooooo bar mu zot
-  -> c
-```
-
-Class constraints
-
-``` haskell
-fun :: (Class a, Class b) => a -> b -> c
-```
-
-Symbol class constructor in class constraint
-
-```haskell
-f :: (a :?: b) => (a, b)
-f' :: ((:?:) a b) => (a, b)
-```
-
-Tuples
-
-``` haskell
-fun :: (a, b, c) -> (a, b)
-```
-
-Quasiquotes in types
-
-```haskell
-fun :: [a|bc|]
-```
-
-Default signatures
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/283
-class Foo a where
-  bar :: a -> a -> a
-  default bar :: Monoid a =>
-    a -> a -> a
-  bar = mappend
-```
-
-Implicit parameters
-
-```haskell
-f :: (?x :: Int) => Int
-```
-
-Symbol type constructor
-
-```haskell
-f :: a :?: b
-f' :: (:?:) a b
-```
-
-Promoted list (issue #348)
-
-```haskell
-a :: A '[ 'True]
-a = undefined
-
--- nested promoted list with multiple elements.
-b :: A '[ '[ 'True, 'False], '[ 'False, 'True]]
-b = undefined
-```
-
-Promoted list with a tuple (issue #348)
-
-```haskell
-a :: A '[ '( a, b, c, d)]
-a = undefined
-
--- nested promoted tuples.
-b :: A '[ '( 'True, 'False, '[], '( 'False, 'True))]
-b = undefined
-```
-
-Prefix promoted symbol type constructor
-
-```haskell
-a :: '(T.:->) 'True 'False
-b :: (T.:->) 'True 'False
-c :: '(:->) 'True 'False
-d :: (:->) 'True 'False
 ```
 
 ## Function declarations
