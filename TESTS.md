@@ -1053,14 +1053,6 @@ Unicode
 -- υ
 ```
 
-Trailing newline is preserved
-
-``` haskell
-module X where
-
-foo = 123
-```
-
 ## Complex input
 
 A complex, slow-to-print decl
