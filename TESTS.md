@@ -172,24 +172,25 @@ instance (:?:) Int Bool
 
 ### Data declarations
 
-GADT declarations
+Non-bang fields
 
 ```haskell
-data Ty :: (* -> *) where
-  TCon
-    :: { field1 :: Int
-       , field2 :: Bool}
-    -> Ty Bool
-  TCon' :: (a :: *) -> a -> Ty a
+data HttpException
+  = InvalidStatusCode Int
+  | MissingContentHeader
 ```
 
-Data declarations
+Bang fields
 
 ```haskell
 data Tree a
   = Branch !a !(Tree a) !(Tree a)
   | Leaf
+```
 
+A constructor with many parameters
+
+```haskell
 data Tree a
   = Branch
       !a
@@ -201,18 +202,11 @@ data Tree a
       !(Tree a)
       !(Tree a)
   | Leaf
+```
 
-data HttpException
-  = InvalidStatusCode Int
-  | MissingContentHeader
+Multiple data constructors with fields
 
-data Person =
-  Person
-    { firstName :: !String -- ^ First name
-    , lastName :: !String -- ^ Last name
-    , age :: !Int -- ^ Age
-    }
-
+```haskell
 data Expression a
   = VariableExpression
       { id :: Id Expression
@@ -232,6 +226,17 @@ data Expression a
       { id :: Id Constructor
       , label :: a
       }
+```
+
+GADT declarations
+
+```haskell
+data Ty :: (* -> *) where
+  TCon
+    :: { field1 :: Int
+       , field2 :: Bool}
+    -> Ty Bool
+  TCon' :: (a :: *) -> a -> Ty a
 ```
 
 Spaces between deriving classes
@@ -1060,6 +1065,17 @@ Etc.
 -}
 main = putStrLn "Hello, World!"
 {- This is another random comment. -}
+```
+
+Comments after fields of a data declaration
+
+```haskell
+data Person =
+  Person
+    { firstName :: !String -- ^ First name
+    , lastName :: !String -- ^ Last name
+    , age :: !Int -- ^ Age
+    }
 ```
 
 ## MINIMAL pragma
