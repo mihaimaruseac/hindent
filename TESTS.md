@@ -220,22 +220,6 @@ Type application
 fun @Int 12
 ```
 
-Transform list comprehensions
-
-```haskell
-list =
-  [ (x, y, map the v)
-  | x <- [1 .. 10]
-  , y <- [1 .. 10]
-  , let v = x + y
-  , then group by v using groupWith
-  , then take 10
-  , then group using permutations
-  , t <- concat v
-  , then takeWhile by t < 3
-  ]
-```
-
 Type families
 
 ```haskell
@@ -303,6 +287,22 @@ With operators
 defaultExtensions =
   [e | e@EnableExtension {} <- knownExtensions] \\
   map EnableExtension badExtensions
+```
+
+Transform list comprehensions
+
+```haskell
+list =
+  [ (x, y, map the v)
+  | x <- [1 .. 10]
+  , y <- [1 .. 10]
+  , let v = x + y
+  , then group by v using groupWith
+  , then take 10
+  , then group using permutations
+  , t <- concat v
+  , then takeWhile by t < 3
+  ]
 ```
 
 #### Parallel list comprehensions
