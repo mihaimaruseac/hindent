@@ -183,6 +183,70 @@ data Ty :: (* -> *) where
   TCon' :: (a :: *) -> a -> Ty a
 ```
 
+Data declarations
+
+``` haskell
+data Tree a
+  = Branch !a !(Tree a) !(Tree a)
+  | Leaf
+
+data Tree a
+  = Branch
+      !a
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
+  | Leaf
+
+data HttpException
+  = InvalidStatusCode Int
+  | MissingContentHeader
+
+data Person =
+  Person
+    { firstName :: !String -- ^ First name
+    , lastName :: !String -- ^ Last name
+    , age :: !Int -- ^ Age
+    }
+
+data Expression a
+  = VariableExpression
+      { id :: Id Expression
+      , label :: a
+      }
+  | FunctionExpression
+      { var :: Id Expression
+      , body :: Expression a
+      , label :: a
+      }
+  | ApplyExpression
+      { func :: Expression a
+      , arg :: Expression a
+      , label :: a
+      }
+  | ConstructorExpression
+      { id :: Id Constructor
+      , label :: a
+      }
+```
+
+Spaces between deriving classes
+
+``` haskell
+-- From https://github.com/chrisdone/hindent/issues/167
+data Person =
+  Person
+    { firstName :: !String -- ^ First name
+    , lastName :: !String -- ^ Last name
+    , age :: !Int -- ^ Age
+    }
+  deriving (Eq, Show)
+```
+
 ### Function signatures
 
 Type declaration with infix promoted type constructor
@@ -812,70 +876,6 @@ filter _ [] = []
 filter p (x:xs)
   | p x = x : filter p xs
   | otherwise = filter p xs
-```
-
-Data declarations
-
-``` haskell
-data Tree a
-  = Branch !a !(Tree a) !(Tree a)
-  | Leaf
-
-data Tree a
-  = Branch
-      !a
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-  | Leaf
-
-data HttpException
-  = InvalidStatusCode Int
-  | MissingContentHeader
-
-data Person =
-  Person
-    { firstName :: !String -- ^ First name
-    , lastName :: !String -- ^ Last name
-    , age :: !Int -- ^ Age
-    }
-
-data Expression a
-  = VariableExpression
-      { id :: Id Expression
-      , label :: a
-      }
-  | FunctionExpression
-      { var :: Id Expression
-      , body :: Expression a
-      , label :: a
-      }
-  | ApplyExpression
-      { func :: Expression a
-      , arg :: Expression a
-      , label :: a
-      }
-  | ConstructorExpression
-      { id :: Id Constructor
-      , label :: a
-      }
-```
-
-Spaces between deriving classes
-
-``` haskell
--- From https://github.com/chrisdone/hindent/issues/167
-data Person =
-  Person
-    { firstName :: !String -- ^ First name
-    , lastName :: !String -- ^ Last name
-    , age :: !Int -- ^ Age
-    }
-  deriving (Eq, Show)
 ```
 
 Hanging lambdas
