@@ -193,34 +193,6 @@ type MyContext m
 
 ## Expressions
 
-List comprehensions, short
-
-``` haskell
-map f xs = [f x | x <- xs]
-```
-
-List comprehensions, long
-
-``` haskell
-defaultExtensions =
-  [ e
-  | EnableExtension {extensionField1 = extensionField1} <-
-      knownExtensions knownExtensions
-  , let a = b
-    -- comment
-  , let c = d
-    -- comment
-  ]
-```
-
-List comprehensions with operators
-
-```haskell
-defaultExtensions =
-  [e | e@EnableExtension {} <- knownExtensions] \\
-  map EnableExtension badExtensions
-```
-
 Parallel list comprehension, short
 
 ```haskell
@@ -430,6 +402,36 @@ Closed type families
 ```haskell
 type family Closed (a :: k) :: Bool where
   Closed x = 'True
+```
+
+### List comprehensions
+
+Short
+
+```haskell
+map f xs = [f x | x <- xs]
+```
+
+Long
+
+```haskell
+defaultExtensions =
+  [ e
+  | EnableExtension {extensionField1 = extensionField1} <-
+      knownExtensions knownExtensions
+  , let a = b
+    -- comment
+  , let c = d
+    -- comment
+  ]
+```
+
+With operators
+
+```haskell
+defaultExtensions =
+  [e | e@EnableExtension {} <- knownExtensions] \\
+  map EnableExtension badExtensions
 ```
 
 ### Lambda expressions
