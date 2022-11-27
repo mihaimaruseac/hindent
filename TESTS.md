@@ -193,20 +193,6 @@ type MyContext m
 
 ## Expressions
 
-Lazy patterns in a lambda
-
-``` haskell
-f = \ ~a -> undefined
--- \~a yields parse error on input ‘\~’
-```
-
-Bang patterns in a lambda
-
-``` haskell
-f = \ !a -> undefined
--- \!a yields parse error on input ‘\!’
-```
-
 List comprehensions, short
 
 ``` haskell
@@ -444,6 +430,22 @@ Closed type families
 ```haskell
 type family Closed (a :: k) :: Bool where
   Closed x = 'True
+```
+
+### Lambda expressions
+
+Lazy patterns
+
+``` haskell
+f = \ ~a -> undefined
+-- \~a yields parse error on input ‘\~’
+```
+
+Bang patterns
+
+``` haskell
+f = \ !a -> undefined
+-- \!a yields parse error on input ‘\!’
 ```
 
 ## Template Haskell
