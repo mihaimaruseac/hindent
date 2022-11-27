@@ -170,6 +170,26 @@ data Ty :: (* -> *) where
   TCon' :: (a :: *) -> a -> Ty a
 ```
 
+### Type families
+
+Without an annotation
+
+```haskell
+type family Id a
+```
+
+With an annotation
+
+```haskell
+type family Id a :: *
+```
+
+With dependencies
+
+```haskell
+type family Id a = r | r -> a
+```
+
 ### Type synonyms
 
 Short
@@ -220,28 +240,10 @@ Type application
 fun @Int 12
 ```
 
-Type families
-
-```haskell
-type family Id a
-```
-
-Type family annotations
-
-``` haskell
-type family Id a :: *
-```
-
 Type family instances
 
 ```haskell
 type instance Id Int = Int
-```
-
-Type family dependencies
-
-```haskell
-type family Id a = r | r -> a
 ```
 
 Binding implicit parameters
