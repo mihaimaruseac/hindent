@@ -157,6 +157,19 @@ instance Bool :?: Bool
 instance (:?:) Int Bool
 ```
 
+### Data declarations
+
+GADT declarations
+
+```haskell
+data Ty :: (* -> *) where
+  TCon
+    :: { field1 :: Int
+       , field2 :: Bool}
+    -> Ty Bool
+  TCon' :: (a :: *) -> a -> Ty a
+```
+
 ### Type synonyms
 
 Short
@@ -176,17 +189,6 @@ type MyContext m
      , MonadMask m
      , Monoid m
      , Functor m)
-```
-
-GADT declarations
-
-```haskell
-data Ty :: (* -> *) where
-  TCon
-    :: { field1 :: Int
-       , field2 :: Bool}
-    -> Ty Bool
-  TCon' :: (a :: *) -> a -> Ty a
 ```
 
 ## Expressions
