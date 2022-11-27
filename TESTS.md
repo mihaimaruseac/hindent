@@ -212,12 +212,6 @@ cons = (:)
 cons' = (:|)
 ```
 
-n+k patterns
-
-``` haskell
-f (n+5) = 0
-```
-
 Binary symbol data constructor in pattern
 
 ```haskell
@@ -454,6 +448,14 @@ Operator in parentheses
 
 ```haskell
 cat = (++)
+```
+
+## Pattern matchings
+
+n+k patterns
+
+``` haskell
+f (n+5) = 0
 ```
 
 ## Template Haskell
