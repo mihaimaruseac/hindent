@@ -204,53 +204,6 @@ strToMonth month =
     _ -> error $ "Unknown month " ++ month
 ```
 
-Operators, bad
-
-``` haskell
-x =
-  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
-  Just thisissolong <*>
-  Just stilllonger <*>
-  evenlonger
-```
-
-Operators, good
-
-```haskell pending
-x =
-  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
-  Just thisissolong <*> Just stilllonger <*> evenlonger
-```
-
-Operator with `do`
-
-```haskell
-for xs $ do
-  left x
-  right x
-```
-
-Operator with lambda
-
-```haskell
-for xs $ \x -> do
-  left x
-  right x
-```
-
-Operator with lambda-case
-
-```haskell
-for xs $ \case
-  Left x -> x
-```
-
-Operator in parentheses
-
-```haskell
-cat = (++)
-```
-
 Symbol data constructor in parentheses
 
 ```haskell
@@ -452,6 +405,55 @@ With symbol field
 f x = x {(..?) = wat}
 
 g x = Rec {(..?)}
+```
+
+### Operators
+
+Bad
+
+``` haskell
+x =
+  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
+  Just thisissolong <*>
+  Just stilllonger <*>
+  evenlonger
+```
+
+Good
+
+```haskell pending
+x =
+  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
+  Just thisissolong <*> Just stilllonger <*> evenlonger
+```
+
+With `do`
+
+```haskell
+for xs $ do
+  left x
+  right x
+```
+
+With lambda
+
+```haskell
+for xs $ \x -> do
+  left x
+  right x
+```
+
+With lambda-case
+
+```haskell
+for xs $ \case
+  Left x -> x
+```
+
+Operator in parentheses
+
+```haskell
+cat = (++)
 ```
 
 ## Template Haskell
