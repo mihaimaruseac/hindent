@@ -213,24 +213,6 @@ class Foo a b c d e f
   foo :: a -> b -> c -> d -> e -> f
 ```
 
-With class constraints
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/459
-class Class1 a =>
-      Class2 a
-  where
-  f :: a -> Int
-
-class (Eq a, Show a) =>
-      Num a
-  where
-  (+), (-), (*) :: a -> a -> a
-  negate :: a -> a
-  abs, signum :: a -> a
-  fromInteger :: Integer -> a
-```
-
 Associated type families annotated with injectivity information
 
 ```haskell
@@ -247,6 +229,31 @@ class C a where
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 class (a :< b) c
+```
+
+#### With class constraints
+
+Single
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/459
+class Class1 a =>
+      Class2 a
+  where
+  f :: a -> Int
+```
+
+Multiple
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/459
+class (Eq a, Show a) =>
+      Num a
+  where
+  (+), (-), (*) :: a -> a -> a
+  negate :: a -> a
+  abs, signum :: a -> a
+  fromInteger :: Integer -> a
 ```
 
 #### MINIMAL pragmas
