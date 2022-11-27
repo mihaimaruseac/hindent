@@ -366,6 +366,18 @@ Type family instances
 type instance Id Int = Int
 ```
 
+Multi-way if
+
+``` haskell
+x =
+  if | x <- Just x,
+       x <- Just x ->
+       case x of
+         Just x -> e
+         Nothing -> p
+     | otherwise -> e
+```
+
 ### List comprehensions
 
 Short
@@ -640,18 +652,6 @@ f x
   | otherwise = do e
   where
     x = y
-```
-
-Multi-way if
-
-``` haskell
-x =
-  if | x <- Just x,
-       x <- Just x ->
-       case x of
-         Just x -> e
-         Nothing -> p
-     | otherwise -> e
 ```
 
 Case inside a `where` and `do`
