@@ -7,40 +7,36 @@ sure re-formatting that code snippet produces the same result.
 You can browse through this document to see what HIndent's style is
 like, or contribute additional sections to it, or regression tests.
 
-## Modules
-
-Empty module
-
-``` haskell
-```
+## Shebangs
 
 Double shebangs
 
-``` haskell
+```haskell
 #!/usr/bin/env stack
 #!/usr/bin/env stack
 main = pure ()
 ```
 
-Extension pragmas
+## Modules
+
+Empty module
 
 ```haskell
-{-# LANGUAGE TypeApplications #-}
-
-fun @Int 12
 ```
 
-Module header
+### Module headers
 
-``` haskell
+Without an export list
+
+```haskell
 module X where
 
 x = 1
 ```
 
-Exports
+With an export list
 
-``` haskell
+```haskell
 module X
   ( x
   , y
@@ -49,15 +45,25 @@ module X
   ) where
 ```
 
-Exports, indentation 4
+With an export list; indentation 4
 
-``` haskell 4
+```haskell 4
 module X
     ( x
     , y
     , Z
     , P(x, z)
     ) where
+```
+
+### Module-level pragmas
+
+Extension pragmas
+
+```haskell
+{-# LANGUAGE TypeApplications #-}
+
+fun @Int 12
 ```
 
 ## Imports
@@ -1045,19 +1051,6 @@ Unicode
 ``` haskell
 α = γ * "ω"
 -- υ
-```
-
-Empty module
-
-``` haskell
-```
-
-Trailing newline is preserved
-
-``` haskell
-module X where
-
-foo = 123
 ```
 
 ## Complex input
