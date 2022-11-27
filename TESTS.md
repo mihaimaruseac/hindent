@@ -193,25 +193,6 @@ type MyContext m
 
 ## Expressions
 
-Parallel list comprehension, short
-
-```haskell
-zip xs ys = [(x, y) | x <- xs | y <- ys]
-```
-
-Parallel list comprehension, long
-
-```haskell
-fun xs ys =
-  [ (alphaBetaGamma, deltaEpsilonZeta)
-  | x <- xs
-  , z <- zs
-  | y <- ys
-  , cond
-  , let t = t
-  ]
-```
-
 Record, short
 
 ``` haskell
@@ -432,6 +413,27 @@ With operators
 defaultExtensions =
   [e | e@EnableExtension {} <- knownExtensions] \\
   map EnableExtension badExtensions
+```
+
+#### Parallel list comprehensions
+
+Short
+
+```haskell
+zip xs ys = [(x, y) | x <- xs | y <- ys]
+```
+
+Long
+
+```haskell
+fun xs ys =
+  [ (alphaBetaGamma, deltaEpsilonZeta)
+  | x <- xs
+  , z <- zs
+  | y <- ys
+  , cond
+  , let t = t
+  ]
 ```
 
 ### Lambda expressions
