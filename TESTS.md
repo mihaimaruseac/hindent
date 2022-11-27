@@ -1053,11 +1053,6 @@ Unicode
 -- υ
 ```
 
-Empty module
-
-``` haskell
-```
-
 Trailing newline is preserved
 
 ``` haskell
