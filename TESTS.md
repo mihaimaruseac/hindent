@@ -190,6 +190,13 @@ With dependencies
 type family Id a = r | r -> a
 ```
 
+Closed type families
+
+```haskell
+type family Closed (a :: k) :: Bool where
+  Closed x = 'True
+```
+
 ### Type synonyms
 
 Short
@@ -252,13 +259,6 @@ Binding implicit parameters
 f =
   let ?x = 42
    in f
-```
-
-Closed type families
-
-```haskell
-type family Closed (a :: k) :: Bool where
-  Closed x = 'True
 ```
 
 ### List comprehensions
