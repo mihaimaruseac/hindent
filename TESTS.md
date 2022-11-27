@@ -185,7 +185,7 @@ data Ty :: (* -> *) where
 
 Data declarations
 
-``` haskell
+```haskell
 data Tree a
   = Branch !a !(Tree a) !(Tree a)
   | Leaf
