@@ -195,24 +195,6 @@ class Foo a where
   bar = mappend
 ```
 
-Functional dependencies
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/323
-class Foo a b | a -> b where
-  f :: a -> b
-
-class Foo a b c d e f
-  | a b c d e -> f
-  , a b c d f -> e
-  , a b c e f -> d
-  , a b d e f -> c
-  , a c d e f -> b
-  , b c d e f -> a
-  where
-  foo :: a -> b -> c -> d -> e -> f
-```
-
 Associated type families annotated with injectivity information
 
 ```haskell
@@ -229,6 +211,31 @@ class C a where
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 class (a :< b) c
+```
+
+#### Functional dependencies
+
+Short
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/323
+class Foo a b | a -> b where
+  f :: a -> b
+```
+
+Long
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/323
+class Foo a b c d e f
+  | a b c d e -> f
+  , a b c d f -> e
+  , a b c e f -> d
+  , a b d e f -> c
+  , a c d e f -> b
+  , b c d e f -> a
+  where
+  foo :: a -> b -> c -> d -> e -> f
 ```
 
 #### With class constraints
