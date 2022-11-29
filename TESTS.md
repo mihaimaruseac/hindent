@@ -182,6 +182,104 @@ data Ty :: (* -> *) where
   TCon' :: (a :: *) -> a -> Ty a
 ```
 
+### Class declarations
+
+Default signatures
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/283
+class Foo a where
+  bar :: a -> a -> a
+  default bar :: Monoid a =>
+    a -> a -> a
+  bar = mappend
+```
+
+Associated type families annotated with injectivity information
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/528
+class C a where
+  type F a = b | b -> a
+```
+
+`TypeOperators` and `MultiParamTypeClasses`
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/277
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+
+class (a :< b) c
+```
+
+#### Functional dependencies
+
+Short
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/323
+class Foo a b | a -> b where
+  f :: a -> b
+```
+
+Long
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/323
+class Foo a b c d e f
+  | a b c d e -> f
+  , a b c d f -> e
+  , a b c e f -> d
+  , a b d e f -> c
+  , a c d e f -> b
+  , b c d e f -> a
+  where
+  foo :: a -> b -> c -> d -> e -> f
+```
+
+#### With class constraints
+
+Single
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/459
+class Class1 a =>
+      Class2 a
+  where
+  f :: a -> Int
+```
+
+Multiple
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/459
+class (Eq a, Show a) =>
+      Num a
+  where
+  (+), (-), (*) :: a -> a -> a
+  negate :: a -> a
+  abs, signum :: a -> a
+  fromInteger :: Integer -> a
+```
+
+#### MINIMAL pragmas
+
+Monad example
+
+```haskell
+class A where
+  {-# MINIMAL return, ((>>=) | (join, fmap)) #-}
+```
+
+Very long names #310
+
+```haskell
+class A where
+  {-# MINIMAL averylongnamewithnoparticularmeaning
+            | ananotherverylongnamewithnomoremeaning #-}
+```
+
 ## Expressions
 
 Lazy patterns in a lambda
@@ -518,17 +616,6 @@ Quasiquotes in types
 
 ```haskell
 fun :: [a|bc|]
-```
-
-Default signatures
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/283
-class Foo a where
-  bar :: a -> a -> a
-  default bar :: Monoid a =>
-    a -> a -> a
-  bar = mappend
 ```
 
 Implicit parameters
@@ -1027,23 +1114,6 @@ main = putStrLn "Hello, World!"
 {- This is another random comment. -}
 ```
 
-## MINIMAL pragma
-
-Monad example
-
-```haskell
-class A where
-  {-# MINIMAL return, ((>>=) | (join, fmap)) #-}
-```
-
-Very long names #310
-
-```haskell
-class A where
-  {-# MINIMAL averylongnamewithnoparticularmeaning
-            | ananotherverylongnamewithnomoremeaning #-}
-```
-
 ## Behaviour checks
 
 Unicode
@@ -1304,11 +1374,8 @@ ivan-timokhin breaks code with type operators #277
 ```haskell
 -- https://github.com/chrisdone/hindent/issues/277
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 
 type m ~> n = ()
-
-class (a :< b) c
 ```
 
 ivan-timokhin variables swapped around in constraints #278
@@ -1569,24 +1636,6 @@ t =
     argz
 ```
 
-ivan-timokhin No linebreaks for long functional dependency declarations #323
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/323
-class Foo a b | a -> b where
-  f :: a -> b
-
-class Foo a b c d e f
-  | a b c d e -> f
-  , a b c d f -> e
-  , a b c e f -> d
-  , a b d e f -> c
-  , a c d e f -> b
-  , b c d e f -> a
-  where
-  foo :: a -> b -> c -> d -> e -> f
-```
-
 utdemir Hindent breaks TH name captures of operators #412
 
 ```haskell
@@ -1687,24 +1736,6 @@ data D =
   forall a b c. D a b c
 ```
 
-sophie-h Regression: Breaks basic type class code by inserting "|" #459
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/459
-class Class1 a =>
-      Class2 a
-  where
-  f :: a -> Int
-
-class (Eq a, Show a) =>
-      Num a
-  where
-  (+), (-), (*) :: a -> a -> a
-  negate :: a -> a
-  abs, signum :: a -> a
-  fromInteger :: Integer -> a
-```
-
 michalrus `let ... in ...` inside of `do` breaks compilation #467
 
 ```haskell
@@ -1755,14 +1786,6 @@ cdsmith Quotes are dropped from package imports #480
 {-# LANGUAGE PackageImports #-}
 
 import qualified "base" Prelude as P
-```
-
-alexwl Hindent breaks associated type families annotated with injectivity information #528
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/528
-class C a where
-  type F a = b | b -> a
 ```
 
 sophie-h Fails to create required indentation for infix #238
