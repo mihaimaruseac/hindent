@@ -218,7 +218,7 @@ type EventSource a = (AddHandler a, a -> IO ())
 Long
 
 ```haskell
--- https://github.com/commercialhaskell/hindent/issues/290
+-- https://github.com/mihaimaruseac/hindent/issues/290
 type MyContext m
    = ( MonadState Int m
      , MonadReader Int m
@@ -231,21 +231,21 @@ type MyContext m
 Infix type constructor
 
 ```haskell
--- https://github.com/commercialhaskell/hindent/issues/417
+-- https://github.com/mihaimaruseac/hindent/issues/417
 type API = api1 :<|> api2
 ```
 
 Type with a string
 
 ```haskell
--- https://github.com/commercialhaskell/hindent/issues/451
+-- https://github.com/mihaimaruseac/hindent/issues/451
 type Y = X "abc\n\n\ndef"
 ```
 
 `TypeOperators`
 
 ```haskell
--- https://github.com/chrisdone/hindent/issues/277
+-- https://github.com/mihaimaruseac/hindent/issues/277
 {-# LANGUAGE TypeOperators #-}
 
 type m ~> n = ()
