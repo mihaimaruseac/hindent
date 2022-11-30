@@ -132,12 +132,6 @@ import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
 
 ## Declarations
 
-Type declaration
-
-``` haskell
-type EventSource a = (AddHandler a, a -> IO ())
-```
-
 Type declaration with infix promoted type constructor
 
 ```haskell
@@ -211,6 +205,50 @@ class C a where
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 class (a :< b) c
+```
+
+### Type synonym declarations
+
+Short
+
+```haskell
+type EventSource a = (AddHandler a, a -> IO ())
+```
+
+Long
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/290
+type MyContext m
+   = ( MonadState Int m
+     , MonadReader Int m
+     , MonadError Text m
+     , MonadMask m
+     , Monoid m
+     , Functor m)
+```
+
+Infix type constructor
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/417
+type API = api1 :<|> api2
+```
+
+Type with a string
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/451
+type Y = X "abc\n\n\ndef"
+```
+
+`TypeOperators`
+
+```haskell
+-- https://github.com/chrisdone/hindent/issues/277
+{-# LANGUAGE TypeOperators #-}
+
+type m ~> n = ()
 ```
 
 #### Functional dependencies
@@ -1369,15 +1407,6 @@ f :: Int -> Int
 f n = n
 ```
 
-ivan-timokhin breaks code with type operators #277
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/277
-{-# LANGUAGE TypeOperators #-}
-
-type m ~> n = ()
-```
-
 ivan-timokhin variables swapped around in constraints #278
 
 ```haskell
@@ -1582,19 +1611,6 @@ someFunctionSignature ::
   -> Overflow (The Line Limit)
 ```
 
-duog Long Type Constraint Synonyms are not reformatted #290
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/290
-type MyContext m
-   = ( MonadState Int m
-     , MonadReader Int m
-     , MonadError Text m
-     , MonadMask m
-     , Monoid m
-     , Functor m)
-```
-
 ocharles Type application differs from function application (leading to long lines) #359
 
 ```haskell
@@ -1669,13 +1685,6 @@ TimoFreiberg INLINE (and other) pragmas for operators are reformatted without pa
 {-# NOINLINE (<>) #-}
 ```
 
-NorfairKing Hindent breaks servant API's #417
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/417
-type API = api1 :<|> api2
-```
-
 andersk Cannot parse @: operator #421
 
 ```haskell
@@ -1712,18 +1721,6 @@ f :: Num a => a
 f = id
 
 x = f @Int 12
-```
-
-michalrus Multiline `GHC.TypeLits.Symbol`s are being broken #451
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/451
-import GHC.TypeLits (Symbol)
-
-data X (sym :: Symbol)
-  deriving (Typeable)
-
-type Y = X "abc\n\n\ndef"
 ```
 
 DavidEichmann Existential Quantification reordered #443
