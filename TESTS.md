@@ -142,29 +142,6 @@ fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
 fun2 = undefined
 ```
 
-Instance declaration without decls
-
-``` haskell
-instance C a
-```
-
-Instance declaration with decls
-
-``` haskell
-instance C a where
-  foobar = do
-    x y
-    k p
-```
-
-Symbol class constructor in instance declaration
-
-```haskell
-instance Bool :?: Bool
-
-instance (:?:) Int Bool
-```
-
 GADT declarations
 
 ```haskell
@@ -205,6 +182,90 @@ class C a where
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 class (a :< b) c
+```
+
+### Class instance declarations
+
+Without methods
+
+```haskell
+instance C a
+```
+
+With methods
+
+```haskell
+instance C a where
+  foobar = do
+    x y
+    k p
+```
+
+With type operators
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/342
+instance Foo (->)
+
+instance Foo (^>)
+
+instance Foo (T.<^)
+```
+
+With `OVERLAPPING`
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/386
+instance {-# OVERLAPPING #-} Arbitrary (Set Int) where
+  arbitrary = undefined
+```
+
+#### With class constraints
+
+Short name
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/244
+instance Num a => C a
+```
+
+Long name
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/244
+instance Nuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuum a =>
+         C a where
+  f = undefined
+```
+
+#### Explicit foralls
+
+Without class constraints
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/218
+instance forall x. C
+```
+
+With class constraints
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/218
+instance forall x. Show x => C x
+```
+
+#### Symbol class constructor
+
+Infix
+
+```haskell
+instance Bool :?: Bool
+```
+
+Prefix
+
+```haskell
+instance (:?:) Int Bool
 ```
 
 ### Type synonym declarations
@@ -1317,15 +1378,6 @@ trans One e n =
     (emptyImage {notPresent = S.singleton (TransitionResult Two (Just A) n)})
 ```
 
-sheyll explicit forall in instances #218
-
-``` haskell
--- https://github.com/chrisdone/hindent/issues/218
-instance forall x. C
-
-instance forall x. Show x => C x
-```
-
 tfausak support shebangs #208
 
 ``` haskell given
@@ -1460,17 +1512,6 @@ newtype Foo =
            )
 ```
 
-ivan-timokhin Breaks instances with type operators #342
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/342
-instance Foo (->)
-
-instance Foo (^>)
-
-instance Foo (T.<^)
-```
-
 Indents record constructions and updates #358
 
 ```haskell
@@ -1587,14 +1628,6 @@ tfausak Class constraints cause too many newlines #244
 -- https://github.com/commercialhaskell/hindent/issues/244
 x :: Num a => a
 x = undefined
-
--- instance
-instance Num a => C a
-
--- long instance
-instance Nuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuum a =>
-         C a where
-  f = undefined
 ```
 
 expipiplus1 Always break before `::` on overlong signatures #390
@@ -1766,14 +1799,6 @@ foreign import ccall "test" test :: IO ()
 foreign import ccall safe "test" test :: IO ()
 
 foreign import ccall unsafe "test" test :: IO ()
-```
-
-ptek Reformatting of the {-# OVERLAPPING #-} pragma #386
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/386
-instance {-# OVERLAPPING #-} Arbitrary (Set Int) where
-  arbitrary = undefined
 ```
 
 cdsmith Quotes are dropped from package imports #480
