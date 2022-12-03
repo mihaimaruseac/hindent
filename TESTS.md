@@ -268,6 +268,9 @@ Prefix
 instance (:?:) Int Bool
 ```
 
+### Data declarations
+
+
 ### Type synonym declarations
 
 Short
