@@ -142,17 +142,6 @@ fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
 fun2 = undefined
 ```
 
-GADT declarations
-
-```haskell
-data Ty :: (* -> *) where
-  TCon
-    :: { field1 :: Int
-       , field2 :: Bool}
-    -> Ty Bool
-  TCon' :: (a :: *) -> a -> Ty a
-```
-
 ### Class declarations
 
 Default signatures
@@ -270,6 +259,16 @@ instance (:?:) Int Bool
 
 ### Data declarations
 
+GADT declarations
+
+```haskell
+data Ty :: (* -> *) where
+  TCon
+    :: { field1 :: Int
+       , field2 :: Bool}
+    -> Ty Bool
+  TCon' :: (a :: *) -> a -> Ty a
+```
 
 ### Type synonym declarations
 
