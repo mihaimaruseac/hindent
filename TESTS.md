@@ -259,6 +259,14 @@ instance (:?:) Int Bool
 
 ### Data declarations
 
+Multiple unnamed fields
+
+```haskell
+data Tree a
+  = Branch !a !(Tree a) !(Tree a)
+  | Leaf
+```
+
 GADT declarations
 
 ```haskell
@@ -272,11 +280,7 @@ data Ty :: (* -> *) where
 
 Data declarations
 
-``` haskell
-data Tree a
-  = Branch !a !(Tree a) !(Tree a)
-  | Leaf
-
+```haskell
 data Tree a
   = Branch
       !a
