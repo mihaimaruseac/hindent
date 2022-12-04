@@ -265,7 +265,7 @@ No fields
 data Foo
 ```
 
-Unbanged fields
+Multiple unnamed fields
 
 ```haskell
 data HttpException
