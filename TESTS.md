@@ -265,6 +265,13 @@ No fields
 data Foo
 ```
 
+Single field
+
+```haskell
+data Foo =
+  Foo
+```
+
 Multiple unnamed fields
 
 ```haskell
