@@ -305,6 +305,15 @@ data Foo =
   Foo !Int
 ```
 
+A record constructor with a field
+
+```haskell
+data Foo =
+  Foo
+    { foo :: Int
+    }
+```
+
 Multiple constructors with fields
 
 ```haskell
