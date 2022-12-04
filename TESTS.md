@@ -534,13 +534,6 @@ class A where
 
 ## Expressions
 
-Bang patterns in a lambda
-
-``` haskell
-f = \ !a -> undefined
--- \!a yields parse error on input ‘\!’
-```
-
 List comprehensions, short
 
 ``` haskell
@@ -787,6 +780,13 @@ Lazy patterns
 ``` haskell
 f = \ ~a -> undefined
 -- \~a yields parse error on input ‘\~’
+```
+
+Bang patterns
+
+``` haskell
+f = \ !a -> undefined
+-- \!a yields parse error on input ‘\!’
 ```
 
 ## Template Haskell
