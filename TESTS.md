@@ -273,7 +273,7 @@ data HttpException
   | MissingContentHeader
 ```
 
-A bang field
+A banged field
 
 ```haskell
 data Foo =
