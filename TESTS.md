@@ -338,6 +338,17 @@ data Expression a
       }
 ```
 
+A mixture of constructors with unnamed fields and record constructors
+
+```haskell
+data X
+  = X
+      { x :: Int
+      , x' :: Int
+      }
+  | X'
+```
+
 A field with a `forall` constraint
 
 ```haskell
