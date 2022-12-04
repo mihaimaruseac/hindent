@@ -661,14 +661,6 @@ for xs $ do
   right x
 ```
 
-Operator with lambda
-
-```haskell
-for xs $ \x -> do
-  left x
-  right x
-```
-
 Operator with lambda-case
 
 ```haskell
@@ -787,6 +779,14 @@ Bang patterns
 ``` haskell
 f = \ !a -> undefined
 -- \!a yields parse error on input ‘\!’
+```
+
+An infix operator with a lambda expression
+
+```haskell
+for xs $ \x -> do
+  left x
+  right x
 ```
 
 ## Template Haskell
