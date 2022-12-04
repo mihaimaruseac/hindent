@@ -769,14 +769,14 @@ type family Closed (a :: k) :: Bool where
 
 Lazy patterns
 
-``` haskell
+```haskell
 f = \ ~a -> undefined
 -- \~a yields parse error on input ‘\~’
 ```
 
 Bang patterns
 
-``` haskell
+```haskell
 f = \ !a -> undefined
 -- \!a yields parse error on input ‘\!’
 ```
