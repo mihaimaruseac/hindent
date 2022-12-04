@@ -273,6 +273,13 @@ data HttpException
   | MissingContentHeader
 ```
 
+A bang field
+
+```haskell
+data Foo =
+  Foo !Int
+```
+
 Multiple unnamed fields
 
 ```haskell
