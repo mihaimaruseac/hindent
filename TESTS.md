@@ -259,6 +259,14 @@ instance (:?:) Int Bool
 
 ### Data declarations
 
+Unbanged fields
+
+```haskell
+data HttpException
+  = InvalidStatusCode Int
+  | MissingContentHeader
+```
+
 Multiple unnamed fields
 
 ```haskell
@@ -297,10 +305,6 @@ data Ty :: (* -> *) where
 Data declarations
 
 ```haskell
-data HttpException
-  = InvalidStatusCode Int
-  | MissingContentHeader
-
 data Person =
   Person
     { firstName :: !String -- ^ First name
