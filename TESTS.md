@@ -291,18 +291,7 @@ data Tree a
   | Leaf
 ```
 
-GADT declarations
-
-```haskell
-data Ty :: (* -> *) where
-  TCon
-    :: { field1 :: Int
-       , field2 :: Bool}
-    -> Ty Bool
-  TCon' :: (a :: *) -> a -> Ty a
-```
-
-Data declarations
+Multiple constructors with fields
 
 ```haskell
 data Expression a
@@ -324,6 +313,17 @@ data Expression a
       { id :: Id Constructor
       , label :: a
       }
+```
+
+GADT declarations
+
+```haskell
+data Ty :: (* -> *) where
+  TCon
+    :: { field1 :: Int
+       , field2 :: Bool}
+    -> Ty Bool
+  TCon' :: (a :: *) -> a -> Ty a
 ```
 
 ### Type synonym declarations
