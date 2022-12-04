@@ -356,15 +356,6 @@ data Foo =
   Int :--> Int
 ```
 
-A field with a `forall` constraint
-
-```haskell
--- https://github.com/mihaimaruseac/hindent/issues/278
-data Link c1 c2 a c =
-  forall b. (c1 a b, c2 b c) =>
-            Link (Proxy b)
-```
-
 GADT declarations
 
 ```haskell
@@ -374,6 +365,27 @@ data Ty :: (* -> *) where
        , field2 :: Bool}
     -> Ty Bool
   TCon' :: (a :: *) -> a -> Ty a
+```
+
+#### Fields with `forall` constraints
+
+Single
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/278
+data Link c1 c2 a c =
+  forall b. (c1 a b, c2 b c) =>
+            Link (Proxy b)
+```
+
+Multiple
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/443
+{-# LANGUAGE ExistentialQuantification #-}
+
+data D =
+  forall a b c. D a b c
 ```
 
 #### Derivings
@@ -1775,16 +1787,6 @@ f :: Num a => a
 f = id
 
 x = f @Int 12
-```
-
-DavidEichmann Existential Quantification reordered #443
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/443
-{-# LANGUAGE ExistentialQuantification #-}
-
-data D =
-  forall a b c. D a b c
 ```
 
 michalrus `let ... in ...` inside of `do` breaks compilation #467
