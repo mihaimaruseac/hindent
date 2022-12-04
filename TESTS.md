@@ -267,6 +267,22 @@ data Tree a
   | Leaf
 ```
 
+A lot of unnamed fields in a constructor
+
+```haskell
+data Tree a
+  = Branch
+      !a
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
+      !(Tree a)
+  | Leaf
+```
+
 GADT declarations
 
 ```haskell
@@ -281,18 +297,6 @@ data Ty :: (* -> *) where
 Data declarations
 
 ```haskell
-data Tree a
-  = Branch
-      !a
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-  | Leaf
-
 data HttpException
   = InvalidStatusCode Int
   | MissingContentHeader
