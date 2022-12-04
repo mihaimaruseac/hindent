@@ -142,17 +142,6 @@ fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
 fun2 = undefined
 ```
 
-GADT declarations
-
-```haskell
-data Ty :: (* -> *) where
-  TCon
-    :: { field1 :: Int
-       , field2 :: Bool}
-    -> Ty Bool
-  TCon' :: (a :: *) -> a -> Ty a
-```
-
 ### Class declarations
 
 Default signatures
@@ -266,6 +255,170 @@ Prefix
 
 ```haskell
 instance (:?:) Int Bool
+```
+
+### Data declarations
+
+No fields
+
+```haskell
+data Foo
+```
+
+Single field
+
+```haskell
+data Foo =
+  Foo
+```
+
+Multiple unnamed fields
+
+```haskell
+data HttpException
+  = InvalidStatusCode Int
+  | MissingContentHeader
+```
+
+A lot of unnamed fields in a constructor
+
+```haskell
+data Foo =
+  Foo
+    String
+    String
+    String
+    String
+    String
+    String
+    String
+    String
+    String
+    String
+    String
+```
+
+A banged field
+
+```haskell
+data Foo =
+  Foo !Int
+```
+
+A record constructor with a field
+
+```haskell
+data Foo =
+  Foo
+    { foo :: Int
+    }
+```
+
+Multiple constructors with fields
+
+```haskell
+data Expression a
+  = VariableExpression
+      { id :: Id Expression
+      , label :: a
+      }
+  | FunctionExpression
+      { var :: Id Expression
+      , body :: Expression a
+      , label :: a
+      }
+  | ApplyExpression
+      { func :: Expression a
+      , arg :: Expression a
+      , label :: a
+      }
+  | ConstructorExpression
+      { id :: Id Constructor
+      , label :: a
+      }
+```
+
+A mixture of constructors with unnamed fields and record constructors
+
+```haskell
+data X
+  = X
+      { x :: Int
+      , x' :: Int
+      }
+  | X'
+```
+
+An infix data constructor
+
+```haskell
+data Foo =
+  Int :--> Int
+```
+
+GADT declarations
+
+```haskell
+data Ty :: (* -> *) where
+  TCon
+    :: { field1 :: Int
+       , field2 :: Bool}
+    -> Ty Bool
+  TCon' :: (a :: *) -> a -> Ty a
+```
+
+#### Fields with `forall` constraints
+
+Single
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/278
+data Link c1 c2 a c =
+  forall b. (c1 a b, c2 b c) =>
+            Link (Proxy b)
+```
+
+Multiple
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/443
+{-# LANGUAGE ExistentialQuantification #-}
+
+data D =
+  forall a b c. D a b c
+```
+
+#### Derivings
+
+With a single constructor
+
+```haskell
+data Simple =
+  Simple
+  deriving (Show)
+```
+
+With multiple constructors
+
+```haskell
+data Stuffs
+  = Things
+  | This
+  | That
+  deriving (Show)
+```
+
+With a record constructor
+
+```haskell
+-- From https://github.com/mihaimaruseac/hindent/issues/167
+data Person =
+  Person
+    { firstName :: !String -- ^ First name
+    , lastName :: !String -- ^ Last name
+    , age :: !Int -- ^ Age
+    }
+  deriving (Eq, Show)
 ```
 
 ### Type synonym declarations
@@ -965,70 +1118,6 @@ filter p (x:xs)
   | otherwise = filter p xs
 ```
 
-Data declarations
-
-``` haskell
-data Tree a
-  = Branch !a !(Tree a) !(Tree a)
-  | Leaf
-
-data Tree a
-  = Branch
-      !a
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-  | Leaf
-
-data HttpException
-  = InvalidStatusCode Int
-  | MissingContentHeader
-
-data Person =
-  Person
-    { firstName :: !String -- ^ First name
-    , lastName :: !String -- ^ Last name
-    , age :: !Int -- ^ Age
-    }
-
-data Expression a
-  = VariableExpression
-      { id :: Id Expression
-      , label :: a
-      }
-  | FunctionExpression
-      { var :: Id Expression
-      , body :: Expression a
-      , label :: a
-      }
-  | ApplyExpression
-      { func :: Expression a
-      , arg :: Expression a
-      , label :: a
-      }
-  | ConstructorExpression
-      { id :: Id Constructor
-      , label :: a
-      }
-```
-
-Spaces between deriving classes
-
-``` haskell
--- From https://github.com/chrisdone/hindent/issues/167
-data Person =
-  Person
-    { firstName :: !String -- ^ First name
-    , lastName :: !String -- ^ Last name
-    , age :: !Int -- ^ Age
-    }
-  deriving (Eq, Show)
-```
-
 Hanging lambdas
 
 ``` haskell
@@ -1436,20 +1525,6 @@ import ATooLongList (alpha, beta, delta, epsilon, eta, gamma, theta, zeta)
 import B
 ```
 
-radupopescu `deriving` keyword not aligned with pipe symbol for type declarations
-
-``` haskell
-data Stuffs
-  = Things
-  | This
-  | That
-  deriving (Show)
-
-data Simple =
-  Simple
-  deriving (Show)
-```
-
 sgraf812 top-level pragmas should not add an additional newline #255
 
 ``` haskell
@@ -1457,15 +1532,6 @@ sgraf812 top-level pragmas should not add an additional newline #255
 {-# INLINE f #-}
 f :: Int -> Int
 f n = n
-```
-
-ivan-timokhin variables swapped around in constraints #278
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/278
-data Link c1 c2 a c =
-  forall b. (c1 a b, c2 b c) =>
-            Link (Proxy b)
 ```
 
 ttuegel qualified infix sections get mangled #273
@@ -1587,39 +1653,6 @@ RecursiveDo `rec` and `mdo` keyword #328
 rec = undefined
 
 mdo = undefined
-```
-
-sophie-h Record syntax change in 5.2.2 #393
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/393
-data X
-  = X
-      { x :: Int
-      }
-  | X'
-
-data X =
-  X
-    { x :: Int
-    , x' :: Int
-    }
-
-data X
-  = X
-      { x :: Int
-      , x' :: Int
-      }
-  | X'
-```
-
-k-bx Infix data constructor gets reformatted into a parse error #328
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/328
-data Expect =
-  String :--> String
-  deriving (Show)
 ```
 
 tfausak Class constraints cause too many newlines #244
@@ -1754,16 +1787,6 @@ f :: Num a => a
 f = id
 
 x = f @Int 12
-```
-
-DavidEichmann Existential Quantification reordered #443
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/443
-{-# LANGUAGE ExistentialQuantification #-}
-
-data D =
-  forall a b c. D a b c
 ```
 
 michalrus `let ... in ...` inside of `do` breaks compilation #467
