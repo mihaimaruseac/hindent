@@ -259,6 +259,12 @@ instance (:?:) Int Bool
 
 ### Data declarations
 
+No fields
+
+```haskell
+data Foo
+```
+
 Unbanged fields
 
 ```haskell
