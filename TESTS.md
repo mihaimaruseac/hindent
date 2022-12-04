@@ -789,6 +789,16 @@ for xs $ \x -> do
   right x
 ```
 
+Nested lambdas
+
+```haskell
+foo :: IO ()
+foo =
+  alloca 10 $ \a ->
+    alloca 20 $ \b ->
+      cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
+```
+
 ## Template Haskell
 
 Expression brackets
