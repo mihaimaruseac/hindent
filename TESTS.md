@@ -349,6 +349,13 @@ data X
   | X'
 ```
 
+An infix data constructor
+
+```haskell
+data Foo =
+  Int :--> Int
+```
+
 A field with a `forall` constraint
 
 ```haskell
@@ -1634,15 +1641,6 @@ RecursiveDo `rec` and `mdo` keyword #328
 rec = undefined
 
 mdo = undefined
-```
-
-k-bx Infix data constructor gets reformatted into a parse error #328
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/328
-data Expect =
-  String :--> String
-  deriving (Show)
 ```
 
 tfausak Class constraints cause too many newlines #244
