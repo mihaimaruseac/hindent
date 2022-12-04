@@ -280,14 +280,6 @@ data Foo =
   Foo !Int
 ```
 
-Multiple unnamed fields
-
-```haskell
-data Tree a
-  = Branch !a !(Tree a) !(Tree a)
-  | Leaf
-```
-
 A lot of unnamed fields in a constructor
 
 ```haskell
