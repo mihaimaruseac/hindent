@@ -315,7 +315,38 @@ data Expression a
       }
 ```
 
-Derivings
+GADT declarations
+
+```haskell
+data Ty :: (* -> *) where
+  TCon
+    :: { field1 :: Int
+       , field2 :: Bool}
+    -> Ty Bool
+  TCon' :: (a :: *) -> a -> Ty a
+```
+
+#### Derivings
+
+With a single constructor
+
+```haskell
+data Simple =
+  Simple
+  deriving (Show)
+```
+
+With multiple constructors
+
+```haskell
+data Stuffs
+  = Things
+  | This
+  | That
+  deriving (Show)
+```
+
+With a record constructor
 
 ```haskell
 -- From https://github.com/mihaimaruseac/hindent/issues/167
@@ -326,17 +357,6 @@ data Person =
     , age :: !Int -- ^ Age
     }
   deriving (Eq, Show)
-```
-
-GADT declarations
-
-```haskell
-data Ty :: (* -> *) where
-  TCon
-    :: { field1 :: Int
-       , field2 :: Bool}
-    -> Ty Bool
-  TCon' :: (a :: *) -> a -> Ty a
 ```
 
 ### Type synonym declarations
@@ -1441,20 +1461,6 @@ import B
 ```haskell expect
 import ATooLongList (alpha, beta, delta, epsilon, eta, gamma, theta, zeta)
 import B
-```
-
-radupopescu `deriving` keyword not aligned with pipe symbol for type declarations
-
-``` haskell
-data Stuffs
-  = Things
-  | This
-  | That
-  deriving (Show)
-
-data Simple =
-  Simple
-  deriving (Show)
 ```
 
 sgraf812 top-level pragmas should not add an additional newline #255
