@@ -273,27 +273,29 @@ data HttpException
   | MissingContentHeader
 ```
 
+A lot of unnamed fields in a constructor
+
+```haskell
+data Foo =
+  Foo
+    String
+    String
+    String
+    String
+    String
+    String
+    String
+    String
+    String
+    String
+    String
+```
+
 A banged field
 
 ```haskell
 data Foo =
   Foo !Int
-```
-
-A lot of unnamed fields in a constructor
-
-```haskell
-data Tree a
-  = Branch
-      !a
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-      !(Tree a)
-  | Leaf
 ```
 
 Multiple constructors with fields
