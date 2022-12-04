@@ -305,13 +305,6 @@ data Ty :: (* -> *) where
 Data declarations
 
 ```haskell
-data Person =
-  Person
-    { firstName :: !String -- ^ First name
-    , lastName :: !String -- ^ Last name
-    , age :: !Int -- ^ Age
-    }
-
 data Expression a
   = VariableExpression
       { id :: Id Expression
