@@ -1130,22 +1130,6 @@ filter p (x:xs)
   | otherwise = filter p xs
 ```
 
-Hanging lambdas
-
-``` haskell
-bar :: IO ()
-bar =
-  forM_ [1, 2, 3] $ \n -> do
-    putStrLn "Here comes a number!"
-    print n
-
-foo :: IO ()
-foo =
-  alloca 10 $ \a ->
-    alloca 20 $ \b ->
-      cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
-```
-
 ## Comments
 
 Comments within a declaration
