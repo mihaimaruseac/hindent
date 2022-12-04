@@ -315,6 +315,19 @@ data Expression a
       }
 ```
 
+Derivings
+
+```haskell
+-- From https://github.com/mihaimaruseac/hindent/issues/167
+data Person =
+  Person
+    { firstName :: !String -- ^ First name
+    , lastName :: !String -- ^ Last name
+    , age :: !Int -- ^ Age
+    }
+  deriving (Eq, Show)
+```
+
 GADT declarations
 
 ```haskell
@@ -1021,19 +1034,6 @@ filter _ [] = []
 filter p (x:xs)
   | p x = x : filter p xs
   | otherwise = filter p xs
-```
-
-Spaces between deriving classes
-
-``` haskell
--- From https://github.com/chrisdone/hindent/issues/167
-data Person =
-  Person
-    { firstName :: !String -- ^ First name
-    , lastName :: !String -- ^ Last name
-    , age :: !Int -- ^ Age
-    }
-  deriving (Eq, Show)
 ```
 
 Hanging lambdas
