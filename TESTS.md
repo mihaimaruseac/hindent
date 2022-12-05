@@ -799,6 +799,9 @@ foo =
       cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
 ```
 
+### List comprehensions
+
+
 ## Template Haskell
 
 Expression brackets
