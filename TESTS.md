@@ -534,19 +534,6 @@ class A where
 
 ## Expressions
 
-Parallel list comprehension, long
-
-```haskell
-fun xs ys =
-  [ (alphaBetaGamma, deltaEpsilonZeta)
-  | x <- xs
-  , z <- zs
-  | y <- ys
-  , cond
-  , let t = t
-  ]
-```
-
 Record, short
 
 ``` haskell
@@ -801,6 +788,19 @@ Parallel list comprehension, short
 
 ```haskell
 zip xs ys = [(x, y) | x <- xs | y <- ys]
+```
+
+Long
+
+```haskell
+fun xs ys =
+  [ (alphaBetaGamma, deltaEpsilonZeta)
+  | x <- xs
+  , z <- zs
+  | y <- ys
+  , cond
+  , let t = t
+  ]
 ```
 
 ## Template Haskell
