@@ -784,7 +784,7 @@ defaultExtensions =
 
 #### Parallel list comprehensions
 
-Parallel list comprehension, short
+Short
 
 ```haskell
 zip xs ys = [(x, y) | x <- xs | y <- ys]
