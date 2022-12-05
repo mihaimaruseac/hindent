@@ -801,6 +801,8 @@ defaultExtensions =
   map EnableExtension badExtensions
 ```
 
+#### Parallel list comprehensions
+
 ## Template Haskell
 
 Expression brackets
