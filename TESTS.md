@@ -534,12 +534,6 @@ class A where
 
 ## Expressions
 
-Parallel list comprehension, short
-
-```haskell
-zip xs ys = [(x, y) | x <- xs | y <- ys]
-```
-
 Parallel list comprehension, long
 
 ```haskell
@@ -802,6 +796,12 @@ defaultExtensions =
 ```
 
 #### Parallel list comprehensions
+
+Parallel list comprehension, short
+
+```haskell
+zip xs ys = [(x, y) | x <- xs | y <- ys]
+```
 
 ## Template Haskell
 
