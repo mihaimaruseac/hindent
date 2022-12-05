@@ -534,12 +534,6 @@ class A where
 
 ## Expressions
 
-List comprehensions, short
-
-``` haskell
-map f xs = [f x | x <- xs]
-```
-
 List comprehensions, long
 
 ``` haskell
@@ -801,7 +795,11 @@ foo =
 
 ### List comprehensions
 
+Short
 
+```haskell
+map f xs = [f x | x <- xs]
+```
 ## Template Haskell
 
 Expression brackets
