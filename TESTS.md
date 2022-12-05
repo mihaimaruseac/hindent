@@ -534,20 +534,6 @@ class A where
 
 ## Expressions
 
-Lazy patterns in a lambda
-
-``` haskell
-f = \ ~a -> undefined
--- \~a yields parse error on input ‘\~’
-```
-
-Bang patterns in a lambda
-
-``` haskell
-f = \ !a -> undefined
--- \!a yields parse error on input ‘\!’
-```
-
 List comprehensions, short
 
 ``` haskell
@@ -675,14 +661,6 @@ for xs $ do
   right x
 ```
 
-Operator with lambda
-
-```haskell
-for xs $ \x -> do
-  left x
-  right x
-```
-
 Operator with lambda-case
 
 ```haskell
@@ -785,6 +763,40 @@ Closed type families
 ```haskell
 type family Closed (a :: k) :: Bool where
   Closed x = 'True
+```
+
+### Lambda expressions
+
+Lazy patterns
+
+```haskell
+f = \ ~a -> undefined
+-- \~a yields parse error on input ‘\~’
+```
+
+Bang patterns
+
+```haskell
+f = \ !a -> undefined
+-- \!a yields parse error on input ‘\!’
+```
+
+An infix operator with a lambda expression
+
+```haskell
+for xs $ \x -> do
+  left x
+  right x
+```
+
+Nested lambdas
+
+```haskell
+foo :: IO ()
+foo =
+  alloca 10 $ \a ->
+    alloca 20 $ \b ->
+      cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
 ```
 
 ## Template Haskell
@@ -1116,22 +1128,6 @@ filter _ [] = []
 filter p (x:xs)
   | p x = x : filter p xs
   | otherwise = filter p xs
-```
-
-Hanging lambdas
-
-``` haskell
-bar :: IO ()
-bar =
-  forM_ [1, 2, 3] $ \n -> do
-    putStrLn "Here comes a number!"
-    print n
-
-foo :: IO ()
-foo =
-  alloca 10 $ \a ->
-    alloca 20 $ \b ->
-      cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
 ```
 
 ## Comments
