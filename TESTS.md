@@ -534,14 +534,6 @@ class A where
 
 ## Expressions
 
-List comprehensions with operators
-
-```haskell
-defaultExtensions =
-  [e | e@EnableExtension {} <- knownExtensions] \\
-  map EnableExtension badExtensions
-```
-
 Parallel list comprehension, short
 
 ```haskell
@@ -799,6 +791,14 @@ defaultExtensions =
   , let c = d
     -- comment
   ]
+```
+
+With operators
+
+```haskell
+defaultExtensions =
+  [e | e@EnableExtension {} <- knownExtensions] \\
+  map EnableExtension badExtensions
 ```
 
 ## Template Haskell
