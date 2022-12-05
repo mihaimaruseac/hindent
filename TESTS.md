@@ -774,6 +774,23 @@ defaultExtensions =
   ]
 ```
 
+Another long one
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/357
+foo =
+  [ (x, y)
+  | x <- [1 .. 10]
+  , y <- [11 .. 20]
+  , even x
+  , even x
+  , even x
+  , even x
+  , even x
+  , odd y
+  ]
+```
+
 With operators
 
 ```haskell
@@ -1621,23 +1638,6 @@ neongreen "{" is lost when formatting "Foo{}" #366
 ```haskell
 -- https://github.com/chrisdone/hindent/issues/366
 foo = Nothing {}
-```
-
-jparoz Trailing space in list comprehension #357
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/357
-foo =
-  [ (x, y)
-  | x <- [1 .. 10]
-  , y <- [11 .. 20]
-  , even x
-  , even x
-  , even x
-  , even x
-  , even x
-  , odd y
-  ]
 ```
 
 ttuegel Record formatting applied to expressions with RecordWildCards #274
