@@ -545,16 +545,6 @@ strToMonth month =
     _ -> error $ "Unknown month " ++ month
 ```
 
-Operators, bad
-
-``` haskell
-x =
-  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
-  Just thisissolong <*>
-  Just stilllonger <*>
-  evenlonger
-```
-
 Operators, good
 
 ```haskell pending
@@ -779,6 +769,15 @@ fun xs ys =
 
 ### Operators
 
+Bad
+
+```haskell
+x =
+  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
+  Just thisissolong <*>
+  Just stilllonger <*>
+  evenlonger
+```
 
 ### Records
 
