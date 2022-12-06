@@ -808,6 +808,24 @@ commitToEvent gitFolderPath timezone commit =
     }
 ```
 
+Another long one
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/358
+foo =
+  assert
+    sanityCheck
+    BomSnapshotAggr
+      { snapshot = Just bs
+      , previousId = M.bomSnapshotHistoryPreviousId . entityVal <$> bsp
+      , nextId = M.bomSnapshotHistoryNextId . entityVal <$> bsn
+      , bomEx = bx''
+      , orderSubstitutes =
+          S.fromList . map OrderSubstituteAggrByCreatedAtAsc $ subs
+      , snapshotSubstitute = msub
+      }
+```
+
 Symbol constructor
 
 ```haskell
@@ -1595,23 +1613,6 @@ newtype Foo =
            , Foldable
            , Traversable
            )
-```
-
-Indents record constructions and updates #358
-
-```haskell
-foo =
-  assert
-    sanityCheck
-    BomSnapshotAggr
-      { snapshot = Just bs
-      , previousId = M.bomSnapshotHistoryPreviousId . entityVal <$> bsp
-      , nextId = M.bomSnapshotHistoryNextId . entityVal <$> bsn
-      , bomEx = bx''
-      , orderSubstitutes =
-          S.fromList . map OrderSubstituteAggrByCreatedAtAsc $ subs
-      , snapshotSubstitute = msub
-      }
 ```
 
 paraseba Deriving strategies with multiple deriving clauses
