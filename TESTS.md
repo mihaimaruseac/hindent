@@ -545,13 +545,6 @@ strToMonth month =
     _ -> error $ "Unknown month " ++ month
 ```
 
-Operator with lambda-case
-
-```haskell
-for xs $ \case
-  Left x -> x
-```
-
 Operator in parentheses
 
 ```haskell
@@ -777,6 +770,13 @@ With `do`
 for xs $ do
   left x
   right x
+```
+
+With lambda-case
+
+```haskell
+for xs $ \case
+  Left x -> x
 ```
 
 ### Records
