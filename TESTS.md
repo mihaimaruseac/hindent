@@ -534,14 +534,6 @@ class A where
 
 ## Expressions
 
-Record, short
-
-``` haskell
-getGitProvider :: EventProvider GitRecord ()
-getGitProvider =
-  EventProvider {getModuleName = "Git", getEvents = getRepoCommits}
-```
-
 Record, medium
 
 ``` haskell
@@ -801,6 +793,13 @@ list =
 
 ### Records
 
+Short
+
+``` haskell
+getGitProvider :: EventProvider GitRecord ()
+getGitProvider =
+  EventProvider {getModuleName = "Git", getEvents = getRepoCommits}
+```
 
 #### Parallel list comprehensions
 
