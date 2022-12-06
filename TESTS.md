@@ -795,7 +795,7 @@ list =
 
 Short
 
-``` haskell
+```haskell
 getGitProvider :: EventProvider GitRecord ()
 getGitProvider =
   EventProvider {getModuleName = "Git", getEvents = getRepoCommits}
