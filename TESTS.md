@@ -534,49 +534,6 @@ class A where
 
 ## Expressions
 
-Record, short
-
-``` haskell
-getGitProvider :: EventProvider GitRecord ()
-getGitProvider =
-  EventProvider {getModuleName = "Git", getEvents = getRepoCommits}
-```
-
-Record, medium
-
-``` haskell
-commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
-commitToEvent gitFolderPath timezone commit =
-  Event.Event
-    {pluginName = getModuleName getGitProvider, eventIcon = "glyphicon-cog"}
-```
-
-Record, long
-
-``` haskell
-commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
-commitToEvent gitFolderPath timezone commit =
-  Event.Event
-    { pluginName = getModuleName getGitProvider
-    , eventIcon = "glyphicon-cog"
-    , eventDate = localTimeToUTC timezone (commitDate commit)
-    }
-```
-
-Record with symbol constructor
-
-```haskell
-f = (:..?) {}
-```
-
-Record with symbol field
-
-```haskell
-f x = x {(..?) = wat}
-
-g x = Rec {(..?)}
-```
-
 Cases
 
 ``` haskell
@@ -818,6 +775,69 @@ fun xs ys =
   , cond
   , let t = t
   ]
+```
+
+### Records
+
+Short
+
+```haskell
+getGitProvider :: EventProvider GitRecord ()
+getGitProvider =
+  EventProvider {getModuleName = "Git", getEvents = getRepoCommits}
+```
+
+Medium
+
+```haskell
+commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
+commitToEvent gitFolderPath timezone commit =
+  Event.Event
+    {pluginName = getModuleName getGitProvider, eventIcon = "glyphicon-cog"}
+```
+
+Long
+
+```haskell
+commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
+commitToEvent gitFolderPath timezone commit =
+  Event.Event
+    { pluginName = getModuleName getGitProvider
+    , eventIcon = "glyphicon-cog"
+    , eventDate = localTimeToUTC timezone (commitDate commit)
+    }
+```
+
+Another long one
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/358
+foo =
+  assert
+    sanityCheck
+    BomSnapshotAggr
+      { snapshot = Just bs
+      , previousId = M.bomSnapshotHistoryPreviousId . entityVal <$> bsp
+      , nextId = M.bomSnapshotHistoryNextId . entityVal <$> bsn
+      , bomEx = bx''
+      , orderSubstitutes =
+          S.fromList . map OrderSubstituteAggrByCreatedAtAsc $ subs
+      , snapshotSubstitute = msub
+      }
+```
+
+Symbol constructor
+
+```haskell
+f = (:..?) {}
+```
+
+Symbol field
+
+```haskell
+f x = x {(..?) = wat}
+
+g x = Rec {(..?)}
 ```
 
 ## Template Haskell
@@ -1593,23 +1613,6 @@ newtype Foo =
            , Foldable
            , Traversable
            )
-```
-
-Indents record constructions and updates #358
-
-```haskell
-foo =
-  assert
-    sanityCheck
-    BomSnapshotAggr
-      { snapshot = Just bs
-      , previousId = M.bomSnapshotHistoryPreviousId . entityVal <$> bsp
-      , nextId = M.bomSnapshotHistoryNextId . entityVal <$> bsn
-      , bomEx = bx''
-      , orderSubstitutes =
-          S.fromList . map OrderSubstituteAggrByCreatedAtAsc $ subs
-      , snapshotSubstitute = msub
-      }
 ```
 
 paraseba Deriving strategies with multiple deriving clauses
