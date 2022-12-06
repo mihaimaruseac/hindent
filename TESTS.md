@@ -764,6 +764,27 @@ list =
   ]
 ```
 
+#### Parallel list comprehensions
+
+Short
+
+```haskell
+zip xs ys = [(x, y) | x <- xs | y <- ys]
+```
+
+Long
+
+```haskell
+fun xs ys =
+  [ (alphaBetaGamma, deltaEpsilonZeta)
+  | x <- xs
+  , z <- zs
+  | y <- ys
+  , cond
+  , let t = t
+  ]
+```
+
 ### Records
 
 Short
@@ -799,27 +820,6 @@ Symbol constructor
 
 ```haskell
 f = (:..?) {}
-```
-
-#### Parallel list comprehensions
-
-Short
-
-```haskell
-zip xs ys = [(x, y) | x <- xs | y <- ys]
-```
-
-Long
-
-```haskell
-fun xs ys =
-  [ (alphaBetaGamma, deltaEpsilonZeta)
-  | x <- xs
-  , z <- zs
-  | y <- ys
-  , cond
-  , let t = t
-  ]
 ```
 
 ## Template Haskell
