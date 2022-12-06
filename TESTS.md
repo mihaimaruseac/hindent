@@ -545,14 +545,6 @@ strToMonth month =
     _ -> error $ "Unknown month " ++ month
 ```
 
-Operator with `do`
-
-```haskell
-for xs $ do
-  left x
-  right x
-```
-
 Operator with lambda-case
 
 ```haskell
@@ -777,6 +769,14 @@ Good
 x =
   Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
   Just thisissolong <*> Just stilllonger <*> evenlonger
+```
+
+With `do`
+
+```haskell
+for xs $ do
+  left x
+  right x
 ```
 
 ### Records
