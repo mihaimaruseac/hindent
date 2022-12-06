@@ -534,14 +534,6 @@ class A where
 
 ## Expressions
 
-Record with symbol field
-
-```haskell
-f x = x {(..?) = wat}
-
-g x = Rec {(..?)}
-```
-
 Cases
 
 ``` haskell
@@ -820,6 +812,14 @@ Symbol constructor
 
 ```haskell
 f = (:..?) {}
+```
+
+Symbol field
+
+```haskell
+f x = x {(..?) = wat}
+
+g x = Rec {(..?)}
 ```
 
 ## Template Haskell
