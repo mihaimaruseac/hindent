@@ -534,12 +534,6 @@ class A where
 
 ## Expressions
 
-Record with symbol constructor
-
-```haskell
-f = (:..?) {}
-```
-
 Record with symbol field
 
 ```haskell
@@ -799,6 +793,12 @@ commitToEvent gitFolderPath timezone commit =
     , eventIcon = "glyphicon-cog"
     , eventDate = localTimeToUTC timezone (commitDate commit)
     }
+```
+
+Symbol constructor
+
+```haskell
+f = (:..?) {}
 ```
 
 #### Parallel list comprehensions
