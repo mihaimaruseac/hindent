@@ -777,6 +777,9 @@ fun xs ys =
   ]
 ```
 
+### Operators
+
+
 ### Records
 
 Short
