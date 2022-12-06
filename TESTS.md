@@ -799,6 +799,9 @@ list =
   ]
 ```
 
+### Records
+
+
 #### Parallel list comprehensions
 
 Short
