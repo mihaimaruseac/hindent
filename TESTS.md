@@ -534,18 +534,6 @@ class A where
 
 ## Expressions
 
-Record, long
-
-``` haskell
-commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
-commitToEvent gitFolderPath timezone commit =
-  Event.Event
-    { pluginName = getModuleName getGitProvider
-    , eventIcon = "glyphicon-cog"
-    , eventDate = localTimeToUTC timezone (commitDate commit)
-    }
-```
-
 Record with symbol constructor
 
 ```haskell
@@ -799,6 +787,18 @@ commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
 commitToEvent gitFolderPath timezone commit =
   Event.Event
     {pluginName = getModuleName getGitProvider, eventIcon = "glyphicon-cog"}
+```
+
+Long
+
+```haskell
+commitToEvent :: FolderPath -> TimeZone -> Commit -> Event.Event
+commitToEvent gitFolderPath timezone commit =
+  Event.Event
+    { pluginName = getModuleName getGitProvider
+    , eventIcon = "glyphicon-cog"
+    , eventDate = localTimeToUTC timezone (commitDate commit)
+    }
 ```
 
 #### Parallel list comprehensions
