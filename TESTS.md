@@ -534,53 +534,6 @@ class A where
 
 ## Expressions
 
-List comprehensions, short
-
-``` haskell
-map f xs = [f x | x <- xs]
-```
-
-List comprehensions, long
-
-``` haskell
-defaultExtensions =
-  [ e
-  | EnableExtension {extensionField1 = extensionField1} <-
-      knownExtensions knownExtensions
-  , let a = b
-    -- comment
-  , let c = d
-    -- comment
-  ]
-```
-
-List comprehensions with operators
-
-```haskell
-defaultExtensions =
-  [e | e@EnableExtension {} <- knownExtensions] \\
-  map EnableExtension badExtensions
-```
-
-Parallel list comprehension, short
-
-```haskell
-zip xs ys = [(x, y) | x <- xs | y <- ys]
-```
-
-Parallel list comprehension, long
-
-```haskell
-fun xs ys =
-  [ (alphaBetaGamma, deltaEpsilonZeta)
-  | x <- xs
-  , z <- zs
-  | y <- ys
-  , cond
-  , let t = t
-  ]
-```
-
 Record, short
 
 ``` haskell
@@ -710,22 +663,6 @@ Type application
 fun @Int 12
 ```
 
-Transform list comprehensions
-
-```haskell
-list =
-  [ (x, y, map the v)
-  | x <- [1 .. 10]
-  , y <- [1 .. 10]
-  , let v = x + y
-  , then group by v using groupWith
-  , then take 10
-  , then group using permutations
-  , t <- concat v
-  , then takeWhile by t < 3
-  ]
-```
-
 Type families
 
 ```haskell
@@ -797,6 +734,90 @@ foo =
   alloca 10 $ \a ->
     alloca 20 $ \b ->
       cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
+```
+
+### List comprehensions
+
+Short
+
+```haskell
+map f xs = [f x | x <- xs]
+```
+
+Long
+
+```haskell
+defaultExtensions =
+  [ e
+  | EnableExtension {extensionField1 = extensionField1} <-
+      knownExtensions knownExtensions
+  , let a = b
+    -- comment
+  , let c = d
+    -- comment
+  ]
+```
+
+Another long one
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/357
+foo =
+  [ (x, y)
+  | x <- [1 .. 10]
+  , y <- [11 .. 20]
+  , even x
+  , even x
+  , even x
+  , even x
+  , even x
+  , odd y
+  ]
+```
+
+With operators
+
+```haskell
+defaultExtensions =
+  [e | e@EnableExtension {} <- knownExtensions] \\
+  map EnableExtension badExtensions
+```
+
+Transform list comprehensions
+
+```haskell
+list =
+  [ (x, y, map the v)
+  | x <- [1 .. 10]
+  , y <- [1 .. 10]
+  , let v = x + y
+  , then group by v using groupWith
+  , then take 10
+  , then group using permutations
+  , t <- concat v
+  , then takeWhile by t < 3
+  ]
+```
+
+#### Parallel list comprehensions
+
+Short
+
+```haskell
+zip xs ys = [(x, y) | x <- xs | y <- ys]
+```
+
+Long
+
+```haskell
+fun xs ys =
+  [ (alphaBetaGamma, deltaEpsilonZeta)
+  | x <- xs
+  , z <- zs
+  | y <- ys
+  , cond
+  , let t = t
+  ]
 ```
 
 ## Template Haskell
@@ -1617,23 +1638,6 @@ neongreen "{" is lost when formatting "Foo{}" #366
 ```haskell
 -- https://github.com/chrisdone/hindent/issues/366
 foo = Nothing {}
-```
-
-jparoz Trailing space in list comprehension #357
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/357
-foo =
-  [ (x, y)
-  | x <- [1 .. 10]
-  , y <- [11 .. 20]
-  , even x
-  , even x
-  , even x
-  , even x
-  , even x
-  , odd y
-  ]
 ```
 
 ttuegel Record formatting applied to expressions with RecordWildCards #274
