@@ -545,12 +545,6 @@ strToMonth month =
     _ -> error $ "Unknown month " ++ month
 ```
 
-Operator in parentheses
-
-```haskell
-cat = (++)
-```
-
 Symbol data constructor in parentheses
 
 ```haskell
@@ -777,6 +771,12 @@ With lambda-case
 ```haskell
 for xs $ \case
   Left x -> x
+```
+
+In parentheses
+
+```haskell
+cat = (++)
 ```
 
 ### Records
