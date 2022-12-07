@@ -779,6 +779,15 @@ In parentheses
 cat = (++)
 ```
 
+`@` can be used to construct an operator unless `TypeApplications` is enabled.
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/421
+a @: b = a + b
+
+main = print (2 @: 2)
+```
+
 A data constructor enclosed by parentheses
 
 ```haskell
@@ -1764,15 +1773,6 @@ TimoFreiberg INLINE (and other) pragmas for operators are reformatted without pa
 ```haskell
 -- https://github.com/commercialhaskell/hindent/issues/415
 {-# NOINLINE (<>) #-}
-```
-
-andersk Cannot parse @: operator #421
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/421
-a @: b = a + b
-
-main = print (2 @: 2)
 ```
 
 NorfairKing Infix constructor pattern is broken #424
