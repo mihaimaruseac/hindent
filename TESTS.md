@@ -435,6 +435,12 @@ With annotations
 type family Id a :: *
 ```
 
+With injectivity annotations
+
+```haskell
+type family Id a = r | r -> a
+```
+
 ### Type synonym declarations
 
 Short
@@ -599,12 +605,6 @@ Type family instances
 
 ```haskell
 type instance Id Int = Int
-```
-
-Type family dependencies
-
-```haskell
-type family Id a = r | r -> a
 ```
 
 Binding implicit parameters
