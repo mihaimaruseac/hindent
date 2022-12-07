@@ -429,6 +429,12 @@ Without annotations
 type family Id a
 ```
 
+With annotations
+
+```haskell
+type family Id a :: *
+```
+
 ### Type synonym declarations
 
 Short
@@ -587,12 +593,6 @@ Type application
 {-# LANGUAGE TypeApplications #-}
 
 fun @Int 12
-```
-
-Type family annotations
-
-``` haskell
-type family Id a :: *
 ```
 
 Type family instances
