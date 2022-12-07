@@ -779,6 +779,16 @@ In parentheses
 cat = (++)
 ```
 
+A data constructor enclosed by parentheses
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/422
+data T a =
+  a :@ a
+
+test = (:@)
+```
+
 ### Records
 
 Short
@@ -1763,16 +1773,6 @@ andersk Cannot parse @: operator #421
 a @: b = a + b
 
 main = print (2 @: 2)
-```
-
-andersk Corrupts parenthesized type operators #422
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/422
-data T a =
-  a :@ a
-
-test = (:@)
 ```
 
 NorfairKing Infix constructor pattern is broken #424
