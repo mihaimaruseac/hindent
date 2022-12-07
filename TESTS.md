@@ -779,7 +779,7 @@ In parentheses
 cat = (++)
 ```
 
-The first character of an operator can be `@` unless `TypeApplications` is enabled.
+The first character of an infix operator can be `@` unless `TypeApplications` is enabled.
 
 ```haskell
 -- https://github.com/mihaimaruseac/hindent/issues/421
