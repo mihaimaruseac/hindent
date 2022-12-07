@@ -545,45 +545,6 @@ strToMonth month =
     _ -> error $ "Unknown month " ++ month
 ```
 
-Operators, bad
-
-``` haskell
-x =
-  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
-  Just thisissolong <*>
-  Just stilllonger <*>
-  evenlonger
-```
-
-Operators, good
-
-```haskell pending
-x =
-  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
-  Just thisissolong <*> Just stilllonger <*> evenlonger
-```
-
-Operator with `do`
-
-```haskell
-for xs $ do
-  left x
-  right x
-```
-
-Operator with lambda-case
-
-```haskell
-for xs $ \case
-  Left x -> x
-```
-
-Operator in parentheses
-
-```haskell
-cat = (++)
-```
-
 Symbol data constructor in parentheses
 
 ```haskell
@@ -775,6 +736,66 @@ fun xs ys =
   , cond
   , let t = t
   ]
+```
+
+### Operators
+
+Bad
+
+```haskell
+x =
+  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
+  Just thisissolong <*>
+  Just stilllonger <*>
+  evenlonger
+```
+
+Good
+
+```haskell pending
+x =
+  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
+  Just thisissolong <*> Just stilllonger <*> evenlonger
+```
+
+With `do`
+
+```haskell
+for xs $ do
+  left x
+  right x
+```
+
+With lambda-case
+
+```haskell
+for xs $ \case
+  Left x -> x
+```
+
+In parentheses
+
+```haskell
+cat = (++)
+```
+
+The first character of an infix operator can be `@` unless `TypeApplications` is enabled.
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/421
+a @: b = a + b
+
+main = print (2 @: 2)
+```
+
+A data constructor enclosed by parentheses
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/422
+data T a =
+  a :@ a
+
+test = (:@)
 ```
 
 ### Records
@@ -1752,25 +1773,6 @@ TimoFreiberg INLINE (and other) pragmas for operators are reformatted without pa
 ```haskell
 -- https://github.com/commercialhaskell/hindent/issues/415
 {-# NOINLINE (<>) #-}
-```
-
-andersk Cannot parse @: operator #421
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/421
-a @: b = a + b
-
-main = print (2 @: 2)
-```
-
-andersk Corrupts parenthesized type operators #422
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/422
-data T a =
-  a :@ a
-
-test = (:@)
 ```
 
 NorfairKing Infix constructor pattern is broken #424
