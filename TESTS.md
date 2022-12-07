@@ -421,6 +421,9 @@ data Person =
   deriving (Eq, Show)
 ```
 
+### Type family declarations
+
+
 ### Type synonym declarations
 
 Short
