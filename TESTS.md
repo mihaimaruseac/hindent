@@ -423,6 +423,11 @@ data Person =
 
 ### Type family declarations
 
+Without annotations
+
+```haskell
+type family Id a
+```
 
 ### Type synonym declarations
 
@@ -582,12 +587,6 @@ Type application
 {-# LANGUAGE TypeApplications #-}
 
 fun @Int 12
-```
-
-Type families
-
-```haskell
-type family Id a
 ```
 
 Type family annotations
