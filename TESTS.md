@@ -132,16 +132,6 @@ import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
 
 ## Declarations
 
-Type declaration with infix promoted type constructor
-
-```haskell
-fun1 :: Def ('[ Ref s (Stored Uint32), IBool] 'T.:-> IBool)
-fun1 = undefined
-
-fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
-fun2 = undefined
-```
-
 ### Class declarations
 
 Default signatures
@@ -449,6 +439,17 @@ type family Closed (a :: k) :: Bool where
 ```
 
 ### Type signature declarations
+
+with infix promoted type constructor
+
+```haskell
+fun1 :: Def ('[ Ref s (Stored Uint32), IBool] 'T.:-> IBool)
+fun1 = undefined
+
+fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
+fun2 = undefined
+```
+
 ### Type synonym declarations
 
 Short
