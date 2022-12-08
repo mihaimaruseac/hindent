@@ -476,6 +476,17 @@ Tuples
 fun :: (a, b, c) -> (a, b)
 ```
 
+Promoted list (issue #348)
+
+```haskell
+a :: A '[ 'True]
+a = undefined
+
+-- nested promoted list with multiple elements.
+b :: A '[ '[ 'True, 'False], '[ 'False, 'True]]
+b = undefined
+```
+
 #### Symbol type constructors
 
 Infix
@@ -969,17 +980,6 @@ g =
 ```
 
 ## Type signatures
-
-Promoted list (issue #348)
-
-```haskell
-a :: A '[ 'True]
-a = undefined
-
--- nested promoted list with multiple elements.
-b :: A '[ '[ 'True, 'False], '[ 'False, 'True]]
-b = undefined
-```
 
 Promoted list with a tuple (issue #348)
 
