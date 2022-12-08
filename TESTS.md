@@ -448,6 +448,12 @@ longLongFunction ::
   -> StateT s (WriterT w (ReaderT r m)) a
 ```
 
+Class constraints
+
+```haskell
+fun :: (Class a, Class b) => a -> b -> c
+```
+
 Class constraints should leave `::` on same line
 
 ```haskell
@@ -922,12 +928,6 @@ g =
 ```
 
 ## Type signatures
-
-Class constraints
-
-``` haskell
-fun :: (Class a, Class b) => a -> b -> c
-```
 
 Symbol class constructor in class constraint
 
