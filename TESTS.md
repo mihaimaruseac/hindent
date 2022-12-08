@@ -448,7 +448,19 @@ longLongFunction ::
   -> StateT s (WriterT w (ReaderT r m)) a
 ```
 
-Class constraints
+with infix promoted type constructor
+
+```haskell
+fun1 :: Def ('[ Ref s (Stored Uint32), IBool] 'T.:-> IBool)
+fun1 = undefined
+
+fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
+fun2 = undefined
+```
+
+#### Type signature with class constraints
+
+Short
 
 ```haskell
 fun :: (Class a, Class b) => a -> b -> c
@@ -463,16 +475,6 @@ fun ::
   => fooooooooooo bar mu zot
   -> fooooooooooo bar mu zot
   -> c
-```
-
-with infix promoted type constructor
-
-```haskell
-fun1 :: Def ('[ Ref s (Stored Uint32), IBool] 'T.:-> IBool)
-fun1 = undefined
-
-fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
-fun2 = undefined
 ```
 
 ### Type synonym declarations
