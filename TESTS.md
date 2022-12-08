@@ -448,6 +448,17 @@ longLongFunction ::
   -> StateT s (WriterT w (ReaderT r m)) a
 ```
 
+Class constraints should leave `::` on same line
+
+```haskell
+-- see https://github.com/mihaimaruseac/hindent/pull/266#issuecomment-244182805
+fun ::
+     (Class a, Class b)
+  => fooooooooooo bar mu zot
+  -> fooooooooooo bar mu zot
+  -> c
+```
+
 with infix promoted type constructor
 
 ```haskell
@@ -911,17 +922,6 @@ g =
 ```
 
 ## Type signatures
-
-Class constraints should leave `::` on same line
-
-``` haskell
--- see https://github.com/chrisdone/hindent/pull/266#issuecomment-244182805
-fun ::
-     (Class a, Class b)
-  => fooooooooooo bar mu zot
-  -> fooooooooooo bar mu zot
-  -> c
-```
 
 Class constraints
 
