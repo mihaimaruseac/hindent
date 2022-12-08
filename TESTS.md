@@ -458,6 +458,12 @@ fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
 fun2 = undefined
 ```
 
+Quasiquotes in types
+
+```haskell
+fun :: [a|bc|]
+```
+
 Tuples
 
 ``` haskell
@@ -943,12 +949,6 @@ g =
 ```
 
 ## Type signatures
-
-Quasiquotes in types
-
-```haskell
-fun :: [a|bc|]
-```
 
 Implicit parameters
 
