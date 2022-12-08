@@ -421,6 +421,33 @@ data Person =
   deriving (Eq, Show)
 ```
 
+### Type family declarations
+
+Without annotations
+
+```haskell
+type family Id a
+```
+
+With annotations
+
+```haskell
+type family Id a :: *
+```
+
+With injectivity annotations
+
+```haskell
+type family Id a = r | r -> a
+```
+
+Closed type families
+
+```haskell
+type family Closed (a :: k) :: Bool where
+  Closed x = 'True
+```
+
 ### Type synonym declarations
 
 Short
@@ -581,28 +608,10 @@ Type application
 fun @Int 12
 ```
 
-Type families
-
-```haskell
-type family Id a
-```
-
-Type family annotations
-
-``` haskell
-type family Id a :: *
-```
-
 Type family instances
 
 ```haskell
 type instance Id Int = Int
-```
-
-Type family dependencies
-
-```haskell
-type family Id a = r | r -> a
 ```
 
 Binding implicit parameters
@@ -611,13 +620,6 @@ Binding implicit parameters
 f =
   let ?x = 42
    in f
-```
-
-Closed type families
-
-```haskell
-type family Closed (a :: k) :: Bool where
-  Closed x = 'True
 ```
 
 ### Lambda expressions
