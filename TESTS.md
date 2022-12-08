@@ -489,6 +489,17 @@ b :: A '[ '[ 'True, 'False], '[ 'False, 'True]]
 b = undefined
 ```
 
+Promoted list with a tuple (issue #348)
+
+```haskell
+a :: A '[ '( a, b, c, d)]
+a = undefined
+
+-- nested promoted tuples.
+b :: A '[ '( 'True, 'False, '[], '( 'False, 'True))]
+b = undefined
+```
+
 #### Symbol type constructors
 
 Infix
@@ -982,17 +993,6 @@ g =
 ```
 
 ## Type signatures
-
-Promoted list with a tuple (issue #348)
-
-```haskell
-a :: A '[ '( a, b, c, d)]
-a = undefined
-
--- nested promoted tuples.
-b :: A '[ '( 'True, 'False, '[], '( 'False, 'True))]
-b = undefined
-```
 
 Prefix promoted symbol type constructor
 
