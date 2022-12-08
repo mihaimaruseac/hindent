@@ -477,6 +477,13 @@ fun ::
   -> c
 ```
 
+Symbol class constructor in class constraint
+
+```haskell
+f :: (a :?: b) => (a, b)
+f' :: ((:?:) a b) => (a, b)
+```
+
 ### Type synonym declarations
 
 Short
@@ -930,13 +937,6 @@ g =
 ```
 
 ## Type signatures
-
-Symbol class constructor in class constraint
-
-```haskell
-f :: (a :?: b) => (a, b)
-f' :: ((:?:) a b) => (a, b)
-```
 
 Tuples
 
