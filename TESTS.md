@@ -458,6 +458,12 @@ fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
 fun2 = undefined
 ```
 
+Implicit parameters
+
+```haskell
+f :: (?x :: Int) => Int
+```
+
 Quasiquotes in types
 
 ```haskell
@@ -949,12 +955,6 @@ g =
 ```
 
 ## Type signatures
-
-Implicit parameters
-
-```haskell
-f :: (?x :: Int) => Int
-```
 
 Symbol type constructor
 
