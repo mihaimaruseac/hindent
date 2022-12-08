@@ -448,6 +448,7 @@ type family Closed (a :: k) :: Bool where
   Closed x = 'True
 ```
 
+### Type signature declarations
 ### Type synonym declarations
 
 Short
