@@ -464,6 +464,13 @@ Implicit parameters
 f :: (?x :: Int) => Int
 ```
 
+Symbol type constructor
+
+```haskell
+f :: a :?: b
+f' :: (:?:) a b
+```
+
 Quasiquotes in types
 
 ```haskell
@@ -955,13 +962,6 @@ g =
 ```
 
 ## Type signatures
-
-Symbol type constructor
-
-```haskell
-f :: a :?: b
-f' :: (:?:) a b
-```
 
 Promoted list (issue #348)
 
