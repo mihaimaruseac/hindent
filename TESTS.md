@@ -500,6 +500,15 @@ b :: A '[ '( 'True, 'False, '[], '( 'False, 'True))]
 b = undefined
 ```
 
+Prefix promoted symbol type constructor
+
+```haskell
+a :: '(T.:->) 'True 'False
+b :: (T.:->) 'True 'False
+c :: '(:->) 'True 'False
+d :: (:->) 'True 'False
+```
+
 #### Symbol type constructors
 
 Infix
@@ -990,17 +999,6 @@ g =
   case x of
     $(mkPat y z) -> True
     _ -> False
-```
-
-## Type signatures
-
-Prefix promoted symbol type constructor
-
-```haskell
-a :: '(T.:->) 'True 'False
-b :: (T.:->) 'True 'False
-c :: '(:->) 'True 'False
-d :: (:->) 'True 'False
 ```
 
 ## Function declarations
