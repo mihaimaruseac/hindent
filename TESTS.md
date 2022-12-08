@@ -448,16 +448,6 @@ longLongFunction ::
   -> StateT s (WriterT w (ReaderT r m)) a
 ```
 
-With infix promoted type constructor
-
-```haskell
-fun1 :: Def ('[ Ref s (Stored Uint32), IBool] 'T.:-> IBool)
-fun1 = undefined
-
-fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
-fun2 = undefined
-```
-
 Implicit parameters
 
 ```haskell
@@ -474,6 +464,18 @@ Tuples
 
 ``` haskell
 fun :: (a, b, c) -> (a, b)
+```
+
+#### Promoted types
+
+Promoted infix type constructor
+
+```haskell
+fun1 :: Def ('[ Ref s (Stored Uint32), IBool] 'T.:-> IBool)
+fun1 = undefined
+
+fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
+fun2 = undefined
 ```
 
 Promoted list (issue #348)
