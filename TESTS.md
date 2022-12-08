@@ -458,6 +458,12 @@ fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
 fun2 = undefined
 ```
 
+Tuples
+
+``` haskell
+fun :: (a, b, c) -> (a, b)
+```
+
 #### Type signature with class constraints
 
 Short
@@ -937,12 +943,6 @@ g =
 ```
 
 ## Type signatures
-
-Tuples
-
-``` haskell
-fun :: (a, b, c) -> (a, b)
-```
 
 Quasiquotes in types
 
