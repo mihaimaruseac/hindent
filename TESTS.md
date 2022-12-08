@@ -448,7 +448,7 @@ longLongFunction ::
   -> StateT s (WriterT w (ReaderT r m)) a
 ```
 
-with infix promoted type constructor
+With infix promoted type constructor
 
 ```haskell
 fun1 :: Def ('[ Ref s (Stored Uint32), IBool] 'T.:-> IBool)
