@@ -459,6 +459,19 @@ someFunctionSignature ::
   -> Overflow (The Line Limit)
 ```
 
+A long type is broken into lines
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/359
+thing ::
+     ( ResB.BomEx
+     , Maybe [( Entity BomSnapshot
+              , ( [ResBS.OrderSubstituteAggr]
+                , ( Maybe (Entity BomSnapshotHistory)
+                  , Maybe (Entity BomSnapshotHistory))))])
+  -> [(ResB.BomEx, Maybe ResBS.BomSnapshotAggr)]
+```
+
 Implicit parameters
 
 ```haskell
@@ -1709,19 +1722,6 @@ RecursiveDo `rec` and `mdo` keyword #328
 rec = undefined
 
 mdo = undefined
-```
-
-ocharles Type application differs from function application (leading to long lines) #359
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/359
-thing ::
-     ( ResB.BomEx
-     , Maybe [( Entity BomSnapshot
-              , ( [ResBS.OrderSubstituteAggr]
-                , ( Maybe (Entity BomSnapshotHistory)
-                  , Maybe (Entity BomSnapshotHistory))))])
-  -> [(ResB.BomEx, Maybe ResBS.BomSnapshotAggr)]
 ```
 
 NorfairKing Do as left-hand side of an infix operation #296
