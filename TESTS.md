@@ -448,6 +448,20 @@ longLongFunction ::
   -> StateT s (WriterT w (ReaderT r m)) a
 ```
 
+Always break before `::` on overlong signatures
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/390
+fun :: Is => Short
+fun = undefined
+
+someFunctionSignature ::
+     Wiiiiiiiiiiiiiiiiith
+  -> Enough
+  -> (Arguments -> To ())
+  -> Overflow (The Line Limit)
+```
+
 Implicit parameters
 
 ```haskell
@@ -1698,20 +1712,6 @@ tfausak Class constraints cause too many newlines #244
 -- https://github.com/commercialhaskell/hindent/issues/244
 x :: Num a => a
 x = undefined
-```
-
-expipiplus1 Always break before `::` on overlong signatures #390
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/390
-fun :: Is => Short
-fun = undefined
-
-someFunctionSignature ::
-     Wiiiiiiiiiiiiiiiiith
-  -> Enough
-  -> (Arguments -> To ())
-  -> Overflow (The Line Limit)
 ```
 
 ocharles Type application differs from function application (leading to long lines) #359
