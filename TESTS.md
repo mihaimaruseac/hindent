@@ -440,13 +440,18 @@ type family Closed (a :: k) :: Bool where
 
 ### Type signature declarations
 
-Always break after `::` on overlong signatures
+Short
 
 ```haskell
 -- https://github.com/mihaimaruseac/hindent/issues/390
 fun :: Is => Short
 fun = undefined
+```
 
+Always break after `::` on overlong signatures
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/390
 someFunctionSignature ::
      Wiiiiiiiiiiiiiiiiith
   -> Enough
@@ -538,7 +543,15 @@ f' :: (:?:) a b
 
 #### Type signature with class constraints
 
-Short
+Single
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/244
+x :: Num a => a
+x = undefined
+```
+
+Multiple
 
 ```haskell
 fun :: (Class a, Class b) => a -> b -> c
@@ -1696,14 +1709,6 @@ RecursiveDo `rec` and `mdo` keyword #328
 rec = undefined
 
 mdo = undefined
-```
-
-tfausak Class constraints cause too many newlines #244
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/244
-x :: Num a => a
-x = undefined
 ```
 
 ocharles Type application differs from function application (leading to long lines) #359
