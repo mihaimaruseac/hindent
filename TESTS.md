@@ -466,6 +466,13 @@ Tuples
 fun :: (a, b, c) -> (a, b)
 ```
 
+Infix operator
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/301
+(+) :: ()
+```
+
 #### Promoted types
 
 Promoted infix type constructor
@@ -1623,13 +1630,6 @@ ys = (++) [] []
 
 cons :: V.Vector a -> V.Vector a -> V.Vector a
 cons = (V.++)
-```
-
-ivan-timokhin breaks operators type signatures #301
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/301
-(+) :: ()
 ```
 
 cdepillabout Long deriving clauses are not reformatted #289
