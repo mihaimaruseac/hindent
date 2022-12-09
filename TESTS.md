@@ -444,7 +444,7 @@ Short
 
 ```haskell
 -- https://github.com/mihaimaruseac/hindent/issues/390
-fun :: Is => Short
+fun :: Short
 fun = undefined
 ```
 
