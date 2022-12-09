@@ -132,16 +132,6 @@ import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
 
 ## Declarations
 
-Type declaration with infix promoted type constructor
-
-```haskell
-fun1 :: Def ('[ Ref s (Stored Uint32), IBool] 'T.:-> IBool)
-fun1 = undefined
-
-fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
-fun2 = undefined
-```
-
 ### Class declarations
 
 Default signatures
@@ -446,6 +436,156 @@ Closed type families
 ```haskell
 type family Closed (a :: k) :: Bool where
   Closed x = 'True
+```
+
+### Type signature declarations
+
+Short
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/390
+fun :: Short
+fun = undefined
+```
+
+Always break after `::` on overlong signatures
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/390
+someFunctionSignature ::
+     Wiiiiiiiiiiiiiiiiith
+  -> Enough
+  -> (Arguments -> To ())
+  -> Overflow (The Line Limit)
+```
+
+A long type is broken into lines
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/359
+thing ::
+     ( ResB.BomEx
+     , Maybe [( Entity BomSnapshot
+              , ( [ResBS.OrderSubstituteAggr]
+                , ( Maybe (Entity BomSnapshotHistory)
+                  , Maybe (Entity BomSnapshotHistory))))])
+  -> [(ResB.BomEx, Maybe ResBS.BomSnapshotAggr)]
+```
+
+Implicit parameters
+
+```haskell
+f :: (?x :: Int) => Int
+```
+
+Quasiquotes in types
+
+```haskell
+fun :: [a|bc|]
+```
+
+Tuples
+
+```haskell
+fun :: (a, b, c) -> (a, b)
+```
+
+Infix operator
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/301
+(+) :: ()
+```
+
+#### Promoted types
+
+Promoted infix type constructor
+
+```haskell
+fun1 :: Def ('[ Ref s (Stored Uint32), IBool] 'T.:-> IBool)
+fun1 = undefined
+
+fun2 :: Def ('[ Ref s (Stored Uint32), IBool] ':-> IBool)
+fun2 = undefined
+```
+
+Promoted list (issue #348)
+
+```haskell
+a :: A '[ 'True]
+a = undefined
+
+-- nested promoted list with multiple elements.
+b :: A '[ '[ 'True, 'False], '[ 'False, 'True]]
+b = undefined
+```
+
+Promoted list with a tuple (issue #348)
+
+```haskell
+a :: A '[ '( a, b, c, d)]
+a = undefined
+
+-- nested promoted tuples.
+b :: A '[ '( 'True, 'False, '[], '( 'False, 'True))]
+b = undefined
+```
+
+Prefix promoted symbol type constructor
+
+```haskell
+a :: '(T.:->) 'True 'False
+b :: (T.:->) 'True 'False
+c :: '(:->) 'True 'False
+d :: (:->) 'True 'False
+```
+
+#### Symbol type constructors
+
+Infix
+
+```haskell
+f :: a :?: b
+```
+
+Prefix
+
+```haskell
+f' :: (:?:) a b
+```
+
+#### Type signature with class constraints
+
+Single
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/244
+x :: Num a => a
+x = undefined
+```
+
+Multiple
+
+```haskell
+fun :: (Class a, Class b) => a -> b -> c
+```
+
+Class constraints should leave `::` on same line
+
+```haskell
+-- see https://github.com/mihaimaruseac/hindent/pull/266#issuecomment-244182805
+fun ::
+     (Class a, Class b)
+  => fooooooooooo bar mu zot
+  -> fooooooooooo bar mu zot
+  -> c
+```
+
+Symbol class constructor in class constraint
+
+```haskell
+f :: (a :?: b) => (a, b)
+f' :: ((:?:) a b) => (a, b)
 ```
 
 ### Type synonym declarations
@@ -898,96 +1038,6 @@ g =
   case x of
     $(mkPat y z) -> True
     _ -> False
-```
-
-## Type signatures
-
-Long argument list should line break
-
-```haskell
-longLongFunction ::
-     ReaderT r (WriterT w (StateT s m)) a
-  -> StateT s (WriterT w (ReaderT r m)) a
-```
-
-Class constraints should leave `::` on same line
-
-``` haskell
--- see https://github.com/chrisdone/hindent/pull/266#issuecomment-244182805
-fun ::
-     (Class a, Class b)
-  => fooooooooooo bar mu zot
-  -> fooooooooooo bar mu zot
-  -> c
-```
-
-Class constraints
-
-``` haskell
-fun :: (Class a, Class b) => a -> b -> c
-```
-
-Symbol class constructor in class constraint
-
-```haskell
-f :: (a :?: b) => (a, b)
-f' :: ((:?:) a b) => (a, b)
-```
-
-Tuples
-
-``` haskell
-fun :: (a, b, c) -> (a, b)
-```
-
-Quasiquotes in types
-
-```haskell
-fun :: [a|bc|]
-```
-
-Implicit parameters
-
-```haskell
-f :: (?x :: Int) => Int
-```
-
-Symbol type constructor
-
-```haskell
-f :: a :?: b
-f' :: (:?:) a b
-```
-
-Promoted list (issue #348)
-
-```haskell
-a :: A '[ 'True]
-a = undefined
-
--- nested promoted list with multiple elements.
-b :: A '[ '[ 'True, 'False], '[ 'False, 'True]]
-b = undefined
-```
-
-Promoted list with a tuple (issue #348)
-
-```haskell
-a :: A '[ '( a, b, c, d)]
-a = undefined
-
--- nested promoted tuples.
-b :: A '[ '( 'True, 'False, '[], '( 'False, 'True))]
-b = undefined
-```
-
-Prefix promoted symbol type constructor
-
-```haskell
-a :: '(T.:->) 'True 'False
-b :: (T.:->) 'True 'False
-c :: '(:->) 'True 'False
-d :: (:->) 'True 'False
 ```
 
 ## Function declarations
@@ -1614,13 +1664,6 @@ cons :: V.Vector a -> V.Vector a -> V.Vector a
 cons = (V.++)
 ```
 
-ivan-timokhin breaks operators type signatures #301
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/301
-(+) :: ()
-```
-
 cdepillabout Long deriving clauses are not reformatted #289
 
 ```haskell
@@ -1679,41 +1722,6 @@ RecursiveDo `rec` and `mdo` keyword #328
 rec = undefined
 
 mdo = undefined
-```
-
-tfausak Class constraints cause too many newlines #244
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/244
-x :: Num a => a
-x = undefined
-```
-
-expipiplus1 Always break before `::` on overlong signatures #390
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/390
-fun :: Is => Short
-fun = undefined
-
-someFunctionSignature ::
-     Wiiiiiiiiiiiiiiiiith
-  -> Enough
-  -> (Arguments -> To ())
-  -> Overflow (The Line Limit)
-```
-
-ocharles Type application differs from function application (leading to long lines) #359
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/359
-thing ::
-     ( ResB.BomEx
-     , Maybe [( Entity BomSnapshot
-              , ( [ResBS.OrderSubstituteAggr]
-                , ( Maybe (Entity BomSnapshotHistory)
-                  , Maybe (Entity BomSnapshotHistory))))])
-  -> [(ResB.BomEx, Maybe ResBS.BomSnapshotAggr)]
 ```
 
 NorfairKing Do as left-hand side of an infix operation #296
