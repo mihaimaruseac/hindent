@@ -440,14 +440,6 @@ type family Closed (a :: k) :: Bool where
 
 ### Type signature declarations
 
-Long argument list should line break
-
-```haskell
-longLongFunction ::
-     ReaderT r (WriterT w (StateT s m)) a
-  -> StateT s (WriterT w (ReaderT r m)) a
-```
-
 Always break after `::` on overlong signatures
 
 ```haskell
