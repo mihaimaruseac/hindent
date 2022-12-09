@@ -701,17 +701,6 @@ class A where
 
 ## Expressions
 
-Cases
-
-``` haskell
-strToMonth :: String -> Int
-strToMonth month =
-  case month of
-    "Jan" -> 1
-    "Feb" -> 2
-    _ -> error $ "Unknown month " ++ month
-```
-
 Symbol data constructor in parentheses
 
 ```haskell
@@ -760,6 +749,53 @@ Binding implicit parameters
 f =
   let ?x = 42
    in f
+```
+
+### Case expressions
+
+Normal case
+
+```haskell
+strToMonth :: String -> Int
+strToMonth month =
+  case month of
+    "Jan" -> 1
+    "Feb" -> 2
+    _ -> error $ "Unknown month " ++ month
+```
+
+Inside a `where` and `do`
+
+```haskell
+g x =
+  case x of
+    a -> x
+  where
+    foo =
+      case x of
+        _ -> do
+          launchMissiles
+      where
+        y = 2
+```
+
+Empty case
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/414
+{-# LANGUAGE EmptyCase #-}
+
+f1 = case () of {}
+```
+
+Empty lambda case
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/414
+{-# LANGUAGE EmptyCase #-}
+{-# LANGUAGE LambdaCase #-}
+
+f2 = \case {}
 ```
 
 ### Lambda expressions
@@ -1082,21 +1118,6 @@ x =
          Just x -> e
          Nothing -> p
      | otherwise -> e
-```
-
-Case inside a `where` and `do`
-
-``` haskell
-g x =
-  case x of
-    a -> x
-  where
-    foo =
-      case x of
-        _ -> do
-          launchMissiles
-      where
-        y = 2
 ```
 
 Let inside a `where`
@@ -1525,7 +1546,7 @@ Escaped newlines
 
 jml Adds trailing whitespace when wrapping #221
 
-``` haskell
+```haskell
 x = do
   config <- execParser options
   comments <-
@@ -1764,18 +1785,6 @@ q = '(-)
 data (-)
 
 q = ''(-)
-```
-
-utdemir Hindent can not parse empty case statements #414
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/414
-{-# LANGUAGE EmptyCase #-}
-{-# LANGUAGE LambdaCase #-}
-
-f1 = case () of {}
-
-f2 = \case {}
 ```
 
 TimoFreiberg INLINE (and other) pragmas for operators are reformatted without parens #415
