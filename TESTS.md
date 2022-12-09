@@ -701,14 +701,6 @@ class A where
 
 ## Expressions
 
-Symbol data constructor in parentheses
-
-```haskell
-cons = (:)
-
-cons' = (:|)
-```
-
 n+k patterns
 
 ``` haskell
@@ -964,6 +956,12 @@ The first character of an infix operator can be `@` unless `TypeApplications` is
 a @: b = a + b
 
 main = print (2 @: 2)
+```
+
+A list constructor enclosed by parentheses
+
+```haskell
+cons = (:)
 ```
 
 A data constructor enclosed by parentheses
