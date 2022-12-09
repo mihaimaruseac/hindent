@@ -448,7 +448,7 @@ longLongFunction ::
   -> StateT s (WriterT w (ReaderT r m)) a
 ```
 
-Always break before `::` on overlong signatures
+Always break after `::` on overlong signatures
 
 ```haskell
 -- https://github.com/mihaimaruseac/hindent/issues/390
