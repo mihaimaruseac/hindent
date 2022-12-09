@@ -486,7 +486,7 @@ fun :: [a|bc|]
 
 Tuples
 
-``` haskell
+```haskell
 fun :: (a, b, c) -> (a, b)
 ```
 
