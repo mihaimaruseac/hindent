@@ -487,6 +487,19 @@ fun Rec {alpha = beta, gamma = delta, epsilon = zeta, eta = theta, iota = kappa}
   beta + delta + zeta + theta + kappa
 ```
 
+Long
+
+```haskell
+fun Rec { alpha = beta
+        , gamma = delta
+        , epsilon = zeta
+        , eta = theta
+        , iota = kappa
+        , lambda = mu
+        } =
+  beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
+```
+
 ### Type family declarations
 
 Without annotations
@@ -1205,19 +1218,6 @@ test
 ```
 
 ## Record syntax
-
-Pattern matching, long
-
-```haskell
-fun Rec { alpha = beta
-        , gamma = delta
-        , epsilon = zeta
-        , eta = theta
-        , iota = kappa
-        , lambda = mu
-        } =
-  beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
-```
 
 Symbol constructor, short
 
