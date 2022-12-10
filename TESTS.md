@@ -525,6 +525,12 @@ Symbol field
 f (X {(..?) = x}) = x
 ```
 
+Punned symbol field
+
+```haskell
+f' (X {(..?)}) = (..?)
+```
+
 ### Type family declarations
 
 Without annotations
@@ -1240,14 +1246,6 @@ test
   ,
   , nu81
   ,)
-```
-
-## Record syntax
-
-Punned symbol field
-
-```haskell
-f' (X {(..?)}) = (..?)
 ```
 
 ## Johan Tibell compatibility checks
