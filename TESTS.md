@@ -458,6 +458,13 @@ g x =
 
 #### Pattern matchings
 
+Multiple matchings
+
+```haskell
+head' [] = Nothing
+head' (x:xs) = Just x
+```
+
 n+k patterns
 
 ```haskell
@@ -1246,25 +1253,6 @@ test
   ,
   , nu81
   ,)
-```
-
-## Johan Tibell compatibility checks
-
-Basic example from Tibbe's style
-
-``` haskell
-sayHello :: IO ()
-sayHello = do
-  name <- getLine
-  putStrLn $ greeting name
-  where
-    greeting name = "Hello, " ++ name ++ "!"
-
-filter :: (a -> Bool) -> [a] -> [a]
-filter _ [] = []
-filter p (x:xs)
-  | p x = x : filter p xs
-  | otherwise = filter p xs
 ```
 
 ## Comments
