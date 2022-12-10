@@ -443,6 +443,19 @@ sayHello = do
     greeting name = "Hello, " ++ name ++ "!"
 ```
 
+Let inside a `where`
+
+```haskell
+g x =
+  let x = 1
+   in x
+  where
+    foo =
+      let y = 2
+          z = 3
+       in y
+```
+
 #### Pattern matchings
 
 n+k patterns
@@ -1120,19 +1133,6 @@ x =
          Just x -> e
          Nothing -> p
      | otherwise -> e
-```
-
-Let inside a `where`
-
-``` haskell
-g x =
-  let x = 1
-   in x
-  where
-    foo =
-      let y = 2
-          z = 3
-       in y
 ```
 
 Lists
