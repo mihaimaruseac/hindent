@@ -416,7 +416,6 @@ data Person =
 Prefix notation for operators
 
 ```haskell
-(+) :: Num a => a -> a -> a
 (+) a b = a
 ```
 
