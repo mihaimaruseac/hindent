@@ -506,6 +506,19 @@ Symbol constructor, short
 fun ((:..?) {}) = undefined
 ```
 
+Symbol constructor, long
+
+```haskell
+fun (:..?) { alpha = beta
+           , gamma = delta
+           , epsilon = zeta
+           , eta = theta
+           , iota = kappa
+           , lambda = mu
+           } =
+  beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
+```
+
 ### Type family declarations
 
 Without annotations
@@ -1224,19 +1237,6 @@ test
 ```
 
 ## Record syntax
-
-Symbol constructor, long
-
-```haskell
-fun (:..?) { alpha = beta
-           , gamma = delta
-           , epsilon = zeta
-           , eta = theta
-           , iota = kappa
-           , lambda = mu
-           } =
-  beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
-```
 
 Symbol field
 
