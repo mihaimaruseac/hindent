@@ -411,6 +411,9 @@ data Person =
   deriving (Eq, Show)
 ```
 
+### Function declarations
+
+
 ### Type family declarations
 
 Without annotations
