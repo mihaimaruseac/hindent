@@ -413,6 +413,13 @@ data Person =
 
 ### Function declarations
 
+Prefix notation for operators
+
+```haskell
+(+) :: Num a => a -> a -> a
+(+) a b = a
+```
+
 #### Pattern matchings
 
 n+k patterns
@@ -1079,13 +1086,6 @@ g =
 ```
 
 ## Function declarations
-
-Prefix notation for operators
-
-``` haskell
-(+) :: Num a => a -> a -> a
-(+) a b = a
-```
 
 Where clause
 
