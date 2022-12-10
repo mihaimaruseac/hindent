@@ -519,6 +519,12 @@ fun (:..?) { alpha = beta
   beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
 ```
 
+Symbol field
+
+```haskell
+f (X {(..?) = x}) = x
+```
+
 ### Type family declarations
 
 Without annotations
@@ -1237,12 +1243,6 @@ test
 ```
 
 ## Record syntax
-
-Symbol field
-
-```haskell
-f (X {(..?) = x}) = x
-```
 
 Punned symbol field
 
