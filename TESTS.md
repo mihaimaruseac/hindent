@@ -478,6 +478,15 @@ g (x:xs) = x
 g' ((:) x _) = x
 ```
 
+##### Pattern matchings against record
+
+Short
+
+```haskell
+fun Rec {alpha = beta, gamma = delta, epsilon = zeta, eta = theta, iota = kappa} = do
+  beta + delta + zeta + theta + kappa
+```
+
 ### Type family declarations
 
 Without annotations
@@ -1196,13 +1205,6 @@ test
 ```
 
 ## Record syntax
-
-Pattern matching, short
-
-```haskell
-fun Rec {alpha = beta, gamma = delta, epsilon = zeta, eta = theta, iota = kappa} = do
-  beta + delta + zeta + theta + kappa
-```
 
 Pattern matching, long
 
