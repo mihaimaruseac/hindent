@@ -413,6 +413,13 @@ data Person =
 
 ### Function declarations
 
+#### Pattern matchings
+
+n+k patterns
+
+```haskell
+f (n+5) = 0
+```
 
 ### Type family declarations
 
@@ -703,12 +710,6 @@ class A where
 ```
 
 ## Expressions
-
-n+k patterns
-
-``` haskell
-f (n+5) = 0
-```
 
 Binary symbol data constructor in pattern
 
