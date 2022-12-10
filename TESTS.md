@@ -421,6 +421,20 @@ n+k patterns
 f (n+5) = 0
 ```
 
+Binary symbol data constructor in pattern
+
+```haskell
+f (x :| _) = x
+
+f' ((:|) x _) = x
+
+f'' ((Data.List.NonEmpty.:|) x _) = x
+
+g (x:xs) = x
+
+g' ((:) x _) = x
+```
+
 ### Type family declarations
 
 Without annotations
@@ -710,20 +724,6 @@ class A where
 ```
 
 ## Expressions
-
-Binary symbol data constructor in pattern
-
-```haskell
-f (x :| _) = x
-
-f' ((:|) x _) = x
-
-f'' ((Data.List.NonEmpty.:|) x _) = x
-
-g (x:xs) = x
-
-g' ((:) x _) = x
-```
 
 Type application
 
