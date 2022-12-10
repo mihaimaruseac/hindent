@@ -420,6 +420,16 @@ Prefix notation for operators
 (+) a b = a
 ```
 
+Where clause
+
+```haskell
+sayHello = do
+  name <- getLine
+  putStrLn $ greeting name
+  where
+    greeting name = "Hello, " ++ name ++ "!"
+```
+
 #### Pattern matchings
 
 n+k patterns
@@ -1086,16 +1096,6 @@ g =
 ```
 
 ## Function declarations
-
-Where clause
-
-``` haskell
-sayHello = do
-  name <- getLine
-  putStrLn $ greeting name
-  where
-    greeting name = "Hello, " ++ name ++ "!"
-```
 
 Guards and pattern guards
 
