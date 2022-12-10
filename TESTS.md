@@ -500,6 +500,12 @@ fun Rec { alpha = beta
   beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
 ```
 
+Symbol constructor, short
+
+```haskell
+fun ((:..?) {}) = undefined
+```
+
 ### Type family declarations
 
 Without annotations
@@ -1218,12 +1224,6 @@ test
 ```
 
 ## Record syntax
-
-Symbol constructor, short
-
-```haskell
-fun ((:..?) {}) = undefined
-```
 
 Symbol constructor, long
 
