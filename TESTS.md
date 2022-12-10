@@ -538,6 +538,13 @@ Punned symbol field
 f' (X {(..?)}) = (..?)
 ```
 
+`RecordWileCards`
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/274
+foo (Bar {..}) = Bar {..}
+```
+
 ### Type family declarations
 
 Without annotations
@@ -1718,13 +1725,6 @@ neongreen "{" is lost when formatting "Foo{}" #366
 ```haskell
 -- https://github.com/chrisdone/hindent/issues/366
 foo = Nothing {}
-```
-
-ttuegel Record formatting applied to expressions with RecordWildCards #274
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/274
-foo (Bar {..}) = Bar {..}
 ```
 
 RecursiveDo `rec` and `mdo` keyword #328
