@@ -420,6 +420,19 @@ Prefix notation for operators
 (+) a b = a
 ```
 
+Guards and pattern guards
+
+```haskell
+f x
+  | x <- Just x
+  , x <- Just x =
+    case x of
+      Just x -> e
+  | otherwise = do e
+  where
+    x = y
+```
+
 Where clause
 
 ```haskell
@@ -1096,19 +1109,6 @@ g =
 ```
 
 ## Function declarations
-
-Guards and pattern guards
-
-``` haskell
-f x
-  | x <- Just x
-  , x <- Just x =
-    case x of
-      Just x -> e
-  | otherwise = do e
-  where
-    x = y
-```
 
 Multi-way if
 
