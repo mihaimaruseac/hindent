@@ -411,6 +411,139 @@ data Person =
   deriving (Eq, Show)
 ```
 
+### Function declarations
+
+Prefix notation for operators
+
+```haskell
+(+) a b = a
+```
+
+Guards and pattern guards
+
+```haskell
+f x
+  | x <- Just x
+  , x <- Just x =
+    case x of
+      Just x -> e
+  | otherwise = do e
+  where
+    x = y
+```
+
+Where clause
+
+```haskell
+sayHello = do
+  name <- getLine
+  putStrLn $ greeting name
+  where
+    greeting name = "Hello, " ++ name ++ "!"
+```
+
+Let inside a `where`
+
+```haskell
+g x =
+  let x = 1
+   in x
+  where
+    foo =
+      let y = 2
+          z = 3
+       in y
+```
+
+#### Pattern matchings
+
+Multiple matchings
+
+```haskell
+head' [] = Nothing
+head' (x:_) = Just x
+```
+
+n+k patterns
+
+```haskell
+f (n+5) = 0
+```
+
+Binary symbol data constructor in pattern
+
+```haskell
+f (x :| _) = x
+
+f' ((:|) x _) = x
+
+f'' ((Data.List.NonEmpty.:|) x _) = x
+
+g (x:xs) = x
+
+g' ((:) x _) = x
+```
+
+##### Pattern matchings against record
+
+Short
+
+```haskell
+fun Rec {alpha = beta, gamma = delta, epsilon = zeta, eta = theta, iota = kappa} = do
+  beta + delta + zeta + theta + kappa
+```
+
+Long
+
+```haskell
+fun Rec { alpha = beta
+        , gamma = delta
+        , epsilon = zeta
+        , eta = theta
+        , iota = kappa
+        , lambda = mu
+        } =
+  beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
+```
+
+Symbol constructor, short
+
+```haskell
+fun ((:..?) {}) = undefined
+```
+
+Symbol constructor, long
+
+```haskell
+fun (:..?) { alpha = beta
+           , gamma = delta
+           , epsilon = zeta
+           , eta = theta
+           , iota = kappa
+           , lambda = mu
+           } =
+  beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
+```
+
+Symbol field
+
+```haskell
+f (X {(..?) = x}) = x
+```
+
+Punned symbol field
+
+```haskell
+f' (X {(..?)}) = (..?)
+```
+
+`RecordWileCards`
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/274
+foo (Bar {..}) = Bar {..}
+```
+
 ### Type family declarations
 
 Without annotations
@@ -700,26 +833,6 @@ class A where
 ```
 
 ## Expressions
-
-n+k patterns
-
-``` haskell
-f (n+5) = 0
-```
-
-Binary symbol data constructor in pattern
-
-```haskell
-f (x :| _) = x
-
-f' ((:|) x _) = x
-
-f'' ((Data.List.NonEmpty.:|) x _) = x
-
-g (x:xs) = x
-
-g' ((:) x _) = x
-```
 
 Type application
 
@@ -1076,36 +1189,6 @@ g =
 
 ## Function declarations
 
-Prefix notation for operators
-
-``` haskell
-(+) :: Num a => a -> a -> a
-(+) a b = a
-```
-
-Where clause
-
-``` haskell
-sayHello = do
-  name <- getLine
-  putStrLn $ greeting name
-  where
-    greeting name = "Hello, " ++ name ++ "!"
-```
-
-Guards and pattern guards
-
-``` haskell
-f x
-  | x <- Just x
-  , x <- Just x =
-    case x of
-      Just x -> e
-  | otherwise = do e
-  where
-    x = y
-```
-
 Multi-way if
 
 ``` haskell
@@ -1116,19 +1199,6 @@ x =
          Just x -> e
          Nothing -> p
      | otherwise -> e
-```
-
-Let inside a `where`
-
-``` haskell
-g x =
-  let x = 1
-   in x
-  where
-    foo =
-      let y = 2
-          z = 3
-       in y
 ```
 
 Lists
@@ -1189,78 +1259,6 @@ test
   ,
   , nu81
   ,)
-```
-
-## Record syntax
-
-Pattern matching, short
-
-```haskell
-fun Rec {alpha = beta, gamma = delta, epsilon = zeta, eta = theta, iota = kappa} = do
-  beta + delta + zeta + theta + kappa
-```
-
-Pattern matching, long
-
-```haskell
-fun Rec { alpha = beta
-        , gamma = delta
-        , epsilon = zeta
-        , eta = theta
-        , iota = kappa
-        , lambda = mu
-        } =
-  beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
-```
-
-Symbol constructor, short
-
-```haskell
-fun ((:..?) {}) = undefined
-```
-
-Symbol constructor, long
-
-```haskell
-fun (:..?) { alpha = beta
-           , gamma = delta
-           , epsilon = zeta
-           , eta = theta
-           , iota = kappa
-           , lambda = mu
-           } =
-  beta + delta + zeta + theta + kappa + mu + beta + delta + zeta + theta + kappa
-```
-
-Symbol field
-
-```haskell
-f (X {(..?) = x}) = x
-```
-
-Punned symbol field
-
-```haskell
-f' (X {(..?)}) = (..?)
-```
-
-## Johan Tibell compatibility checks
-
-Basic example from Tibbe's style
-
-``` haskell
-sayHello :: IO ()
-sayHello = do
-  name <- getLine
-  putStrLn $ greeting name
-  where
-    greeting name = "Hello, " ++ name ++ "!"
-
-filter :: (a -> Bool) -> [a] -> [a]
-filter _ [] = []
-filter p (x:xs)
-  | p x = x : filter p xs
-  | otherwise = filter p xs
 ```
 
 ## Comments
@@ -1726,13 +1724,6 @@ neongreen "{" is lost when formatting "Foo{}" #366
 ```haskell
 -- https://github.com/chrisdone/hindent/issues/366
 foo = Nothing {}
-```
-
-ttuegel Record formatting applied to expressions with RecordWildCards #274
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/274
-foo (Bar {..}) = Bar {..}
 ```
 
 RecursiveDo `rec` and `mdo` keyword #328
