@@ -461,7 +461,7 @@ Multiple matchings
 
 ```haskell
 head' [] = Nothing
-head' (x:xs) = Just x
+head' (x:_) = Just x
 ```
 
 n+k patterns
