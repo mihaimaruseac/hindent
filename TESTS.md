@@ -122,6 +122,12 @@ import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
 
 ## Declarations
 
+Type family instances
+
+```haskell
+type instance Id Int = Int
+```
+
 ### Class declarations
 
 Default signatures
@@ -824,6 +830,33 @@ class A where
 
 ## Expressions
 
+Lists
+
+```haskell
+exceptions = [InvalidStatusCode, MissingContentHeader, InternalServerError]
+
+exceptions =
+  [ InvalidStatusCode
+  , MissingContentHeader
+  , InternalServerError
+  , InvalidStatusCode
+  , MissingContentHeader
+  , InternalServerError
+  ]
+```
+
+Multi-way if
+
+```haskell
+x =
+  if | x <- Just x,
+       x <- Just x ->
+       case x of
+         Just x -> e
+         Nothing -> p
+     | otherwise -> e
+```
+
 Type application
 
 ```haskell
@@ -832,13 +865,7 @@ Type application
 fun @Int 12
 ```
 
-Type family instances
-
-```haskell
-type instance Id Int = Int
-```
-
-Binding implicit parameters
+Let binding with implicit parameters
 
 ```haskell
 f =
@@ -891,6 +918,53 @@ Empty lambda case
 {-# LANGUAGE LambdaCase #-}
 
 f2 = \case {}
+```
+
+### Function applications
+
+Long line, inside a `do`
+
+```haskell
+test = do
+  alphaBetaGamma deltaEpsilonZeta etaThetaIota kappaLambdaMu nuXiOmicron piRh79
+  alphaBetaGamma deltaEpsilonZeta etaThetaIota kappaLambdaMu nuXiOmicron piRho80
+  alphaBetaGamma
+    deltaEpsilonZeta
+    etaThetaIota
+    kappaLambdaMu
+    nuXiOmicron
+    piRhoS81
+```
+
+Long line, tuple
+
+```haskell
+test
+  (alphaBetaGamma, deltaEpsilonZeta, etaThetaIota, kappaLambdaMu, nuXiOmicro79)
+  (alphaBetaGamma, deltaEpsilonZeta, etaThetaIota, kappaLambdaMu, nuXiOmicron80)
+  ( alphaBetaGamma
+  , deltaEpsilonZeta
+  , etaThetaIota
+  , kappaLambdaMu
+  , nuXiOmicronP81)
+```
+
+Long line, tuple section
+
+```haskell
+test
+  (, alphaBetaGamma, , deltaEpsilonZeta, , etaThetaIota, kappaLambdaMu, nu79, )
+  (, alphaBetaGamma, , deltaEpsilonZeta, , etaThetaIota, kappaLambdaMu, , n80, )
+  (
+  , alphaBetaGamma
+  ,
+  , deltaEpsilonZeta
+  ,
+  , etaThetaIota
+  , kappaLambdaMu
+  ,
+  , nu81
+  ,)
 ```
 
 ### Lambda expressions
@@ -1177,79 +1251,6 @@ g =
     _ -> False
 ```
 
-## Function declarations
-
-Multi-way if
-
-``` haskell
-x =
-  if | x <- Just x,
-       x <- Just x ->
-       case x of
-         Just x -> e
-         Nothing -> p
-     | otherwise -> e
-```
-
-Lists
-
-``` haskell
-exceptions = [InvalidStatusCode, MissingContentHeader, InternalServerError]
-
-exceptions =
-  [ InvalidStatusCode
-  , MissingContentHeader
-  , InternalServerError
-  , InvalidStatusCode
-  , MissingContentHeader
-  , InternalServerError
-  ]
-```
-
-Long line, function application
-
-```haskell
-test = do
-  alphaBetaGamma deltaEpsilonZeta etaThetaIota kappaLambdaMu nuXiOmicron piRh79
-  alphaBetaGamma deltaEpsilonZeta etaThetaIota kappaLambdaMu nuXiOmicron piRho80
-  alphaBetaGamma
-    deltaEpsilonZeta
-    etaThetaIota
-    kappaLambdaMu
-    nuXiOmicron
-    piRhoS81
-```
-
-Long line, tuple
-
-```haskell
-test
-  (alphaBetaGamma, deltaEpsilonZeta, etaThetaIota, kappaLambdaMu, nuXiOmicro79)
-  (alphaBetaGamma, deltaEpsilonZeta, etaThetaIota, kappaLambdaMu, nuXiOmicron80)
-  ( alphaBetaGamma
-  , deltaEpsilonZeta
-  , etaThetaIota
-  , kappaLambdaMu
-  , nuXiOmicronP81)
-```
-
-Long line, tuple section
-
-```haskell
-test
-  (, alphaBetaGamma, , deltaEpsilonZeta, , etaThetaIota, kappaLambdaMu, nu79, )
-  (, alphaBetaGamma, , deltaEpsilonZeta, , etaThetaIota, kappaLambdaMu, , n80, )
-  (
-  , alphaBetaGamma
-  ,
-  , deltaEpsilonZeta
-  ,
-  , etaThetaIota
-  , kappaLambdaMu
-  ,
-  , nu81
-  ,)
-```
 
 ## Comments
 
