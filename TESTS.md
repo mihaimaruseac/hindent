@@ -122,6 +122,12 @@ import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
 
 ## Declarations
 
+Type family instances
+
+```haskell
+type instance Id Int = Int
+```
+
 ### Class declarations
 
 Default signatures
@@ -830,12 +836,6 @@ Type application
 {-# LANGUAGE TypeApplications #-}
 
 fun @Int 12
-```
-
-Type family instances
-
-```haskell
-type instance Id Int = Int
 ```
 
 Let binding with implicit parameters
