@@ -838,7 +838,7 @@ Type family instances
 type instance Id Int = Int
 ```
 
-Binding implicit parameters
+Let binding with implicit parameters
 
 ```haskell
 f =
