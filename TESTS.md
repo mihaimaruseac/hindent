@@ -1092,6 +1092,7 @@ x = do
 Do as left-hand side of an infix operation
 
 ```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/238
 -- https://github.com/mihaimaruseac/hindent/issues/296
 block =
   do ds <- inBraces $ inWhiteSpace declarations
