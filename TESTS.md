@@ -573,6 +573,17 @@ f' (X {(..?)}) = (..?)
 foo (Bar {..}) = Bar {..}
 ```
 
+### Pragma declarations
+
+`INLINE`
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/255
+{-# INLINE f #-}
+f :: Int -> Int
+f n = n
+```
+
 ### Type family declarations
 
 Without annotations
@@ -1590,15 +1601,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-sgraf812 top-level pragmas should not add an additional newline #255
-
-``` haskell
--- https://github.com/chrisdone/hindent/issues/255
-{-# INLINE f #-}
-f :: Int -> Int
-f n = n
-```
 
 ttuegel qualified infix sections get mangled #273
 
