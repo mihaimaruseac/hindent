@@ -1433,7 +1433,7 @@ Unicode
 
 A complex, slow-to-print decl
 
-``` haskell
+```haskell
 quasiQuotes =
   [ ( ''[]
     , \(typeVariable:_) _automaticPrinter ->
@@ -1472,7 +1472,7 @@ quasiQuotes =
 
 Random snippet from hindent itself
 
-``` haskell
+```haskell
 exp' (App _ op a) = do
   (fits, st) <- fitsOnOneLine (spaced (map pretty (f : args)))
   if fits
