@@ -920,9 +920,9 @@ Empty lambda case
 f2 = \case {}
 ```
 
-### Function applications
+### `do` expressions
 
-Long line, inside a `do`
+Long function applications
 
 ```haskell
 test = do
@@ -935,6 +935,22 @@ test = do
     nuXiOmicron
     piRhoS81
 ```
+
+Large bindings
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/221
+x = do
+  config <- execParser options
+  comments <-
+    case config of
+      Diff False args -> commentsFromDiff args
+      Diff True args -> commentsFromDiff ("--cached" : args)
+      Files args -> commentsFromFiles args
+  mapM_ (putStrLn . Fixme.formatTodo) (concatMap Fixme.getTodos comments)
+```
+
+### Function applications
 
 Long line, tuple
 
@@ -1530,19 +1546,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-jml Adds trailing whitespace when wrapping #221
-
-```haskell
-x = do
-  config <- execParser options
-  comments <-
-    case config of
-      Diff False args -> commentsFromDiff args
-      Diff True args -> commentsFromDiff ("--cached" : args)
-      Files args -> commentsFromFiles args
-  mapM_ (putStrLn . Fixme.formatTodo) (concatMap Fixme.getTodos comments)
-```
 
 meditans hindent freezes when trying to format this code #222
 
