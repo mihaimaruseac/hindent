@@ -1343,6 +1343,18 @@ data T a =
 test = (:@)
 ```
 
+Force indent and print RHS in a top-level expression
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/473
+template $
+  haskell
+    [ SomeVeryLongName
+    , AnotherLongNameEvenLongToBreakTheLine
+    , LastLongNameInList
+    ]
+```
+
 ### Records
 
 No field
@@ -1756,18 +1768,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-sophie-h Breaking valid top-level template haskell #473
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/473
-template $
-  haskell
-    [ ''SomeVeryLongName
-    , ''AnotherLongNameEvenLongToBreakTheLine
-    , ''LastLongNameInList
-    ]
-```
 
 schroffl Hindent produces invalid Syntax from FFI exports #479
 
