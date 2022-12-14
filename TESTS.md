@@ -1407,7 +1407,26 @@ Type brackets
 foo :: $([t|Bool|]) -> a
 ```
 
-Quoted data constructors
+A quoted TH name from a normal data constructors
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/412
+data T =
+  (-)
+
+q = '(-)
+```
+
+A quoted TH name from a type name
+
+```haskell
+-- https://github.com/commercialhaskell/hindent/issues/412
+data (-)
+
+q = ''(-)
+```
+
+Quoted list constructors
 
 ```haskell
 cons = '(:)
@@ -1711,20 +1730,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-utdemir Hindent breaks TH name captures of operators #412
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/412
-data T =
-  (-)
-
-q = '(-)
-
-data (-)
-
-q = ''(-)
-```
 
 TimoFreiberg INLINE (and other) pragmas for operators are reformatted without parens #415
 
