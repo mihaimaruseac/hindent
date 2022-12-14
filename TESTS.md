@@ -688,7 +688,7 @@ f' :: (:?:) a b
 Single
 
 ```haskell
--- https://github.com/commercialhaskell/hindent/issues/244
+-- https://github.com/mihaimaruseac/hindent/issues/244
 x :: Num a => a
 x = undefined
 ```
