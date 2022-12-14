@@ -1424,7 +1424,6 @@ g =
     _ -> False
 ```
 
-
 ## Comments
 
 Comments within a declaration
