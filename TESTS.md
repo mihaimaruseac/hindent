@@ -9,6 +9,24 @@ like, or contribute additional sections to it, or regression tests.
 
 ## Shebangs
 
+No newlines after a shebang
+
+```haskell given
+#!/usr/bin/env stack
+
+-- stack runghc
+main =
+ pure ()
+-- https://github.com/mihaimaruseac/hindent/issues/208
+```
+
+```haskell expect
+#!/usr/bin/env stack
+-- stack runghc
+main = pure ()
+-- https://github.com/mihaimaruseac/hindent/issues/208
+```
+
 Double shebangs
 
 ```haskell
@@ -56,7 +74,7 @@ module X
     ) where
 ```
 
-## Imports
+## Imports, foreign imports, and foreign exports
 
 Import lists
 
@@ -118,6 +136,60 @@ import A hiding
 import Name hiding ()
 
 import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
+```
+
+Preserve newlines between import groups
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/200
+import GHC.Monad
+
+import CommentAfter -- Comment here shouldn't affect newlines
+import HelloWorld
+
+import CommentAfter -- Comment here shouldn't affect newlines
+
+-- Comment here shouldn't affect newlines
+import CommentAfter
+```
+
+`PackageImports`
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/480
+{-# LANGUAGE PackageImports #-}
+
+import qualified "base" Prelude as P
+```
+
+### Foreign imports and exports
+
+Foreign export
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/479
+foreign export ccall "test" test :: IO ()
+```
+
+Foreign import without safety annotation
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/479
+foreign import ccall "test" test :: IO ()
+```
+
+Foreign import with a `safe` annotation
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/479
+foreign import ccall safe "test" test :: IO ()
+```
+
+Foreign import with an `unsafe` annotation
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/479
+foreign import ccall unsafe "test" test :: IO ()
 ```
 
 ## Declarations
@@ -407,6 +479,45 @@ data Person =
   deriving (Eq, Show)
 ```
 
+Multiple derivings
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/289
+newtype Foo =
+  Foo Proxy
+  deriving ( Functor
+           , Applicative
+           , Monad
+           , Semigroup
+           , Monoid
+           , Alternative
+           , MonadPlus
+           , Foldable
+           , Traversable
+           )
+```
+
+Various deriving strategies
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/503
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+module Foo where
+
+import Data.Typeable
+import GHC.Generics
+
+newtype Number a =
+  Number a
+  deriving (Generic)
+  deriving newtype (Show, Eq)
+  deriving anyclass (Typeable)
+```
+
 ### Function declarations
 
 Prefix notation for operators
@@ -480,6 +591,13 @@ g (x:xs) = x
 g' ((:) x _) = x
 ```
 
+Infix constructor pattern
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/424
+from $ \(author `InnerJoin` post) -> pure ()
+```
+
 ##### Pattern matchings against record
 
 Short
@@ -538,6 +656,24 @@ f' (X {(..?)}) = (..?)
 ```haskell
 -- https://github.com/mihaimaruseac/hindent/issues/274
 foo (Bar {..}) = Bar {..}
+```
+
+### Pragma declarations
+
+`INLINE`
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/255
+{-# INLINE f #-}
+f :: Int -> Int
+f n = n
+```
+
+`NOINLINE` with an operator enclosed by parentheses
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/415
+{-# NOINLINE (<>) #-}
 ```
 
 ### Type family declarations
@@ -688,7 +824,7 @@ f' :: (:?:) a b
 Single
 
 ```haskell
--- https://github.com/commercialhaskell/hindent/issues/244
+-- https://github.com/mihaimaruseac/hindent/issues/244
 x :: Num a => a
 x = undefined
 ```
@@ -697,6 +833,17 @@ Multiple
 
 ```haskell
 fun :: (Class a, Class b) => a -> b -> c
+```
+
+Long constraints
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/222
+foo ::
+     ( Foooooooooooooooooooooooooooooooooooooooooo
+     , Foooooooooooooooooooooooooooooooooooooooooo
+     )
+  => A
 ```
 
 Class constraints should leave `::` on same line
@@ -865,14 +1012,6 @@ Type application
 fun @Int 12
 ```
 
-Let binding with implicit parameters
-
-```haskell
-f =
-  let ?x = 42
-   in f
-```
-
 ### Case expressions
 
 Normal case
@@ -920,9 +1059,9 @@ Empty lambda case
 f2 = \case {}
 ```
 
-### Function applications
+### `do` expressions
 
-Long line, inside a `do`
+Long function applications
 
 ```haskell
 test = do
@@ -935,6 +1074,33 @@ test = do
     nuXiOmicron
     piRhoS81
 ```
+
+Large bindings
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/221
+x = do
+  config <- execParser options
+  comments <-
+    case config of
+      Diff False args -> commentsFromDiff args
+      Diff True args -> commentsFromDiff ("--cached" : args)
+      Files args -> commentsFromFiles args
+  mapM_ (putStrLn . Fixme.formatTodo) (concatMap Fixme.getTodos comments)
+```
+
+Do as left-hand side of an infix operation
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/238
+-- https://github.com/mihaimaruseac/hindent/issues/296
+block =
+  do ds <- inBraces $ inWhiteSpace declarations
+     return $ Block ds
+     <?> "block"
+```
+
+### Function applications
 
 Long line, tuple
 
@@ -965,6 +1131,24 @@ test
   ,
   , nu81
   ,)
+```
+
+Linebreaks after very short names if the total line length goes over 80
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/405
+t =
+  f "this is a very loooooooooooooooooooooooooooong string that goes over the line length"
+    argx
+    argy
+    argz
+
+t =
+  function
+    "this is a very loooooooooooooooooooooooooooong string that goes over the line length"
+    argx
+    argy
+    argz
 ```
 
 ### Lambda expressions
@@ -999,6 +1183,26 @@ foo =
   alloca 10 $ \a ->
     alloca 20 $ \b ->
       cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
+```
+
+### Let ... in expressions
+
+With implicit parameters
+
+```haskell
+f =
+  let ?x = 42
+   in f
+```
+
+inside a `do`
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/467
+main :: IO ()
+main = do
+  let x = 5
+   in when (x > 0) (return ())
 ```
 
 ### List comprehensions
@@ -1120,10 +1324,38 @@ for xs $ \case
   Left x -> x
 ```
 
+Qualified operator as an argument
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/273
+foo = foldr1 (V.++) [V.empty, V.empty]
+```
+
+Apply an infix operator in prefix style
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/273
+ys = (++) [] []
+```
+
+Qualified operator
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/273
+xs = V.empty V.++ V.empty
+```
+
 In parentheses
 
 ```haskell
 cat = (++)
+```
+
+Qualified operator in parentheses
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/273
+cons = (V.++)
 ```
 
 The first character of an infix operator can be `@` unless `TypeApplications` is enabled.
@@ -1151,7 +1383,26 @@ data T a =
 test = (:@)
 ```
 
+Force indent and print RHS in a top-level expression
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/473
+template $
+  haskell
+    [ SomeVeryLongName
+    , AnotherLongNameEvenLongToBreakTheLine
+    , LastLongNameInList
+    ]
+```
+
 ### Records
+
+No field
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/366
+foo = Nothing {}
+```
 
 Short
 
@@ -1234,7 +1485,26 @@ Type brackets
 foo :: $([t|Bool|]) -> a
 ```
 
-Quoted data constructors
+A quoted TH name from a normal data constructors
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/412
+data T =
+  (-)
+
+q = '(-)
+```
+
+A quoted TH name from a type name
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/412
+data (-)
+
+q = ''(-)
+```
+
+Quoted list constructors
 
 ```haskell
 cons = '(:)
@@ -1251,12 +1521,11 @@ g =
     _ -> False
 ```
 
-
 ## Comments
 
 Comments within a declaration
 
-``` haskell
+```haskell
 bob -- after bob
  =
   foo -- next to foo
@@ -1328,7 +1597,7 @@ gamma = do
 
 Haddock comments
 
-``` haskell
+```haskell
 -- | Module comment.
 module X where
 
@@ -1357,7 +1626,7 @@ data X =
 
 Comments around regular declarations
 
-``` haskell
+```haskell
 -- This is some random comment.
 -- | Main entry point.
 main = putStrLn "Hello, World!"
@@ -1366,7 +1635,7 @@ main = putStrLn "Hello, World!"
 
 Multi-line comments
 
-``` haskell
+```haskell
 bob {- after bob -}
  =
   foo {- next to foo -}
@@ -1411,7 +1680,7 @@ foo = 1 {- after foo -}
 
 Multi-line comments with multi-line contents
 
-``` haskell
+```haskell
 {- | This is some random comment.
 Here is more docs and such.
 Etc.
@@ -1420,20 +1689,48 @@ main = putStrLn "Hello, World!"
 {- This is another random comment. -}
 ```
 
-## Behaviour checks
+Comments on functions in where clause
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/540
+topLevelFunc1 = f
+  where
+    -- comment on func in where clause
+    -- stays in the where clause
+    f = undefined
+
+topLevelFunc2 = f . g
+  where
+    {- multi
+       line
+       comment -}
+    f = undefined
+    -- single line comment
+    g = undefined
+```
+## Identifiers
 
 Unicode
 
-``` haskell
+```haskell
 α = γ * "ω"
 -- υ
+```
+
+`rec` and `mdo` are valid identifiers unless `RecursiveDo` is enabled
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/328
+rec = undefined
+
+mdo = undefined
 ```
 
 ## Complex input
 
 A complex, slow-to-print decl
 
-``` haskell
+```haskell
 quasiQuotes =
   [ ( ''[]
     , \(typeVariable:_) _automaticPrinter ->
@@ -1472,7 +1769,7 @@ quasiQuotes =
 
 Random snippet from hindent itself
 
-``` haskell
+```haskell
 exp' (App _ op a) = do
   (fits, st) <- fitsOnOneLine (spaced (map pretty (f : args)))
   if fits
@@ -1527,337 +1824,4 @@ Escaped newlines
     }
 #define SHORT_MACRO_DEFINITION \
   x
-```
-
-## Regression tests
-
-jml Adds trailing whitespace when wrapping #221
-
-```haskell
-x = do
-  config <- execParser options
-  comments <-
-    case config of
-      Diff False args -> commentsFromDiff args
-      Diff True args -> commentsFromDiff ("--cached" : args)
-      Files args -> commentsFromFiles args
-  mapM_ (putStrLn . Fixme.formatTodo) (concatMap Fixme.getTodos comments)
-```
-
-meditans hindent freezes when trying to format this code #222
-
-``` haskell
-c :: forall new.
-     ( Settable "pitch" Pitch (Map.AsMap (new Map.:\ "pitch")) new
-     , Default (Book' (Map.AsMap (new Map.:\ "pitch")))
-     )
-  => Book' new
-c = set #pitch C (def :: Book' (Map.AsMap (new Map.:\ "pitch")))
-
-foo ::
-     ( Foooooooooooooooooooooooooooooooooooooooooo
-     , Foooooooooooooooooooooooooooooooooooooooooo
-     )
-  => A
-```
-
-bitemyapp wonky multiline comment handling #231
-
-``` haskell
-module Woo where
-
-hi = "hello"
-{-
-test comment
--}
--- blah blah
--- blah blah
--- blah blah
-```
-
-cocreature removed from declaration issue #186
-
-``` haskell
--- https://github.com/chrisdone/hindent/issues/186
-trans One e n =
-  M.singleton
-    (Query Unmarked (Mark NonExistent)) -- The goal of this is to fail always
-    (emptyImage {notPresent = S.singleton (TransitionResult Two (Just A) n)})
-```
-
-tfausak support shebangs #208
-
-``` haskell given
-#!/usr/bin/env stack
--- stack runghc
-main =
- pure ()
--- https://github.com/chrisdone/hindent/issues/208
-```
-
-``` haskell expect
-#!/usr/bin/env stack
--- stack runghc
-main = pure ()
--- https://github.com/chrisdone/hindent/issues/208
-```
-
-joe9 preserve newlines between import groups
-
-``` haskell
--- https://github.com/chrisdone/hindent/issues/200
-import Data.List
-import Data.Maybe
-
-import FooBar
-import MyProject
-
-import GHC.Monad
-
--- blah
-import Hello
-
-import CommentAfter -- Comment here shouldn't affect newlines
-import HelloWorld
-
-import CommentAfter -- Comment here shouldn't affect newlines
-
-import HelloWorld
-
--- Comment here shouldn't affect newlines
-import CommentAfter
-
-import HelloWorld
-```
-
-Wrapped import list shouldn't add newline
-
-```haskell given
-import ATooLongList
-       (alpha, beta, gamma, delta, epsilon, zeta, eta, theta)
-import B
-```
-
-```haskell expect
-import ATooLongList (alpha, beta, delta, epsilon, eta, gamma, theta, zeta)
-import B
-```
-
-sgraf812 top-level pragmas should not add an additional newline #255
-
-``` haskell
--- https://github.com/chrisdone/hindent/issues/255
-{-# INLINE f #-}
-f :: Int -> Int
-f n = n
-```
-
-ttuegel qualified infix sections get mangled #273
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/273
-import qualified Data.Vector as V
-
-main :: IO ()
-main = do
-  let _ = foldr1 (V.++) [V.empty, V.empty]
-  pure ()
-
--- more corner cases.
-xs = V.empty V.++ V.empty
-
-ys = (++) [] []
-
-cons :: V.Vector a -> V.Vector a -> V.Vector a
-cons = (V.++)
-```
-
-cdepillabout Long deriving clauses are not reformatted #289
-
-```haskell
-newtype Foo =
-  Foo Proxy
-  deriving ( Functor
-           , Applicative
-           , Monad
-           , Semigroup
-           , Monoid
-           , Alternative
-           , MonadPlus
-           , Foldable
-           , Traversable
-           )
-```
-
-paraseba Deriving strategies with multiple deriving clauses
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/503
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
-module Foo where
-
-import Data.Typeable
-import GHC.Generics
-
-newtype Number a =
-  Number a
-  deriving (Generic)
-  deriving newtype (Show, Eq)
-  deriving anyclass (Typeable)
-```
-
-neongreen "{" is lost when formatting "Foo{}" #366
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/366
-foo = Nothing {}
-```
-
-RecursiveDo `rec` and `mdo` keyword #328
-
-```haskell
-rec = undefined
-
-mdo = undefined
-```
-
-NorfairKing Do as left-hand side of an infix operation #296
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/296
-block =
-  do ds <- inBraces $ inWhiteSpace declarations
-     return $ Block ds
-     <?> "block"
-```
-
-NorfairKing Hindent linebreaks after very short names if the total line length goes over 80 #405
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/405
-t =
-  f "this is a very loooooooooooooooooooooooooooong string that goes over the line length"
-    argx
-    argy
-    argz
-
-t =
-  function
-    "this is a very loooooooooooooooooooooooooooong string that goes over the line length"
-    argx
-    argy
-    argz
-```
-
-utdemir Hindent breaks TH name captures of operators #412
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/412
-data T =
-  (-)
-
-q = '(-)
-
-data (-)
-
-q = ''(-)
-```
-
-TimoFreiberg INLINE (and other) pragmas for operators are reformatted without parens #415
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/415
-{-# NOINLINE (<>) #-}
-```
-
-NorfairKing Infix constructor pattern is broken #424
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/424
-from $ \(author `InnerJoin` post) -> pure ()
-```
-
-michalrus `let ... in ...` inside of `do` breaks compilation #467
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/467
-main :: IO ()
-main = do
-  let x = 5
-   in when (x > 0) (return ())
-```
-
-sophie-h Breaking valid top-level template haskell #473
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/473
-template $
-  haskell
-    [ ''SomeVeryLongName
-    , ''AnotherLongNameEvenLongToBreakTheLine
-    , ''LastLongNameInList
-    ]
-```
-
-schroffl Hindent produces invalid Syntax from FFI exports #479
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/479
-foreign export ccall "test" test :: IO ()
-
-foreign import ccall "test" test :: IO ()
-
-foreign import ccall safe "test" test :: IO ()
-
-foreign import ccall unsafe "test" test :: IO ()
-```
-
-cdsmith Quotes are dropped from package imports #480
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/480
-{-# LANGUAGE PackageImports #-}
-
-import qualified "base" Prelude as P
-```
-
-sophie-h Fails to create required indentation for infix #238
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/238
-{-# LANGUAGE ScopedTypeVariables #-}
-
-import Control.Exception
-
-x :: IO Int
-x =
-  do putStrLn "ok"
-     error "ok"
-     `catch` (\(_ :: IOException) -> pure 1) `catch`
-  (\(_ :: ErrorCall) -> pure 2)
-
-```
-
-lippirk Comments on functions in where clause not quite right #540
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/540
-topLevelFunc1 = f
-  where
-    -- comment on func in where clause
-    -- stays in the where clause
-    f = undefined
-
-topLevelFunc2 = f . g
-  where
-    {- multi
-       line
-       comment -}
-    f = undefined
-    -- single line comment
-    g = undefined
 ```
