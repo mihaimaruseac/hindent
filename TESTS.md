@@ -1808,23 +1808,6 @@ Escaped newlines
 
 ## Regression tests
 
-sophie-h Fails to create required indentation for infix #238
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/238
-{-# LANGUAGE ScopedTypeVariables #-}
-
-import Control.Exception
-
-x :: IO Int
-x =
-  do putStrLn "ok"
-     error "ok"
-     `catch` (\(_ :: IOException) -> pure 1) `catch`
-  (\(_ :: ErrorCall) -> pure 2)
-
-```
-
 lippirk Comments on functions in where clause not quite right #540
 
 ```haskell
