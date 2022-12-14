@@ -440,6 +440,24 @@ data Person =
   deriving (Eq, Show)
 ```
 
+Multiple derivings
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/289
+newtype Foo =
+  Foo Proxy
+  deriving ( Functor
+           , Applicative
+           , Monad
+           , Semigroup
+           , Monoid
+           , Alternative
+           , MonadPlus
+           , Foldable
+           , Traversable
+           )
+```
+
 ### Function declarations
 
 Prefix notation for operators
@@ -1629,23 +1647,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-cdepillabout Long deriving clauses are not reformatted #289
-
-```haskell
-newtype Foo =
-  Foo Proxy
-  deriving ( Functor
-           , Applicative
-           , Monad
-           , Semigroup
-           , Monoid
-           , Alternative
-           , MonadPlus
-           , Foldable
-           , Traversable
-           )
-```
 
 paraseba Deriving strategies with multiple deriving clauses
 
