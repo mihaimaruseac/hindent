@@ -1256,7 +1256,7 @@ g =
 
 Comments within a declaration
 
-``` haskell
+```haskell
 bob -- after bob
  =
   foo -- next to foo
@@ -1328,7 +1328,7 @@ gamma = do
 
 Haddock comments
 
-``` haskell
+```haskell
 -- | Module comment.
 module X where
 
@@ -1357,7 +1357,7 @@ data X =
 
 Comments around regular declarations
 
-``` haskell
+```haskell
 -- This is some random comment.
 -- | Main entry point.
 main = putStrLn "Hello, World!"
@@ -1366,7 +1366,7 @@ main = putStrLn "Hello, World!"
 
 Multi-line comments
 
-``` haskell
+```haskell
 bob {- after bob -}
  =
   foo {- next to foo -}
@@ -1411,7 +1411,7 @@ foo = 1 {- after foo -}
 
 Multi-line comments with multi-line contents
 
-``` haskell
+```haskell
 {- | This is some random comment.
 Here is more docs and such.
 Etc.
