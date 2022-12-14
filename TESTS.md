@@ -1191,6 +1191,12 @@ for xs $ \case
   Left x -> x
 ```
 
+Apply an infix operator in prefix style
+
+```haskell
+ys = (++) [] []
+```
+
 Qualified operator
 
 ```haskell
@@ -1626,9 +1632,6 @@ main :: IO ()
 main = do
   let _ = foldr1 (V.++) [V.empty, V.empty]
   pure ()
-
--- more corner cases.
-ys = (++) [] []
 ```
 
 cdepillabout Long deriving clauses are not reformatted #289
