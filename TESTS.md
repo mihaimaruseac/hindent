@@ -9,6 +9,23 @@ like, or contribute additional sections to it, or regression tests.
 
 ## Shebangs
 
+No newlines after a shebang
+
+```haskell given
+#!/usr/bin/env stack
+-- stack runghc
+main =
+ pure ()
+-- https://github.com/chrisdone/hindent/issues/208
+```
+
+```haskell expect
+#!/usr/bin/env stack
+-- stack runghc
+main = pure ()
+-- https://github.com/chrisdone/hindent/issues/208
+```
+
 Double shebangs
 
 ```haskell
@@ -1557,23 +1574,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-tfausak support shebangs #208
-
-``` haskell given
-#!/usr/bin/env stack
--- stack runghc
-main =
- pure ()
--- https://github.com/chrisdone/hindent/issues/208
-```
-
-``` haskell expect
-#!/usr/bin/env stack
--- stack runghc
-main = pure ()
--- https://github.com/chrisdone/hindent/issues/208
-```
 
 joe9 preserve newlines between import groups
 
