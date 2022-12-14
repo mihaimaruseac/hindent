@@ -623,6 +623,13 @@ f :: Int -> Int
 f n = n
 ```
 
+`NOINLINE` with an operator enclosed by parentheses
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/415
+{-# NOINLINE (<>) #-}
+```
+
 ### Type family declarations
 
 Without annotations
@@ -1730,13 +1737,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-TimoFreiberg INLINE (and other) pragmas for operators are reformatted without parens #415
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/415
-{-# NOINLINE (<>) #-}
-```
 
 NorfairKing Infix constructor pattern is broken #424
 
