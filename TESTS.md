@@ -1044,6 +1044,16 @@ x = do
   mapM_ (putStrLn . Fixme.formatTodo) (concatMap Fixme.getTodos comments)
 ```
 
+Do as left-hand side of an infix operation
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/296
+block =
+  do ds <- inBraces $ inWhiteSpace declarations
+     return $ Block ds
+     <?> "block"
+```
+
 ### Function applications
 
 Long line, tuple
@@ -1684,16 +1694,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-NorfairKing Do as left-hand side of an infix operation #296
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/296
-block =
-  do ds <- inBraces $ inWhiteSpace declarations
-     return $ Block ds
-     <?> "block"
-```
 
 NorfairKing Hindent linebreaks after very short names if the total line length goes over 80 #405
 
