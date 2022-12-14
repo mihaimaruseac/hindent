@@ -1558,16 +1558,6 @@ Escaped newlines
 
 ## Regression tests
 
-cocreature removed from declaration issue #186
-
-``` haskell
--- https://github.com/chrisdone/hindent/issues/186
-trans One e n =
-  M.singleton
-    (Query Unmarked (Mark NonExistent)) -- The goal of this is to fail always
-    (emptyImage {notPresent = S.singleton (TransitionResult Two (Just A) n)})
-```
-
 tfausak support shebangs #208
 
 ``` haskell given
