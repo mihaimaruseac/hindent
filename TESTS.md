@@ -138,6 +138,21 @@ import Name hiding ()
 import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
 ```
 
+Preserve newlines between import groups
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/200
+import GHC.Monad
+
+import CommentAfter -- Comment here shouldn't affect newlines
+import HelloWorld
+
+import CommentAfter -- Comment here shouldn't affect newlines
+
+-- Comment here shouldn't affect newlines
+import CommentAfter
+```
+
 ## Declarations
 
 Type family instances
@@ -1575,34 +1590,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-joe9 preserve newlines between import groups
-
-``` haskell
--- https://github.com/chrisdone/hindent/issues/200
-import Data.List
-import Data.Maybe
-
-import FooBar
-import MyProject
-
-import GHC.Monad
-
--- blah
-import Hello
-
-import CommentAfter -- Comment here shouldn't affect newlines
-import HelloWorld
-
-import CommentAfter -- Comment here shouldn't affect newlines
-
-import HelloWorld
-
--- Comment here shouldn't affect newlines
-import CommentAfter
-
-import HelloWorld
-```
 
 Wrapped import list shouldn't add newline
 
