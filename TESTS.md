@@ -1558,20 +1558,6 @@ Escaped newlines
 
 ## Regression tests
 
-bitemyapp wonky multiline comment handling #231
-
-``` haskell
-module Woo where
-
-hi = "hello"
-{-
-test comment
--}
--- blah blah
--- blah blah
--- blah blah
-```
-
 cocreature removed from declaration issue #186
 
 ``` haskell
