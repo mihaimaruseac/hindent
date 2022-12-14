@@ -17,14 +17,14 @@ No newlines after a shebang
 -- stack runghc
 main =
  pure ()
--- https://github.com/chrisdone/hindent/issues/208
+-- https://github.com/mihaimaruseac/hindent/issues/208
 ```
 
 ```haskell expect
 #!/usr/bin/env stack
 -- stack runghc
 main = pure ()
--- https://github.com/chrisdone/hindent/issues/208
+-- https://github.com/mihaimaruseac/hindent/issues/208
 ```
 
 Double shebangs
