@@ -1291,6 +1291,13 @@ test = (:@)
 
 ### Records
 
+No field
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/366
+foo = Nothing {}
+```
+
 Short
 
 ```haskell
@@ -1668,13 +1675,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-neongreen "{" is lost when formatting "Foo{}" #366
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/366
-foo = Nothing {}
-```
 
 RecursiveDo `rec` and `mdo` keyword #328
 
