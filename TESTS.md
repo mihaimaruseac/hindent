@@ -1191,9 +1191,17 @@ for xs $ \case
   Left x -> x
 ```
 
+Qualified operator as an argument
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/273
+foo = foldr1 (V.++) [V.empty, V.empty]
+```
+
 Apply an infix operator in prefix style
 
 ```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/273
 ys = (++) [] []
 ```
 
@@ -1621,18 +1629,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-ttuegel qualified infix sections get mangled #273
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/273
-import qualified Data.Vector as V
-
-main :: IO ()
-main = do
-  let _ = foldr1 (V.++) [V.empty, V.empty]
-  pure ()
-```
 
 cdepillabout Long deriving clauses are not reformatted #289
 
