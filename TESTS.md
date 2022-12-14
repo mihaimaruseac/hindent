@@ -1191,6 +1191,13 @@ for xs $ \case
   Left x -> x
 ```
 
+Qualified operator
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/273
+xs = V.empty V.++ V.empty
+```
+
 In parentheses
 
 ```haskell
@@ -1621,8 +1628,6 @@ main = do
   pure ()
 
 -- more corner cases.
-xs = V.empty V.++ V.empty
-
 ys = (++) [] []
 ```
 
