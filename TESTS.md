@@ -153,6 +153,15 @@ import CommentAfter -- Comment here shouldn't affect newlines
 import CommentAfter
 ```
 
+`PackageImports`
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/480
+{-# LANGUAGE PackageImports #-}
+
+import qualified "base" Prelude as P
+```
+
 ### Foreign imports and exports
 
 Foreign export
@@ -1798,15 +1807,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-cdsmith Quotes are dropped from package imports #480
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/480
-{-# LANGUAGE PackageImports #-}
-
-import qualified "base" Prelude as P
-```
 
 sophie-h Fails to create required indentation for infix #238
 
