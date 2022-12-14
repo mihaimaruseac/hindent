@@ -1420,7 +1420,7 @@ q = '(-)
 A quoted TH name from a type name
 
 ```haskell
--- https://github.com/commercialhaskell/hindent/issues/412
+-- https://github.com/mihaimaruseac/hindent/issues/412
 data (-)
 
 q = ''(-)
