@@ -973,14 +973,6 @@ Type application
 fun @Int 12
 ```
 
-Let binding with implicit parameters
-
-```haskell
-f =
-  let ?x = 42
-   in f
-```
-
 ### Case expressions
 
 Normal case
@@ -1151,6 +1143,26 @@ foo =
   alloca 10 $ \a ->
     alloca 20 $ \b ->
       cFunction fooo barrr muuu (fooo barrr muuu) (fooo barrr muuu)
+```
+
+### Let ... in expressions
+
+With implicit parameters
+
+```haskell
+f =
+  let ?x = 42
+   in f
+```
+
+inside a `do`
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/467
+main :: IO ()
+main = do
+  let x = 5
+   in when (x > 0) (return ())
 ```
 
 ### List comprehensions
@@ -1744,16 +1756,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-michalrus `let ... in ...` inside of `do` breaks compilation #467
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/467
-main :: IO ()
-main = do
-  let x = 5
-   in when (x > 0) (return ())
-```
 
 sophie-h Breaking valid top-level template haskell #473
 
