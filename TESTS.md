@@ -1591,19 +1591,6 @@ Escaped newlines
 
 ## Regression tests
 
-Wrapped import list shouldn't add newline
-
-```haskell given
-import ATooLongList
-       (alpha, beta, gamma, delta, epsilon, zeta, eta, theta)
-import B
-```
-
-```haskell expect
-import ATooLongList (alpha, beta, delta, epsilon, eta, gamma, theta, zeta)
-import B
-```
-
 sgraf812 top-level pragmas should not add an additional newline #255
 
 ``` haskell
