@@ -552,6 +552,13 @@ g (x:xs) = x
 g' ((:) x _) = x
 ```
 
+Infix constructor pattern
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/424
+from $ \(author `InnerJoin` post) -> pure ()
+```
+
 ##### Pattern matchings against record
 
 Short
@@ -1737,13 +1744,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-NorfairKing Infix constructor pattern is broken #424
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/424
-from $ \(author `InnerJoin` post) -> pure ()
-```
 
 michalrus `let ... in ...` inside of `do` breaks compilation #467
 
