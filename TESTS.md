@@ -1689,6 +1689,25 @@ main = putStrLn "Hello, World!"
 {- This is another random comment. -}
 ```
 
+Comments on functions in where clause
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/540
+topLevelFunc1 = f
+  where
+    -- comment on func in where clause
+    -- stays in the where clause
+    f = undefined
+
+topLevelFunc2 = f . g
+  where
+    {- multi
+       line
+       comment -}
+    f = undefined
+    -- single line comment
+    g = undefined
+```
 ## Identifiers
 
 Unicode
@@ -1805,26 +1824,4 @@ Escaped newlines
     }
 #define SHORT_MACRO_DEFINITION \
   x
-```
-
-## Regression tests
-
-lippirk Comments on functions in where clause not quite right #540
-
-```haskell
--- https://github.com/chrisdone/hindent/issues/540
-topLevelFunc1 = f
-  where
-    -- comment on func in where clause
-    -- stays in the where clause
-    f = undefined
-
-topLevelFunc2 = f . g
-  where
-    {- multi
-       line
-       comment -}
-    f = undefined
-    -- single line comment
-    g = undefined
 ```
