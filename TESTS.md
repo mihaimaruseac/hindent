@@ -182,6 +182,7 @@ Foreign import with an `unsafe` annotation
 -- https://github.com/mihaimaruseac/hindent/issues/479
 foreign import ccall unsafe "test" test :: IO ()
 ```
+
 ## Declarations
 
 Type family instances
