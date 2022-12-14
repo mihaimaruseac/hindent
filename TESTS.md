@@ -74,7 +74,7 @@ module X
     ) where
 ```
 
-## Imports
+## Imports, foreign imports, and foreign exports
 
 Import lists
 
@@ -153,6 +153,35 @@ import CommentAfter -- Comment here shouldn't affect newlines
 import CommentAfter
 ```
 
+### Foreign imports and exports
+
+Foreign export
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/479
+foreign export ccall "test" test :: IO ()
+```
+
+Foreign import without safety annotation
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/479
+foreign import ccall "test" test :: IO ()
+```
+
+Foreign import with a `safe` annotation
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/479
+foreign import ccall safe "test" test :: IO ()
+```
+
+Foreign import with an `unsafe` annotation
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/479
+foreign import ccall unsafe "test" test :: IO ()
+```
 ## Declarations
 
 Type family instances
@@ -1768,19 +1797,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-schroffl Hindent produces invalid Syntax from FFI exports #479
-
-```haskell
--- https://github.com/commercialhaskell/hindent/issues/479
-foreign export ccall "test" test :: IO ()
-
-foreign import ccall "test" test :: IO ()
-
-foreign import ccall safe "test" test :: IO ()
-
-foreign import ccall unsafe "test" test :: IO ()
-```
 
 cdsmith Quotes are dropped from package imports #480
 
