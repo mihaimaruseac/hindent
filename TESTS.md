@@ -1565,13 +1565,22 @@ main = putStrLn "Hello, World!"
 {- This is another random comment. -}
 ```
 
-## Behaviour checks
+## Identifiers
 
 Unicode
 
 ```haskell
 α = γ * "ω"
 -- υ
+```
+
+`rec` and `mdo` are valid identifiers unless `RecursiveDo` is enabled
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/328
+rec = undefined
+
+mdo = undefined
 ```
 
 ## Complex input
@@ -1675,14 +1684,6 @@ Escaped newlines
 ```
 
 ## Regression tests
-
-RecursiveDo `rec` and `mdo` keyword #328
-
-```haskell
-rec = undefined
-
-mdo = undefined
-```
 
 NorfairKing Do as left-hand side of an infix operation #296
 
