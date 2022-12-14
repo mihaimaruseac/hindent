@@ -1197,6 +1197,13 @@ In parentheses
 cat = (++)
 ```
 
+Qualified operator in parentheses
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/273
+cons = (V.++)
+```
+
 The first character of an infix operator can be `@` unless `TypeApplications` is enabled.
 
 ```haskell
@@ -1617,9 +1624,6 @@ main = do
 xs = V.empty V.++ V.empty
 
 ys = (++) [] []
-
-cons :: V.Vector a -> V.Vector a -> V.Vector a
-cons = (V.++)
 ```
 
 cdepillabout Long deriving clauses are not reformatted #289
