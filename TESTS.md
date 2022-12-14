@@ -1424,7 +1424,7 @@ main = putStrLn "Hello, World!"
 
 Unicode
 
-``` haskell
+```haskell
 α = γ * "ω"
 -- υ
 ```
