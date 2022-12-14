@@ -13,6 +13,7 @@ No newlines after a shebang
 
 ```haskell given
 #!/usr/bin/env stack
+
 -- stack runghc
 main =
  pure ()
