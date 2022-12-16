@@ -151,6 +151,162 @@ Do not collect pragma-like comments
 static = 3
 ```
 
+## Imports, foreign imports, and foreign exports
+
+Import lists
+
+```haskell
+import Control.Lens (_2, _Just)
+import Data.Text
+import Data.Text
+import qualified Data.Text as T
+import qualified Data.Text (a, b, c)
+import Data.Text (a, b, c)
+import Data.Text hiding (a, b, c)
+```
+
+Shorter identifiers come first
+
+```haskell
+import Foo ((!), (!!))
+```
+
+Import a pattern
+
+```haskell
+{-# LANGUAGE PatternSynonyms #-}
+
+import Foo (pattern Bar)
+```
+
+Sorted
+
+```haskell given
+import B
+import A
+```
+
+```haskell expect
+import A
+import B
+```
+
+Explicit imports - capitals first (typeclasses/types), then operators, then identifiers
+
+```haskell given
+import qualified MegaModule as M ((>>>), MonadBaseControl, void, MaybeT(..), join, Maybe(Nothing, Just), liftIO, Either, (<<<), Monad(return, (>>=), (>>)))
+```
+
+```haskell expect
+import qualified MegaModule as M
+  ( Either
+  , Maybe(Just, Nothing)
+  , MaybeT(..)
+  , Monad((>>), (>>=), return)
+  , MonadBaseControl
+  , (<<<)
+  , (>>>)
+  , join
+  , liftIO
+  , void
+  )
+```
+
+Pretty import specification
+
+```haskell
+import A hiding
+  ( foobarbazqux
+  , foobarbazqux
+  , foobarbazqux
+  , foobarbazqux
+  , foobarbazqux
+  , foobarbazqux
+  , foobarbazqux
+  )
+
+import Name hiding ()
+
+import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
+```
+
+An import declaration importing lots of data constructors
+
+```haskell
+import Direction
+  ( Direction(East, North, NorthEast, NorthWest, South, SouthEast,
+          SouthWest, West)
+  , allDirections
+  )
+```
+
+Preserve newlines between import groups
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/200
+import GHC.Monad
+
+import CommentAfter -- Comment here shouldn't affect newlines
+import HelloWorld
+
+import CommentAfter -- Comment here shouldn't affect newlines
+
+-- Comment here shouldn't affect newlines
+import CommentAfter
+```
+
+`PackageImports`
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/480
+{-# LANGUAGE PackageImports #-}
+
+import qualified "base" Prelude as P
+```
+
+### Foreign imports and exports
+
+A `ccall` foreign export
+
+```haskell
+{-# LANGUAGE ForeignFunctionInterface #-}
+
+foreign export ccall "test" test :: IO ()
+```
+
+A `ccall` unsafe foreign import
+
+```haskell
+{-# LANGUAGE ForeignFunctionInterface #-}
+
+foreign import ccall unsafe "test" test :: IO ()
+```
+
+A `capi` foreign import
+
+```haskell
+{-# LANGUAGE CApiFFI #-}
+{-# LANGUAGE ForeignFunctionInterface #-}
+
+foreign import capi safe "foo" test :: IO Int
+```
+
+A `stdcall` foreign import
+
+```haskell
+{-# LANGUAGE ForeignFunctionInterface #-}
+
+foreign import stdcall safe "test" bar :: IO ()
+```
+
+A `javascript` foreign import
+
+```haskell
+{-# LANGUAGE ForeignFunctionInterface #-}
+
+foreign import javascript safe "test" test :: IO ()
+```
+
 ## Declarations
 
 Data family
@@ -929,162 +1085,6 @@ As pattern
 
 ```haskell
 f all@(x:xs) = all
-```
-
-### Imports, foreign imports, and foreign exports
-
-Import lists
-
-```haskell
-import Control.Lens (_2, _Just)
-import Data.Text
-import Data.Text
-import qualified Data.Text as T
-import qualified Data.Text (a, b, c)
-import Data.Text (a, b, c)
-import Data.Text hiding (a, b, c)
-```
-
-Shorter identifiers come first
-
-```haskell
-import Foo ((!), (!!))
-```
-
-Import a pattern
-
-```haskell
-{-# LANGUAGE PatternSynonyms #-}
-
-import Foo (pattern Bar)
-```
-
-Sorted
-
-```haskell given
-import B
-import A
-```
-
-```haskell expect
-import A
-import B
-```
-
-Explicit imports - capitals first (typeclasses/types), then operators, then identifiers
-
-```haskell given
-import qualified MegaModule as M ((>>>), MonadBaseControl, void, MaybeT(..), join, Maybe(Nothing, Just), liftIO, Either, (<<<), Monad(return, (>>=), (>>)))
-```
-
-```haskell expect
-import qualified MegaModule as M
-  ( Either
-  , Maybe(Just, Nothing)
-  , MaybeT(..)
-  , Monad((>>), (>>=), return)
-  , MonadBaseControl
-  , (<<<)
-  , (>>>)
-  , join
-  , liftIO
-  , void
-  )
-```
-
-Pretty import specification
-
-```haskell
-import A hiding
-  ( foobarbazqux
-  , foobarbazqux
-  , foobarbazqux
-  , foobarbazqux
-  , foobarbazqux
-  , foobarbazqux
-  , foobarbazqux
-  )
-
-import Name hiding ()
-
-import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
-```
-
-An import declaration importing lots of data constructors
-
-```haskell
-import Direction
-  ( Direction(East, North, NorthEast, NorthWest, South, SouthEast,
-          SouthWest, West)
-  , allDirections
-  )
-```
-
-Preserve newlines between import groups
-
-```haskell
--- https://github.com/mihaimaruseac/hindent/issues/200
-import GHC.Monad
-
-import CommentAfter -- Comment here shouldn't affect newlines
-import HelloWorld
-
-import CommentAfter -- Comment here shouldn't affect newlines
-
--- Comment here shouldn't affect newlines
-import CommentAfter
-```
-
-`PackageImports`
-
-```haskell
--- https://github.com/mihaimaruseac/hindent/issues/480
-{-# LANGUAGE PackageImports #-}
-
-import qualified "base" Prelude as P
-```
-
-#### Foreign imports and exports
-
-A `ccall` foreign export
-
-```haskell
-{-# LANGUAGE ForeignFunctionInterface #-}
-
-foreign export ccall "test" test :: IO ()
-```
-
-A `ccall` unsafe foreign import
-
-```haskell
-{-# LANGUAGE ForeignFunctionInterface #-}
-
-foreign import ccall unsafe "test" test :: IO ()
-```
-
-A `capi` foreign import
-
-```haskell
-{-# LANGUAGE CApiFFI #-}
-{-# LANGUAGE ForeignFunctionInterface #-}
-
-foreign import capi safe "foo" test :: IO Int
-```
-
-A `stdcall` foreign import
-
-```haskell
-{-# LANGUAGE ForeignFunctionInterface #-}
-
-foreign import stdcall safe "test" bar :: IO ()
-```
-
-A `javascript` foreign import
-
-```haskell
-{-# LANGUAGE ForeignFunctionInterface #-}
-
-foreign import javascript safe "test" test :: IO ()
 ```
 
 ### Infix declarations
