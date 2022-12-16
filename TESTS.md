@@ -1437,8 +1437,11 @@ Promoted list (issue #348)
 
 ```haskell
 a :: A '[ 'True]
+a = undefined
+
 -- nested promoted list with multiple elements.
 b :: A '[ '[ 'True, 'False], '[ 'False, 'True]]
+b = undefined
 ```
 
 Class constraints should leave `::` on same line
