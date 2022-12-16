@@ -2438,6 +2438,16 @@ Type brackets
 foo :: $([t|Bool|]) -> a
 ```
 
+A quoted TH name from a normal data constructors
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/412
+data T =
+  (-)
+
+q = '(-)
+```
+
 A quoted TH name from a type name
 
 ```haskell
