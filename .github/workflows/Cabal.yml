@@ -18,10 +18,13 @@ jobs:
       fail-fast: false  # Windows builds randomly fail
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        ghc: ["8.10.7", "9.2.2", "9.4.1"]
+        ghc: ["8.10.7", "9.2.5", "9.4.1"]
         exclude:
+        # https://github.com/haskell/actions/issues/129
         - os: windows-latest
           ghc: "9.4.1"
+        - os: windows-latest
+          ghc: "9.2.5"
     env:
       CONFIG: "--enable-tests --enable-benchmarks"
     steps:
