@@ -31,24 +31,58 @@ library
   ghc-options:       -Wall -O2
   default-language:  Haskell2010
   exposed-modules:   HIndent
-                     HIndent.Types
-                     HIndent.Pretty
+                     HIndent.Applicative
                      HIndent.CabalFile
                      HIndent.CodeBlock
+                     HIndent.Language
+                     HIndent.LanguageExtension
+                     HIndent.LanguageExtension.Conversion
+                     HIndent.LanguageExtension.Types
+                     HIndent.ModulePreprocessing
+                     HIndent.ModulePreprocessing.CommentRelocation
+                     HIndent.Parse
+                     HIndent.Pragma
+                     HIndent.Pretty
+                     HIndent.Pretty.Combinators
+                     HIndent.Pretty.Combinators.Comment
+                     HIndent.Pretty.Combinators.Getter
+                     HIndent.Pretty.Combinators.Indent
+                     HIndent.Pretty.Combinators.Lineup
+                     HIndent.Pretty.Combinators.Op
+                     HIndent.Pretty.Combinators.Outputable
+                     HIndent.Pretty.Combinators.RhsSeparator
+                     HIndent.Pretty.Combinators.String
+                     HIndent.Pretty.Combinators.Switch
+                     HIndent.Pretty.Combinators.Wrap
+                     HIndent.Pretty.Import
+                     HIndent.Pretty.Import.Sort
+                     HIndent.Pretty.NodeComments
+                     HIndent.Pretty.Pragma
+                     HIndent.Pretty.SigBindFamily
+                     HIndent.Pretty.Types
+                     HIndent.Types
   build-depends:     base >= 4.7 && <5
                    , containers
                    , Cabal
                    , filepath
                    , directory
-                   , haskell-src-exts >= 1.20
+                   , ghc-lib-parser-ex
                    , monad-loops
                    , mtl
                    , bytestring
+                   , split
                    , utf8-string
                    , transformers
                    , exceptions
+                   , syb
+                   , regex-tdfa
                    , text
+                   , unicode-show
                    , yaml
+  if(impl(ghc >= 9.4.1))
+    build-depends: ghc-lib-parser >= 9.4.1.20220807 && < 9.5
+  else
+    build-depends: ghc-lib-parser >= 9.2.3.20220527 && < 9.3
 
 executable hindent
   hs-source-dirs:    src/main
@@ -60,8 +94,8 @@ executable hindent
   build-depends:     base >= 4 && < 5
                    , hindent
                    , bytestring
+                   , Cabal
                    , utf8-string
-                   , haskell-src-exts
                    , ghc-prim
                    , directory
                    , text
@@ -82,10 +116,10 @@ test-suite hindent-test
   other-modules: Markdone
   build-depends:     base >= 4 && <5
                    , hindent
-                   , haskell-src-exts
                    , monad-loops
                    , mtl
                    , bytestring
+                   , regex-tdfa
                    , utf8-string
                    , hspec
                    , directory
@@ -105,7 +139,6 @@ benchmark hindent-bench
                    , hindent
                    , bytestring
                    , utf8-string
-                   , haskell-src-exts
                    , ghc-prim
                    , directory
                    , criterion

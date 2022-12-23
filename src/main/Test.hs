@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | Test the pretty printer.
@@ -5,30 +6,34 @@ module Main where
 
 import           Data.Algorithm.Diff
 import           Data.Algorithm.DiffOutput
-import qualified Data.ByteString as S
-import qualified Data.ByteString.Builder as S
-import           Data.ByteString.Lazy (ByteString)
-import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString            as S
+import qualified Data.ByteString.Builder    as S
+import           Data.ByteString.Lazy       (ByteString)
+import qualified Data.ByteString.Lazy       as L
 import qualified Data.ByteString.Lazy.Char8 as L8
-import qualified Data.ByteString.Lazy.UTF8 as LUTF8
-import qualified Data.ByteString.UTF8 as UTF8
+import qualified Data.ByteString.Lazy.UTF8  as LUTF8
+import qualified Data.ByteString.UTF8       as UTF8
 import           Data.Function
-import           Data.Monoid
+import           Data.Version
 import qualified HIndent
 import           HIndent.CodeBlock
+import qualified HIndent.LanguageExtension  as HIndent
 import           HIndent.Types
 import           Markdone
+import qualified System.Info
 import           Test.Hspec
+import           Text.Read
+import           Text.Regex.TDFA
 
 -- | Main benchmarks.
 main :: IO ()
 main = do
-    bytes <- S.readFile "TESTS.md"
-    forest <- parse (tokenize bytes)
-    hspec $ do
-      codeBlocksSpec
-      markdoneSpec
-      toSpec forest
+  bytes <- S.readFile "TESTS.md"
+  forest <- parse (tokenize bytes)
+  hspec $ do
+    codeBlocksSpec
+    markdoneSpec
+    toSpec forest
 
 reformat :: Config -> S.ByteString -> ByteString
 reformat cfg code =
@@ -66,10 +71,35 @@ toSpec = go
         "haskell pending" -> do
           it (UTF8.toString desc) pending
           go next
+        s
+          | Just from <- fromVersion $ UTF8.toString s ->
+            if compilerVersion >= from
+              then do
+                it (UTF8.toString desc) $
+                  shouldBeReadable (reformat cfg code) (L.fromStrict code)
+                go next
+              else do
+                it
+                  (UTF8.toString desc)
+                  (pendingWith $ pendingForVersionMsg from)
+                go next
         _ -> go next
     go (PlainText {}:next) = go next
     go (CodeFence {}:next) = go next
     go [] = return ()
+    pendingForVersionMsg from =
+      "The test is for GHC versions since " ++
+      showVersion from ++
+      " but you are using GHC version " ++ showVersion compilerVersion ++ "."
+    fromVersion :: String -> Maybe Version
+    fromVersion s
+      | (_, _, _, [x, y, z]) <-
+          s =~ fromRegex :: (String, String, String, [String])
+      , (Just x', Just y', Just z') <- (readMaybe x, readMaybe y, readMaybe z) =
+        Just $ Version [x', y', z'] []
+    fromVersion _ = Nothing
+    fromRegex :: String
+    fromRegex = "haskell since ([0-9]+)\\.([0-9]+)\\.([0-9]+)"
 
 -- | Version of 'shouldBe' that prints strings in a readable way,
 -- better for our use-case.
@@ -78,10 +108,11 @@ shouldBeReadable x y =
   shouldBe (Readable x (Just (diff y x))) (Readable y Nothing)
 
 -- | Prints a string without quoting and escaping.
-data Readable = Readable
-  { readableString :: ByteString
-  , readableDiff :: Maybe String
-  }
+data Readable =
+  Readable
+    { readableString :: ByteString
+    , readableDiff   :: Maybe String
+    }
 
 instance Eq Readable where
   (==) = on (==) readableString
@@ -91,7 +122,7 @@ instance Show Readable where
     "\n" ++
     LUTF8.toString x ++
     (case d' of
-       Just d -> "\nThe diff:\n" ++ d
+       Just d  -> "\nThe diff:\n" ++ d
        Nothing -> "")
 
 -- | A diff display.
@@ -100,7 +131,7 @@ diff x y = ppDiff (on getGroupedDiff (lines . LUTF8.toString) x y)
 
 skipEmptyLines :: [Markdone] -> [Markdone]
 skipEmptyLines (PlainText "":rest) = rest
-skipEmptyLines other = other
+skipEmptyLines other               = other
 
 codeBlocksSpec :: Spec
 codeBlocksSpec =
@@ -175,3 +206,16 @@ markdoneSpec = do
             "This is a heading"
             [PlainText "This is plain text\nsplit across two lines."]
         ]
+
+-- | Returns the version of the compiler used to build this program.
+--
+-- This function is a wrapper for `compilerVersion` and
+-- `fullCompilerVersion` defined in `System.info`. If the `base` package
+-- 4.15.0.0 or later is used, the latter function is defined and hence the
+-- value is returned, otherwise the former value is returned.
+compilerVersion :: Version
+#if MIN_VERSION_base(4,15,0)
+compilerVersion = System.Info.fullCompilerVersion
+#else
+compilerVersion = System.Info.compilerVersion
+#endif
