@@ -4,35 +4,33 @@ module HIndent.CabalFile
   ( getCabalExtensionsForSourcePath
   ) where
 
-import           Control.Monad
-import qualified Data.ByteString                               as BS
-import           Data.List
-import           Data.Maybe
-import           Data.Traversable
-import           Distribution.ModuleName
-import           Distribution.PackageDescription
-import           Distribution.PackageDescription.Configuration
+import Control.Monad
+import qualified Data.ByteString as BS
+import Data.List
+import Data.Maybe
+import Data.Traversable
+import Distribution.ModuleName
+import Distribution.PackageDescription
+import Distribution.PackageDescription.Configuration
 #if MIN_VERSION_Cabal(3, 6, 0)
-import           Distribution.Utils.Path                       (getSymbolicPath)
+import Distribution.Utils.Path (getSymbolicPath)
 #endif
 #if MIN_VERSION_Cabal(2, 2, 0)
-import           Distribution.PackageDescription.Parsec
+import Distribution.PackageDescription.Parsec
 #else
-import           Distribution.PackageDescription.Parse
+import Distribution.PackageDescription.Parse
 #endif
-import           HIndent.Language
-import           HIndent.LanguageExtension                     hiding
-                                                               (defaultExtensions)
-import           HIndent.LanguageExtension.Conversion
-import           HIndent.LanguageExtension.Types
-import           Language.Haskell.Extension                    hiding
-                                                               (Extension)
-import           System.Directory
-import           System.FilePath
+import HIndent.Language
+import HIndent.LanguageExtension hiding (defaultExtensions)
+import HIndent.LanguageExtension.Conversion
+import HIndent.LanguageExtension.Types
+import Language.Haskell.Extension hiding (Extension)
+import System.Directory
+import System.FilePath
 
 data Stanza =
   MkStanza
-    { _stanzaBuildInfo       :: BuildInfo
+    { _stanzaBuildInfo :: BuildInfo
     , stanzaIsSourceFilePath :: FilePath -> Bool
     }
 
@@ -76,16 +74,16 @@ packageStanzas pd =
           (testBuildInfo ts)
           (case testInterface ts of
              TestSuiteLibV09 _ mname -> [mname]
-             _                       -> [])
+             _ -> [])
           (case testInterface ts of
              TestSuiteExeV10 _ path -> [path]
-             _                      -> [])
+             _ -> [])
       benchStanza :: Benchmark -> Stanza
       benchStanza bn =
         mkStanza (benchmarkBuildInfo bn) [] $
         case benchmarkInterface bn of
           BenchmarkExeV10 _ path -> [path]
-          _                      -> []
+          _ -> []
    in mconcat
         [ maybeToList $ fmap libStanza $ library pd
         , fmap exeStanza $ executables pd
@@ -115,7 +113,7 @@ getGenericPackageDescription cabalPath = do
   cabaltext <- readFile cabalPath
   case parsePackageDescription cabaltext of
     ParseOk _ gpd -> return $ Just gpd
-    _             -> return Nothing
+    _ -> return Nothing
 #endif
 -- | Find the `Stanza` that refers to this source path
 getCabalStanza :: FilePath -> IO (Maybe Stanza)
@@ -134,7 +132,7 @@ getCabalStanza srcpath = do
       return $
         case filter (\stanza -> stanzaIsSourceFilePath stanza relpath) $
              mconcat stanzass of
-          []         -> Nothing
+          [] -> Nothing
           (stanza:_) -> Just stanza -- just pick the first one
     Nothing -> return Nothing
 

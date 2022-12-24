@@ -1,9 +1,9 @@
-{-# LANGUAGE CPP                        #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 
 -- | All types.
 module HIndent.Types
@@ -13,18 +13,18 @@ module HIndent.Types
   , defaultConfig
   ) where
 
-import           Control.Applicative
-import           Control.Monad
-import           Control.Monad.State.Strict           (MonadState (..), StateT)
-import           Control.Monad.Trans.Maybe
-import           Data.ByteString.Builder
-import           Data.Functor.Identity
-import           Data.Int                             (Int64)
-import           Data.Maybe
-import           Data.Yaml                            (FromJSON (..))
-import qualified Data.Yaml                            as Y
-import           HIndent.LanguageExtension.Conversion
-import           HIndent.LanguageExtension.Types
+import Control.Applicative
+import Control.Monad
+import Control.Monad.State.Strict (MonadState(..), StateT)
+import Control.Monad.Trans.Maybe
+import Data.ByteString.Builder
+import Data.Functor.Identity
+import Data.Int (Int64)
+import Data.Maybe
+import Data.Yaml (FromJSON(..))
+import qualified Data.Yaml as Y
+import HIndent.LanguageExtension.Conversion
+import HIndent.LanguageExtension.Types
 
 -- | A pretty printing monad.
 newtype Printer a =
@@ -42,35 +42,35 @@ newtype Printer a =
 -- | The state of the pretty printer.
 data PrintState =
   PrintState
-    { psIndentLevel  :: !Int64
+    { psIndentLevel :: !Int64
     -- ^ Current indentation level, i.e. every time there's a
     -- new-line, output this many spaces.
-    , psOutput       :: !Builder
+    , psOutput :: !Builder
     -- ^ The current output bytestring builder.
-    , psNewline      :: !Bool
+    , psNewline :: !Bool
     -- ^ Just outputted a newline?
-    , psColumn       :: !Int64
+    , psColumn :: !Int64
     -- ^ Current column.
-    , psLine         :: !Int64
+    , psLine :: !Int64
     -- ^ Current line number.
-    , psConfig       :: !Config
+    , psConfig :: !Config
     -- ^ Configuration of max colums and indentation style.
     , psFitOnOneLine :: !Bool
     -- ^ Bail out if we need to print beyond the current line or
     -- the maximum column.
-    , psEolComment   :: !Bool
+    , psEolComment :: !Bool
     }
 
 -- | Configurations shared among the different styles. Styles may pay
 -- attention to or completely disregard this configuration.
 data Config =
   Config
-    { configMaxColumns      :: !Int64 -- ^ Maximum columns to fit code into ideally.
-    , configIndentSpaces    :: !Int64 -- ^ How many spaces to indent?
+    { configMaxColumns :: !Int64 -- ^ Maximum columns to fit code into ideally.
+    , configIndentSpaces :: !Int64 -- ^ How many spaces to indent?
     , configTrailingNewline :: !Bool -- ^ End with a newline.
-    , configSortImports     :: !Bool -- ^ Sort imports in groups.
-    , configLineBreaks      :: [String] -- ^ Break line when meets these operators.
-    , configExtensions      :: [Extension]
+    , configSortImports :: !Bool -- ^ Sort imports in groups.
+    , configLineBreaks :: [String] -- ^ Break line when meets these operators.
+    , configExtensions :: [Extension]
       -- ^ Extra language extensions enabled by default.
     }
 

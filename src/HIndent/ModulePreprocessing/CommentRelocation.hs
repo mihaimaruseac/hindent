@@ -1,9 +1,9 @@
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE GADTs               #-}
-{-# LANGUAGE RankNTypes          #-}
-{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeApplications #-}
 
 -- | Comment relocation for pretty-printing comments correctly.
 --
@@ -38,18 +38,18 @@ module HIndent.ModulePreprocessing.CommentRelocation
   ( relocateComments
   ) where
 
-import           Control.Exception
-import           Control.Monad.State
-import           Data.Foldable
-import           Data.Function
-import           Data.List
-import           Generics.SYB                 hiding (GT, typeOf, typeRep)
-import           GHC.Data.Bag
-import           GHC.Hs
-import           GHC.Types.SrcLoc
-import           HIndent.Pretty.Pragma
-import           HIndent.Pretty.SigBindFamily
-import           Type.Reflection
+import Control.Exception
+import Control.Monad.State
+import Data.Foldable
+import Data.Function
+import Data.List
+import GHC.Data.Bag
+import GHC.Hs
+import GHC.Types.SrcLoc
+import Generics.SYB hiding (GT, typeOf, typeRep)
+import HIndent.Pretty.Pragma
+import HIndent.Pretty.SigBindFamily
+import Type.Reflection
 
 -- | A wrapper type used in everywhereMEpAnnsBackwards' to collect all
 -- 'EpAnn's to apply a function with them in order their positions.

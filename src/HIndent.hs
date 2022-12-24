@@ -1,6 +1,6 @@
-{-# LANGUAGE CPP                 #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Haskell indenter.
@@ -12,37 +12,37 @@ module HIndent
     testAst
   ) where
 
-import           Control.Monad.State.Strict
-import           Control.Monad.Trans.Maybe
-import           Data.ByteString                      (ByteString)
-import qualified Data.ByteString                      as S
-import           Data.ByteString.Builder              (Builder)
-import qualified Data.ByteString.Builder              as S
-import qualified Data.ByteString.Char8                as S8
-import qualified Data.ByteString.Internal             as S
-import qualified Data.ByteString.Lazy                 as L
-import qualified Data.ByteString.Lazy.Char8           as L8
-import qualified Data.ByteString.Unsafe               as S
-import qualified Data.ByteString.UTF8                 as UTF8
-import           Data.Char
-import           Data.Either
-import           Data.Function
-import           Data.Functor.Identity
-import           Data.List                            hiding (stripPrefix)
-import           Data.Maybe
-import           Data.Monoid
-import           GHC.Hs
-import           GHC.Parser.Lexer                     hiding (buffer)
-import           GHC.Types.SrcLoc
-import           HIndent.CodeBlock
-import           HIndent.LanguageExtension
+import Control.Monad.State.Strict
+import Control.Monad.Trans.Maybe
+import Data.ByteString (ByteString)
+import qualified Data.ByteString as S
+import Data.ByteString.Builder (Builder)
+import qualified Data.ByteString.Builder as S
+import qualified Data.ByteString.Char8 as S8
+import qualified Data.ByteString.Internal as S
+import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString.Lazy.Char8 as L8
+import qualified Data.ByteString.UTF8 as UTF8
+import qualified Data.ByteString.Unsafe as S
+import Data.Char
+import Data.Either
+import Data.Function
+import Data.Functor.Identity
+import Data.List hiding (stripPrefix)
+import Data.Maybe
+import Data.Monoid
+import GHC.Hs
+import GHC.Parser.Lexer hiding (buffer)
+import GHC.Types.SrcLoc
+import HIndent.CodeBlock
+import HIndent.LanguageExtension
 import qualified HIndent.LanguageExtension.Conversion as CE
-import           HIndent.LanguageExtension.Types
-import           HIndent.ModulePreprocessing
-import           HIndent.Parse
-import           HIndent.Pretty
-import           HIndent.Types
-import           Prelude
+import HIndent.LanguageExtension.Types
+import HIndent.ModulePreprocessing
+import HIndent.Parse
+import HIndent.Pretty
+import HIndent.Types
+import Prelude
 
 -- | Format the given source.
 reformat ::
