@@ -18,7 +18,13 @@ jobs:
       fail-fast: false  # Windows builds randomly fail
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        ghc: ["8.10.7", "9.2.2", "9.4.1"]
+        ghc: ["8.10.7", "9.2.5", "9.4.1"]
+        exclude:
+        # https://github.com/haskell/actions/issues/129
+        - os: windows-latest
+          ghc: "9.4.1"
+        - os: windows-latest
+          ghc: "9.2.5"
     env:
       CONFIG: "--enable-tests --enable-benchmarks"
     steps:
@@ -45,6 +51,12 @@ jobs:
       run: cabal v2-build $CONFIG
     - name: Check the format of files in `src/`
       run: cabal run hindent -- src/**/*.hs --validate
+      if: matrix.os != 'macOS-latest' || matrix.ghc != '9.2.5'
+      # See https://gitlab.haskell.org/ghc/ghc/-/issues/20592#note_391266 for the problem and workaround.
+      # This problem is fixed in GHC 9.2.3.
+    - name: Build with a workaround for macOS
+      run: C_INCLUDE_PATH="`xcrun --show-sdk-path`/usr/include/ffi" cabal v2-build $CONFIG
+      if: matrix.os == 'macOS-latest' && matrix.ghc == '9.2.5'
     - name: Run tests
       run: cabal v2-test $CONFIG
     - name: Run benchmarks

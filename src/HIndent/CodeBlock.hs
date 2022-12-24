@@ -5,17 +5,16 @@ module HIndent.CodeBlock
   , cppSplitBlocks
   ) where
 
-import Data.ByteString (ByteString)
+import           Data.ByteString       (ByteString)
 import qualified Data.ByteString.Char8 as S8
-import Data.Monoid
 
 -- | A block of code.
 data CodeBlock
-    = Shebang ByteString
-    | HaskellSource Int ByteString
+  = Shebang ByteString
+  | HaskellSource Int ByteString
     -- ^ Includes the starting line (indexed from 0) for error reporting
-    | CPPDirectives ByteString
-     deriving (Show, Eq)
+  | CPPDirectives ByteString
+  deriving (Show, Eq)
 
 -- | Break a Haskell code string into chunks, using CPP as a delimiter.
 -- Lines that start with '#if', '#end', or '#else' are their own chunks, and
@@ -40,7 +39,7 @@ cppSplitBlocks inp =
     groupLines (line1:line2:remainingLines) =
       case mergeLines line1 line2 of
         Just line1And2 -> groupLines (line1And2 : remainingLines)
-        Nothing -> line1 : groupLines (line2 : remainingLines)
+        Nothing        -> line1 : groupLines (line2 : remainingLines)
     groupLines xs@[_] = xs
     groupLines xs@[] = xs
     mergeLines :: CodeBlock -> CodeBlock -> Maybe CodeBlock
@@ -57,7 +56,16 @@ cppSplitBlocks inp =
     cppLine src =
       any
         (`S8.isPrefixOf` src)
-        ["#if", "#end", "#else", "#define", "#undef", "#elif", "#include", "#error", "#warning"]
+        [ "#if"
+        , "#end"
+        , "#else"
+        , "#define"
+        , "#undef"
+        , "#elif"
+        , "#include"
+        , "#error"
+        , "#warning"
+        ]
         -- Note: #ifdef and #ifndef are handled by #if
     hasEscapedTrailingNewline :: ByteString -> Bool
     hasEscapedTrailingNewline src = "\\" `S8.isSuffixOf` src
@@ -87,9 +95,9 @@ cppSplitBlocks inp =
         then "\n"
         else ""
     modifyLast :: (a -> a) -> [a] -> [a]
-    modifyLast _ [] = []
-    modifyLast f [x] = [f x]
+    modifyLast _ []     = []
+    modifyLast f [x]    = [f x]
     modifyLast f (x:xs) = x : modifyLast f xs
     inBlock :: (ByteString -> ByteString) -> CodeBlock -> CodeBlock
     inBlock f (HaskellSource line txt) = HaskellSource line (f txt)
-    inBlock _ dir = dir
+    inBlock _ dir                      = dir
