@@ -13,3 +13,5 @@ src/main/TestGenerate
 .stack-work
 .cabal-sandbox/
 cabal.sandbox.config
+dist-newstyle/
+cabal.project.local
