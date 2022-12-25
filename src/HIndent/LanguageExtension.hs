@@ -110,7 +110,7 @@ badExtensions =
     -- ,QuasiQuotes -- breaks [x| ...], making whitespace free list comps break
   , GLP.PatternSynonyms -- steals the pattern keyword
   , GLP.RecursiveDo -- steals the rec keyword
-  , GLP.TypeApplications -- since GHC
+  , GLP.TypeApplications -- Steals `@`
   , GLP.StaticPointers -- Steals the `static` keyword
   , GLP.AlternativeLayoutRule -- Breaks a few tests
   , GLP.AlternativeLayoutRuleTransitional -- Same as `AlternativeLayoutRule`
