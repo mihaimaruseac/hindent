@@ -25,6 +25,9 @@ jobs:
           ghc: "9.4.1"
         - os: windows-latest
           ghc: "9.2.5"
+    defaults:
+      run:
+        shell: bash
     env:
       CONFIG: "--enable-tests --enable-benchmarks"
     steps:
