@@ -17,18 +17,14 @@ import qualified Data.ByteString.Lazy.Char8 as L8
 import Data.Maybe
 import qualified Data.Text as T
 import Data.Version (showVersion)
-import qualified Data.Yaml as Y
 import Foreign.C.Error
 import GHC.IO.Exception
 import HIndent
 import HIndent.CabalFile
+import HIndent.Config
 import HIndent.LanguageExtension
 import HIndent.LanguageExtension.Types
-import HIndent.Types
 import Options.Applicative hiding (action, style)
-import Path
-import qualified Path.Find as Path
-import qualified Path.IO as Path
 import Paths_hindent (version)
 import qualified System.Directory as IO
 import System.Exit (exitWith)
@@ -85,24 +81,6 @@ main = do
                                else throw e
                        IO.copyPermissions filepath fp
                        IO.renameFile fp filepath `catch` exdev
-
--- | Read config from a config file, or return 'defaultConfig'.
-getConfig :: IO Config
-getConfig = do
-  cur <- Path.getCurrentDir
-  homeDir <- Path.getHomeDir
-  mfile <-
-    Path.findFileUp
-      cur
-      ((== ".hindent.yaml") . toFilePath . filename)
-      (Just homeDir)
-  case mfile of
-    Nothing -> return defaultConfig
-    Just file -> do
-      result <- Y.decodeFileEither (toFilePath file)
-      case result of
-        Left e -> error (show e)
-        Right config -> return config
 
 -- | Program options.
 options :: Config -> Parser RunMode

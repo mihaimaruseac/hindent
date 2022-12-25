@@ -40,6 +40,7 @@ import GHC.Types.SrcLoc
 import GHC.Unit
 import GHC.Unit.Module.Warnings
 import HIndent.Applicative
+import HIndent.Config
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.Import
 import HIndent.Pretty.NodeComments
