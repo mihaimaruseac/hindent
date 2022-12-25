@@ -11,6 +11,7 @@ module HIndent.Pretty.Combinators.String
 import Control.Monad.RWS
 import qualified Data.ByteString.Builder as S
 import GHC.Stack
+import HIndent.Config
 import HIndent.Types
 
 -- | This function prints the given string.

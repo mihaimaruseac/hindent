@@ -35,6 +35,7 @@ import GHC.Hs
 import GHC.Parser.Lexer hiding (buffer)
 import GHC.Types.SrcLoc
 import HIndent.CodeBlock
+import HIndent.Config
 import HIndent.LanguageExtension
 import qualified HIndent.LanguageExtension.Conversion as CE
 import HIndent.LanguageExtension.Types

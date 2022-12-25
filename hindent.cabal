@@ -34,12 +34,14 @@ library
                      HIndent.Applicative
                      HIndent.CabalFile
                      HIndent.CodeBlock
+                     HIndent.Config
                      HIndent.Language
                      HIndent.LanguageExtension
                      HIndent.LanguageExtension.Conversion
                      HIndent.LanguageExtension.Types
                      HIndent.ModulePreprocessing
                      HIndent.ModulePreprocessing.CommentRelocation
+                     HIndent.Path.Find
                      HIndent.Parse
                      HIndent.Pragma
                      HIndent.Pretty
@@ -70,6 +72,8 @@ library
                    , monad-loops
                    , mtl
                    , bytestring
+                   , path
+                   , path-io
                    , split
                    , utf8-string
                    , transformers
@@ -89,8 +93,7 @@ executable hindent
   ghc-options:       -Wall -O2
   default-language:  Haskell2010
   main-is:           Main.hs
-  other-modules:     Path.Find
-                     Paths_hindent
+  other-modules:     Paths_hindent
   build-depends:     base >= 4 && < 5
                    , hindent
                    , bytestring
@@ -102,8 +105,6 @@ executable hindent
                    , yaml
                    , unix-compat
                    , deepseq
-                   , path
-                   , path-io
                    , transformers
                    , exceptions
                    , optparse-applicative
