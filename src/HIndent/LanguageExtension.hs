@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP                 #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Operations related to language extensions.
@@ -11,17 +11,17 @@ module HIndent.LanguageExtension
   , getExtensions
   ) where
 
-import           Data.Char
-import           Data.List
-import           Data.List.Split
-import           Data.Maybe
-import qualified Data.Text                            as T
-import qualified GHC.Driver.Session                   as GLP
-import qualified GHC.LanguageExtensions               as GLP
-import           HIndent.LanguageExtension.Conversion
-import           HIndent.LanguageExtension.Types
-import           HIndent.Pragma
-import           Text.Regex.TDFA
+import Data.Char
+import Data.List
+import Data.List.Split
+import Data.Maybe
+import qualified Data.Text as T
+import qualified GHC.Driver.Session as GLP
+import qualified GHC.LanguageExtensions as GLP
+import HIndent.LanguageExtension.Conversion
+import HIndent.LanguageExtension.Types
+import HIndent.Pragma
+import Text.Regex.TDFA
 
 -- | This function returns a list of extensions that the passed language
 -- (e.g., GHC2021) enables.
@@ -37,7 +37,7 @@ extensionImplies :: Extension -> [Extension]
 extensionImplies (EnableExtension e) =
   toExtension <$> filter (\(a, _, _) -> e == a) GLP.impliedXFlags
   where
-    toExtension (_, True, e')  = EnableExtension e'
+    toExtension (_, True, e') = EnableExtension e'
     toExtension (_, False, e') = DisableExtension e'
 extensionImplies _ = []
 
@@ -56,7 +56,7 @@ getExtensions = foldr (f . T.unpack) defaultExtensions
       case strToExt x of
         Just x'@EnableExtension {} -> x' : delete x' a
         Just (DisableExtension x') -> delete (EnableExtension x') a
-        _                          -> error $ "Unknown extension: " ++ x
+        _ -> error $ "Unknown extension: " ++ x
 
 -- | Collects language extensions enabled or disabled by @{-# LANGUAGE FOO
 -- #-}@.

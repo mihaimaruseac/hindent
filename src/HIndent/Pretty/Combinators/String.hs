@@ -8,10 +8,10 @@ module HIndent.Pretty.Combinators.String
   , dot
   ) where
 
-import           Control.Monad.RWS
+import Control.Monad.RWS
 import qualified Data.ByteString.Builder as S
-import           GHC.Stack
-import           HIndent.Types
+import GHC.Stack
+import HIndent.Types
 
 -- | This function prints the given string.
 --

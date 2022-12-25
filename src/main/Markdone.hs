@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveGeneric      #-}
-{-# LANGUAGE LambdaCase         #-}
-{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- | A subset of markdown that only supports @#headings@ and code
 -- fences.
@@ -15,14 +15,14 @@ module Markdone
   , parse
   ) where
 
-import           Control.DeepSeq
-import           Control.Monad.Catch
-import           Control.Monad.State.Strict (State, evalState, get, put)
-import           Data.ByteString            (ByteString)
-import qualified Data.ByteString.Char8      as S8
-import           Data.Char
-import           Data.Typeable
-import           GHC.Generics
+import Control.DeepSeq
+import Control.Monad.Catch
+import Control.Monad.State.Strict (State, evalState, get, put)
+import Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as S8
+import Data.Char
+import Data.Typeable
+import GHC.Generics
 
 -- | A markdone token.
 data Token
@@ -92,7 +92,7 @@ parse = go (0 :: Int)
                 span
                   (\case
                      Heading nextN _ -> nextN > n
-                     _               -> True)
+                     _ -> True)
                   rest
            in do childs <- go (level + 1) children
                  siblings <- go level rest'
@@ -103,7 +103,7 @@ parse = go (0 :: Int)
                   span
                     (\case
                        PlainLine {} -> True
-                       _            -> False)
+                       _ -> False)
                     rest
              in case rest' of
                   (EndFence:rest'') ->
@@ -119,7 +119,7 @@ parse = go (0 :: Int)
                   span
                     (\case
                        PlainLine {} -> True
-                       _            -> False)
+                       _ -> False)
                     (PlainLine p : rest)
              in fmap
                   (PlainText
@@ -130,4 +130,4 @@ parse = go (0 :: Int)
         [] -> return []
         _ -> throwM ExpectedSection
     getPlain (PlainLine x) = x
-    getPlain _             = ""
+    getPlain _ = ""

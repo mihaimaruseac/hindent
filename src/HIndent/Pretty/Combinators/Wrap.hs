@@ -15,10 +15,10 @@ module HIndent.Pretty.Combinators.Wrap
   , unboxedSums
   ) where
 
-import           GHC.Types.Name
-import           HIndent.Pretty.Combinators.Indent
-import           HIndent.Pretty.Combinators.String
-import           HIndent.Types
+import GHC.Types.Name
+import HIndent.Pretty.Combinators.Indent
+import HIndent.Pretty.Combinators.String
+import HIndent.Types
 
 -- | This function wraps the printer with parentheses.
 parens :: Printer a -> Printer a
