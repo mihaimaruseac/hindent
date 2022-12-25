@@ -35,13 +35,13 @@ module HIndent.Pretty.Combinators.Lineup
   , inter
   ) where
 
-import           Control.Monad
-import           Data.List
-import           HIndent.Pretty.Combinators.Indent
-import           HIndent.Pretty.Combinators.String
-import           HIndent.Pretty.Combinators.Switch
-import           HIndent.Pretty.Combinators.Wrap
-import           HIndent.Types
+import Control.Monad
+import Data.List
+import HIndent.Pretty.Combinators.Indent
+import HIndent.Pretty.Combinators.String
+import HIndent.Pretty.Combinators.Switch
+import HIndent.Pretty.Combinators.Wrap
+import HIndent.Types
 
 -- | Applies 'hTuple' if the result fits in a line or 'vTuple' otherwise.
 hvTuple :: [Printer ()] -> Printer ()

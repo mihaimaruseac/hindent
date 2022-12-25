@@ -6,19 +6,19 @@ module HIndent.Parse
   , lexCode
   ) where
 
-import           Data.Maybe
-import qualified GHC.Data.EnumSet       as ES
-import           GHC.Data.FastString
-import           GHC.Data.StringBuffer
-import           GHC.Hs
+import Data.Maybe
+import qualified GHC.Data.EnumSet as ES
+import GHC.Data.FastString
+import GHC.Data.StringBuffer
+import GHC.Hs
 import qualified GHC.LanguageExtensions as GLP
-import qualified GHC.Parser             as GLP
-import           GHC.Parser.Lexer       hiding (buffer)
-import           GHC.Stack
-import           GHC.Types.SrcLoc
+import qualified GHC.Parser as GLP
+import GHC.Parser.Lexer hiding (buffer)
+import GHC.Stack
+import GHC.Types.SrcLoc
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
-import           GHC.Utils.Error
-import           GHC.Utils.Outputable   hiding (empty, text, (<>))
+import GHC.Utils.Error
+import GHC.Utils.Outputable hiding ((<>), empty, text)
 #endif
 -- | This function parses the given Haskell source code with the given file
 -- path (if any) and parse options.
@@ -26,7 +26,7 @@ parseModule ::
      Maybe FilePath -> [GLP.Extension] -> String -> ParseResult HsModule
 parseModule filepath exts src =
   case unP GLP.parseModule initState of
-    POk s m   -> POk s $ unLoc m
+    POk s m -> POk s $ unLoc m
     PFailed s -> PFailed s
   where
     initState = initParserState (parserOptsFromExtensions exts) buffer location

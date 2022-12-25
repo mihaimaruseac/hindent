@@ -4,10 +4,10 @@ module HIndent.Pretty.Combinators.Getter
   , printerLength
   ) where
 
-import           Control.Monad.RWS                 hiding (state)
-import           Data.Int
-import           HIndent.Pretty.Combinators.String
-import           HIndent.Types
+import Control.Monad.RWS hiding (state)
+import Data.Int
+import HIndent.Pretty.Combinators.String
+import HIndent.Types
 
 -- | Returns the column from which a new string is printed. It may be
 -- different from 'psColumn' immediately after printing a comment.

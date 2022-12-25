@@ -1,27 +1,26 @@
-{-# LANGUAGE CPP                 #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE GADTs               #-}
-{-# LANGUAGE ImpredicativeTypes  #-}
-{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE ImpredicativeTypes #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeApplications #-}
 
 -- | Module preprocessing before pretty-printing.
 module HIndent.ModulePreprocessing
   ( modifyASTForPrettyPrinting
   ) where
 
-import           Control.Applicative
-import           Data.Function
-import           Data.List
-import           Data.Maybe
-import           Generics.SYB                                  hiding (GT,
-                                                                typeOf, typeRep)
-import           GHC.Hs
-import           GHC.Types.SrcLoc
-import           HIndent.ModulePreprocessing.CommentRelocation
-import           Language.Haskell.GhclibParserEx.Fixity
-import           Type.Reflection
+import Control.Applicative
+import Data.Function
+import Data.List
+import Data.Maybe
+import GHC.Hs
+import GHC.Types.SrcLoc
+import Generics.SYB hiding (GT, typeOf, typeRep)
+import HIndent.ModulePreprocessing.CommentRelocation
+import Language.Haskell.GhclibParserEx.Fixity
+import Type.Reflection
 
 -- | This function modifies the given module AST for pretty-printing.
 --
@@ -41,7 +40,7 @@ modifyASTForPrettyPrinting m = relocateComments (beforeRelocation m) allComments
       replaceAllNotUsedAnns . removeComments . sortExprLStmt . fixFixities
     allComments = listify (not . isEofComment . ac_tok . unLoc) m
     isEofComment EpaEofComment = True
-    isEofComment _             = False
+    isEofComment _ = False
 
 -- | This function modifies the given module AST to apply fixities of infix
 -- operators defined in the 'base' package.
@@ -162,7 +161,7 @@ closeEpAnnOfHsFunTy = everywhere (mkT closeEpAnn)
   where
     closeEpAnn :: HsType GhcPs -> HsType GhcPs
     closeEpAnn (HsFunTy _ p l r) = HsFunTy EpAnnNotUsed p l r
-    closeEpAnn x                 = x
+    closeEpAnn x = x
 
 -- | This function replaces all 'EpAnn's that contain placeholder anchors
 -- to locate comments correctly. A placeholder anchor is an anchor pointing
@@ -189,7 +188,7 @@ removeAllDocDs x@HsModule {hsmodDecls = decls} =
   x {hsmodDecls = filter (not . isDocD . unLoc) decls}
   where
     isDocD DocD {} = True
-    isDocD _       = False
+    isDocD _ = False
 
 -- | This function sets the position of the given 'LGRHS' to the end
 -- position of the last RHS in it.

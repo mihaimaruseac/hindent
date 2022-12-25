@@ -8,9 +8,9 @@ module HIndent.LanguageExtension.Conversion
   , strToExt
   ) where
 
-import qualified GHC.LanguageExtensions                             as GLP
-import           HIndent.LanguageExtension.Types
-import qualified Language.Haskell.Extension                         as Cabal
+import qualified GHC.LanguageExtensions as GLP
+import HIndent.LanguageExtension.Types
+import qualified Language.Haskell.Extension as Cabal
 import qualified Language.Haskell.GhclibParserEx.GHC.Driver.Session as GLP
 
 -- | Converts from an `Extension` defined in the `Cabal` package to an
@@ -55,4 +55,4 @@ convertExtension = GLP.readExtension . show
 -- fail.
 strToExt :: String -> Maybe Extension
 strToExt ('N':'o':s) = DisableExtension <$> GLP.readExtension s
-strToExt s           = EnableExtension <$> GLP.readExtension s
+strToExt s = EnableExtension <$> GLP.readExtension s

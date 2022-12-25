@@ -11,11 +11,11 @@ module HIndent.Pretty.SigBindFamily
   , filterLBind
   ) where
 
-import           Data.Function
-import           Data.List
-import           Data.Maybe
-import           GHC.Hs
-import           GHC.Types.SrcLoc
+import Data.Function
+import Data.List
+import Data.Maybe
+import GHC.Hs
+import GHC.Types.SrcLoc
 
 -- | A sum type containing one of those: 'Sig', 'HsBindLR', and
 -- 'FamilyDecl'.
@@ -58,7 +58,7 @@ filterLSig =
   mapMaybe
     (\case
        (L l (Sig x)) -> Just $ L l x
-       _             -> Nothing)
+       _ -> Nothing)
 
 -- | Filters out 'Bind's and extract the wrapped values.
 filterLBind :: [LSigBindFamily] -> [LHsBindLR GhcPs GhcPs]
@@ -66,4 +66,4 @@ filterLBind =
   mapMaybe
     (\case
        (L l (Bind x)) -> Just $ L l x
-       _              -> Nothing)
+       _ -> Nothing)

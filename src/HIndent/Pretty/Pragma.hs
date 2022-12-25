@@ -5,18 +5,18 @@ module HIndent.Pretty.Pragma
   , isPragma
   ) where
 
-import           Data.Bifunctor
-import           Data.Char
-import           Data.Generics.Schemes
-import           Data.List
-import           Data.List.Split
-import           Data.Maybe
-import           GHC.Hs
-import           HIndent.Pragma
-import           HIndent.Pretty.Combinators.Lineup
-import           HIndent.Pretty.Combinators.String
-import           HIndent.Types
-import           Text.Regex.TDFA
+import Data.Bifunctor
+import Data.Char
+import Data.Generics.Schemes
+import Data.List
+import Data.List.Split
+import Data.Maybe
+import GHC.Hs
+import HIndent.Pragma
+import HIndent.Pretty.Combinators.Lineup
+import HIndent.Pretty.Combinators.String
+import HIndent.Types
+import Text.Regex.TDFA
 
 -- | This function pretty-prints the module's pragmas
 prettyPragmas :: HsModule -> Printer ()
@@ -39,7 +39,7 @@ collectPragmas =
   where
     matchToComment :: EpaCommentTok -> Bool
     matchToComment EpaBlockComment {} = True
-    matchToComment _                  = False
+    matchToComment _ = False
     constructPragma optionOrPragma xs =
       "{-# " ++
       fmap toUpper optionOrPragma ++ " " ++ intercalate ", " xs ++ " #-}"
@@ -58,4 +58,4 @@ extractPragma _ = Nothing
 -- a pragma. Otherwise, it returns a 'False'.
 isPragma :: EpaCommentTok -> Bool
 isPragma (EpaBlockComment c) = match pragmaRegex c
-isPragma _                   = False
+isPragma _ = False

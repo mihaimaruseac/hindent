@@ -7,10 +7,10 @@ module HIndent.Pragma
   , pragmaRegex
   ) where
 
-import           Data.Maybe
-import           GHC.Parser.Lexer
-import           HIndent.Parse
-import           Text.Regex.TDFA  hiding (empty)
+import Data.Maybe
+import GHC.Parser.Lexer
+import HIndent.Parse
+import Text.Regex.TDFA hiding (empty)
 
 -- | Extracts all pragmas from the given source code.
 --
@@ -25,7 +25,7 @@ extractPragmasFromCode =
   mapMaybe extractPragmaNameAndElement . mapMaybe extractBlockComment . lexCode
   where
     extractBlockComment (ITblockComment c _) = Just c
-    extractBlockComment _                    = Nothing
+    extractBlockComment _ = Nothing
 
 -- | Extracts the pragma's name and its element from the given pragma.
 --

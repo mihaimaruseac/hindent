@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP             #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE PatternSynonyms #-}
 
 -- | Types to pretty-print certain parts of Haskell codes.
@@ -47,10 +47,10 @@ module HIndent.Pretty.Types
   , CaseOrCases(..)
   ) where
 
-import           GHC.Hs
-import           GHC.Types.Name.Reader
-import           GHC.Unit
-import           GHC.Unit.Module.Warnings
+import GHC.Hs
+import GHC.Types.Name.Reader
+import GHC.Unit
+import GHC.Unit.Module.Warnings
 
 -- | `LHsExpr` used as a infix operator
 newtype InfixExpr =
@@ -77,9 +77,9 @@ newtype PrefixOp =
 -- is not a valid Haskell code.
 data InfixApp =
   InfixApp
-    { lhs                :: LHsExpr GhcPs
-    , op                 :: LHsExpr GhcPs
-    , rhs                :: LHsExpr GhcPs
+    { lhs :: LHsExpr GhcPs
+    , op :: LHsExpr GhcPs
+    , rhs :: LHsExpr GhcPs
     , immediatelyAfterDo :: Bool
     }
 
@@ -88,14 +88,14 @@ data InfixApp =
 data GRHSsExpr =
   GRHSsExpr
     { grhssExprType :: GRHSExprType
-    , grhssExpr     :: GRHSs GhcPs (LHsExpr GhcPs)
+    , grhssExpr :: GRHSs GhcPs (LHsExpr GhcPs)
     }
 
 -- | 'GRHS' for a normal binding.
 data GRHSExpr =
   GRHSExpr
     { grhsExprType :: GRHSExprType
-    , grhsExpr     :: GRHS GhcPs (LHsExpr GhcPs)
+    , grhsExpr :: GRHS GhcPs (LHsExpr GhcPs)
     }
 
 -- | 'GRHS' for a @proc@ binding.
@@ -120,7 +120,7 @@ data HsSigType' =
     { hsSigTypeFor :: HsTypeFor -- ^ In which context a `HsSigType` is located in.
     , hsSigTypeDir :: HsTypeDir -- ^ How a `HsSigType` should be printed;
                                 -- either horizontally or vertically.
-    , hsSigType    :: HsSigType GhcPs -- ^ The actual signature.
+    , hsSigType :: HsSigType GhcPs -- ^ The actual signature.
     }
 
 -- | `HsSigType'` for instance declarations.
@@ -144,7 +144,7 @@ data HsType' =
     { hsTypeFor :: HsTypeFor -- ^ In which context a `HsType` is located in.
     , hsTypeDir :: HsTypeDir -- ^ How a function signature is printed;
                              -- either horizontally or vertically.
-    , hsType    :: HsType GhcPs -- ^ The actual type.
+    , hsType :: HsType GhcPs -- ^ The actual type.
     }
 
 -- | `HsType'` inside a function signature declaration; printed horizontally.
@@ -225,7 +225,7 @@ newtype PatInsidePatDecl =
 data LambdaCase =
   LambdaCase
     { lamCaseGroup :: MatchGroup GhcPs (LHsExpr GhcPs)
-    , caseOrCases  :: CaseOrCases
+    , caseOrCases :: CaseOrCases
     }
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 -- | A deprecation pragma for a module.
@@ -254,15 +254,15 @@ data DoExpression =
 data LetIn =
   LetIn
     { letBinds :: HsLocalBinds GhcPs
-    , inExpr   :: LHsExpr GhcPs
+    , inExpr :: LHsExpr GhcPs
     }
 
 -- | Comments belonging to an AST node.
 data NodeComments =
   NodeComments
-    { commentsBefore     :: [LEpaComment]
+    { commentsBefore :: [LEpaComment]
     , commentsOnSameLine :: [LEpaComment]
-    , commentsAfter      :: [LEpaComment]
+    , commentsAfter :: [LEpaComment]
     }
 
 -- | Values indicating whether `do` or `mdo` is used.

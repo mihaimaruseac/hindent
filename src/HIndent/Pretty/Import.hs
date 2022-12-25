@@ -6,9 +6,9 @@ module HIndent.Pretty.Import
   , groupImports
   ) where
 
-import           GHC.Hs
-import           GHC.Types.SrcLoc
-import           HIndent.Pretty.Import.Sort
+import GHC.Hs
+import GHC.Types.SrcLoc
+import HIndent.Pretty.Import.Sort
 
 -- | Returns if the module has import declarations.
 importsExist :: HsModule -> Bool
@@ -43,4 +43,4 @@ groupImports = groupImports' []
     sp x =
       case locA $ getLoc x of
         RealSrcSpan x' _ -> x'
-        _                -> error "Src span unavailable."
+        _ -> error "Src span unavailable."

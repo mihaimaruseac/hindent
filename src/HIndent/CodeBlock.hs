@@ -5,7 +5,7 @@ module HIndent.CodeBlock
   , cppSplitBlocks
   ) where
 
-import           Data.ByteString       (ByteString)
+import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as S8
 
 -- | A block of code.
@@ -39,7 +39,7 @@ cppSplitBlocks inp =
     groupLines (line1:line2:remainingLines) =
       case mergeLines line1 line2 of
         Just line1And2 -> groupLines (line1And2 : remainingLines)
-        Nothing        -> line1 : groupLines (line2 : remainingLines)
+        Nothing -> line1 : groupLines (line2 : remainingLines)
     groupLines xs@[_] = xs
     groupLines xs@[] = xs
     mergeLines :: CodeBlock -> CodeBlock -> Maybe CodeBlock
@@ -95,9 +95,9 @@ cppSplitBlocks inp =
         then "\n"
         else ""
     modifyLast :: (a -> a) -> [a] -> [a]
-    modifyLast _ []     = []
-    modifyLast f [x]    = [f x]
+    modifyLast _ [] = []
+    modifyLast f [x] = [f x]
     modifyLast f (x:xs) = x : modifyLast f xs
     inBlock :: (ByteString -> ByteString) -> CodeBlock -> CodeBlock
     inBlock f (HaskellSource line txt) = HaskellSource line (f txt)
-    inBlock _ dir                      = dir
+    inBlock _ dir = dir

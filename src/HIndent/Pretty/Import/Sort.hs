@@ -4,14 +4,14 @@ module HIndent.Pretty.Import.Sort
   , sortImportsByLocation
   ) where
 
-import           Data.Char
-import           Data.Function
-import           Data.List
-import           Data.Maybe
-import           GHC.Hs
-import           GHC.Stack
-import           GHC.Types.SrcLoc
-import           HIndent.Pretty.Combinators.Outputable
+import Data.Char
+import Data.Function
+import Data.List
+import Data.Maybe
+import GHC.Hs
+import GHC.Stack
+import GHC.Types.SrcLoc
+import HIndent.Pretty.Combinators.Outputable
 
 -- | The letter type of a 'Char'.
 --
@@ -69,11 +69,11 @@ compareImportEntities (L _ a) (L _ b) =
 -- | This function returns a 'Just' value with the module name extracted
 -- from the import declaration. Otherwise, it returns a 'Nothing'.
 moduleName :: IE GhcPs -> Maybe String
-moduleName (IEVar _ wrapped)           = Just $ showOutputable wrapped
-moduleName (IEThingAbs _ wrapped)      = Just $ showOutputable wrapped
-moduleName (IEThingAll _ wrapped)      = Just $ showOutputable wrapped
+moduleName (IEVar _ wrapped) = Just $ showOutputable wrapped
+moduleName (IEThingAbs _ wrapped) = Just $ showOutputable wrapped
+moduleName (IEThingAll _ wrapped) = Just $ showOutputable wrapped
 moduleName (IEThingWith _ wrapped _ _) = Just $ showOutputable wrapped
-moduleName _                           = Nothing
+moduleName _ = Nothing
 
 -- | This function compares two identifiers in order of capitals, symbols,
 -- and lowers.
@@ -81,7 +81,7 @@ compareIdentifier :: String -> String -> Ordering
 compareIdentifier as@(a:_) bs@(b:_) =
   case compareChar a b of
     EQ -> compareSameIdentifierType as bs
-    x  -> x
+    x -> x
 compareIdentifier _ _ = error "Either identifier is an empty string."
 
 -- | Almost similar to 'compare' but ignores parentheses for symbol
@@ -97,7 +97,7 @@ compareSameIdentifierType as (')':bs) = compareSameIdentifierType as bs
 compareSameIdentifierType (a:as) (b:bs) =
   case compare a b of
     EQ -> compareSameIdentifierType as bs
-    x  -> x
+    x -> x
 
 -- | This function compares two characters by their types (capital, symbol,
 -- and lower). If both are the same type, then it compares them by the
@@ -106,7 +106,7 @@ compareChar :: Char -> Char -> Ordering
 compareChar a b =
   case compare at bt of
     EQ -> compare a b
-    x  -> x
+    x -> x
   where
     at = charToLetterType a
     bt = charToLetterType b
