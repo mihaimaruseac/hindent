@@ -31,6 +31,8 @@ jobs:
     env:
       CONFIG: "--enable-tests --enable-benchmarks"
     steps:
+    - name: Modify a git setting not to convert LF to CRLF
+      run: git config --global core.autocrlf input
     - uses: actions/checkout@v2
     - uses: haskell/actions/setup@v1
       id: setup-haskell-cabal

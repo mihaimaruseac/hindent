@@ -2,7 +2,7 @@
 
 -- | Finding files.
 -- Lifted from Stack.
-module Path.Find
+module HIndent.Path.Find
   ( findFileUp
   ) where
 
