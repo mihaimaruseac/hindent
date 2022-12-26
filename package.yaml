@@ -1,0 +1,69 @@
+spec-version: 0.30.0
+
+name:         hindent
+version:      5.3.5
+synopsis:     Extensible Haskell pretty printer
+description:  "Extensible Haskell pretty printer. Both a library and an executable. See the GitHub page for usage/explanation: <https://github.com/mihaimaruseac/hindent>"
+category:     Development
+stability:    Unstable
+homepage:     https://github.com/mihaimaruseac/hindent
+bug-reports:  https://github.com/mihaimaruseac/hindent/issues
+author:       Mihai Maruseac, Chris Done, Andrew Gibiansky, Tobias Pflug, Pierre Radermecker
+maintainer:   Mihai Maruseac
+copyright:    2014 Chris Done, 2015 Andrew Gibiansky, 2021 Mihai Maruseac
+license:      BSD3
+license-file: LICENSE.md
+build-type:   Simple
+extra-source-files:
+  - README.md
+  - CHANGELOG.md
+  - BENCHMARKS.md
+  - TESTS.md
+data-files:   elisp/hindent.el
+github:       mihaimaruseac/hindent
+
+ghc-options: -Wall -O2
+
+dependencies:
+  - Cabal
+  - base >= 4.7 && < 5
+  - bytestring
+  - containers
+  - directory
+  - exceptions
+  - filepath
+  - ghc-lib-parser-ex
+  - monad-loops
+  - mtl
+  - regex-tdfa
+  - split
+  - syb
+  - text
+  - transformers
+  - unicode-show
+  - utf8-string
+  - yaml
+
+when:
+  - condition: impl(ghc >= 9.4.1)
+    then:
+      dependencies: ghc-lib-parser >= 9.4.1.20220807 && < 9.5
+    else:
+      dependencies: ghc-lib-parser >= 9.2.3.20220527 && < 9.3
+
+library:
+  source-dirs: src
+
+executable:
+  main: Main.hs
+  source-dirs: src/main
+
+tests:
+  hindent-test:
+    main: Test.hs
+    source-dirs: src/main
+
+benchmarks:
+  hindent-bench:
+    main: Benchmark.hs
+    source-dirs: src/main
