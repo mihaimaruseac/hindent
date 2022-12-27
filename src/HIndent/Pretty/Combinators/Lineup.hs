@@ -72,7 +72,7 @@ hPromotedTuple = promotedTupleParens . hCommaSep
 
 -- | RUns printers to construct an unboxed tuple in a line.
 hUnboxedTuple :: [Printer ()] -> Printer ()
-hUnboxedTuple = unboxedSums . hCommaSep
+hUnboxedTuple = unboxedParens . hCommaSep
 
 -- | Applies 'hFields' if the result fits in a line or 'vFields' otherwise.
 hvFields :: [Printer ()] -> Printer ()

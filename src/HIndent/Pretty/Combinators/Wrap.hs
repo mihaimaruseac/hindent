@@ -12,7 +12,7 @@ module HIndent.Pretty.Combinators.Wrap
   , wrapWithBars
   , promotedListBrackets
   , promotedTupleParens
-  , unboxedSums
+  , unboxedParens
   ) where
 
 import GHC.Types.Name
@@ -77,8 +77,8 @@ promotedTupleParens :: Printer a -> Printer a
 promotedTupleParens = wrap "'( " ")"
 
 -- | Wraps with @(# @ and @ #)@.
-unboxedSums :: Printer a -> Printer a
-unboxedSums = wrap "(# " " #)"
+unboxedParens :: Printer a -> Printer a
+unboxedParens = wrap "(# " " #)"
 
 -- | This function wraps the printer with the prefix and the suffix.
 wrap :: String -> String -> Printer a -> Printer a
