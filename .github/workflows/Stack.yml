@@ -52,7 +52,7 @@ jobs:
     - name: Run benchmarks
       run: stack bench
     - name: Check the format of files in `src/`
-      run: stack run -- src/**/*.hs --validate
+      run: stack run -- **/*.hs --validate
     # We don't generate stack documentation as documentation for deps does not get cached
     # name: Generate documentation
     # run: stack haddock

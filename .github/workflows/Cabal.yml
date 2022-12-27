@@ -55,7 +55,7 @@ jobs:
     - name: Build
       run: cabal v2-build $CONFIG
     - name: Check the format of files in `src/`
-      run: cabal run hindent -- src/**/*.hs --validate
+      run: cabal run hindent -- **/*.hs --validate
     - name: Run tests
       run: cabal v2-test $CONFIG
     - name: Run benchmarks

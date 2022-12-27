@@ -18,8 +18,8 @@ import Data.Version
 import qualified HIndent
 import HIndent.CodeBlock
 import HIndent.Config
+import HIndent.Internal.Test.Markdone
 import qualified HIndent.LanguageExtension as HIndent
-import Markdone
 import qualified System.Info
 import Test.Hspec
 import Text.Read

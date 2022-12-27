@@ -13,8 +13,8 @@ import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.UTF8 as UTF8
 import HIndent
 import HIndent.Config
+import HIndent.Internal.Test.Markdone
 import HIndent.LanguageExtension
-import Markdone
 
 -- | Main benchmarks.
 main :: IO ()
