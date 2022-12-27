@@ -59,7 +59,7 @@ reformat config mexts mfilepath =
     processBlock :: CodeBlock -> Either String Builder
     processBlock (Shebang text) = Right $ S.byteString text
     processBlock (CPPDirectives text) = Right $ S.byteString text
-    processBlock (HaskellSource _ text) =
+    processBlock (HaskellSource yPos text) =
       let ls = S8.lines text
           prefix = findPrefix ls
           code = unlines' (map (stripPrefix prefix) ls)
@@ -74,9 +74,10 @@ reformat config mexts mfilepath =
               S.lazyByteString $
               addPrefix prefix $ S.toLazyByteString $ prettyPrint config m
             PFailed st ->
-              Left $
-              "Parse failed near " ++
-              show ((,) <$> srcLocLine <*> srcLocCol $ psRealLoc $ loc st)
+              let rawErrLoc = psRealLoc $ loc st
+                  adjustedLoc =
+                    (srcLocLine rawErrLoc + yPos, srcLocCol rawErrLoc)
+               in Left $ "Parse failed near " ++ show adjustedLoc
     unlines' = S.concat . intersperse "\n"
     unlines'' = L.concat . intersperse "\n"
     addPrefix :: ByteString -> L8.ByteString -> L8.ByteString
