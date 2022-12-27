@@ -59,12 +59,12 @@ hTuple = parens . hCommaSep
 -- | Runs printers to construct a tuple where elements are aligned
 -- vertically.
 vTuple :: [Printer ()] -> Printer ()
-vTuple = vLineup ("(", ")")
+vTuple = vCommaSepWrapped ("(", ")")
 
 -- | Similar to 'vTuple', but the closing parenthesis is in the last
 -- element.
 vTuple' :: [Printer ()] -> Printer ()
-vTuple' = vLineup' ("(", ")")
+vTuple' = vCommaSepWrapped' ("(", ")")
 
 -- | Runs printers to construct a promoted tuple in a line.
 hPromotedTuple :: [Printer ()] -> Printer ()
@@ -85,12 +85,12 @@ hFields = braces . hCommaSep
 -- | Runs printers to construct a record where elements are aligned
 -- vertically.
 vFields :: [Printer ()] -> Printer ()
-vFields = vLineup ("{", "}")
+vFields = vCommaSepWrapped ("{", "}")
 
 -- | Similar to 'vFields', but the closing brace is in the same line as the
 -- last element.
 vFields' :: [Printer ()] -> Printer ()
-vFields' = vLineup' ("{", "}")
+vFields' = vCommaSepWrapped' ("{", "}")
 
 -- | Runs printers to construct a list in a line.
 hList :: [Printer ()] -> Printer ()
@@ -99,29 +99,11 @@ hList = brackets . hCommaSep
 -- | Runs printers to construct a list where elements are aligned
 -- vertically.
 vList :: [Printer ()] -> Printer ()
-vList = vLineup ("[", "]")
+vList = vCommaSepWrapped ("[", "]")
 
 -- | Runs printers to construct a promoted list in a line.
 hPromotedList :: [Printer ()] -> Printer ()
 hPromotedList = promotedListBrackets . hCommaSep
-
--- | Prints elements in vertical with the given prefix and suffix.
-vLineup :: (String, String) -> [Printer ()] -> Printer ()
-vLineup (prefix, suffix) ps =
-  string prefix >>
-  space |=> do
-    vCommaSep ps
-    newline
-    indentedWithSpace (-(fromIntegral (length prefix) + 1)) $ string suffix
-
--- | Similar to 'vLineup' but the suffix is in the same line as the last
--- element.
-vLineup' :: (String, String) -> [Printer ()] -> Printer ()
-vLineup' (prefix, suffix) ps =
-  string prefix >>
-  space |=> do
-    vCommaSep ps
-    string suffix
 
 -- | Runs printers in a line with a space as the separator.
 spaced :: [Printer ()] -> Printer ()
@@ -162,6 +144,16 @@ hCommaSep = inter (string ", ")
 vCommaSep :: [Printer ()] -> Printer ()
 vCommaSep = prefixedLined ", "
 
+-- | Prints elements separated by comma  in vertical with the given prefix
+-- and suffix.
+vCommaSepWrapped :: (String, String) -> [Printer ()] -> Printer ()
+vCommaSepWrapped = vWrappedLineup ','
+
+-- | Similar to 'vCommaSepWrapped' but the suffix is in the same line as the last
+-- element.
+vCommaSepWrapped' :: (String, String) -> [Printer ()] -> Printer ()
+vCommaSepWrapped' = vWrappedLineup' ','
+
 -- | Runs printers with a dot as the separator.
 hDotSep :: [Printer ()] -> Printer ()
 hDotSep = inter (string ".")
@@ -182,6 +174,25 @@ prefixedLined pref (x:xs) = do
   forM_ xs $ \p -> do
     newline
     prefixed pref p
+
+-- | Prints elements in vertical with the given prefix, suffix, and
+-- separator.
+vWrappedLineup :: Char -> (String, String) -> [Printer ()] -> Printer ()
+vWrappedLineup sep (prefix, suffix) ps =
+  string prefix >>
+  space |=> do
+    prefixedLined [sep, ' '] ps
+    newline
+    indentedWithSpace (-(fromIntegral (length prefix) + 1)) $ string suffix
+
+-- | Similar to 'vWrappedLineup' but the suffix is in the same line as the
+-- last element.
+vWrappedLineup' :: Char -> (String, String) -> [Printer ()] -> Printer ()
+vWrappedLineup' sep (prefix, suffix) ps =
+  string prefix >>
+  space |=> do
+    prefixedLined [sep, ' '] ps
+    string suffix
 
 -- Inserts the first printer between each element of the list passed as the
 -- second argument and runs them.
