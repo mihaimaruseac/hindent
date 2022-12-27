@@ -1019,8 +1019,11 @@ prettyHsType (HsAppTy _ l r) = spaced $ fmap pretty [l, r]
 prettyHsType (HsAppKindTy _ l r) = pretty l >> string " @" >> pretty r
 prettyHsType (HsFunTy _ _ a b) = (pretty a >> string " -> ") |=> pretty b
 prettyHsType (HsListTy _ xs) = brackets $ pretty xs
-prettyHsType (HsTupleTy _ _ []) = string "()"
-prettyHsType (HsTupleTy _ _ xs) = hvTuple' $ fmap pretty xs
+prettyHsType (HsTupleTy _ HsUnboxedTuple []) = string "(# #)"
+prettyHsType (HsTupleTy _ HsBoxedOrConstraintTuple []) = string "()"
+prettyHsType (HsTupleTy _ HsUnboxedTuple xs) = hUnboxedTuple $ fmap pretty xs
+prettyHsType (HsTupleTy _ HsBoxedOrConstraintTuple xs) =
+  hvTuple' $ fmap pretty xs
 prettyHsType (HsSumTy _ xs) = unboxedSums $ hBarSep $ fmap pretty xs
   -- For `HsOpTy`, we do not need a single quote for the infix operator. An
   -- explicit promotion is necessary if there is a data constructor and

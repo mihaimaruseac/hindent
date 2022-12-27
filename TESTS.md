@@ -1643,7 +1643,7 @@ foo = undefined
 ```haskell
 {-# LANGUAGE UnboxedSums #-}
 
-f :: (# Int | Bool | String #)
+f :: (# (# Int, String #) | String #) -> (# Int | String #)
 ```
 
 #### Promoted types

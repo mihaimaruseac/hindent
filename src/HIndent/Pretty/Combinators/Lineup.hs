@@ -7,6 +7,7 @@ module HIndent.Pretty.Combinators.Lineup
   , vTuple
   , vTuple'
   , hPromotedTuple
+  , hUnboxedTuple
   , -- * Records
     hvFields
   , hFields
@@ -68,6 +69,10 @@ vTuple' = vLineup' ("(", ")")
 -- | Runs printers to construct a promoted tuple in a line.
 hPromotedTuple :: [Printer ()] -> Printer ()
 hPromotedTuple = promotedTupleParens . hCommaSep
+
+-- | RUns printers to construct an unboxed tuple in a line.
+hUnboxedTuple :: [Printer ()] -> Printer ()
+hUnboxedTuple = unboxedSums . hCommaSep
 
 -- | Applies 'hFields' if the result fits in a line or 'vFields' otherwise.
 hvFields :: [Printer ()] -> Printer ()
