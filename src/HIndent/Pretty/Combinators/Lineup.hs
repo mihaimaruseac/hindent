@@ -7,7 +7,8 @@ module HIndent.Pretty.Combinators.Lineup
   , vTuple
   , vTuple'
   , hPromotedTuple
-  , hUnboxedTuple
+  , -- * Unboxed tuples
+    hvUnboxedTuple'
   , -- * Unboxed sums
     hvUnboxedSum'
   , -- * Records
@@ -72,9 +73,19 @@ vTuple' = vCommaSepWrapped' ("(", ")")
 hPromotedTuple :: [Printer ()] -> Printer ()
 hPromotedTuple = promotedTupleParens . hCommaSep
 
+-- | Runs printers to construct an unboxed tuple. The elements are aligned
+-- either in a line or vertically.
+hvUnboxedTuple' :: [Printer ()] -> Printer ()
+hvUnboxedTuple' = (<-|>) <$> hUnboxedTuple <*> vUnboxedTuple'
+
 -- | Runs printers to construct an unboxed tuple in a line.
 hUnboxedTuple :: [Printer ()] -> Printer ()
 hUnboxedTuple = unboxedParens . hCommaSep
+
+-- | Runs printers to construct an unboxed tuple where the elements are
+-- aligned vertically.
+vUnboxedTuple' :: [Printer ()] -> Printer ()
+vUnboxedTuple' = vCommaSepWrapped' ("(#", " #)")
 
 -- | Runs printers to construct an unboxed sum. The elements are aligned
 -- either in a line or vertically.

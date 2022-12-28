@@ -1021,7 +1021,7 @@ prettyHsType (HsFunTy _ _ a b) = (pretty a >> string " -> ") |=> pretty b
 prettyHsType (HsListTy _ xs) = brackets $ pretty xs
 prettyHsType (HsTupleTy _ HsUnboxedTuple []) = string "(# #)"
 prettyHsType (HsTupleTy _ HsBoxedOrConstraintTuple []) = string "()"
-prettyHsType (HsTupleTy _ HsUnboxedTuple xs) = hUnboxedTuple $ fmap pretty xs
+prettyHsType (HsTupleTy _ HsUnboxedTuple xs) = hvUnboxedTuple' $ fmap pretty xs
 prettyHsType (HsTupleTy _ HsBoxedOrConstraintTuple xs) =
   hvTuple' $ fmap pretty xs
 prettyHsType (HsSumTy _ xs) = hvUnboxedSum' $ fmap pretty xs

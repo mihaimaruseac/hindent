@@ -1753,9 +1753,9 @@ f :: (a :?: b) => (a, b)
 f' :: ((:?:) a b) => (a, b)
 ```
 
-#### `UnboxedSums`
+#### Unboxed types
 
-Short
+Short unboxed sums
 
 ```haskell
 {-# LANGUAGE UnboxedSums #-}
@@ -1763,7 +1763,7 @@ Short
 f :: (# (# Int, String #) | String #) -> (# Int | String #)
 ```
 
-Long
+Long unboxed sums
 
 ```haskell
 {-# LANGUAGE UnboxedSums #-}
@@ -1777,6 +1777,16 @@ f' ::
       | Either Bool Int
       | String #)
   -> (# Int | String #)
+```
+
+Large unboxed tuples
+
+```haskell
+{-# LANGUAGE UnboxedTuples #-}
+
+f :: (# Looooooooooooooooooooooooooooooooooooooooooooong
+      , Looooooooooooooooooooooooooooooooooooooooooooong
+      , Looooooooooooooooooooooooooooooooooooooooooooong #)
 ```
 
 ### Type synonym declarations
