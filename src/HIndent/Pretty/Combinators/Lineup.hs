@@ -8,6 +8,8 @@ module HIndent.Pretty.Combinators.Lineup
   , vTuple'
   , hPromotedTuple
   , hUnboxedTuple
+  , -- * Unboxed sums
+    hvUnboxedSum'
   , -- * Records
     hvFields
   , hFields
@@ -70,9 +72,29 @@ vTuple' = vCommaSepWrapped' ("(", ")")
 hPromotedTuple :: [Printer ()] -> Printer ()
 hPromotedTuple = promotedTupleParens . hCommaSep
 
--- | RUns printers to construct an unboxed tuple in a line.
+-- | Runs printers to construct an unboxed tuple in a line.
 hUnboxedTuple :: [Printer ()] -> Printer ()
 hUnboxedTuple = unboxedParens . hCommaSep
+
+-- | Runs printers to construct an unboxed sum. The elements are aligned
+-- either in a line or vertically.
+--
+-- The enclosing parenthesis will be printed on the same line as the last
+-- element.
+hvUnboxedSum' :: [Printer ()] -> Printer ()
+hvUnboxedSum' = (<-|>) <$> hUnboxedSum <*> vUnboxedSum'
+
+-- | Runs printers to construct an unboxed sum in a line.
+hUnboxedSum :: [Printer ()] -> Printer ()
+hUnboxedSum = unboxedParens . hBarSep
+
+-- | Runs printers to construct an unboxed sum where the elements are
+-- aligned vertically.
+--
+-- The enclosing parenthesis will be printed on the same line as the last
+-- element.
+vUnboxedSum' :: [Printer ()] -> Printer ()
+vUnboxedSum' = vWrappedLineup' '|' ("(#", " #)")
 
 -- | Applies 'hFields' if the result fits in a line or 'vFields' otherwise.
 hvFields :: [Printer ()] -> Printer ()

@@ -1638,14 +1638,6 @@ foo = undefined
     go = undefined
 ```
 
-`UnboxedSums`
-
-```haskell
-{-# LANGUAGE UnboxedSums #-}
-
-f :: (# (# Int, String #) | String #) -> (# Int | String #)
-```
-
 #### Promoted types
 
 Promoted lists
@@ -1759,6 +1751,32 @@ Symbol class constructor in class constraint
 ```haskell
 f :: (a :?: b) => (a, b)
 f' :: ((:?:) a b) => (a, b)
+```
+
+#### `UnboxedSums`
+
+Short
+
+```haskell
+{-# LANGUAGE UnboxedSums #-}
+
+f :: (# (# Int, String #) | String #) -> (# Int | String #)
+```
+
+Long
+
+```haskell
+{-# LANGUAGE UnboxedSums #-}
+
+f' ::
+     (# (# Int, String #)
+      | Either Bool Int
+      | Either Bool Int
+      | Either Bool Int
+      | Either Bool Int
+      | Either Bool Int
+      | String #)
+  -> (# Int | String #)
 ```
 
 ### Type synonym declarations
