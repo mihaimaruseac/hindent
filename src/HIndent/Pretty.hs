@@ -520,7 +520,7 @@ prettyHsExpr (ExplicitTuple _ full _) = horizontal <-|> vertical
     isMissing Missing {} = True
     isMissing _ = False
 prettyHsExpr (ExplicitSum _ _ _ expr) =
-  unboxedSums $ spaced [string "|", pretty expr]
+  unboxedParens $ spaced [string "|", pretty expr]
 prettyHsExpr (HsCase _ cond arms) = do
   string "case " |=> do
     pretty cond
@@ -1019,9 +1019,12 @@ prettyHsType (HsAppTy _ l r) = spaced $ fmap pretty [l, r]
 prettyHsType (HsAppKindTy _ l r) = pretty l >> string " @" >> pretty r
 prettyHsType (HsFunTy _ _ a b) = (pretty a >> string " -> ") |=> pretty b
 prettyHsType (HsListTy _ xs) = brackets $ pretty xs
-prettyHsType (HsTupleTy _ _ []) = string "()"
-prettyHsType (HsTupleTy _ _ xs) = hvTuple' $ fmap pretty xs
-prettyHsType (HsSumTy _ xs) = unboxedSums $ hBarSep $ fmap pretty xs
+prettyHsType (HsTupleTy _ HsUnboxedTuple []) = string "(# #)"
+prettyHsType (HsTupleTy _ HsBoxedOrConstraintTuple []) = string "()"
+prettyHsType (HsTupleTy _ HsUnboxedTuple xs) = hvUnboxedTuple' $ fmap pretty xs
+prettyHsType (HsTupleTy _ HsBoxedOrConstraintTuple xs) =
+  hvTuple' $ fmap pretty xs
+prettyHsType (HsSumTy _ xs) = hvUnboxedSum' $ fmap pretty xs
   -- For `HsOpTy`, we do not need a single quote for the infix operator. An
   -- explicit promotion is necessary if there is a data constructor and
   -- a type with the same name. However, infix data constructors never
