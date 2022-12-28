@@ -68,6 +68,8 @@ executable:
   dependencies:
     - hindent
     - optparse-applicative
+  generated-other-modules:
+    - Paths_hindent
 
 tests:
   hindent-test:

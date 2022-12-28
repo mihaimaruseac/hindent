@@ -45,6 +45,14 @@ jobs:
       run: |
         stack update
         stack build --system-ghc --only-dependencies --test --bench --no-run-tests --no-run-benchmarks
+    # Despite the name, `stack build --dry-run` generates the cabal file.
+    # See https://github.com/commercialhaskell/stack/issues/3697#issuecomment-353729540.
+    - name: Ensure the cabal file is up-to-date
+      run: |
+        mv hindent.cabal hindent.cabal.original
+        stack build --dry-run
+        diff hindent.cabal hindent.cabal.original
+        mv hindent.cabal.original hindent.cabal
     - name: Build
       run: stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
     - name: Run tests
