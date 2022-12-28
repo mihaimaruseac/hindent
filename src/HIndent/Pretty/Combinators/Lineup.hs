@@ -1,7 +1,7 @@
 -- | Printer combinators for lining up multiple elements.
 module HIndent.Pretty.Combinators.Lineup
-    -- * Tuples
-  ( hvTuple
+  ( -- * Tuples
+    hvTuple
   , hvTuple'
   , hTuple
   , vTuple
