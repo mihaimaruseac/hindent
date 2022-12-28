@@ -9,6 +9,7 @@ module HIndent.Pretty.Combinators.Lineup
   , hPromotedTuple
   , -- * Unboxed tuples
     hvUnboxedTuple'
+  , hUnboxedTuple
   , -- * Unboxed sums
     hvUnboxedSum'
   , -- * Records

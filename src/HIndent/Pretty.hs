@@ -519,8 +519,14 @@ prettyHsExpr (ExplicitTuple _ full _) = horizontal <-|> vertical
       fmap (\e -> unless (isMissing e) (space |=> pretty e)) full
     isMissing Missing {} = True
     isMissing _ = False
-prettyHsExpr (ExplicitSum _ _ _ expr) =
-  unboxedParens $ spaced [string "|", pretty expr]
+prettyHsExpr (ExplicitSum _ position numElem expr) = do
+  string "(#"
+  forM_ [1 .. numElem] $ \idx -> do
+    if idx == position
+      then string " " >> pretty expr >> string " "
+      else string " "
+    when (idx < numElem) $ string "|"
+  string "#)"
 prettyHsExpr (HsCase _ cond arms) = do
   string "case " |=> do
     pretty cond
@@ -1258,7 +1264,8 @@ prettyPat (ParPat _ inner) = parens $ pretty inner
 #endif
 prettyPat (BangPat _ x) = string "!" >> pretty x
 prettyPat (ListPat _ xs) = hList $ fmap pretty xs
-prettyPat (TuplePat _ pats _) = hTuple $ fmap pretty pats
+prettyPat (TuplePat _ pats Boxed) = hTuple $ fmap pretty pats
+prettyPat (TuplePat _ pats Unboxed) = hUnboxedTuple $ fmap pretty pats
 prettyPat (SumPat _ x position numElem) = do
   string "(#"
   forM_ [1 .. numElem] $ \idx -> do

@@ -1173,7 +1173,8 @@ Unboxed sum pattern matching.
 ```haskell
 {-# LANGUAGE UnboxedSums #-}
 
-f (# x | | | #) = undefined
+f (# (# n, _ #) | #) = (# n | #)
+f (# | b #) = (# | b #)
 ```
 
 Pattern matching against a infix constructor with a module name prefix
