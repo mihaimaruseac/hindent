@@ -141,6 +141,8 @@ executable hindent
   main-is: Main.hs
   other-modules:
       Paths_hindent
+  autogen-modules:
+      Paths_hindent
   hs-source-dirs:
       app
   ghc-options: -Wall -O2
