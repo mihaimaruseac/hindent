@@ -1,159 +1,263 @@
-name:                hindent
-version:             5.3.5
-synopsis:            Extensible Haskell pretty printer
-description:         Extensible Haskell pretty printer. Both a library and an executable.
-                     .
-                     See the Github page for usage\/explanation: <https://github.com/mihaimaruseac/hindent>
-license:             BSD3
-stability:           Unstable
-license-file:        LICENSE.md
-author:              Mihai Maruseac, Chris Done, Andrew Gibiansky, Tobias Pflug, Pierre Radermecker
-maintainer:          Mihai Maruseac
-copyright:           2014 Chris Done, 2015 Andrew Gibiansky, 2021 Mihai Maruseac
-category:            Development
-build-type:          Simple
-cabal-version:       2.0
-homepage:            https://github.com/mihaimaruseac/hindent
-bug-reports:         https://github.com/mihaimaruseac/hindent/issues
-data-files:          elisp/hindent.el
+cabal-version: 2.0
+
+-- This file has been generated from package.yaml by hpack version 0.35.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           hindent
+version:        5.3.5
+synopsis:       Extensible Haskell pretty printer
+description:    Extensible Haskell pretty printer. Both a library and an executable. See the GitHub page for usage/explanation: <https://github.com/mihaimaruseac/hindent>
+category:       Development
+stability:      Unstable
+homepage:       https://github.com/mihaimaruseac/hindent
+bug-reports:    https://github.com/mihaimaruseac/hindent/issues
+author:         Mihai Maruseac, Chris Done, Andrew Gibiansky, Tobias Pflug, Pierre Radermecker
+maintainer:     Mihai Maruseac
+copyright:      2014 Chris Done, 2015 Andrew Gibiansky, 2021 Mihai Maruseac
+license:        BSD3
+license-file:   LICENSE.md
+build-type:     Simple
 extra-source-files:
- README.md
- CHANGELOG.md
- BENCHMARKS.md
- TESTS.md
+    README.md
+    CHANGELOG.md
+    BENCHMARKS.md
+    TESTS.md
+data-files:
+    elisp/hindent.el
 
 source-repository head
-    type:           git
-    location:       https://github.com/mihaimaruseac/hindent
+  type: git
+  location: https://github.com/mihaimaruseac/hindent
 
 library
-  hs-source-dirs:    src/
-  ghc-options:       -Wall -O2
-  default-language:  Haskell2010
-  exposed-modules:   HIndent
-                     HIndent.Applicative
-                     HIndent.CabalFile
-                     HIndent.CodeBlock
-                     HIndent.Config
-                     HIndent.Language
-                     HIndent.LanguageExtension
-                     HIndent.LanguageExtension.Conversion
-                     HIndent.LanguageExtension.Types
-                     HIndent.ModulePreprocessing
-                     HIndent.ModulePreprocessing.CommentRelocation
-                     HIndent.Path.Find
-                     HIndent.Parse
-                     HIndent.Pragma
-                     HIndent.Pretty
-                     HIndent.Pretty.Combinators
-                     HIndent.Pretty.Combinators.Comment
-                     HIndent.Pretty.Combinators.Getter
-                     HIndent.Pretty.Combinators.Indent
-                     HIndent.Pretty.Combinators.Lineup
-                     HIndent.Pretty.Combinators.Op
-                     HIndent.Pretty.Combinators.Outputable
-                     HIndent.Pretty.Combinators.RhsSeparator
-                     HIndent.Pretty.Combinators.String
-                     HIndent.Pretty.Combinators.Switch
-                     HIndent.Pretty.Combinators.Wrap
-                     HIndent.Pretty.Import
-                     HIndent.Pretty.Import.Sort
-                     HIndent.Pretty.NodeComments
-                     HIndent.Pretty.Pragma
-                     HIndent.Pretty.SigBindFamily
-                     HIndent.Pretty.Types
-                     HIndent.Types
-  build-depends:     base >= 4.7 && <5
-                   , containers
-                   , Cabal
-                   , filepath
-                   , directory
-                   , ghc-lib-parser-ex
-                   , monad-loops
-                   , mtl
-                   , bytestring
-                   , path
-                   , path-io
-                   , split
-                   , utf8-string
-                   , transformers
-                   , exceptions
-                   , syb
-                   , regex-tdfa
-                   , text
-                   , unicode-show
-                   , yaml
-  if(impl(ghc >= 9.4.1))
-    build-depends: ghc-lib-parser >= 9.4.1.20220807 && < 9.5
+  exposed-modules:
+      HIndent
+      HIndent.Applicative
+      HIndent.CabalFile
+      HIndent.CodeBlock
+      HIndent.Config
+      HIndent.Language
+      HIndent.LanguageExtension
+      HIndent.LanguageExtension.Conversion
+      HIndent.LanguageExtension.Types
+      HIndent.ModulePreprocessing
+      HIndent.ModulePreprocessing.CommentRelocation
+      HIndent.Parse
+      HIndent.Path.Find
+      HIndent.Pragma
+      HIndent.Pretty
+      HIndent.Pretty.Combinators
+      HIndent.Pretty.Combinators.Comment
+      HIndent.Pretty.Combinators.Getter
+      HIndent.Pretty.Combinators.Indent
+      HIndent.Pretty.Combinators.Lineup
+      HIndent.Pretty.Combinators.Op
+      HIndent.Pretty.Combinators.Outputable
+      HIndent.Pretty.Combinators.RhsSeparator
+      HIndent.Pretty.Combinators.String
+      HIndent.Pretty.Combinators.Switch
+      HIndent.Pretty.Combinators.Wrap
+      HIndent.Pretty.Import
+      HIndent.Pretty.Import.Sort
+      HIndent.Pretty.NodeComments
+      HIndent.Pretty.Pragma
+      HIndent.Pretty.SigBindFamily
+      HIndent.Pretty.Types
+      HIndent.Types
+  other-modules:
+      Paths_hindent
+  autogen-modules:
+      Paths_hindent
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -O2
+  build-depends:
+      Cabal
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , filepath
+    , ghc-lib-parser-ex
+    , monad-loops
+    , mtl
+    , path
+    , path-io
+    , regex-tdfa
+    , split
+    , syb
+    , text
+    , transformers
+    , unicode-show
+    , utf8-string
+    , yaml
+  default-language: Haskell2010
+  if impl(ghc >= 9.4.1)
+    build-depends:
+        ghc-lib-parser >=9.4.1.20220807 && <9.5
   else
-    build-depends: ghc-lib-parser >= 9.2.3.20220527 && < 9.3
+    build-depends:
+        ghc-lib-parser >=9.2.3.20220527 && <9.3
 
 library hindent-internal
-  default-language:  Haskell2010
-  hs-source-dirs:    internal
-  exposed-modules:   HIndent.Internal.Test.Markdone
-  build-depends:     base
-                   , bytestring
-                   , deepseq
-                   , exceptions
-                   , mtl
+  exposed-modules:
+      HIndent.Internal.Test.Markdone
+  other-modules:
+      Paths_hindent
+  autogen-modules:
+      Paths_hindent
+  hs-source-dirs:
+      internal
+  ghc-options: -Wall -O2
+  build-depends:
+      Cabal
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , deepseq
+    , directory
+    , filepath
+    , ghc-lib-parser-ex
+    , monad-loops
+    , mtl
+    , path
+    , path-io
+    , regex-tdfa
+    , split
+    , syb
+    , text
+    , transformers
+    , unicode-show
+    , utf8-string
+    , yaml
+  default-language: Haskell2010
+  if impl(ghc >= 9.4.1)
+    build-depends:
+        ghc-lib-parser >=9.4.1.20220807 && <9.5
+  else
+    build-depends:
+        ghc-lib-parser >=9.2.3.20220527 && <9.3
 
 executable hindent
-  hs-source-dirs:    app
-  ghc-options:       -Wall -O2
-  default-language:  Haskell2010
-  main-is:           Main.hs
-  other-modules:     Paths_hindent
-  autogen-modules:   Paths_hindent
-  build-depends:     base >= 4 && < 5
-                   , hindent
-                   , bytestring
-                   , Cabal
-                   , utf8-string
-                   , ghc-prim
-                   , directory
-                   , text
-                   , yaml
-                   , unix-compat
-                   , deepseq
-                   , transformers
-                   , exceptions
-                   , optparse-applicative
+  main-is: Main.hs
+  other-modules:
+      Paths_hindent
+  autogen-modules:
+      Paths_hindent
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -O2
+  build-depends:
+      Cabal
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , filepath
+    , ghc-lib-parser-ex
+    , hindent
+    , monad-loops
+    , mtl
+    , optparse-applicative
+    , path
+    , path-io
+    , regex-tdfa
+    , split
+    , syb
+    , text
+    , transformers
+    , unicode-show
+    , utf8-string
+    , yaml
+  default-language: Haskell2010
+  if impl(ghc >= 9.4.1)
+    build-depends:
+        ghc-lib-parser >=9.4.1.20220807 && <9.5
+  else
+    build-depends:
+        ghc-lib-parser >=9.2.3.20220527 && <9.3
 
 test-suite hindent-test
   type: exitcode-stdio-1.0
-  hs-source-dirs:    tests
-  default-language:  Haskell2010
-  main-is:           Main.hs
-  build-depends:     base >= 4 && <5
-                   , hindent
-                   , hindent-internal
-                   , monad-loops
-                   , mtl
-                   , bytestring
-                   , regex-tdfa
-                   , utf8-string
-                   , hspec
-                   , directory
-                   , deepseq
-                   , exceptions
-                   , utf8-string
-                   , Diff
+  main-is: Main.hs
+  other-modules:
+      Paths_hindent
+  autogen-modules:
+      Paths_hindent
+  hs-source-dirs:
+      tests
+  ghc-options: -Wall -O2
+  build-depends:
+      Cabal
+    , Diff
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , filepath
+    , ghc-lib-parser-ex
+    , hindent
+    , hindent-internal
+    , hspec
+    , monad-loops
+    , mtl
+    , path
+    , path-io
+    , regex-tdfa
+    , split
+    , syb
+    , text
+    , transformers
+    , unicode-show
+    , utf8-string
+    , yaml
+  default-language: Haskell2010
+  if impl(ghc >= 9.4.1)
+    build-depends:
+        ghc-lib-parser >=9.4.1.20220807 && <9.5
+  else
+    build-depends:
+        ghc-lib-parser >=9.2.3.20220527 && <9.3
 
 benchmark hindent-bench
   type: exitcode-stdio-1.0
-  hs-source-dirs:    benchmarks
-  default-language:  Haskell2010
-  ghc-options:       -Wall -O2 -rtsopts
-  main-is:           Main.hs
-  build-depends:     base >= 4 && < 5
-                   , hindent
-                   , hindent-internal
-                   , bytestring
-                   , utf8-string
-                   , ghc-prim
-                   , directory
-                   , criterion
-                   , deepseq
-                   , exceptions
-                   , mtl
+  main-is: Main.hs
+  other-modules:
+      Paths_hindent
+  autogen-modules:
+      Paths_hindent
+  hs-source-dirs:
+      benchmarks
+  ghc-options: -Wall -O2
+  build-depends:
+      Cabal
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , criterion
+    , deepseq
+    , directory
+    , filepath
+    , ghc-lib-parser-ex
+    , hindent
+    , hindent-internal
+    , monad-loops
+    , mtl
+    , path
+    , path-io
+    , regex-tdfa
+    , split
+    , syb
+    , text
+    , transformers
+    , unicode-show
+    , utf8-string
+    , yaml
+  default-language: Haskell2010
+  if impl(ghc >= 9.4.1)
+    build-depends:
+        ghc-lib-parser >=9.4.1.20220807 && <9.5
+  else
+    build-depends:
+        ghc-lib-parser >=9.2.3.20220527 && <9.3

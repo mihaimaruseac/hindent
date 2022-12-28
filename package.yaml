@@ -35,6 +35,8 @@ dependencies:
   - ghc-lib-parser-ex
   - monad-loops
   - mtl
+  - path
+  - path-io
   - regex-tdfa
   - split
   - syb
@@ -54,16 +56,35 @@ when:
 library:
   source-dirs: src
 
+internal-libraries:
+  hindent-internal:
+    source-dirs: internal
+    dependencies:
+      - deepseq
+
 executable:
   main: Main.hs
-  source-dirs: src/main
+  source-dirs: app
+  dependencies:
+    - hindent
+    - optparse-applicative
 
 tests:
   hindent-test:
-    main: Test.hs
-    source-dirs: src/main
+    main: Main.hs
+    source-dirs: tests
+    dependencies:
+      - Diff
+      - hindent
+      - hindent-internal
+      - hspec
 
 benchmarks:
   hindent-bench:
-    main: Benchmark.hs
-    source-dirs: src/main
+    main: Main.hs
+    source-dirs: benchmarks
+    dependencies:
+      - criterion
+      - deepseq
+      - hindent
+      - hindent-internal
