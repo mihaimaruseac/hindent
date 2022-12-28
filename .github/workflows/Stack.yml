@@ -45,6 +45,10 @@ jobs:
       run: |
         stack update
         stack build --system-ghc --only-dependencies --test --bench --no-run-tests --no-run-benchmarks
+    - name: Ensure the cabal file is up-to-date
+      run: |
+        stack install --system-ghc hpack-$(stack --hpack-numeric-version)
+        diff <(hpack -) hindent.cabal
     - name: Build
       run: stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
     - name: Run tests
