@@ -17,9 +17,9 @@ import Data.Function
 import Data.Version
 import qualified HIndent
 import HIndent.CodeBlock
+import HIndent.Config
+import HIndent.Internal.Test.Markdone
 import qualified HIndent.LanguageExtension as HIndent
-import HIndent.Types
-import Markdone
 import qualified System.Info
 import Test.Hspec
 import Text.Read
@@ -44,7 +44,7 @@ reformat cfg code =
 toSpec :: [Markdone] -> Spec
 toSpec = go
   where
-    cfg = HIndent.Types.defaultConfig {configTrailingNewline = False}
+    cfg = HIndent.Config.defaultConfig {configTrailingNewline = False}
     go (Section name children:next) = do
       describe (UTF8.toString name) (go children)
       go next

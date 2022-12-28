@@ -31,6 +31,8 @@ jobs:
     env:
       CONFIG: "--enable-tests --enable-benchmarks"
     steps:
+    - name: Modify a git setting not to convert LF to CRLF
+      run: git config --global core.autocrlf input
     - uses: actions/checkout@v2
     - uses: haskell/actions/setup@v1
       id: setup-haskell-cabal
@@ -53,7 +55,7 @@ jobs:
     - name: Build
       run: cabal v2-build $CONFIG
     - name: Check the format of files in `src/`
-      run: cabal run hindent -- src/**/*.hs --validate
+      run: cabal run hindent -- **/*.hs --validate
     - name: Run tests
       run: cabal v2-test $CONFIG
     - name: Run benchmarks

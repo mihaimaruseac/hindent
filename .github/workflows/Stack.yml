@@ -23,6 +23,8 @@ jobs:
         # TODO(mihaimaruseac): Fully disabling windows for now
         os: [ubuntu-latest]
     steps:
+    - name: Modify a git setting not to convert LF to CRLF
+      run: git config --global core.autocrlf input
     - uses: actions/checkout@v2
     - uses: haskell/actions/setup@v1
       with:
@@ -50,7 +52,7 @@ jobs:
     - name: Run benchmarks
       run: stack bench
     - name: Check the format of files in `src/`
-      run: stack run -- src/**/*.hs --validate
+      run: stack run -- **/*.hs --validate
     # We don't generate stack documentation as documentation for deps does not get cached
     # name: Generate documentation
     # run: stack haddock

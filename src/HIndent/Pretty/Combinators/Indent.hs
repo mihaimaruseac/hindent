@@ -10,6 +10,7 @@ module HIndent.Pretty.Combinators.Indent
 
 import Control.Monad.State
 import Data.Int
+import HIndent.Config
 import HIndent.Pretty.Combinators.String
 import HIndent.Types
 
