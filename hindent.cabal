@@ -78,6 +78,7 @@ library
     , bytestring
     , containers
     , directory
+    , exceptions
     , filepath
     , ghc-lib-parser-ex
     , monad-loops
@@ -117,6 +118,7 @@ library hindent-internal
     , containers
     , deepseq
     , directory
+    , exceptions
     , filepath
     , ghc-lib-parser-ex
     , monad-loops
@@ -154,6 +156,7 @@ executable hindent
     , bytestring
     , containers
     , directory
+    , exceptions
     , filepath
     , ghc-lib-parser-ex
     , hindent
@@ -195,6 +198,7 @@ test-suite hindent-test
     , bytestring
     , containers
     , directory
+    , exceptions
     , filepath
     , ghc-lib-parser-ex
     , hindent
@@ -238,6 +242,7 @@ benchmark hindent-bench
     , criterion
     , deepseq
     , directory
+    , exceptions
     , filepath
     , ghc-lib-parser-ex
     , hindent
