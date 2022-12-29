@@ -23,8 +23,6 @@ jobs:
         # https://github.com/haskell/actions/issues/129
         - os: windows-latest
           ghc: "9.4.4"
-        - os: windows-latest
-          ghc: "9.2.5"
     defaults:
       run:
         shell: bash
