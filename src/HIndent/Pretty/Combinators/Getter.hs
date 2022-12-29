@@ -7,7 +7,7 @@ module HIndent.Pretty.Combinators.Getter
 import Control.Monad.RWS hiding (state)
 import Data.Int
 import HIndent.Pretty.Combinators.String
-import HIndent.Types
+import HIndent.Printer
 
 -- | Returns the column from which a new string is printed. It may be
 -- different from 'psColumn' immediately after printing a comment.

@@ -7,7 +7,7 @@ module HIndent.Pretty.Combinators.Switch
 
 import Control.Applicative
 import Control.Monad.State
-import HIndent.Types
+import HIndent.Printer
 
 -- | This function runs the first printer if the result of running it fits
 -- in a single line. Otherwise, it runs the second printer.

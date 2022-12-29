@@ -18,7 +18,7 @@ module HIndent.Pretty.Combinators.Wrap
 import GHC.Types.Name
 import HIndent.Pretty.Combinators.Indent
 import HIndent.Pretty.Combinators.String
-import HIndent.Types
+import HIndent.Printer
 
 -- | This function wraps the printer with parentheses.
 parens :: Printer a -> Printer a

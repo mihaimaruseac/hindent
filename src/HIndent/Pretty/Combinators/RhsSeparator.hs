@@ -5,7 +5,7 @@ module HIndent.Pretty.Combinators.RhsSeparator
 
 import HIndent.Pretty.Combinators.String
 import HIndent.Pretty.Types
-import HIndent.Types
+import HIndent.Printer
 
 -- | Returns a separator between a LHS and a RHS according to the type of
 -- the RHS.

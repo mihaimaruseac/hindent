@@ -47,7 +47,7 @@ import HIndent.Pretty.NodeComments
 import HIndent.Pretty.Pragma
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
-import HIndent.Types
+import HIndent.Printer
 import Text.Show.Unicode
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 import GHC.Types.PkgQual
