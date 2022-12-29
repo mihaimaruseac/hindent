@@ -6,7 +6,7 @@ module HIndent.Pretty.Combinators.Op
 import Control.Monad
 import GHC.Types.Name
 import GHC.Types.Name.Reader
-import HIndent.Types
+import HIndent.Printer
 
 -- | Runs the printer unless HIndent needs to treat the operator specially.
 unlessSpecialOp :: RdrName -> Printer () -> Printer ()

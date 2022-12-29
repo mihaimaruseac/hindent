@@ -10,7 +10,7 @@ import GHC.Driver.Session
 import GHC.Stack
 import GHC.Utils.Outputable
 import HIndent.Pretty.Combinators.String
-import HIndent.Types
+import HIndent.Printer
 import Language.Haskell.GhclibParserEx.GHC.Settings.Config
 
 -- | Prints the given value using the type's 'Outputable' implementation.

@@ -4,7 +4,7 @@ module HIndent.Pretty.Combinators.Comment
   ) where
 
 import Control.Monad.State
-import HIndent.Types
+import HIndent.Printer
 
 -- | Claims that comments were printed. Next time calling 'string' will
 -- print a newline before printing a text.

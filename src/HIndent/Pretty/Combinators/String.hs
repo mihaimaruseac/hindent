@@ -12,7 +12,7 @@ import Control.Monad.RWS
 import qualified Data.ByteString.Builder as S
 import GHC.Stack
 import HIndent.Config
-import HIndent.Types
+import HIndent.Printer
 
 -- | This function prints the given string.
 --

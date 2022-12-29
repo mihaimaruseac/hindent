@@ -46,7 +46,7 @@ import HIndent.Pretty.Combinators.Indent
 import HIndent.Pretty.Combinators.String
 import HIndent.Pretty.Combinators.Switch
 import HIndent.Pretty.Combinators.Wrap
-import HIndent.Types
+import HIndent.Printer
 
 -- | Applies 'hTuple' if the result fits in a line or 'vTuple' otherwise.
 hvTuple :: [Printer ()] -> Printer ()

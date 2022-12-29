@@ -15,14 +15,14 @@ import GHC.Hs
 import HIndent.Pragma
 import HIndent.Pretty.Combinators.Lineup
 import HIndent.Pretty.Combinators.String
-import HIndent.Types
+import HIndent.Printer
 import Text.Regex.TDFA
 
 -- | This function pretty-prints the module's pragmas
 prettyPragmas :: HsModule -> Printer ()
 prettyPragmas = lined . fmap string . collectPragmas
 
--- | This function returns a 'True' if the module has pragmas. 
+-- | This function returns a 'True' if the module has pragmas.
 -- Otherwise, it returns a 'False'.
 pragmaExists :: HsModule -> Bool
 pragmaExists = not . null . collectPragmas
@@ -44,7 +44,7 @@ collectPragmas =
       "{-# " ++
       fmap toUpper optionOrPragma ++ " " ++ intercalate ", " xs ++ " #-}"
 
--- | This function returns a 'Just' value with the pragma 
+-- | This function returns a 'Just' value with the pragma
 -- extracted from the passed 'EpaCommentTok' if it has one. Otherwise, it
 -- returns a 'Nothing'.
 extractPragma :: EpaCommentTok -> Maybe (String, [String])

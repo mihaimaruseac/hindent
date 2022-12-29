@@ -12,7 +12,7 @@ import Control.Monad.State
 import Data.Int
 import HIndent.Config
 import HIndent.Pretty.Combinators.String
-import HIndent.Types
+import HIndent.Printer
 
 -- | This function runs the given printer with an additional indent. The
 -- indent has 'configIndentSpaces' spaces.

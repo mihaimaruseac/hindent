@@ -64,7 +64,7 @@ library
       HIndent.Pretty.Pragma
       HIndent.Pretty.SigBindFamily
       HIndent.Pretty.Types
-      HIndent.Types
+      HIndent.Printer
   other-modules:
       Paths_hindent
   hs-source-dirs:

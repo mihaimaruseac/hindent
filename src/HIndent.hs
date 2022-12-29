@@ -42,7 +42,7 @@ import HIndent.LanguageExtension.Types
 import HIndent.ModulePreprocessing
 import HIndent.Parse
 import HIndent.Pretty
-import HIndent.Types
+import HIndent.Printer
 import Prelude
 
 -- | Format the given source.

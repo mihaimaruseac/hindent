@@ -4,8 +4,8 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RankNTypes #-}
 
--- | All types.
-module HIndent.Types
+-- | Printer types.
+module HIndent.Printer
   ( Printer(..)
   , PrintState(..)
   ) where
