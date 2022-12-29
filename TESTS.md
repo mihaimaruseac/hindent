@@ -304,6 +304,13 @@ import CommentAfter
 import qualified "base" Prelude as P
 ```
 
+Importing a `#`
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/547
+import Diagrams.Prelude ((#))
+```
+
 ### Foreign imports and exports
 
 A `ccall` foreign export
