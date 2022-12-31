@@ -2600,6 +2600,14 @@ Unboxed `String`
 a = "Foo"#
 ```
 
+`NumericUnderscores`
+
+```haskell
+{-# LANGUAGE NumericUnderscores #-}
+
+foo = 10_000
+```
+
 ### Quasi-quotes
 
 Body has multiple lines.
