@@ -2603,6 +2603,7 @@ a = "Foo"#
 `NumericUnderscores`
 
 ```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/542
 {-# LANGUAGE NumericUnderscores #-}
 
 foo = 10_000
