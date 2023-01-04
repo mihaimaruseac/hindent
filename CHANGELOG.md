@@ -180,7 +180,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 ### Added
 
-- Shebang support (Fixes [#208]).
+- Add shebang support (Fixes [#208]).
 - Output the filename for parse errors (Fixes [#179]).
 - Added a document of the `-X` option (Fixes [#212]).
 
