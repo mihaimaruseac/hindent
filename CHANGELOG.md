@@ -76,13 +76,21 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - Switched to [`optparse-applicative`].
 
-5.2.5:
+## [5.2.5] - 2018-01-04
 
-    * Support get extensions from `.cabal` file
-    * Improve indention with record constructions and updates
-    * Fix `let ... in` bug
-    * Fix top-level lambda expressions in TemplateHaskell slices
-    * Update to haskell-src-exts dependency to version `>= 1.20.0`
+### Added
+
+- Support getting extensions from a `.cabal` file
+
+### Changed
+
+- Improved the indentation with record constructions and updates
+- Updated [`haskell-src-exts`] dependency to version `>= 1.20.0`
+
+### Fixed
+
+- Fix the `let ... in` bug
+- Fix formatting top-level lambda expressions in `TemplateHaskell` slices
 
 5.2.4:
 
@@ -200,6 +208,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.3.0]: https://github.com/mihaimaruseac/hindent/compare/5.2.7...5.3.0
 [5.2.7]: https://github.com/mihaimaruseac/hindent/compare/5.2.6...5.2.7
 [5.2.6]: https://github.com/mihaimaruseac/hindent/compare/5.2.5...5.2.6
+[5.2.5]: https://github.com/mihaimaruseac/hindent/compare/5.2.4...5.2.5
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
