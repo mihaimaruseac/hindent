@@ -209,11 +209,16 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - Some miscellaneous bugs.
 
-5.0.1:
+## [5.0.1] - 2016-08-20
 
-    * Re-implement using bytestring instead of text
-    * Made compatible with GHC 7.8 through to GHC 8.0
-    * Added test suite and benchmarks in TESTS.md and BENCHMARKS.md
+### Added
+
+- Made compatible with GHC 7.8 through to GHC 8.0
+- Added test suites and benchmarks in [`TESTS.md`] and [`BENCHMARKS.md`]
+
+### Changed
+
+- Re-implement using [`bytestring`] instead of [`text`]
 
 5.0.0:
 
@@ -282,3 +287,8 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [`haskell-src-exts`]: https://hackage.haskell.org/package/haskell-src-exts
 [`ghc-lib-parser`]: https://hackage.haskell.org/package/ghc-lib-parser
 [`optparse-applicative`]: https://hackage.haskell.org/package/optparse-applicative
+[`bytestring`]: https://hackage.haskell.org/package/bytestring
+[`text`]: https://hackage.haskell.org/package/text
+
+[`TESTS.md`]: TESTS.md
+[`BENCHMARKS.md`]: BENCHMARKS.md
