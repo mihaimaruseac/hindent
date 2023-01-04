@@ -120,8 +120,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 ### Added
 
 - HIndent now reports where a parse happened.
-- Support custom the `line-break` option.
-- Added `--line-breaks` parameter.
+- Added `--line-breaks` parameter to support custom line breaks.
 - Added the `RecStmt` support
 
 ### Changed
