@@ -226,9 +226,11 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - Support for styles
 
-4.6.4
+## [4.6.4] - 2016-07-15
 
-	* Copy/delete file instead of renaming
+### Changed
+
+- The formatted file is now created by coping/deleting a file instead of renaming.
 
 4.4.6
 
@@ -272,6 +274,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.1.0]: https://github.com/mihaimaruseac/hindent/compare/5.0.1...5.1.0
 [5.0.1]: https://github.com/mihaimaruseac/hindent/compare/5.0.0...5.0.1
 [5.0.0]: https://github.com/mihaimaruseac/hindent/compare/4.6.4...5.0.0
+[4.6.4]: https://github.com/mihaimaruseac/hindent/compare/4.6.3...4.6.4
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
