@@ -92,22 +92,28 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 - Fix the `let ... in` bug
 - Fix formatting top-level lambda expressions in `TemplateHaskell` slices
 
-5.2.4:
+## [5.2.4] - 2017-10-20
 
-    * Pretty print imports
-    * Fix pretty print for string literals for `DataKinds`
-    * Support `--validate` option for checking the format without reformatting
-    * Support parse `#include`, `#error`, `#warning` directives
-    * Support read `LANGUAGE` pragma and parse the declared extensions from source
-    * Treat `TypeApplications` extension as 'badExtensions' due to the `@` symbol
-    * Improve pretty print for unboxed tuples
-    * Fix many issues related to infix operators, includes TH name quotes,
-      `INLINE`/`NOINLINE` pragmas, infix type operator and infix constructor
-    * Fix pretty print for operators in `INLINE`/`NOINLINE` pragmas
-    * Support for `EmptyCases` extension
-    * Fix TH name quotes on operator names
-    * Optimize pretty print for many fundeps
-    * Fix extra linebreaks after short identifiers
+### Added
+
+- Improved pretty-printing unboxed tuples.
+- Support the `--validate` option for checking the format without reformatting
+- Support parsing `#include`, `#error`, and `#warning` directives.
+- Support reading `LANGUAGE` pragmas and parse the declared extensions from sources.
+- Support the `EmptyCases` extension
+- Optimize pretty-printing for many functional dependencies.
+
+### Changed
+
+- The `TypeApplications` extension is now disabled-by-default due to the `@` symbol
+
+### Fixed
+
+- Fixed pretty-printing imports
+- Fixed pretty-printing string literals for `DataKinds`
+- Fixed many issues related to infix operators including TH name quotes,
+  `INLINE`/`NOINLINE` pragmas, infix type operators, and infix constructors.
+- Fix extra linebreaks after short identifiers.
 
 5.2.3:
 
@@ -209,6 +215,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.2.7]: https://github.com/mihaimaruseac/hindent/compare/5.2.6...5.2.7
 [5.2.6]: https://github.com/mihaimaruseac/hindent/compare/5.2.5...5.2.6
 [5.2.5]: https://github.com/mihaimaruseac/hindent/compare/5.2.4...5.2.5
+[5.2.4]: https://github.com/mihaimaruseac/hindent/compare/5.2.3...5.2.4
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
