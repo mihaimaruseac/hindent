@@ -242,6 +242,13 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - Fixed the whole module printer.
 
+## [4.5.4] - 2015-06-22
+
+### Added
+
+- Improvements to Tibell style.
+- 6x speed up on rendering operators.
+
 ## [4.4.5] - 2015-11-10
 
 ### Fixed
@@ -265,11 +272,6 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - A bug in printing operators in statements.
 
-4.5.4
-
-	* Improvements to Tibell style.
-	* 6x speed up on rendering operators.
-
 [unreleased]: https://github.com/mihaimaruseac/hindent/compare/v5.3.4...HEAD
 [5.3.4]: https://github.com/mihaimaruseac/hindent/compare/v5.3.3...v5.3.4
 [5.3.3]: https://github.com/mihaimaruseac/hindent/compare/v5.3.2...v5.3.3
@@ -290,6 +292,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.0.0]: https://github.com/mihaimaruseac/hindent/compare/4.6.4...5.0.0
 [4.6.4]: https://github.com/mihaimaruseac/hindent/compare/4.6.3...4.6.4
 [4.6.3]: https://github.com/mihaimaruseac/hindent/compare/4.6.2...4.6.3
+[4.5.4]: https://github.com/mihaimaruseac/hindent/compare/4.5.3...4.5.4
 [4.4.5]: https://github.com/mihaimaruseac/hindent/compare/4.4.4...4.4.5
 [4.4.2]: https://github.com/mihaimaruseac/hindent/compare/4.4.1...4.4.2
 [4.3.8]: https://github.com/mihaimaruseac/hindent/compare/4.3.7...4.3.8
