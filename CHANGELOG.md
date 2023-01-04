@@ -177,6 +177,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
+[@toku-sa-n]: https://github.com/toku-sa-n
 
 [#588]: https://github.com/mihaimaruseac/hindent/pull/588
 [#584]: https://github.com/mihaimaruseac/hindent/pull/584
