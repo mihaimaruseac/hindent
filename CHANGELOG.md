@@ -212,7 +212,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 ### Added
 
-- Made compatible with GHC 7.8 through to GHC 8.0
+- Made HIndent compatible with GHC 7.8 through GHC 8.0
 - Added test suites and benchmarks in [`TESTS.md`] and [`BENCHMARKS.md`]
 
 ### Changed
