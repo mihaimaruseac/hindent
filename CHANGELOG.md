@@ -142,7 +142,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 ### Changed
 
-- HIndent now leaves do, lambda, and lambda-case on the previous line of `$`.
+- HIndent now leaves `do`, lambda (`\x->`), and lambda-case (`\case->`) on the previous line of `$`.
 
 ### Fixed
 
