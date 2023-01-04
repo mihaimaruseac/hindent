@@ -70,8 +70,11 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - A bug in the `-X` option
 
-5.2.6:
-    * Switch to optparse-applicative
+## [5.2.6] - 2019-03-16
+
+### Changed
+
+- Switched to [`optparse-applicative`].
 
 5.2.5:
 
@@ -207,3 +210,4 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 [`haskell-src-exts`]: https://hackage.haskell.org/package/haskell-src-exts
 [`ghc-lib-parser`]: https://hackage.haskell.org/package/ghc-lib-parser
+[`optparse-applicative`]: https://hackage.haskell.org/package/optparse-applicative
