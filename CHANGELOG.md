@@ -60,7 +60,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 - Fix pretty-printing of `'(:)`.
 - Fix parsing C preprocessor line continuations.
 - Add parentheses around symbols `(:|)` when required.
-- Support $p` pattern splices.
+- Support `$p` pattern splices.
 - Fix formatting associated type families.
 - Fix formatting non-dependent record constructors.
 
