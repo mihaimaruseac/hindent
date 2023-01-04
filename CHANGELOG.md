@@ -226,10 +226,6 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - Support for styles
 
-5.0.0:
-
-	* Drop support for styles
-
 4.6.4
 
 	* Copy/delete file instead of renaming
