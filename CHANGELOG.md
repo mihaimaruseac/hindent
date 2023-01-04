@@ -268,6 +268,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.2.0]: https://github.com/mihaimaruseac/hindent/compare/5.1.1...5.2.0
 [5.1.1]: https://github.com/mihaimaruseac/hindent/compare/5.1.0...5.1.1
 [5.1.0]: https://github.com/mihaimaruseac/hindent/compare/5.0.1...5.1.0
+[5.0.1]: https://github.com/mihaimaruseac/hindent/compare/5.0.0...5.0.1
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
