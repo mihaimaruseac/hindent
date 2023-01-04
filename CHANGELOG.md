@@ -161,7 +161,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - Fixed handling on large constraints.
 - Fixed pretty-printing multi-line comments.
-- Fixed adding a spurious space for comments at the end of a file.
+- Fixed bug resulting in adding a spurious space for comments at the end of a file.
 - Fixed adding a trailing white space on `<-`
 
 ## [5.2.0] - 2016-08-30
