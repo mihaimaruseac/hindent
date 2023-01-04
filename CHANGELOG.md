@@ -154,4 +154,4 @@
 	* Improvements to Tibell style.
 	* 6x speed up on rendering operators.
 
-[unreleased]: [unreleased]: https://github.com/mihaimaruseac/hindent/compare/v5.3.4...HEAD
+[unreleased]: https://github.com/mihaimaruseac/hindent/compare/v5.3.4...HEAD
