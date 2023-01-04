@@ -176,17 +176,24 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 ### Changed
 
 - The default number of spaces for a tab is changed to 2.
-- The last parenthesis of an export list is now put on a new line.
 
-5.1.1:
+## [5.1.1] - 2016-08-29
 
-    * Preserve spaces between groups of imports (fixes #200)
-    * Support shebangs (closes #208)
-    * Output filename for parse errors (fixes #179)
-    * Input with newline ends with newline (closes #211)
-    * Document -X (closes #212)
-    * Fix explicit forall in instances (closes #218)
-    * Put last paren of export list on a new line #227
+### Added
+
+- Shebang support (Fixes [#208]).
+- Output the filename for parse errors (Fixes [#179]).
+- Added a document of the `-X` option (Fixes [#212]).
+
+### Changed
+
+- HIndent now preserves spaces between groups of imports (Fixes [#200]).
+- HIndent now preserves the last newline if the input ends with one (Fixes [#211]).
+- HIndent now puts the last parenthesis of an export list on a new line (Fixes [#227]).
+
+### Fixed
+
+- Fixed pretty-printing explicit `forall`s in instances (Fixes [#218]).
 
 5.1.0:
 
@@ -254,6 +261,13 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [#588]: https://github.com/mihaimaruseac/hindent/pull/588
 [#584]: https://github.com/mihaimaruseac/hindent/pull/584
 [#579]: https://github.com/mihaimaruseac/hindent/pull/579
+[#227]: https://github.com/mihaimaruseac/hindent/pull/227
+[#218]: https://github.com/mihaimaruseac/hindent/pull/218
+[#212]: https://github.com/mihaimaruseac/hindent/pull/212
+[#211]: https://github.com/mihaimaruseac/hindent/pull/211
+[#208]: https://github.com/mihaimaruseac/hindent/pull/208
+[#200]: https://github.com/mihaimaruseac/hindent/pull/200
+[#179]: https://github.com/mihaimaruseac/hindent/pull/179
 
 [`haskell-src-exts`]: https://hackage.haskell.org/package/haskell-src-exts
 [`ghc-lib-parser`]: https://hackage.haskell.org/package/ghc-lib-parser
