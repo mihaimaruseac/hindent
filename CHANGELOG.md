@@ -115,18 +115,29 @@ This version is accidentally pushlished, and is the same as 5.3.3.
   `INLINE`/`NOINLINE` pragmas, infix type operators, and infix constructors.
 - Fix extra linebreaks after short identifiers.
 
-5.2.3:
+## [5.2.3] - 2017-05-07
 
-    * Sort explicit import lists
-    * Report the `SrcLoc` when there's a parse error
-    * Improve long type signatures pretty printing
-    * Support custom line-break operators, add `--line-breaks` argument
-    * Fix infix data constructor
-    * Disable `RecursiveDo` and `DoRec` extensions by default
-    * Add RecStmt support
-    * Improve GADT records, data declaration records
-    * Complicated type alias and type signatures pretty printing
-    * Fix quasi-quoter names
+### Added
+
+- HIndent now reports where a parse happened.
+- Support custom the `line-break` option.
+- Added `--line-breaks` parameter.
+- Added the `RecStmt` support
+
+### Changed
+
+- Explicit import lists are now sorted.
+- Improved pretty-printing long type signatures.
+- Improved pretty-printing GADT records.
+- Improved pretty-printing data declaration records.
+- The `RecursiveDo` and `DoRec` extensions are now disabled-by-default.
+
+## Fixed
+
+- Fixed pretty-printing infix data constructors.
+- Fixed pretty-printing quasi-quoter names.
+- Fixed pretty-printing complicated type aliases.
+- Fixed pretty-printing complicated type signatures.
 
 5.2.2:
 
@@ -216,6 +227,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.2.6]: https://github.com/mihaimaruseac/hindent/compare/5.2.5...5.2.6
 [5.2.5]: https://github.com/mihaimaruseac/hindent/compare/5.2.4...5.2.5
 [5.2.4]: https://github.com/mihaimaruseac/hindent/compare/5.2.3...5.2.4
+[5.2.3]: https://github.com/mihaimaruseac/hindent/compare/5.2.2...5.2.3
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
