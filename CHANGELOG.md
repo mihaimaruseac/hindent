@@ -232,10 +232,15 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - The formatted file is now created by coping/deleting a file instead of renaming.
 
-4.4.6
+## [4.6.3] - 2016-04-18
 
-	* Fix whole module printer
-	* Accept a filename to reformat
+### Added
+
+- Accept a filename to reformat.
+
+### Fixed
+
+- Fixed the whole module printer.
 
 4.4.5
 
@@ -275,6 +280,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.0.1]: https://github.com/mihaimaruseac/hindent/compare/5.0.0...5.0.1
 [5.0.0]: https://github.com/mihaimaruseac/hindent/compare/4.6.4...5.0.0
 [4.6.4]: https://github.com/mihaimaruseac/hindent/compare/4.6.3...4.6.4
+[4.6.3]: https://github.com/mihaimaruseac/hindent/compare/4.6.2...4.6.3
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
