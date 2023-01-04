@@ -134,7 +134,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 ## Fixed
 
 - Fixed pretty-printing for infix data constructors.
-- Fixed pretty-printing quasi-quoter names.
+- Fixed pretty-printing of quasi-quoter names.
 - Fixed pretty-printing complicated type aliases.
 - Fixed pretty-printing complicated type signatures.
 
