@@ -259,9 +259,11 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 - Bunch of Gibiansky style bugs.
 - Tibell style bugs.
 
-4.3.8
+## [4.3.8] - 2015-02-06
 
-	* Fixed: bug in printing operators in statements.
+### Fixed
+
+- A bug in printing operators in statements.
 
 4.5.4
 
@@ -290,6 +292,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [4.6.3]: https://github.com/mihaimaruseac/hindent/compare/4.6.2...4.6.3
 [4.4.5]: https://github.com/mihaimaruseac/hindent/compare/4.4.4...4.4.5
 [4.4.2]: https://github.com/mihaimaruseac/hindent/compare/4.4.1...4.4.2
+[4.3.8]: https://github.com/mihaimaruseac/hindent/compare/4.3.7...4.3.8
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
