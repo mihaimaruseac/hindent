@@ -62,7 +62,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 - Add parentheses around symbols `(:|)` when required.
 - Support `$p` pattern splices.
 - Fix formatting of associated type families.
-- Fix formatting non-dependent record constructors.
+- Fix formatting of non-dependent record constructors.
 
 ## [5.2.7] - 2019-03-16
 
