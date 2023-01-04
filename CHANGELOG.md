@@ -8,9 +8,7 @@
 
 ### Changed
 
-- Switched the parser from
-  [`haskell-src-exts`](https://hackage.haskell.org/package/haskell-src-exts) to
-  [`ghc-lib-parser`](https://hackage.haskell.org/package/ghc-lib-parser-9.4.1.20220807).
+- Switched the parser from [`haskell-src-exts`] to [`ghc-lib-parser`].
   This switch causes changes in the formatting results in some cases.
 
 ### Removed
@@ -182,3 +180,6 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [#588]: https://github.com/mihaimaruseac/hindent/pull/588
 [#584]: https://github.com/mihaimaruseac/hindent/pull/584
 [#579]: https://github.com/mihaimaruseac/hindent/pull/579
+
+[`haskell-src-exts`]: https://hackage.haskell.org/package/haskell-src-exts
+[`ghc-lib-parser`]: https://hackage.haskell.org/package/ghc-lib-parser
