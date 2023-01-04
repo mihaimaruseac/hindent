@@ -64,8 +64,11 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 - Fix formatting associated type families.
 - Fix formatting non-dependent record constructors.
 
-5.2.7:
-    * Fix -X option bug
+## [5.2.7] - 2019-03-16
+
+### Fixed
+
+- A bug in the `-X` option
 
 5.2.6:
     * Switch to optparse-applicative
@@ -192,6 +195,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.3.2]: https://github.com/mihaimaruseac/hindent/compare/5.3.1...v5.3.2
 [5.3.1]: https://github.com/mihaimaruseac/hindent/compare/5.3.0...5.3.1
 [5.3.0]: https://github.com/mihaimaruseac/hindent/compare/5.2.7...5.3.0
+[5.2.7]: https://github.com/mihaimaruseac/hindent/compare/5.2.6...5.2.7
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
