@@ -220,6 +220,12 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - Re-implement using [`bytestring`] instead of [`text`]
 
+## [5.0.0] - 2016-08-11
+
+### Removed
+
+- Support for styles
+
 5.0.0:
 
 	* Drop support for styles
@@ -269,6 +275,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.1.1]: https://github.com/mihaimaruseac/hindent/compare/5.1.0...5.1.1
 [5.1.0]: https://github.com/mihaimaruseac/hindent/compare/5.0.1...5.1.0
 [5.0.1]: https://github.com/mihaimaruseac/hindent/compare/5.0.0...5.0.1
+[5.0.0]: https://github.com/mihaimaruseac/hindent/compare/4.6.4...5.0.0
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
