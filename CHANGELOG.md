@@ -195,11 +195,19 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - Fixed pretty-printing explicit `forall`s in instances (Fixes [#218]).
 
-5.1.0:
+## [5.1.0] - 2016-08-25
 
-    * Rewrote comment association, more reliable
-    * Added --tab-size flag for indentation spaces
-    * Fixed some miscellaneous bugs
+### Added
+
+- `--tab-size` parameter for indentation spaces.
+
+### Changed
+
+- Rewrote comment association for more reliability.
+
+### Fixed
+
+- Some miscellaneous bugs.
 
 5.0.1:
 
@@ -254,6 +262,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.2.1]: https://github.com/mihaimaruseac/hindent/compare/5.2.0...5.2.1
 [5.2.0]: https://github.com/mihaimaruseac/hindent/compare/5.1.1...5.2.0
 [5.1.1]: https://github.com/mihaimaruseac/hindent/compare/5.1.0...5.1.1
+[5.1.0]: https://github.com/mihaimaruseac/hindent/compare/5.0.1...5.1.0
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
