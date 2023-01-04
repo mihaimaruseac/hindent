@@ -154,7 +154,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 ### Changed
 
 - The `--tab-size` option is renamed to `--indent-size`.
-- The `PatternSynonyms` extension is now disabled-by-default.
+- The `PatternSynonyms` extension is now disabled by default.
 - HIndent now puts a newline before the closing bracket on a list.
 
 ### Fixed
