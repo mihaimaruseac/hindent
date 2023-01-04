@@ -1,3 +1,22 @@
+# Changelog
+
+## [Unreleased]
+
+### Added
+
+- The getConfig function is exported.
+
+### Changed
+
+- Switched the parser from
+  [`haskell-src-exts`](https://hackage.haskell.org/package/haskell-src-exts) to
+  [`ghc-lib-parser`](https://hackage.haskell.org/package/ghc-lib-parser-9.4.1.20220807).
+  This switch causes changes in the formatting results in some cases.
+
+### Removed
+
+- Test functions except `testAst`.
+
 5.3.0:
     * Handle multiple deriving clauses in a DerivingStrategies scenario
     * Ignore non-files in findCabalFiles
@@ -134,3 +153,5 @@
 
 	* Improvements to Tibell style.
 	* 6x speed up on rendering operators.
+
+[unreleased]: [unreleased]: https://github.com/mihaimaruseac/hindent/compare/v5.3.4...HEAD
