@@ -159,7 +159,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 ### Fixed
 
-- Fixed handling on large constraints.
+- Fixed handling of paragraph overhang when using large constraints.
 - Fixed pretty-printing multi-line comments.
 - Fixed bug resulting in adding a spurious space for comments at the end of a file.
 - Fixed bug which results in adding a trailing white space on `<-`
