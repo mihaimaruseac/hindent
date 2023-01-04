@@ -139,11 +139,16 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 - Fixed pretty-printing complicated type aliases.
 - Fixed pretty-printing complicated type signatures.
 
-5.2.2:
+## [5.2.2] - 2017-01-16
 
-    * Parallel list comprehensions
-    * Leave do, lambda, lambda-case on previous line of $
-    * Misc fixes
+### Changed
+
+- HIndent now leaves do, lambda, and lambda-case on the previous line of `$`.
+
+### Fixed
+
+- Fixed pretty-printing parallel list comprehensions.
+- Miscellaneous fixes.
 
 5.2.1:
 
@@ -228,6 +233,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.2.5]: https://github.com/mihaimaruseac/hindent/compare/5.2.4...5.2.5
 [5.2.4]: https://github.com/mihaimaruseac/hindent/compare/5.2.3...5.2.4
 [5.2.3]: https://github.com/mihaimaruseac/hindent/compare/5.2.2...5.2.3
+[5.2.2]: https://github.com/mihaimaruseac/hindent/compare/5.2.1...5.2.2
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
