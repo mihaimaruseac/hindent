@@ -165,13 +165,18 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 - Fixed adding a spurious space for comments at the end of a file.
 - Fixed adding a trailing white space on `<-`
 
-5.2.0:
+## [5.2.0] - 2016-08-30
 
-    * Default tab-width is now 2
-    * Supports .hindent.yaml file to specify alt tab-width and max
-      column
-    * Put last paren of export list on a new line
-    * Implement tab-size support in Emacs Lisp
+### Added
+
+- Support the `.hindent.yaml` file to specify alternative tab width and max
+  column numbers.
+- Implement the tab-size support in Emacs Lisp.
+
+### Changed
+
+- The default number of spaces for a tab is changed to 2.
+- The last parenthesis of an export list is now put on a new line.
 
 5.1.1:
 
@@ -240,6 +245,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.2.3]: https://github.com/mihaimaruseac/hindent/compare/5.2.2...5.2.3
 [5.2.2]: https://github.com/mihaimaruseac/hindent/compare/5.2.1...5.2.2
 [5.2.1]: https://github.com/mihaimaruseac/hindent/compare/5.2.0...5.2.1
+[5.2.0]: https://github.com/mihaimaruseac/hindent/compare/5.1.1...5.2.0
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
