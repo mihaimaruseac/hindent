@@ -38,6 +38,12 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - `MonadFix` issues to support newer GHC versions.
 
+## [5.3.1] - 2019-06-28
+
+### Fixed
+
+- Comment relocations in where clauses of top-level function declarations.
+
 5.3.0:
     * Handle multiple deriving clauses in a DerivingStrategies scenario
     * Ignore non-files in findCabalFiles
@@ -179,6 +185,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.3.4]: https://github.com/mihaimaruseac/hindent/compare/v5.3.3...v5.3.4
 [5.3.3]: https://github.com/mihaimaruseac/hindent/compare/v5.3.2...v5.3.3
 [5.3.2]: https://github.com/mihaimaruseac/hindent/compare/5.3.1...v5.3.2
+[5.3.1]: https://github.com/mihaimaruseac/hindent/compare/5.3.0...v5.3.1
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
