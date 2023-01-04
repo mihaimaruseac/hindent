@@ -198,7 +198,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 ### Added
 
-- `--tab-size` parameter for indentation spaces.
+- Add `--tab-size` parameter to control indentation spaces.
 
 ### Changed
 
