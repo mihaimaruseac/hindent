@@ -248,11 +248,16 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - Fixed a bug in infix patterns.
 
-4.4.2
+## [4.4.2] - 2015-04-05
 
-	* Bunch of Gibiansky style fixes.
-	* Support CPP.
-	* Tibell style fixes.
+### Added
+
+- Support for CPP.
+
+### Fixed
+
+- Bunch of Gibiansky style bugs.
+- Tibell style bugs.
 
 4.3.8
 
@@ -284,6 +289,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [4.6.4]: https://github.com/mihaimaruseac/hindent/compare/4.6.3...4.6.4
 [4.6.3]: https://github.com/mihaimaruseac/hindent/compare/4.6.2...4.6.3
 [4.4.5]: https://github.com/mihaimaruseac/hindent/compare/4.4.4...4.4.5
+[4.4.2]: https://github.com/mihaimaruseac/hindent/compare/4.4.1...4.4.2
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
