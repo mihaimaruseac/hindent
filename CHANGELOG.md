@@ -146,7 +146,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 ### Fixed
 
-- Fixed pretty-printing parallel list comprehensions.
+- Fixed pretty-printing of parallel list comprehensions.
 - Miscellaneous fixes.
 
 ## [5.2.1] - 2016-09-01
