@@ -150,15 +150,20 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 - Fixed pretty-printing parallel list comprehensions.
 - Miscellaneous fixes.
 
-5.2.1:
+## [5.2.1] - 2016-09-01
 
-    * Fix hanging on large constraints
-    * Render multi-line comments
-    * Rename --tab-size to --indent-size
-    * Don't add a spurious space for comments at the end of the file
-    * Don't add trailing whitespace on <-
-    * Disable PatternSynonyms
-    * Put a newline before the closing bracket on a list
+### Changed
+
+- The `--tab-size` option is renamed to `--indent-size`.
+- The `PatternSynonyms` extension is now disabled-by-default.
+- HIndent now puts a newline before the closing bracket on a list.
+
+### Fixed
+
+- Fixed handling on large constraints.
+- Fixed pretty-printing multi-line comments.
+- Fixed adding a spurious space for comments at the end of a file.
+- Fixed adding a trailing white space on `<-`
 
 5.2.0:
 
@@ -234,6 +239,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.2.4]: https://github.com/mihaimaruseac/hindent/compare/5.2.3...5.2.4
 [5.2.3]: https://github.com/mihaimaruseac/hindent/compare/5.2.2...5.2.3
 [5.2.2]: https://github.com/mihaimaruseac/hindent/compare/5.2.1...5.2.2
+[5.2.1]: https://github.com/mihaimaruseac/hindent/compare/5.2.0...5.2.1
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
