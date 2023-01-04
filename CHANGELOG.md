@@ -199,6 +199,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.3.1]: https://github.com/mihaimaruseac/hindent/compare/5.3.0...5.3.1
 [5.3.0]: https://github.com/mihaimaruseac/hindent/compare/5.2.7...5.3.0
 [5.2.7]: https://github.com/mihaimaruseac/hindent/compare/5.2.6...5.2.7
+[5.2.6]: https://github.com/mihaimaruseac/hindent/compare/5.2.5...5.2.6
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
