@@ -44,20 +44,25 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - Comment relocations in where clauses of top-level function declarations.
 
-5.3.0:
-    * Handle multiple deriving clauses in a DerivingStrategies scenario
-    * Ignore non-files in findCabalFiles
-    * Allow batch processing of multiple files
-    * Prevent hindent from trying to open non-files when searching for
-      .cabal files
-    * Specify default extensions in configuration file
-    * Fix bad output for [p|Foo|] pattern quasi-quotes
-    * Parse C preprocessor line continuations
-    * Fix pretty printing of '(:)
-    * Add parens around symbols (:|) when required
-    * Support $p pattern splices
-    * Fix associated type families
-    * Non-dependent record constructor formatting
+## [5.3.0] - 2019-04-29
+
+### Added
+
+- Allow batch processing of multiple files.
+- You can now specify default extensions in the configuration file.
+
+### Fixed
+
+- Handle multiple deriving clauses in the `DerivingStrategies` scenario.
+- Ignore non-files in `findCabalFiles`.
+- Prevent HIndent from trying to open non-files when searching for `.cabal` files.
+- Fix the bad output for `[p|Foo|]` pattern quasi-quotes.
+- Fix pretty-printing of `'(:)`.
+- Fix parsing C preprocessor line continuations.
+- Add parentheses around symbols `(:|)` when required.
+- Support $p` pattern splices.
+- Fix formatting associated type families.
+- Fix formatting non-dependent record constructors.
 
 5.2.7:
     * Fix -X option bug
@@ -186,6 +191,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [5.3.3]: https://github.com/mihaimaruseac/hindent/compare/v5.3.2...v5.3.3
 [5.3.2]: https://github.com/mihaimaruseac/hindent/compare/5.3.1...v5.3.2
 [5.3.1]: https://github.com/mihaimaruseac/hindent/compare/5.3.0...5.3.1
+[5.3.1]: https://github.com/mihaimaruseac/hindent/compare/5.2.7...5.3.0
 
 [@mattfbacon]: https://github.com/mattfbacon
 [@uhbif19]: https://github.com/uhbif19
