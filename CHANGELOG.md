@@ -17,6 +17,10 @@
 
 - Test functions except `testAst`.
 
+## [5.3.4] - 2022-07-07
+
+This version is accidentally pushlished, and is the same as 5.3.3.
+
 5.3.0:
     * Handle multiple deriving clauses in a DerivingStrategies scenario
     * Ignore non-files in findCabalFiles
@@ -155,3 +159,4 @@
 	* 6x speed up on rendering operators.
 
 [unreleased]: https://github.com/mihaimaruseac/hindent/compare/v5.3.4...HEAD
+[5.3.4]: https://github.com/mihaimaruseac/hindent/compare/v5.3.3...v5.3.4
