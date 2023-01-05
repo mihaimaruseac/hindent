@@ -624,11 +624,10 @@ instance (:?:) Int Bool
 Data declaration with underscore
 
 ```haskell
-data Stanza =
-  MkStanza
-    { _stanzaBuildInfo :: BuildInfo
-    , stanzaIsSourceFilePath :: FilePath -> Bool
-    }
+data Stanza = MkStanza
+  { _stanzaBuildInfo :: BuildInfo
+  , stanzaIsSourceFilePath :: FilePath -> Bool
+  }
 ```
 
 A data declaration with typeclass constraints
@@ -642,10 +641,9 @@ data Ord a =>
 Multiple constructors at once
 
 ```haskell
-data Foo =
-  Foo
-    { foo, bar, baz, qux, quux :: Int
-    }
+data Foo = Foo
+  { foo, bar, baz, qux, quux :: Int
+  }
 ```
 
 No fields
@@ -697,10 +695,9 @@ data Foo =
 A record constructor with a field
 
 ```haskell
-data Foo =
-  Foo
-    { foo :: Int
-    }
+data Foo = Foo
+  { foo :: Int
+  }
 ```
 
 Multiple constructors with fields
@@ -749,28 +746,25 @@ data Foo =
 An `UNPACK`ed field.
 
 ```haskell
-data Foo =
-  Foo
-    { x :: {-# UNPACK #-} Int
-    }
+data Foo = Foo
+  { x :: {-# UNPACK #-} Int
+  }
 ```
 
 An `NOUNPACK`ed field.
 
 ```haskell
-data Foo =
-  Foo
-    { x :: {-# NOUNPACK #-} !Int
-    }
+data Foo = Foo
+  { x :: {-# NOUNPACK #-} !Int
+  }
 ```
 
 A lazy field.
 
 ```haskell
-data Foo =
-  Foo
-    { x :: ~Int
-    }
+data Foo = Foo
+  { x :: ~Int
+  }
 ```
 
 #### Fields with `forall` constraints
@@ -818,13 +812,11 @@ With a record constructor
 
 ```haskell
 -- From https://github.com/mihaimaruseac/hindent/issues/167
-data Person =
-  Person
-    { firstName :: !String -- ^ First name
-    , lastName :: !String -- ^ Last name
-    , age :: !Int -- ^ Age
-    }
-  deriving (Eq, Show)
+data Person = Person
+  { firstName :: !String -- ^ First name
+  , lastName :: !String -- ^ Last name
+  , age :: !Int -- ^ Age
+  } deriving (Eq, Show)
 ```
 
 Multiple derivings
@@ -2785,11 +2777,10 @@ f = undefined
 ```haskell since 9.2.2
 {-# LANGUAGE OverloadedRecordDot #-}
 
-data Rectangle =
-  Rectangle
-    { width :: Int
-    , height :: Int
-    }
+data Rectangle = Rectangle
+  { width :: Int
+  , height :: Int
+  }
 
 area :: Rectangle -> Int
 area r = r.width * r.height
@@ -2994,19 +2985,18 @@ data X
   = X -- ^ X is for xylophone.
   | Y -- ^ Y is for why did I eat that pizza.
 
-data X =
-  X
-    { field1 :: Int -- ^ Field1 is the first field.
-    , field11 :: Char
-      -- ^ This field comment is on its own line.
-    , field2 :: Int -- ^ Field2 is the second field.
-    , field3 :: Char -- ^ This is a long comment which starts next to
-      -- the field but continues onto the next line, it aligns exactly
-      -- with the field name.
-    , field4 :: Char
-      -- ^ This is a long comment which starts on the following line
-      -- from from the field, lines continue at the sme column.
-    }
+data X = X
+  { field1 :: Int -- ^ Field1 is the first field.
+  , field11 :: Char
+    -- ^ This field comment is on its own line.
+  , field2 :: Int -- ^ Field2 is the second field.
+  , field3 :: Char -- ^ This is a long comment which starts next to
+    -- the field but continues onto the next line, it aligns exactly
+    -- with the field name.
+  , field4 :: Char
+    -- ^ This is a long comment which starts on the following line
+    -- from from the field, lines continue at the sme column.
+  }
 
 foo ::
      String -- ^ Reason for eating pizza.
