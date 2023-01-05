@@ -138,7 +138,7 @@ pattern HsSigTypeInsideDeclSig x = HsSigType' HsTypeForDeclSig HsTypeNoDir x
 data HsType' = HsType'
   { hsTypeFor :: HsTypeFor -- ^ In which context a `HsType` is located in.
   , hsTypeDir :: HsTypeDir -- ^ How a function signature is printed;
-                             -- either horizontally or vertically.
+                           -- either horizontally or vertically.
   , hsType :: HsType GhcPs -- ^ The actual type.
   }
 
