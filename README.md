@@ -12,12 +12,25 @@ Haskell pretty printer
 ## Usage
 
     $ hindent --help
-    hindent --version --help --style STYLE --line-length <...> --indent-size <...> --no-force-newline [-X<...>]* [<FILENAME>]
-    Version 5.1.1
-    Default --indent-size is 2. Specify --indent-size 4 if you prefer that.
-    -X to pass extensions e.g. -XMagicHash etc.
-    The --style option is now ignored, but preserved for backwards-compatibility.
-    Johan Tibell is the default and only style.
+    hindent - Reformat Haskell source code
+
+    Usage: hindent [--version | [--line-length ARG]
+                     [--indent-size ARG | --tab-size ARG] [--no-force-newline]
+                     [--sort-imports | --no-sort-imports] [--style STYLE]
+                     [-X GHCEXT] [--validate] [FILENAMES]]
+
+    Available options:
+      --version                Print the version
+      --line-length ARG        Desired length of lines (default: 80)
+      --indent-size ARG        Indentation size in spaces (default: 2)
+      --tab-size ARG           Same as --indent-size, for compatibility
+      --no-force-newline       Don't force a trailing newline
+      --sort-imports           Sort imports in groups
+      --no-sort-imports        Don't sort imports
+      --style STYLE            Style to print with (historical, now ignored)
+      -X GHCEXT                Language extension
+      --validate               Check if files are formatted without changing them
+      -h,--help                Show this help text
 
 hindent is used in a pipeline style
 
@@ -119,7 +132,7 @@ like a charm that way!
 ## IntelliJ / other JetBrains IDEs
 1. Install the "HaskForce" Haskell plugin (this is so we get the language type recognized in the file watcher)
 2. Install the "File Watchers" plugin under "Browse Repositories"
-3. Add a File Watcher with 
+3. Add a File Watcher with
     1. File type: Haskell Language
     2. Program: `/path/to/hindent`
     3. Arguments: `$FilePath$`

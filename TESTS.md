@@ -1985,6 +1985,14 @@ f = (# | Bool #)
 f = static 1
 ```
 
+`OverloadedLabels`
+
+```haskell
+{-# LANGUAGE OverloadedLabels #-}
+
+f = #foo
+```
+
 ### Arrows
 
 `-<`
