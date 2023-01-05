@@ -419,9 +419,9 @@ instance Pretty (HsDataDefn GhcPs) where
             indentedBlock $ do
               pretty x
               derivingsAfterNewline
-          _ -> do
-            newline
+          _ ->
             indentedBlock $ do
+              newline
               string "= " |=> vBarSep (fmap pretty dd_cons)
               derivingsAfterNewline
     where
