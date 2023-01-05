@@ -108,11 +108,10 @@ shouldBeReadable x y =
   shouldBe (Readable x (Just (diff y x))) (Readable y Nothing)
 
 -- | Prints a string without quoting and escaping.
-data Readable =
-  Readable
-    { readableString :: ByteString
-    , readableDiff :: Maybe String
-    }
+data Readable = Readable
+  { readableString :: ByteString
+  , readableDiff :: Maybe String
+  }
 
 instance Eq Readable where
   (==) = on (==) readableString
