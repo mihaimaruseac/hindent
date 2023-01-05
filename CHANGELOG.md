@@ -10,6 +10,8 @@
 
 - Switched the parser from [`haskell-src-exts`] to [`ghc-lib-parser`].
   This switch causes changes in the formatting results in some cases.
+- Changed how to format a data type with a record constructor to follow
+  the [Johan Tibell's Haskell Style Guide]. ([#662]).
 
 ### Removed
 
@@ -300,6 +302,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#662]: https://github.com/mihaimaruseac/hindent/pull/662
 [#588]: https://github.com/mihaimaruseac/hindent/pull/588
 [#584]: https://github.com/mihaimaruseac/hindent/pull/584
 [#579]: https://github.com/mihaimaruseac/hindent/pull/579
@@ -319,3 +322,5 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 [`TESTS.md`]: TESTS.md
 [`BENCHMARKS.md`]: BENCHMARKS.md
+
+[Johan Tibell's Haskell Style Guide]: https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md

@@ -406,24 +406,32 @@ instance Pretty (HsDataDefn GhcPs) where
           pretty x
         string " where"
         indentedBlock $ newlinePrefixed $ fmap pretty dd_cons
-      else indentedBlock $ do
-             case dd_cons of
-               [] -> pure ()
-               [x] -> do
-                 string " ="
-                 newline
-                 pretty x
-               _ -> do
-                 newline
-                 string "= " |=> vBarSep (fmap pretty dd_cons)
-             unless (null dd_derivs) $ do
-               newline
-               lined $ fmap pretty dd_derivs
+      else do
+        case dd_cons of
+          [] -> indentedBlock derivingsAfterNewline
+          [x@(L _ ConDeclH98 {con_args = RecCon {}})] -> do
+            string " = "
+            pretty x
+            unless (null dd_derivs) $ space |=> printDerivings
+          [x] -> do
+            string " ="
+            newline
+            indentedBlock $ do
+              pretty x
+              derivingsAfterNewline
+          _ ->
+            indentedBlock $ do
+              newline
+              string "= " |=> vBarSep (fmap pretty dd_cons)
+              derivingsAfterNewline
     where
       isGADT =
         case dd_cons of
           (L _ ConDeclGADT {}:_) -> True
           _ -> False
+      derivingsAfterNewline =
+        unless (null dd_derivs) $ newline >> printDerivings
+      printDerivings = lined $ fmap pretty dd_derivs
 
 instance Pretty (ClsInstDecl GhcPs) where
   pretty' ClsInstDecl {..} = do
