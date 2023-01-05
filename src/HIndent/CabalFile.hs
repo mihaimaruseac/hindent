@@ -28,11 +28,10 @@ import Language.Haskell.Extension hiding (Extension)
 import System.Directory
 import System.FilePath
 
-data Stanza =
-  MkStanza
-    { _stanzaBuildInfo :: BuildInfo
-    , stanzaIsSourceFilePath :: FilePath -> Bool
-    }
+data Stanza = MkStanza
+  { _stanzaBuildInfo :: BuildInfo
+  , stanzaIsSourceFilePath :: FilePath -> Bool
+  }
 
 -- | Find the relative path of a child path in a parent, if it is a child
 toRelative :: FilePath -> FilePath -> Maybe FilePath

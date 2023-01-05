@@ -75,28 +75,25 @@ newtype PrefixOp =
 -- > * b
 --
 -- is not a valid Haskell code.
-data InfixApp =
-  InfixApp
-    { lhs :: LHsExpr GhcPs
-    , op :: LHsExpr GhcPs
-    , rhs :: LHsExpr GhcPs
-    , immediatelyAfterDo :: Bool
-    }
+data InfixApp = InfixApp
+  { lhs :: LHsExpr GhcPs
+  , op :: LHsExpr GhcPs
+  , rhs :: LHsExpr GhcPs
+  , immediatelyAfterDo :: Bool
+  }
 
 -- | `GRHSs` with a label indicating in which context the RHS is located
 -- in.
-data GRHSsExpr =
-  GRHSsExpr
-    { grhssExprType :: GRHSExprType
-    , grhssExpr :: GRHSs GhcPs (LHsExpr GhcPs)
-    }
+data GRHSsExpr = GRHSsExpr
+  { grhssExprType :: GRHSExprType
+  , grhssExpr :: GRHSs GhcPs (LHsExpr GhcPs)
+  }
 
 -- | 'GRHS' for a normal binding.
-data GRHSExpr =
-  GRHSExpr
-    { grhsExprType :: GRHSExprType
-    , grhsExpr :: GRHS GhcPs (LHsExpr GhcPs)
-    }
+data GRHSExpr = GRHSExpr
+  { grhsExprType :: GRHSExprType
+  , grhsExpr :: GRHS GhcPs (LHsExpr GhcPs)
+  }
 
 -- | 'GRHS' for a @proc@ binding.
 newtype GRHSProc =
@@ -115,13 +112,12 @@ newtype RecConField =
   RecConField (HsRecField' (FieldOcc GhcPs) (LPat GhcPs))
 #endif
 -- | A wrapper for `HsSigType`.
-data HsSigType' =
-  HsSigType'
-    { hsSigTypeFor :: HsTypeFor -- ^ In which context a `HsSigType` is located in.
-    , hsSigTypeDir :: HsTypeDir -- ^ How a `HsSigType` should be printed;
+data HsSigType' = HsSigType'
+  { hsSigTypeFor :: HsTypeFor -- ^ In which context a `HsSigType` is located in.
+  , hsSigTypeDir :: HsTypeDir -- ^ How a `HsSigType` should be printed;
                                 -- either horizontally or vertically.
-    , hsSigType :: HsSigType GhcPs -- ^ The actual signature.
-    }
+  , hsSigType :: HsSigType GhcPs -- ^ The actual signature.
+  }
 
 -- | `HsSigType'` for instance declarations.
 pattern HsSigTypeInsideInstDecl :: HsSigType GhcPs -> HsSigType'
@@ -139,13 +135,12 @@ pattern HsSigTypeInsideDeclSig :: HsSigType GhcPs -> HsSigType'
 pattern HsSigTypeInsideDeclSig x = HsSigType' HsTypeForDeclSig HsTypeNoDir x
 
 -- | A wrapper for `HsType`.
-data HsType' =
-  HsType'
-    { hsTypeFor :: HsTypeFor -- ^ In which context a `HsType` is located in.
-    , hsTypeDir :: HsTypeDir -- ^ How a function signature is printed;
+data HsType' = HsType'
+  { hsTypeFor :: HsTypeFor -- ^ In which context a `HsType` is located in.
+  , hsTypeDir :: HsTypeDir -- ^ How a function signature is printed;
                              -- either horizontally or vertically.
-    , hsType :: HsType GhcPs -- ^ The actual type.
-    }
+  , hsType :: HsType GhcPs -- ^ The actual type.
+  }
 
 -- | `HsType'` inside a function signature declaration; printed horizontally.
 pattern HsTypeInsideVerticalFuncSig :: HsType GhcPs -> HsType'
@@ -222,11 +217,10 @@ newtype PatInsidePatDecl =
   PatInsidePatDecl (Pat GhcPs)
 
 -- | Lambda case.
-data LambdaCase =
-  LambdaCase
-    { lamCaseGroup :: MatchGroup GhcPs (LHsExpr GhcPs)
-    , caseOrCases :: CaseOrCases
-    }
+data LambdaCase = LambdaCase
+  { lamCaseGroup :: MatchGroup GhcPs (LHsExpr GhcPs)
+  , caseOrCases :: CaseOrCases
+  }
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 -- | A deprecation pragma for a module.
 newtype ModuleDeprecatedPragma =
@@ -237,33 +231,29 @@ newtype ModuleDeprecatedPragma =
   ModuleDeprecatedPragma WarningTxt
 #endif
 -- | Use this type to pretty-print a list comprehension.
-data ListComprehension =
-  ListComprehension
-    { listCompLhs :: ExprLStmt GhcPs -- ^ @f x@ of @[f x| x <- xs]@.
-    , listCompRhs :: [ExprLStmt GhcPs] -- ^ @x <- xs@ of @[f x| x <- xs]@.
-    }
+data ListComprehension = ListComprehension
+  { listCompLhs :: ExprLStmt GhcPs -- ^ @f x@ of @[f x| x <- xs]@.
+  , listCompRhs :: [ExprLStmt GhcPs] -- ^ @x <- xs@ of @[f x| x <- xs]@.
+  }
 
 -- | Use this type to pretty-print a do expression.
-data DoExpression =
-  DoExpression
-    { doStmts :: [ExprLStmt GhcPs]
-    , doOrMdo :: DoOrMdo
-    }
+data DoExpression = DoExpression
+  { doStmts :: [ExprLStmt GhcPs]
+  , doOrMdo :: DoOrMdo
+  }
 
 -- | Use this type to pretty-print a @let ... in ...@ expression.
-data LetIn =
-  LetIn
-    { letBinds :: HsLocalBinds GhcPs
-    , inExpr :: LHsExpr GhcPs
-    }
+data LetIn = LetIn
+  { letBinds :: HsLocalBinds GhcPs
+  , inExpr :: LHsExpr GhcPs
+  }
 
 -- | Comments belonging to an AST node.
-data NodeComments =
-  NodeComments
-    { commentsBefore :: [LEpaComment]
-    , commentsOnSameLine :: [LEpaComment]
-    , commentsAfter :: [LEpaComment]
-    }
+data NodeComments = NodeComments
+  { commentsBefore :: [LEpaComment]
+  , commentsOnSameLine :: [LEpaComment]
+  , commentsAfter :: [LEpaComment]
+  }
 
 -- | Values indicating whether `do` or `mdo` is used.
 data DoOrMdo

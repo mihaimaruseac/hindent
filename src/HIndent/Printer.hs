@@ -20,36 +20,33 @@ import Data.Int (Int64)
 import HIndent.Config
 
 -- | A pretty printing monad.
-newtype Printer a =
-  Printer
-    { runPrinter :: StateT PrintState (MaybeT Identity) a
-    }
-  deriving ( Applicative
-           , Monad
-           , Functor
-           , MonadState PrintState
-           , MonadPlus
-           , Alternative
-           )
+newtype Printer a = Printer
+  { runPrinter :: StateT PrintState (MaybeT Identity) a
+  } deriving ( Applicative
+             , Monad
+             , Functor
+             , MonadState PrintState
+             , MonadPlus
+             , Alternative
+             )
 
 -- | The state of the pretty printer.
-data PrintState =
-  PrintState
-    { psIndentLevel :: !Int64
+data PrintState = PrintState
+  { psIndentLevel :: !Int64
     -- ^ Current indentation level, i.e. every time there's a
     -- new-line, output this many spaces.
-    , psOutput :: !Builder
+  , psOutput :: !Builder
     -- ^ The current output bytestring builder.
-    , psNewline :: !Bool
+  , psNewline :: !Bool
     -- ^ Just outputted a newline?
-    , psColumn :: !Int64
+  , psColumn :: !Int64
     -- ^ Current column.
-    , psLine :: !Int64
+  , psLine :: !Int64
     -- ^ Current line number.
-    , psConfig :: !Config
+  , psConfig :: !Config
     -- ^ Configuration of max colums and indentation style.
-    , psFitOnOneLine :: !Bool
+  , psFitOnOneLine :: !Bool
     -- ^ Bail out if we need to print beyond the current line or
     -- the maximum column.
-    , psEolComment :: !Bool
-    }
+  , psEolComment :: !Bool
+  }
