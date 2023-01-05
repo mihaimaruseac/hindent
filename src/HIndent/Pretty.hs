@@ -412,7 +412,7 @@ instance Pretty (HsDataDefn GhcPs) where
           [x@(L _ ConDeclH98 {con_args = RecCon {}})] -> do
             string " = "
             pretty x
-            unless (null dd_derivs) $ space |=> lined (fmap pretty dd_derivs)
+            unless (null dd_derivs) $ space |=> printDerivings
           [x] -> do
             string " ="
             newline
@@ -430,9 +430,8 @@ instance Pretty (HsDataDefn GhcPs) where
           (L _ ConDeclGADT {}:_) -> True
           _ -> False
       derivingsAfterNewline =
-        unless (null dd_derivs) $ do
-          newline
-          lined $ fmap pretty dd_derivs
+        unless (null dd_derivs) $ newline >> printDerivings
+      printDerivings = lined $ fmap pretty dd_derivs
 
 instance Pretty (ClsInstDecl GhcPs) where
   pretty' ClsInstDecl {..} = do
