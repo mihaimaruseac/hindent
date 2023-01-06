@@ -121,17 +121,14 @@ data HsSigType' = HsSigType'
 
 -- | `HsSigType'` for instance declarations.
 pattern HsSigTypeInsideInstDecl :: HsSigType GhcPs -> HsSigType'
-
 pattern HsSigTypeInsideInstDecl x = HsSigType' HsTypeForInstDecl HsTypeNoDir x
 
 -- | `HsSigType'` for function declarations; printed horizontally.
 pattern HsSigTypeInsideVerticalFuncSig :: HsSigType GhcPs -> HsSigType'
-
 pattern HsSigTypeInsideVerticalFuncSig x = HsSigType' HsTypeForFuncSig HsTypeVertical x
 
 -- | `HsSigType'` for a top-level function signature.
 pattern HsSigTypeInsideDeclSig :: HsSigType GhcPs -> HsSigType'
-
 pattern HsSigTypeInsideDeclSig x = HsSigType' HsTypeForDeclSig HsTypeNoDir x
 
 -- | A wrapper for `HsType`.
@@ -144,17 +141,14 @@ data HsType' = HsType'
 
 -- | `HsType'` inside a function signature declaration; printed horizontally.
 pattern HsTypeInsideVerticalFuncSig :: HsType GhcPs -> HsType'
-
 pattern HsTypeInsideVerticalFuncSig x = HsType' HsTypeForFuncSig HsTypeVertical x
 
 -- | `HsType'` inside a top-level function signature declaration.
 pattern HsTypeInsideDeclSig :: HsType GhcPs -> HsType'
-
 pattern HsTypeInsideDeclSig x = HsType' HsTypeForDeclSig HsTypeNoDir x
 
 -- | `HsType'` inside a instance signature declaration.
 pattern HsTypeInsideInstDecl :: HsType GhcPs -> HsType'
-
 pattern HsTypeInsideInstDecl x = HsType' HsTypeForInstDecl HsTypeNoDir x
 
 -- | `StmtLR` inside a vertically printed list.

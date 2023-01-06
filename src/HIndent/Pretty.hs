@@ -157,6 +157,7 @@ instance Pretty HsModule where
         (x, Just $ declSeparator $ unLoc x) : addDeclSeparator xs
       declSeparator (SigD _ TypeSig {}) = newline
       declSeparator (SigD _ InlineSig {}) = newline
+      declSeparator (SigD _ PatSynSig {}) = newline
       declSeparator _ = blankline
       declsExist = not . null . hsmodDecls
       prettyImports = importDecls >>= blanklined . fmap outputImportGroup
