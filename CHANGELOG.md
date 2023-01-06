@@ -12,6 +12,7 @@
   This switch causes changes in the formatting results in some cases.
 - Changed how to format a data type with a record constructor to follow
   the [Johan Tibell's Haskell Style Guide]. ([#662]).
+- A newline is no longer inserted after a pattern signature.
 
 ### Removed
 
