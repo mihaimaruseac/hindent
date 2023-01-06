@@ -12,7 +12,7 @@
   This switch causes changes in the formatting results in some cases.
 - Changed how to format a data type with a record constructor to follow
   the [Johan Tibell's Haskell Style Guide]. ([#662]).
-- A newline is no longer inserted after a pattern signature.
+- A newline is no longer inserted after a pattern signature ([#663]).
 
 ### Removed
 
@@ -303,6 +303,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#663]: https://github.com/mihaimaruseac/hindent/pull/663
 [#662]: https://github.com/mihaimaruseac/hindent/pull/662
 [#588]: https://github.com/mihaimaruseac/hindent/pull/588
 [#584]: https://github.com/mihaimaruseac/hindent/pull/584
