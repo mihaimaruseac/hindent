@@ -152,7 +152,7 @@ pattern HsTypeInsideDeclSig x = HsType' HsTypeForDeclSig HsTypeNoDir x
 pattern HsTypeInsideInstDecl :: HsType GhcPs -> HsType'
 pattern HsTypeInsideInstDecl x = HsType' HsTypeForInstDecl HsTypeNoDir x
 
--- | `HsType'` to a `HsAppTy` vertically.
+-- | `HsType'` to pretty-print a `HsAppTy` vertically.
 pattern HsTypeWithVerticalAppTy :: HsType GhcPs -> HsType'
 pattern HsTypeWithVerticalAppTy x = HsType' HsTypeForVerticalAppTy HsTypeVertical x
 
