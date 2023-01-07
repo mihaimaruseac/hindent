@@ -1638,6 +1638,20 @@ foo = undefined
     go = undefined
 ```
 
+Types with many type applications
+
+```haskell
+foo ::
+     Foo
+       LongLongType
+       LongLongType
+       LongLongType
+       LongLongType
+       LongLongType
+       LongLongType
+  -> Int
+```
+
 #### Promoted types
 
 Promoted lists
