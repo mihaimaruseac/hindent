@@ -1015,10 +1015,6 @@ instance Pretty HsType' where
         string " =>"
         newline
         pretty hst_body
-  pretty' (HsTypeWithVerticalAppTy (HsAppTy _ l@(L _ HsAppTy {}) r)) = do
-    pretty $ fmap HsTypeWithVerticalAppTy l
-    newline
-    indentedBlock $ pretty $ fmap HsTypeWithVerticalAppTy r
   pretty' (HsTypeWithVerticalAppTy (HsAppTy _ l r)) = do
     pretty $ fmap HsTypeWithVerticalAppTy l
     newline
