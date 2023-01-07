@@ -135,8 +135,8 @@ hList = brackets . hCommaSep
 vList :: [Printer ()] -> Printer ()
 vList = vCommaSepWrapped ("[", "]")
 
--- | Runs printers to print a promoted list where elements are aligned in
--- a line or vertically.
+-- | Runs printers to construct a promoted list where elements are aligned
+-- in a line or vertically.
 hvPromotedList :: [Printer ()] -> Printer ()
 hvPromotedList = (<-|>) <$> hPromotedList <*> vPromotedList
 
