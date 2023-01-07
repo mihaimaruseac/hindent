@@ -1553,10 +1553,11 @@ A long type is broken into lines
 -- https://github.com/mihaimaruseac/hindent/issues/359
 thing ::
      ( ResB.BomEx
-     , Maybe [( Entity BomSnapshot
-              , ( [ResBS.OrderSubstituteAggr]
-                , ( Maybe (Entity BomSnapshotHistory)
-                  , Maybe (Entity BomSnapshotHistory))))])
+     , Maybe
+         [( Entity BomSnapshot
+          , ( [ResBS.OrderSubstituteAggr]
+            , ( Maybe (Entity BomSnapshotHistory)
+              , Maybe (Entity BomSnapshotHistory))))])
   -> [(ResB.BomEx, Maybe ResBS.BomSnapshotAggr)]
 ```
 
@@ -1801,12 +1802,35 @@ Long
 ```haskell
 -- https://github.com/mihaimaruseac/hindent/issues/290
 type MyContext m
-   = ( MonadState Int m
-     , MonadReader Int m
-     , MonadError Text m
-     , MonadMask m
-     , Monoid m
-     , Functor m)
+  = ( MonadState Int m
+    , MonadReader Int m
+    , MonadError Text m
+    , MonadMask m
+    , Monoid m
+    , Functor m)
+```
+
+Very higher-kinded type
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/534
+type SomeTypeSynonym
+  = RecordWithManyFields
+      FieldNumber1
+      FieldNumber2
+      FieldNumber3
+      FieldNumber4
+      FieldNumber5
+      FieldNumber6
+      FieldNumber7
+      FieldNumber8
+      FieldNumber9
+      FieldNumber10
+      FieldNumber11
+      FieldNumber12
+      FieldNumber13
+      FieldNumber14
+      FieldNumber15
 ```
 
 Infix type constructor
