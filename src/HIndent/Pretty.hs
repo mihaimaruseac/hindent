@@ -205,14 +205,8 @@ prettyTyClDecl SynDecl {..} = do
         _ -> error "Not enough parameters are given."
   hor <-|> ver
   where
-    hor = do
-      string " = "
-      pretty tcdRhs
-    ver =
-      indentedBlock $ do
-        newline
-        string " = "
-        indentedBlock $ pretty tcdRhs
+    hor = string " = " >> pretty tcdRhs
+    ver = newline >> indentedBlock (string "= " |=> pretty tcdRhs)
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 prettyTyClDecl DataDecl {..} = do
   printDataNewtype |=> do
@@ -1021,6 +1015,10 @@ instance Pretty HsType' where
         string " =>"
         newline
         pretty hst_body
+  pretty' (HsTypeWithVerticalAppTy (HsAppTy _ l r)) = do
+    pretty $ fmap HsTypeWithVerticalAppTy l
+    newline
+    indentedBlock $ pretty $ fmap HsTypeWithVerticalAppTy r
   pretty' (HsType' _ _ x) = prettyHsType x
 
 prettyHsType :: HsType GhcPs -> Printer ()
@@ -1030,7 +1028,10 @@ prettyHsType HsQualTy {..} = do
   lined [string " =>", indentedBlock $ pretty hst_body]
 prettyHsType (HsTyVar _ NotPromoted x) = pretty x
 prettyHsType (HsTyVar _ IsPromoted x) = string "'" >> pretty x
-prettyHsType (HsAppTy _ l r) = spaced $ fmap pretty [l, r]
+prettyHsType x@(HsAppTy _ l r) = hor <-|> ver
+  where
+    hor = spaced $ fmap pretty [l, r]
+    ver = pretty $ HsTypeWithVerticalAppTy x
 prettyHsType (HsAppKindTy _ l r) = pretty l >> string " @" >> pretty r
 prettyHsType (HsFunTy _ _ a b) = (pretty a >> string " -> ") |=> pretty b
 prettyHsType (HsListTy _ xs) = brackets $ pretty xs
@@ -1358,12 +1359,14 @@ instance Pretty RecConField where
       pretty hfbRHS
 #else
 -- | For pattern matching against a record.
-instance Pretty (HsRecField' (FieldOcc GhcPs) (GenLocated SrcSpanAnnA (Pat GhcPs))) where
+instance Pretty
+           (HsRecField' (FieldOcc GhcPs) (GenLocated SrcSpanAnnA (Pat GhcPs))) where
   pretty' HsRecField {..} =
     (pretty hsRecFieldLbl >> string " = ") |=> pretty hsRecFieldArg
 
 -- | For record updates.
-instance Pretty (HsRecField' (FieldOcc GhcPs) (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
+instance Pretty
+           (HsRecField' (FieldOcc GhcPs) (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
   pretty' HsRecField {..} = do
     pretty hsRecFieldLbl
     unless hsRecPun $ do
@@ -1375,11 +1378,17 @@ instance Pretty (HsRecField' (FieldOcc GhcPs) (GenLocated SrcSpanAnnA (HsExpr Gh
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 -- | For pattern matchings against records.
-instance Pretty (HsFieldBind (GenLocated (SrcAnn NoEpAnns) (FieldOcc GhcPs)) (GenLocated SrcSpanAnnA (Pat GhcPs))) where
+instance Pretty
+           (HsFieldBind
+              (GenLocated (SrcAnn NoEpAnns) (FieldOcc GhcPs))
+              (GenLocated SrcSpanAnnA (Pat GhcPs))) where
   pretty' HsFieldBind {..} = (pretty hfbLHS >> string " = ") |=> pretty hfbRHS
 
 -- | For record updates.
-instance Pretty (HsFieldBind (GenLocated (SrcAnn NoEpAnns) (FieldOcc GhcPs)) (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
+instance Pretty
+           (HsFieldBind
+              (GenLocated (SrcAnn NoEpAnns) (FieldOcc GhcPs))
+              (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
   pretty' HsFieldBind {..} = do
     pretty hfbLHS
     unless hfbPun $ do
@@ -1404,7 +1413,13 @@ instance Pretty (FieldOcc GhcPs) where
   pretty' FieldOcc {..} = pretty rdrNameFieldOcc
 #endif
 -- HsConDeclH98Details
-instance Pretty (HsConDetails Void (HsScaled GhcPs (GenLocated SrcSpanAnnA (BangType GhcPs))) (GenLocated SrcSpanAnnL [GenLocated SrcSpanAnnA (ConDeclField GhcPs)])) where
+instance Pretty
+           (HsConDetails
+              Void
+              (HsScaled GhcPs (GenLocated SrcSpanAnnA (BangType GhcPs)))
+              (GenLocated
+                 SrcSpanAnnL
+                 [GenLocated SrcSpanAnnA (ConDeclField GhcPs)])) where
   pretty' (PrefixCon _ xs) = horizontal <-|> vertical
     where
       horizontal = spacePrefixed $ fmap pretty xs
@@ -1720,7 +1735,10 @@ instance Pretty (FamEqn GhcPs (HsDataDefn GhcPs)) where
     pretty feqn_rhs
 
 -- | HsArg (LHsType GhcPs) (LHsType GhcPs)
-instance Pretty (HsArg (GenLocated SrcSpanAnnA (HsType GhcPs)) (GenLocated SrcSpanAnnA (HsType GhcPs))) where
+instance Pretty
+           (HsArg
+              (GenLocated SrcSpanAnnA (HsType GhcPs))
+              (GenLocated SrcSpanAnnA (HsType GhcPs))) where
   pretty' (HsValArg x) = pretty x
   pretty' (HsTypeArg _ x) = string "@" >> pretty x
   pretty' HsArgPar {} = notUsedInParsedStage
@@ -1812,7 +1830,8 @@ instance Pretty (DerivDecl GhcPs) where
     pretty deriv_type
 
 -- | 'Pretty' for 'LHsSigWcType GhcPs'.
-instance Pretty (HsWildCardBndrs GhcPs (GenLocated SrcSpanAnnA (HsSigType GhcPs))) where
+instance Pretty
+           (HsWildCardBndrs GhcPs (GenLocated SrcSpanAnnA (HsSigType GhcPs))) where
   pretty' HsWC {..} = pretty hswc_body
 
 -- | 'Pretty' for 'LHsWcType'
@@ -1906,7 +1925,11 @@ instance Pretty (PatSynBind GhcPs GhcPs) where
       _ -> pure ()
 
 -- | 'Pretty' for 'HsPatSynDetails'.
-instance Pretty (HsConDetails Void (GenLocated SrcSpanAnnN RdrName) [RecordPatSynField GhcPs]) where
+instance Pretty
+           (HsConDetails
+              Void
+              (GenLocated SrcSpanAnnN RdrName)
+              [RecordPatSynField GhcPs]) where
   pretty' (PrefixCon _ xs) = spaced $ fmap pretty xs
   pretty' (RecCon rec) = hFields $ fmap pretty rec
   pretty' InfixCon {} =

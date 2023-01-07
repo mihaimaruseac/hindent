@@ -24,6 +24,7 @@ module HIndent.Pretty.Types
   , pattern HsTypeInsideVerticalFuncSig
   , pattern HsTypeInsideDeclSig
   , pattern HsTypeInsideInstDecl
+  , pattern HsTypeWithVerticalAppTy
   , StmtLRInsideVerticalList(..)
   , ParStmtBlockInsideVerticalList(..)
   , DeclSig(..)
@@ -151,6 +152,10 @@ pattern HsTypeInsideDeclSig x = HsType' HsTypeForDeclSig HsTypeNoDir x
 pattern HsTypeInsideInstDecl :: HsType GhcPs -> HsType'
 pattern HsTypeInsideInstDecl x = HsType' HsTypeForInstDecl HsTypeNoDir x
 
+-- | `HsType'` to pretty-print a `HsAppTy` vertically.
+pattern HsTypeWithVerticalAppTy :: HsType GhcPs -> HsType'
+pattern HsTypeWithVerticalAppTy x = HsType' HsTypeForVerticalAppTy HsTypeVertical x
+
 -- | `StmtLR` inside a vertically printed list.
 newtype StmtLRInsideVerticalList =
   StmtLRInsideVerticalList (StmtLR GhcPs GhcPs (LHsExpr GhcPs))
@@ -273,6 +278,7 @@ data HsTypeFor
   | HsTypeForInstDecl
   | HsTypeForFuncSig
   | HsTypeForDeclSig
+  | HsTypeForVerticalAppTy
 
 -- | Values indicating how a node should be printed; either horizontally or
 -- vertically.
