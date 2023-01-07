@@ -1702,6 +1702,19 @@ fun2 :: Def ('[ Ref s (Stored Uint32), IBool] :-> IBool)
 fun2 = undefined
 ```
 
+Long
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/522
+type OurContext
+  = '[ AuthHandler W.Request (ExtendedPayloadWrapper UserSession)
+     , BasicAuthCheck GameInstanceId
+     , BasicAuthCheck (RegionId, RegionName)
+     , BasicAuthCheck Alert.SourceId
+     , M.MultipartOptions M.Tmp
+     ]
+```
+
 Nested
 
 ```haskell

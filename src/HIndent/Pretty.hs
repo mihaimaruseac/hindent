@@ -1081,7 +1081,7 @@ prettyHsType (HsRecTy _ xs) = hvFields $ fmap pretty xs
 prettyHsType (HsExplicitListTy _ _ xs) =
   case xs of
     [] -> string "'[]"
-    _ -> hPromotedList $ fmap pretty xs
+    _ -> hvPromotedList $ fmap pretty xs
 prettyHsType (HsExplicitTupleTy _ xs) = hPromotedTuple $ fmap pretty xs
 prettyHsType (HsTyLit _ x) = pretty x
 prettyHsType HsWildCardTy {} = string "_"

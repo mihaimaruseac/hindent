@@ -20,7 +20,7 @@ module HIndent.Pretty.Combinators.Lineup
   , -- * Lists
     hList
   , vList
-  , hPromotedList
+  , hvPromotedList
   , -- * Bars
     hvBarSep
   , hBarSep
@@ -135,9 +135,19 @@ hList = brackets . hCommaSep
 vList :: [Printer ()] -> Printer ()
 vList = vCommaSepWrapped ("[", "]")
 
+-- | Runs printers to print a promoted list where elements are aligned in
+-- a line or vertically.
+hvPromotedList :: [Printer ()] -> Printer ()
+hvPromotedList = (<-|>) <$> hPromotedList <*> vPromotedList
+
 -- | Runs printers to construct a promoted list in a line.
 hPromotedList :: [Printer ()] -> Printer ()
 hPromotedList = promotedListBrackets . hCommaSep
+
+-- | Runs printers to construct a promoted list where elements are aligned
+-- vertically.
+vPromotedList :: [Printer ()] -> Printer ()
+vPromotedList = vCommaSepWrapped ("'[", " ]")
 
 -- | Runs printers in a line with a space as the separator.
 spaced :: [Printer ()] -> Printer ()
