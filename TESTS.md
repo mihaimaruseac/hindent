@@ -2678,7 +2678,7 @@ f =
 Typed quote.
 
 ```haskell
-f = [|| a ||]
+f = [||a||]
 ```
 
 Preserve the trailing newline.
