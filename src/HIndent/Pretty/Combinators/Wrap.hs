@@ -43,9 +43,9 @@ braces = wrap "{" "}"
 brackets :: Printer a -> Printer a
 brackets = wrap "[" "]"
 
--- | Wraps with @[|| @ and @ ||]@.
+-- | Wraps with @[||@ and @||]@.
 typedBrackets :: Printer a -> Printer a
-typedBrackets = wrap "[|| " " ||]"
+typedBrackets = wrap "[||" "||]"
 
 -- | Wraps with double quotes.
 doubleQuotes :: Printer a -> Printer a

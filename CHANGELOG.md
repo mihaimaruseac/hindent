@@ -16,6 +16,7 @@
 - A type with many type applications are now broken into multiple lines.
   ([#664]).
 - A long type-level list is broken into multiple lines. ([#665]).
+- Spaces around typed expression brackets are removed ([#666]).
 
 ### Removed
 
@@ -306,6 +307,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#666]: https://github.com/mihaimaruseac/hindent/pull/666
 [#665]: https://github.com/mihaimaruseac/hindent/pull/665
 [#664]: https://github.com/mihaimaruseac/hindent/pull/664
 [#663]: https://github.com/mihaimaruseac/hindent/pull/663
