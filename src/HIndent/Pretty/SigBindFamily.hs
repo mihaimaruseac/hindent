@@ -24,6 +24,7 @@ data SigBindFamily
   | Bind (HsBindLR GhcPs GhcPs)
   | TypeFamily (FamilyDecl GhcPs)
   | TyFamInst (TyFamInstDecl GhcPs)
+  | DataFamInst (DataFamInstDecl GhcPs)
 
 -- | 'SigBindFamily' with the location information.
 type LSigBindFamily = GenLocated SrcSpanAnnA SigBindFamily
@@ -35,10 +36,11 @@ mkSortedLSigBindFamilyList ::
   -> [LHsBindLR GhcPs GhcPs]
   -> [LFamilyDecl GhcPs]
   -> [LTyFamInstDecl GhcPs]
+  -> [LDataFamInstDecl GhcPs]
   -> [LSigBindFamily]
-mkSortedLSigBindFamilyList sigs binds fams =
+mkSortedLSigBindFamilyList sigs binds fams datafams =
   sortBy (compare `on` realSrcSpan . locA . getLoc) .
-  mkLSigBindFamilyList sigs binds fams
+  mkLSigBindFamilyList sigs binds fams datafams
 
 -- | Creates a list of 'LSigBindFamily' from arguments.
 mkLSigBindFamilyList ::
@@ -46,11 +48,13 @@ mkLSigBindFamilyList ::
   -> [LHsBindLR GhcPs GhcPs]
   -> [LFamilyDecl GhcPs]
   -> [LTyFamInstDecl GhcPs]
+  -> [LDataFamInstDecl GhcPs]
   -> [LSigBindFamily]
-mkLSigBindFamilyList sigs binds fams insts =
+mkLSigBindFamilyList sigs binds fams insts datafams =
   fmap (fmap Sig) sigs ++
   fmap (fmap Bind) binds ++
-  fmap (fmap TypeFamily) fams ++ fmap (fmap TyFamInst) insts
+  fmap (fmap TypeFamily) fams ++
+  fmap (fmap TyFamInst) insts ++ fmap (fmap DataFamInst) datafams
 
 -- | Filters out 'Sig's and extract the wrapped values.
 filterLSig :: [LSigBindFamily] -> [LSig GhcPs]

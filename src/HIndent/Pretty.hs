@@ -286,7 +286,7 @@ prettyTyClDecl ClassDecl {..} = do
               spacePrefixed $ fmap pretty xs
             _ -> error "Not enough parameters are given."
     sigsMethodsFamilies =
-      mkSortedLSigBindFamilyList tcdSigs (bagToList tcdMeths) tcdATs []
+      mkSortedLSigBindFamilyList tcdSigs (bagToList tcdMeths) tcdATs [] []
 
 instance Pretty (InstDecl GhcPs) where
   pretty' ClsInstD {..} = pretty cid_inst
@@ -446,6 +446,7 @@ instance Pretty (ClsInstDecl GhcPs) where
           (bagToList cid_binds)
           []
           cid_tyfam_insts
+          cid_datafam_insts
 
 instance Pretty (MatchGroup GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
   pretty' MG {..} = printCommentsAnd mg_alts (lined . fmap pretty)
@@ -1330,6 +1331,7 @@ instance Pretty SigBindFamily where
   pretty' (Bind x) = pretty x
   pretty' (TypeFamily x) = pretty x
   pretty' (TyFamInst x) = pretty x
+  pretty' (DataFamInst x) = pretty $ DataFamInstDeclInsideClassInst x
 
 instance Pretty EpaComment where
   pretty' EpaComment {..} = pretty ac_tok
@@ -1344,7 +1346,8 @@ instance Pretty (HsLocalBindsLR GhcPs GhcPs) where
 instance Pretty (HsValBindsLR GhcPs GhcPs) where
   pretty' (ValBinds _ methods sigs) = lined $ fmap pretty sigsAndMethods
     where
-      sigsAndMethods = mkSortedLSigBindFamilyList sigs (bagToList methods) [] []
+      sigsAndMethods =
+        mkSortedLSigBindFamilyList sigs (bagToList methods) [] [] []
   pretty' XValBindsLR {} = notUsedInParsedStage
 
 instance Pretty (HsTupArg GhcPs) where
@@ -1729,10 +1732,15 @@ instance Pretty (FamEqn GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs))) where
     pretty feqn_rhs
 
 -- | Pretty-print a data instance.
-instance Pretty (FamEqn GhcPs (HsDataDefn GhcPs)) where
-  pretty' FamEqn {..} = do
-    spaced $ string "data instance" : pretty feqn_tycon : fmap pretty feqn_pats
+instance Pretty FamEqn' where
+  pretty' FamEqn' {famEqn = FamEqn {..}, ..} = do
+    spaced $ string prefix : pretty feqn_tycon : fmap pretty feqn_pats
     pretty feqn_rhs
+    where
+      prefix =
+        case famEqnFor of
+          DataFamInstDeclForTopLevel -> "data instance"
+          DataFamInstDeclForInsideClassInst -> "data"
 
 -- | HsArg (LHsType GhcPs) (LHsType GhcPs)
 instance Pretty
@@ -1908,7 +1916,11 @@ instance Pretty TopLevelTyFamInstDecl where
     string "type instance " >> pretty tfid_eqn
 
 instance Pretty (DataFamInstDecl GhcPs) where
-  pretty' DataFamInstDecl {..} = pretty dfid_eqn
+  pretty' = pretty' . DataFamInstDeclTopLevel
+
+instance Pretty DataFamInstDecl' where
+  pretty' DataFamInstDecl' {dataFamInstDecl = DataFamInstDecl {..}, ..} =
+    pretty $ FamEqn' dataFamInstDeclFor dfid_eqn
 
 instance Pretty (PatSynBind GhcPs GhcPs) where
   pretty' PSB {..} = do

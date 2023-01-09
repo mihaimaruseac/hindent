@@ -540,6 +540,17 @@ instance (Show a) => Show (Foo a) where
   show = undefined
 ```
 
+With associated data types
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/493
+instance GM 'Practice where
+  data MatchConfig 'Practice = MatchConfig'Practice
+    { teamSize :: Int
+    , ladder :: Ladder
+    }
+```
+
 #### With overlapping pragmas
 
 `OVERLAPPING`

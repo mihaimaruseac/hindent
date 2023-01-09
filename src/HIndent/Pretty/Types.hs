@@ -25,6 +25,12 @@ module HIndent.Pretty.Types
   , pattern HsTypeInsideDeclSig
   , pattern HsTypeInsideInstDecl
   , pattern HsTypeWithVerticalAppTy
+  , DataFamInstDecl'(..)
+  , pattern DataFamInstDeclTopLevel
+  , pattern DataFamInstDeclInsideClassInst
+  , FamEqn'(..)
+  , pattern FamEqnTopLevel
+  , pattern FamEqnInsideClassInst
   , StmtLRInsideVerticalList(..)
   , ParStmtBlockInsideVerticalList(..)
   , DeclSig(..)
@@ -46,6 +52,7 @@ module HIndent.Pretty.Types
   , HsTypeFor(..)
   , HsTypeDir(..)
   , CaseOrCases(..)
+  , DataFamInstDeclFor(..)
   ) where
 
 import GHC.Hs
@@ -155,6 +162,30 @@ pattern HsTypeInsideInstDecl x = HsType' HsTypeForInstDecl HsTypeNoDir x
 -- | `HsType'` to pretty-print a `HsAppTy` vertically.
 pattern HsTypeWithVerticalAppTy :: HsType GhcPs -> HsType'
 pattern HsTypeWithVerticalAppTy x = HsType' HsTypeForVerticalAppTy HsTypeVertical x
+
+-- | A wrapper of `DataFamInstDecl`.
+data DataFamInstDecl' = DataFamInstDecl'
+  { dataFamInstDeclFor :: DataFamInstDeclFor -- ^ Where a data family instance is declared.
+  , dataFamInstDecl :: DataFamInstDecl GhcPs -- ^ The actual value.
+  }
+
+pattern DataFamInstDeclTopLevel :: DataFamInstDecl GhcPs -> DataFamInstDecl'
+pattern DataFamInstDeclTopLevel x = DataFamInstDecl' DataFamInstDeclForTopLevel x
+
+pattern DataFamInstDeclInsideClassInst :: DataFamInstDecl GhcPs -> DataFamInstDecl'
+pattern DataFamInstDeclInsideClassInst x = DataFamInstDecl' DataFamInstDeclForInsideClassInst x
+
+-- | A wrapper for `FamEqn`.
+data FamEqn' = FamEqn'
+  { famEqnFor :: DataFamInstDeclFor -- ^ Where a data family instance is declared.
+  , famEqn :: FamEqn GhcPs (HsDataDefn GhcPs)
+  }
+
+pattern FamEqnTopLevel :: FamEqn GhcPs (HsDataDefn GhcPs) -> FamEqn'
+pattern FamEqnTopLevel x = FamEqn' DataFamInstDeclForTopLevel x
+
+pattern FamEqnInsideClassInst :: FamEqn GhcPs (HsDataDefn GhcPs) -> FamEqn'
+pattern FamEqnInsideClassInst x = FamEqn' DataFamInstDeclForInsideClassInst x
 
 -- | `StmtLR` inside a vertically printed list.
 newtype StmtLRInsideVerticalList =
@@ -290,3 +321,8 @@ data HsTypeDir
 data CaseOrCases
   = Case
   | Cases
+
+-- | Values indicating where a data family instance is declared.
+data DataFamInstDeclFor
+  = DataFamInstDeclForTopLevel
+  | DataFamInstDeclForInsideClassInst

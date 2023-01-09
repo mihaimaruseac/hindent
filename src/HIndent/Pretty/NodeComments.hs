@@ -374,6 +374,7 @@ instance CommentExtraction SigBindFamily where
   nodeComments (Bind x) = nodeComments x
   nodeComments (TypeFamily x) = nodeComments x
   nodeComments (TyFamInst x) = nodeComments x
+  nodeComments (DataFamInst x) = nodeComments x
 
 instance CommentExtraction EpaComment where
   nodeComments EpaComment {} = emptyNodeComments
@@ -576,6 +577,9 @@ instance CommentExtraction
            (FamEqn GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs))) where
   nodeComments FamEqn {..} = nodeComments feqn_ext
 
+instance CommentExtraction FamEqn' where
+  nodeComments FamEqn' {..} = nodeComments famEqn
+
 -- | Pretty-print a data instance.
 instance CommentExtraction (FamEqn GhcPs (HsDataDefn GhcPs)) where
   nodeComments FamEqn {..} = nodeComments feqn_ext
@@ -683,6 +687,9 @@ instance CommentExtraction TopLevelTyFamInstDecl where
 
 instance CommentExtraction (DataFamInstDecl GhcPs) where
   nodeComments DataFamInstDecl {} = emptyNodeComments
+
+instance CommentExtraction DataFamInstDecl' where
+  nodeComments DataFamInstDecl' {..} = nodeComments dataFamInstDecl
 
 instance CommentExtraction (PatSynBind GhcPs GhcPs) where
   nodeComments PSB {..} = nodeComments psb_ext
