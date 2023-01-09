@@ -1732,6 +1732,9 @@ instance Pretty (FamEqn GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs))) where
     pretty feqn_rhs
 
 -- | Pretty-print a data instance.
+instance Pretty (FamEqn GhcPs (HsDataDefn GhcPs)) where
+  pretty' = pretty' . FamEqnTopLevel
+
 instance Pretty FamEqn' where
   pretty' FamEqn' {famEqn = FamEqn {..}, ..} = do
     spaced $ string prefix : pretty feqn_tycon : fmap pretty feqn_pats
