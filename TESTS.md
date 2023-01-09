@@ -1654,24 +1654,6 @@ foo ::
 
 #### Promoted types
 
-Promoted lists
-
-```haskell
-fun1 :: Def ('[ Ref s (Stored Uint32), IBool] T.:-> IBool)
-fun1 = undefined
-
-fun2 :: Def ('[ Ref s (Stored Uint32), IBool] :-> IBool)
-fun2 = undefined
-```
-
-Promoted list (issue #348)
-
-```haskell
-a :: A '[ 'True]
--- nested promoted list with multiple elements.
-b :: A '[ '[ 'True, 'False], '[ 'False, 'True]]
-```
-
 Class constraints should leave `::` on same line
 
 ``` haskell
@@ -1706,6 +1688,40 @@ a :: '(T.:->) 'True 'False
 b :: (T.:->) 'True 'False
 c :: '(:->) 'True 'False
 d :: (:->) 'True 'False
+```
+
+##### Promoted lists
+
+Short
+
+```haskell
+fun1 :: Def ('[ Ref s (Stored Uint32), IBool] T.:-> IBool)
+fun1 = undefined
+
+fun2 :: Def ('[ Ref s (Stored Uint32), IBool] :-> IBool)
+fun2 = undefined
+```
+
+Long
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/522
+type OurContext
+  = '[ AuthHandler W.Request (ExtendedPayloadWrapper UserSession)
+     , BasicAuthCheck GameInstanceId
+     , BasicAuthCheck (RegionId, RegionName)
+     , BasicAuthCheck Alert.SourceId
+     , M.MultipartOptions M.Tmp
+     ]
+```
+
+Nested
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/348
+a :: A '[ 'True]
+-- nested promoted list with multiple elements.
+b :: A '[ '[ 'True, 'False], '[ 'False, 'True]]
 ```
 
 #### Symbol type constructors
