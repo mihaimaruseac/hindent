@@ -17,8 +17,8 @@ import Data.Maybe
 import GHC.Hs
 import GHC.Types.SrcLoc
 
--- | A sum type containing one of those: 'Sig', 'HsBindLR', and
--- 'FamilyDecl'.
+-- | A sum type containing one of those: function signature, function
+-- binding, type family, type family instance, and data family instance.
 data SigBindFamily
   = Sig (Sig GhcPs)
   | Bind (HsBindLR GhcPs GhcPs)
