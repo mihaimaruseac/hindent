@@ -17,8 +17,8 @@
   ([#664]).
 - A long type-level list is broken into multiple lines. ([#665]).
 - Spaces around typed expression brackets are removed ([#666]).
-- HIndent no longer breaks short class constraints into multiple lines
-  ([#669]).
+- HIndent no longer breaks short class constraints in function signautres into
+  multiple lines ([#669]).
 
 ### Fixed
 
