@@ -412,8 +412,7 @@ Default signatures
 -- https://github.com/chrisdone/hindent/issues/283
 class Foo a where
   bar :: a -> a -> a
-  default bar :: Monoid a =>
-    a -> a -> a
+  default bar :: Monoid a => a -> a -> a
   bar = mappend
 ```
 
@@ -1623,10 +1622,7 @@ url :: r {url :: String} => r -> Integer
 `forall` type
 
 ```haskell
-f :: (forall a. Data a =>
-                  a -> a)
-  -> (forall a b. Data a =>
-                    a -> b)
+f :: (forall a. Data a => a -> a) -> (forall a b. Data a => a -> b)
 g :: forall a b. a -> b
 ```
 
@@ -1674,16 +1670,6 @@ fun ::
   => fooooooooooo bar mu zot
   -> fooooooooooo bar mu zot
   -> c
-```
-
-`forall` type
-
-```haskell
-f :: (forall a. Data a =>
-                  a -> a)
-  -> (forall a b. Data a =>
-                    a -> b)
-g :: forall a b. a -> b
 ```
 
 An infix operator containing `#`
@@ -1763,6 +1749,13 @@ Multiple
 
 ```haskell
 fun :: (Class a, Class b) => a -> b -> c
+```
+
+Multiple without parentheses
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/554
+g :: Semigroup a => Monoid a => Maybe a -> a
 ```
 
 Long constraints
