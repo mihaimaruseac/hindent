@@ -1024,9 +1024,12 @@ instance Pretty HsType' where
 
 prettyHsType :: HsType GhcPs -> Printer ()
 prettyHsType (HsForAllTy _ tele body) = (pretty tele >> space) |=> pretty body
-prettyHsType HsQualTy {..} = do
-  pretty $ Context hst_ctxt
-  lined [string " =>", indentedBlock $ pretty hst_body]
+prettyHsType HsQualTy {..} = hor <-|> ver
+  where
+    hor = spaced [pretty $ Context hst_ctxt, string "=>", pretty hst_body]
+    ver = do
+      pretty $ Context hst_ctxt
+      lined [string " =>", indentedBlock $ pretty hst_body]
 prettyHsType (HsTyVar _ NotPromoted x) = pretty x
 prettyHsType (HsTyVar _ IsPromoted x) = string "'" >> pretty x
 prettyHsType x@(HsAppTy _ l r) = hor <-|> ver
