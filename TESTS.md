@@ -925,6 +925,14 @@ data Foo where
   Foo :: (Ord v) => v -> v -> Foo
 ```
 
+With methods with record signatures
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/581
+data Test where
+  Test :: Eq a => { test :: a } -> Test
+```
+
 ### Data instance declarations
 
 Without type applications

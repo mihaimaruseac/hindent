@@ -24,6 +24,8 @@
 
 - Fixed the wrong formatting of data family instances inside class instances
   ([#667]).
+- Fixed the bug of removing the space before the enclosing parenthesis of a
+  record syntax in a signature in a GADT declaration ([#670]).
 
 ### Removed
 
@@ -314,6 +316,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#670]: https://github.com/mihaimaruseac/hindent/pull/670
 [#669]: https://github.com/mihaimaruseac/hindent/pull/669
 [#667]: https://github.com/mihaimaruseac/hindent/pull/667
 [#666]: https://github.com/mihaimaruseac/hindent/pull/666
