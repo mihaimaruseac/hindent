@@ -123,12 +123,6 @@ Alternatively you could use the
 [vim-hindent](https://github.com/alx741/vim-hindent) plugin which runs hindent
 automatically when a Haskell file is saved.
 
-## Atom
-
-Fortunately, you can use https://atom.io/packages/ide-haskell with the
-path to hindent specified instead of that to stylish-haskell. Works
-like a charm that way!
-
 ## IntelliJ / other JetBrains IDEs
 1. Install the "HaskForce" Haskell plugin (this is so we get the language type recognized in the file watcher)
 2. Install the "File Watchers" plugin under "Browse Repositories"
