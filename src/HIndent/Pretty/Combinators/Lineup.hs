@@ -232,6 +232,8 @@ vWrappedLineup sep (prefix, suffix) ps =
 -- | Similar to 'vWrappedLineup' but the suffix is in the same line as the
 -- last element.
 vWrappedLineup' :: Char -> (String, String) -> [Printer ()] -> Printer ()
+vWrappedLineup' _ (prefix, suffix) [x] =
+  spaced [string prefix, x, string suffix]
 vWrappedLineup' sep (prefix, suffix) ps =
   string prefix >>
   space |=> do
