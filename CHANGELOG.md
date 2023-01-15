@@ -27,7 +27,7 @@
 - Fixed the bug of removing the space before the enclosing parenthesis of a
   record syntax in a signature in a GADT declaration ([#670]).
 - Fixed the bug of inserting unnecessary empty lines if a file contains only
-  comments ([#671]).
+  comments ([#672]).
 
 ### Removed
 
@@ -318,7 +318,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
-[#671]: https://github.com/mihaimaruseac/hindent/pull/671
+[#672]: https://github.com/mihaimaruseac/hindent/pull/672
 [#670]: https://github.com/mihaimaruseac/hindent/pull/670
 [#669]: https://github.com/mihaimaruseac/hindent/pull/669
 [#667]: https://github.com/mihaimaruseac/hindent/pull/667
