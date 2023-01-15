@@ -20,16 +20,15 @@ import qualified Path.IO as Path
 
 -- | Configurations shared among the different styles. Styles may pay
 -- attention to or completely disregard this configuration.
-data Config =
-  Config
-    { configMaxColumns :: !Int64 -- ^ Maximum columns to fit code into ideally.
-    , configIndentSpaces :: !Int64 -- ^ How many spaces to indent?
-    , configTrailingNewline :: !Bool -- ^ End with a newline.
-    , configSortImports :: !Bool -- ^ Sort imports in groups.
-    , configLineBreaks :: [String] -- ^ Break line when meets these operators.
-    , configExtensions :: [Extension]
+data Config = Config
+  { configMaxColumns :: !Int64 -- ^ Maximum columns to fit code into ideally.
+  , configIndentSpaces :: !Int64 -- ^ How many spaces to indent?
+  , configTrailingNewline :: !Bool -- ^ End with a newline.
+  , configSortImports :: !Bool -- ^ Sort imports in groups.
+  , configLineBreaks :: [String] -- ^ Break line when meets these operators.
+  , configExtensions :: [Extension]
       -- ^ Extra language extensions enabled by default.
-    }
+  }
 
 instance FromJSON Config where
   parseJSON (Y.Object v) =

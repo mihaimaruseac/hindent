@@ -167,7 +167,7 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       bindsSigs' <- mapM addCommentsBeforeEpAnn bindsSigs
       pure (listToBag $ filterLBind bindsSigs', filterLSig bindsSigs')
       where
-        bindsSigs = mkSortedLSigBindFamilyList sigs (bagToList binds) [] []
+        bindsSigs = mkSortedLSigBindFamilyList sigs (bagToList binds) [] [] []
     addCommentsBeforeEpAnn (L (SrcSpanAnn epa@EpAnn {..} sp) x) = do
       cs <- get
       let (notAbove, above) =

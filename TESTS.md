@@ -412,8 +412,7 @@ Default signatures
 -- https://github.com/chrisdone/hindent/issues/283
 class Foo a where
   bar :: a -> a -> a
-  default bar :: Monoid a =>
-    a -> a -> a
+  default bar :: Monoid a => a -> a -> a
   bar = mappend
 ```
 
@@ -540,6 +539,17 @@ instance (Show a) => Show (Foo a) where
   show = undefined
 ```
 
+With associated data types
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/493
+instance GM 'Practice where
+  data MatchConfig 'Practice = MatchConfig'Practice
+    { teamSize :: Int
+    , ladder :: Ladder
+    }
+```
+
 #### With overlapping pragmas
 
 `OVERLAPPING`
@@ -624,11 +634,10 @@ instance (:?:) Int Bool
 Data declaration with underscore
 
 ```haskell
-data Stanza =
-  MkStanza
-    { _stanzaBuildInfo :: BuildInfo
-    , stanzaIsSourceFilePath :: FilePath -> Bool
-    }
+data Stanza = MkStanza
+  { _stanzaBuildInfo :: BuildInfo
+  , stanzaIsSourceFilePath :: FilePath -> Bool
+  }
 ```
 
 A data declaration with typeclass constraints
@@ -642,10 +651,9 @@ data Ord a =>
 Multiple constructors at once
 
 ```haskell
-data Foo =
-  Foo
-    { foo, bar, baz, qux, quux :: Int
-    }
+data Foo = Foo
+  { foo, bar, baz, qux, quux :: Int
+  }
 ```
 
 No fields
@@ -697,10 +705,9 @@ data Foo =
 A record constructor with a field
 
 ```haskell
-data Foo =
-  Foo
-    { foo :: Int
-    }
+data Foo = Foo
+  { foo :: Int
+  }
 ```
 
 Multiple constructors with fields
@@ -749,28 +756,25 @@ data Foo =
 An `UNPACK`ed field.
 
 ```haskell
-data Foo =
-  Foo
-    { x :: {-# UNPACK #-} Int
-    }
+data Foo = Foo
+  { x :: {-# UNPACK #-} Int
+  }
 ```
 
 An `NOUNPACK`ed field.
 
 ```haskell
-data Foo =
-  Foo
-    { x :: {-# NOUNPACK #-} !Int
-    }
+data Foo = Foo
+  { x :: {-# NOUNPACK #-} !Int
+  }
 ```
 
 A lazy field.
 
 ```haskell
-data Foo =
-  Foo
-    { x :: ~Int
-    }
+data Foo = Foo
+  { x :: ~Int
+  }
 ```
 
 #### Fields with `forall` constraints
@@ -818,13 +822,11 @@ With a record constructor
 
 ```haskell
 -- From https://github.com/mihaimaruseac/hindent/issues/167
-data Person =
-  Person
-    { firstName :: !String -- ^ First name
-    , lastName :: !String -- ^ Last name
-    , age :: !Int -- ^ Age
-    }
-  deriving (Eq, Show)
+data Person = Person
+  { firstName :: !String -- ^ First name
+  , lastName :: !String -- ^ Last name
+  , age :: !Int -- ^ Age
+  } deriving (Eq, Show)
 ```
 
 Multiple derivings
@@ -921,6 +923,14 @@ With a context but no `forall`s
 ```haskell
 data Foo where
   Foo :: (Ord v) => v -> v -> Foo
+```
+
+With methods with record signatures
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/581
+data Test where
+  Test :: Eq a => { test :: a } -> Test
 ```
 
 ### Data instance declarations
@@ -1297,7 +1307,6 @@ Unidirectional with a pattern type signature
 {-# LANGUAGE PatternSynonyms #-}
 
 pattern Foo :: Int -> Int -> [Int]
-
 pattern Foo x y <- [x, y]
 ```
 
@@ -1562,10 +1571,11 @@ A long type is broken into lines
 -- https://github.com/mihaimaruseac/hindent/issues/359
 thing ::
      ( ResB.BomEx
-     , Maybe [( Entity BomSnapshot
-              , ( [ResBS.OrderSubstituteAggr]
-                , ( Maybe (Entity BomSnapshotHistory)
-                  , Maybe (Entity BomSnapshotHistory))))])
+     , Maybe
+         [( Entity BomSnapshot
+          , ( [ResBS.OrderSubstituteAggr]
+            , ( Maybe (Entity BomSnapshotHistory)
+              , Maybe (Entity BomSnapshotHistory))))])
   -> [(ResB.BomEx, Maybe ResBS.BomSnapshotAggr)]
 ```
 
@@ -1620,10 +1630,7 @@ url :: r {url :: String} => r -> Integer
 `forall` type
 
 ```haskell
-f :: (forall a. Data a =>
-                  a -> a)
-  -> (forall a b. Data a =>
-                    a -> b)
+f :: (forall a. Data a => a -> a) -> (forall a b. Data a => a -> b)
 g :: forall a b. a -> b
 ```
 
@@ -1646,25 +1653,21 @@ foo = undefined
     go = undefined
 ```
 
+Types with many type applications
+
+```haskell
+foo ::
+     Foo
+       LongLongType
+       LongLongType
+       LongLongType
+       LongLongType
+       LongLongType
+       LongLongType
+  -> Int
+```
+
 #### Promoted types
-
-Promoted lists
-
-```haskell
-fun1 :: Def ('[ Ref s (Stored Uint32), IBool] T.:-> IBool)
-fun1 = undefined
-
-fun2 :: Def ('[ Ref s (Stored Uint32), IBool] :-> IBool)
-fun2 = undefined
-```
-
-Promoted list (issue #348)
-
-```haskell
-a :: A '[ 'True]
--- nested promoted list with multiple elements.
-b :: A '[ '[ 'True, 'False], '[ 'False, 'True]]
-```
 
 Class constraints should leave `::` on same line
 
@@ -1675,16 +1678,6 @@ fun ::
   => fooooooooooo bar mu zot
   -> fooooooooooo bar mu zot
   -> c
-```
-
-`forall` type
-
-```haskell
-f :: (forall a. Data a =>
-                  a -> a)
-  -> (forall a b. Data a =>
-                    a -> b)
-g :: forall a b. a -> b
 ```
 
 An infix operator containing `#`
@@ -1700,6 +1693,40 @@ a :: '(T.:->) 'True 'False
 b :: (T.:->) 'True 'False
 c :: '(:->) 'True 'False
 d :: (:->) 'True 'False
+```
+
+##### Promoted lists
+
+Short
+
+```haskell
+fun1 :: Def ('[ Ref s (Stored Uint32), IBool] T.:-> IBool)
+fun1 = undefined
+
+fun2 :: Def ('[ Ref s (Stored Uint32), IBool] :-> IBool)
+fun2 = undefined
+```
+
+Long
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/522
+type OurContext
+  = '[ AuthHandler W.Request (ExtendedPayloadWrapper UserSession)
+     , BasicAuthCheck GameInstanceId
+     , BasicAuthCheck (RegionId, RegionName)
+     , BasicAuthCheck Alert.SourceId
+     , M.MultipartOptions M.Tmp
+     ]
+```
+
+Nested
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/348
+a :: A '[ 'True]
+-- nested promoted list with multiple elements.
+b :: A '[ '[ 'True, 'False], '[ 'False, 'True]]
 ```
 
 #### Symbol type constructors
@@ -1730,6 +1757,13 @@ Multiple
 
 ```haskell
 fun :: (Class a, Class b) => a -> b -> c
+```
+
+Multiple without parentheses
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/554
+g :: Semigroup a => Monoid a => Maybe a -> a
 ```
 
 Long constraints
@@ -1810,12 +1844,35 @@ Long
 ```haskell
 -- https://github.com/mihaimaruseac/hindent/issues/290
 type MyContext m
-   = ( MonadState Int m
-     , MonadReader Int m
-     , MonadError Text m
-     , MonadMask m
-     , Monoid m
-     , Functor m)
+  = ( MonadState Int m
+    , MonadReader Int m
+    , MonadError Text m
+    , MonadMask m
+    , Monoid m
+    , Functor m)
+```
+
+Very higher-kinded type
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/534
+type SomeTypeSynonym
+  = RecordWithManyFields
+      FieldNumber1
+      FieldNumber2
+      FieldNumber3
+      FieldNumber4
+      FieldNumber5
+      FieldNumber6
+      FieldNumber7
+      FieldNumber8
+      FieldNumber9
+      FieldNumber10
+      FieldNumber11
+      FieldNumber12
+      FieldNumber13
+      FieldNumber14
+      FieldNumber15
 ```
 
 Infix type constructor
@@ -1983,6 +2040,14 @@ f = (# | Bool #)
 {-# LANGUAGE StaticPointers #-}
 
 f = static 1
+```
+
+`OverloadedLabels`
+
+```haskell
+{-# LANGUAGE OverloadedLabels #-}
+
+f = #foo
 ```
 
 ### Arrows
@@ -2641,7 +2706,7 @@ f =
 Typed quote.
 
 ```haskell
-f = [|| a ||]
+f = [||a||]
 ```
 
 Preserve the trailing newline.
@@ -2777,11 +2842,10 @@ f = undefined
 ```haskell since 9.2.2
 {-# LANGUAGE OverloadedRecordDot #-}
 
-data Rectangle =
-  Rectangle
-    { width :: Int
-    , height :: Int
-    }
+data Rectangle = Rectangle
+  { width :: Int
+  , height :: Int
+  }
 
 area :: Rectangle -> Int
 area r = r.width * r.height
@@ -2986,19 +3050,18 @@ data X
   = X -- ^ X is for xylophone.
   | Y -- ^ Y is for why did I eat that pizza.
 
-data X =
-  X
-    { field1 :: Int -- ^ Field1 is the first field.
-    , field11 :: Char
-      -- ^ This field comment is on its own line.
-    , field2 :: Int -- ^ Field2 is the second field.
-    , field3 :: Char -- ^ This is a long comment which starts next to
-      -- the field but continues onto the next line, it aligns exactly
-      -- with the field name.
-    , field4 :: Char
-      -- ^ This is a long comment which starts on the following line
-      -- from from the field, lines continue at the sme column.
-    }
+data X = X
+  { field1 :: Int -- ^ Field1 is the first field.
+  , field11 :: Char
+    -- ^ This field comment is on its own line.
+  , field2 :: Int -- ^ Field2 is the second field.
+  , field3 :: Char -- ^ This is a long comment which starts next to
+    -- the field but continues onto the next line, it aligns exactly
+    -- with the field name.
+  , field4 :: Char
+    -- ^ This is a long comment which starts on the following line
+    -- from from the field, lines continue at the sme column.
+  }
 
 foo ::
      String -- ^ Reason for eating pizza.

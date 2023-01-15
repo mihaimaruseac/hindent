@@ -204,7 +204,8 @@ instance CommentExtraction (ConDecl GhcPs) where
 instance CommentExtraction (Match GhcPs a) where
   nodeComments Match {..} = nodeComments m_ext
 
-instance CommentExtraction (StmtLR GhcPs GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
+instance CommentExtraction
+           (StmtLR GhcPs GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
   nodeComments LastStmt {} = emptyNodeComments
   nodeComments (BindStmt x _ _) = nodeComments x
   nodeComments ApplicativeStmt {} = emptyNodeComments
@@ -214,7 +215,8 @@ instance CommentExtraction (StmtLR GhcPs GhcPs (GenLocated SrcSpanAnnA (HsExpr G
   nodeComments TransStmt {..} = nodeComments trS_ext
   nodeComments RecStmt {..} = nodeComments recS_ext
 
-instance CommentExtraction (StmtLR GhcPs GhcPs (GenLocated SrcSpanAnnA (HsCmd GhcPs))) where
+instance CommentExtraction
+           (StmtLR GhcPs GhcPs (GenLocated SrcSpanAnnA (HsCmd GhcPs))) where
   nodeComments LastStmt {} = emptyNodeComments
   nodeComments (BindStmt x _ _) = nodeComments x
   nodeComments ApplicativeStmt {} = emptyNodeComments
@@ -228,11 +230,13 @@ instance CommentExtraction StmtLRInsideVerticalList where
   nodeComments (StmtLRInsideVerticalList x) = nodeComments x
 
 -- | For pattern matching.
-instance CommentExtraction (HsRecFields GhcPs (GenLocated SrcSpanAnnA (Pat GhcPs))) where
+instance CommentExtraction
+           (HsRecFields GhcPs (GenLocated SrcSpanAnnA (Pat GhcPs))) where
   nodeComments HsRecFields {} = emptyNodeComments
 
 -- | For record updates
-instance CommentExtraction (HsRecFields GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
+instance CommentExtraction
+           (HsRecFields GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
   nodeComments HsRecFields {} = emptyNodeComments
 
 instance CommentExtraction (HsType GhcPs) where
@@ -370,6 +374,7 @@ instance CommentExtraction SigBindFamily where
   nodeComments (Bind x) = nodeComments x
   nodeComments (TypeFamily x) = nodeComments x
   nodeComments (TyFamInst x) = nodeComments x
+  nodeComments (DataFamInst x) = nodeComments x
 
 instance CommentExtraction EpaComment where
   nodeComments EpaComment {} = emptyNodeComments
@@ -412,20 +417,28 @@ instance CommentExtraction RecConField where
   nodeComments (RecConField x) = nodeComments x
 #else
 -- | For pattern matching against a record.
-instance CommentExtraction (HsRecField' (FieldOcc GhcPs) (GenLocated SrcSpanAnnA (Pat GhcPs))) where
+instance CommentExtraction
+           (HsRecField' (FieldOcc GhcPs) (GenLocated SrcSpanAnnA (Pat GhcPs))) where
   nodeComments HsRecField {..} = nodeComments hsRecFieldAnn
 
 -- | For record updates.
-instance CommentExtraction (HsRecField' (FieldOcc GhcPs) (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
+instance CommentExtraction
+           (HsRecField' (FieldOcc GhcPs) (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
   nodeComments HsRecField {..} = nodeComments hsRecFieldAnn
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 -- | For pattern matchings against records.
-instance CommentExtraction (HsFieldBind (GenLocated (SrcAnn NoEpAnns) (FieldOcc GhcPs)) (GenLocated SrcSpanAnnA (Pat GhcPs))) where
+instance CommentExtraction
+           (HsFieldBind
+              (GenLocated (SrcAnn NoEpAnns) (FieldOcc GhcPs))
+              (GenLocated SrcSpanAnnA (Pat GhcPs))) where
   nodeComments HsFieldBind {..} = nodeComments hfbAnn
 
 -- | For record updates.
-instance CommentExtraction (HsFieldBind (GenLocated (SrcAnn NoEpAnns) (FieldOcc GhcPs)) (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
+instance CommentExtraction
+           (HsFieldBind
+              (GenLocated (SrcAnn NoEpAnns) (FieldOcc GhcPs))
+              (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
   nodeComments HsFieldBind {..} = nodeComments hfbAnn
 #else
 instance CommentExtraction RecConField where
@@ -439,7 +452,13 @@ instance CommentExtraction (FieldOcc GhcPs) where
   nodeComments FieldOcc {} = emptyNodeComments
 #endif
 -- HsConDeclH98Details
-instance CommentExtraction (HsConDetails Void (HsScaled GhcPs (GenLocated SrcSpanAnnA (BangType GhcPs))) (GenLocated SrcSpanAnnL [GenLocated SrcSpanAnnA (ConDeclField GhcPs)])) where
+instance CommentExtraction
+           (HsConDetails
+              Void
+              (HsScaled GhcPs (GenLocated SrcSpanAnnA (BangType GhcPs)))
+              (GenLocated
+                 SrcSpanAnnL
+                 [GenLocated SrcSpanAnnA (ConDeclField GhcPs)])) where
   nodeComments PrefixCon {} = emptyNodeComments
   nodeComments RecCon {} = emptyNodeComments
   nodeComments InfixCon {} = emptyNodeComments
@@ -554,15 +573,22 @@ instance CommentExtraction (IE GhcPs) where
   nodeComments IEDoc {} = emptyNodeComments
   nodeComments IEDocNamed {} = emptyNodeComments
 
-instance CommentExtraction (FamEqn GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs))) where
+instance CommentExtraction
+           (FamEqn GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs))) where
   nodeComments FamEqn {..} = nodeComments feqn_ext
+
+instance CommentExtraction FamEqn' where
+  nodeComments FamEqn' {..} = nodeComments famEqn
 
 -- | Pretty-print a data instance.
 instance CommentExtraction (FamEqn GhcPs (HsDataDefn GhcPs)) where
   nodeComments FamEqn {..} = nodeComments feqn_ext
 
 -- | HsArg (LHsType GhcPs) (LHsType GhcPs)
-instance CommentExtraction (HsArg (GenLocated SrcSpanAnnA (HsType GhcPs)) (GenLocated SrcSpanAnnA (HsType GhcPs))) where
+instance CommentExtraction
+           (HsArg
+              (GenLocated SrcSpanAnnA (HsType GhcPs))
+              (GenLocated SrcSpanAnnA (HsType GhcPs))) where
   nodeComments HsValArg {} = emptyNodeComments
   nodeComments HsTypeArg {} = emptyNodeComments
   nodeComments HsArgPar {} = emptyNodeComments
@@ -609,11 +635,13 @@ instance CommentExtraction (DerivDecl GhcPs) where
   nodeComments DerivDecl {..} = nodeComments deriv_ext
 
 -- | 'Pretty' for 'LHsSigWcType GhcPs'.
-instance CommentExtraction (HsWildCardBndrs GhcPs (GenLocated SrcSpanAnnA (HsSigType GhcPs))) where
+instance CommentExtraction
+           (HsWildCardBndrs GhcPs (GenLocated SrcSpanAnnA (HsSigType GhcPs))) where
   nodeComments HsWC {} = emptyNodeComments
 
 -- | 'Pretty' for 'LHsWcType'
-instance CommentExtraction (HsWildCardBndrs GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs))) where
+instance CommentExtraction
+           (HsWildCardBndrs GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs))) where
   nodeComments HsWC {} = emptyNodeComments
 
 instance CommentExtraction (StandaloneKindSig GhcPs) where
@@ -660,11 +688,18 @@ instance CommentExtraction TopLevelTyFamInstDecl where
 instance CommentExtraction (DataFamInstDecl GhcPs) where
   nodeComments DataFamInstDecl {} = emptyNodeComments
 
+instance CommentExtraction DataFamInstDecl' where
+  nodeComments DataFamInstDecl' {..} = nodeComments dataFamInstDecl
+
 instance CommentExtraction (PatSynBind GhcPs GhcPs) where
   nodeComments PSB {..} = nodeComments psb_ext
 
 -- | 'Pretty' for 'HsPatSynDetails'.
-instance CommentExtraction (HsConDetails Void (GenLocated SrcSpanAnnN RdrName) [RecordPatSynField GhcPs]) where
+instance CommentExtraction
+           (HsConDetails
+              Void
+              (GenLocated SrcSpanAnnN RdrName)
+              [RecordPatSynField GhcPs]) where
   nodeComments PrefixCon {} = emptyNodeComments
   nodeComments RecCon {} = emptyNodeComments
   nodeComments InfixCon {} = emptyNodeComments
