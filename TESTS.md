@@ -2940,6 +2940,12 @@ foo = $$bar
 
 ## Comments
 
+Only comments
+
+```haskell
+-- foo
+```
+
 Double comments in a line
 
 ```haskell
