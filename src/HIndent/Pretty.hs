@@ -113,7 +113,13 @@ class CommentExtraction a =>
   where
   pretty' :: a -> Printer ()
 
+-- Do nothing if there are no pragmas, module headers, imports, or
+-- declarations. Otherwise, extra blank lines will be inserted if only
+-- comments are present in the source code. See
+-- https://github.com/mihaimaruseac/hindent/issues/586#issuecomment-1374992624.
 instance Pretty HsModule where
+  pretty' m@HsModule {hsmodName = Nothing, hsmodImports = [], hsmodDecls = []}
+    | not (pragmaExists m) = pure ()
   pretty' m = blanklined printers >> newline
     where
       printers = snd <$> filter fst pairs
