@@ -32,6 +32,7 @@
 ### Removed
 
 - Test functions except `testAst`.
+- Atom support ([#671]).
 
 ## [5.3.4] - 2022-07-07
 
@@ -319,6 +320,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@toku-sa-n]: https://github.com/toku-sa-n
 
 [#672]: https://github.com/mihaimaruseac/hindent/pull/672
+[#671]: https://github.com/mihaimaruseac/hindent/pull/671
 [#670]: https://github.com/mihaimaruseac/hindent/pull/670
 [#669]: https://github.com/mihaimaruseac/hindent/pull/669
 [#667]: https://github.com/mihaimaruseac/hindent/pull/667
