@@ -1,4 +1,4 @@
-tab-size: 2
+indent-size: 2
 line-length: 80
 force-trailing-newline: true
 extensions:
