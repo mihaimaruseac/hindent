@@ -30,21 +30,20 @@ class CommentExtraction a where
   nodeComments :: a -> NodeComments
 
 instance CommentExtraction HsModule where
-  nodeComments =
-    NodeComments <$> commentsBefore <*> commentOnSameLine <*> commentsAfter
+  nodeComments = nodeComments . filterOutEofAndPragmasFromAnn . hsmodAnn
     where
-      commentsBefore =
-        filter isNeitherEofNorPragmaComment .
-        priorComments . comments . hsmodAnn
-        where
-          isNeitherEofNorPragmaComment (L _ (EpaComment EpaEofComment _)) =
-            False
-          isNeitherEofNorPragmaComment (L _ (EpaComment tok _)) =
-            not $ isPragma tok
-      commentOnSameLine = const []
-      commentsAfter =
-        filter (not . isPragma . ac_tok . unLoc) .
-        followingComments . comments . hsmodAnn
+      filterOutEofAndPragmasFromAnn EpAnn {..} =
+        EpAnn {comments = filterOutEofAndPragmasFromComments comments, ..}
+      filterOutEofAndPragmasFromAnn EpAnnNotUsed = EpAnnNotUsed
+      filterOutEofAndPragmasFromComments comments =
+        EpaCommentsBalanced
+          { priorComments = filterOutEofAndPragmas $ priorComments comments
+          , followingComments =
+              filterOutEofAndPragmas $ getFollowingComments comments
+          }
+      filterOutEofAndPragmas = filter isNeitherEofNorPragmaComment
+      isNeitherEofNorPragmaComment (L _ (EpaComment EpaEofComment _)) = False
+      isNeitherEofNorPragmaComment (L _ (EpaComment tok _)) = not $ isPragma tok
 
 instance CommentExtraction l => CommentExtraction (GenLocated l e) where
   nodeComments (L l _) = nodeComments l
