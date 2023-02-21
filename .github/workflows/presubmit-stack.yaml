@@ -67,6 +67,7 @@ jobs:
         run: stack haddock --resolver=${{ matrix.resolver }}
 
       - name: Validate cabal file is properly generated from HPack
+        if: matrix.os != 'windows-latest' # Since we're using `diff -u`, cannot run on Windows
         run: |
           mv hindent.cabal hindent.cabal.original
           # See https://github.com/commercialhaskell/stack/issues/3697#issuecomment-353729540.
