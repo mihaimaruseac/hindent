@@ -4,6 +4,24 @@
 
 ### Added
 
+- ...
+
+### Changed
+
+- ...
+
+### Fixed
+
+- ...
+
+### Removed
+
+- ...
+
+## [6.0.0] - 2023-02-20
+
+### Added
+
 - The getConfig function is exported.
 
 ### Changed
@@ -290,7 +308,8 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - A bug in printing operators in statements.
 
-[unreleased]: https://github.com/mihaimaruseac/hindent/compare/v5.3.4...HEAD
+[unreleased]: https://github.com/mihaimaruseac/hindent/compare/v6.0.0...HEAD
+[6.0.0]: https://github.com/mihaimaruseac/hindent/compare/v5.3.4...v6.0.0
 [5.3.4]: https://github.com/mihaimaruseac/hindent/compare/v5.3.3...v5.3.4
 [5.3.3]: https://github.com/mihaimaruseac/hindent/compare/v5.3.2...v5.3.3
 [5.3.2]: https://github.com/mihaimaruseac/hindent/compare/5.3.1...v5.3.2
