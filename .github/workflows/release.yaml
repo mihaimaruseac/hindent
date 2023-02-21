@@ -58,7 +58,7 @@ jobs:
         id: hash_sdist
         run: |
           set -euo pipefail
-          echo "hash_sdist=$(sha256sum io-manager-*.tar.gz | base64 -w0)" >> "${GITHUB_OUTPUT}"
+          echo "hash_sdist=$(sha256sum hindent-*.tar.gz | base64 -w0)" >> "${GITHUB_OUTPUT}"
 
       # Wehn uploading we pick a fixed name since we don't yet have access to
       # the version string in the tarball. This can be fixed with some
@@ -67,7 +67,7 @@ jobs:
       - name: Upload sdist as an artifact for later jobs in workflow
         uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
         with:
-          path: io-manager-*.tar.gz
+          path: hindent-*.tar.gz
           name: sdist.zip # When downloading it is a zip containing the sdist tarball
           if-no-files-found: error
           retention-days: 1
