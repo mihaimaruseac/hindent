@@ -60,3 +60,7 @@ jobs:
 
       - name: Generate documentation
         run: cabal haddock all
+
+      # TODO(mihaimaruseac): Move to using a custom action that can be reused
+      - name: Validate code formatting (self-validate)
+        run: cabal run -- --validate **/*.hs
