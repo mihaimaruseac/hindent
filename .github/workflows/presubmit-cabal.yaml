@@ -63,5 +63,6 @@ jobs:
 
       # TODO(mihaimaruseac): Move to using a custom action that can be reused
       - name: Validate code formatting (self-validate)
-        if: ${{ matrix.os }} != 'windows-latest' # TODO(mihaimaruseac): Why does this fail on Windows?
-        run: cabal run hindent -- **/*.hs --validate
+        run: |
+          echo ${{ matrix.os }} matrix.os runner.os ${{ runner.os }}
+          cabal run hindent -- **/*.hs --validate
