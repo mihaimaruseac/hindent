@@ -63,4 +63,4 @@ jobs:
 
       # TODO(mihaimaruseac): Move to using a custom action that can be reused
       - name: Validate code formatting (self-validate)
-        run: cabal run -- --validate **/*.hs
+        run: cabal run hindent -- --validate **/*.hs
