@@ -70,5 +70,5 @@ jobs:
         run: |
           mv hindent.cabal hindent.cabal.original
           # See https://github.com/commercialhaskell/stack/issues/3697#issuecomment-353729540.
-          stack build --dry-run
+          stack build --resolver=${{ matrix.resolver }} --dry-run
           diff -u hindent.cabal.original hindent.cabal
