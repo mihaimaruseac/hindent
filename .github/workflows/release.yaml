@@ -1,0 +1,150 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    if: github.repository == 'mihaimaruseac/hindent' # Don't do this in forks
+    runs-on: ubuntu-latest
+    # Keep these in sync with a subset of Cabal-based CI matrix. This way, we
+    # are not building a new cache here, just reusing an existing one.
+    env:
+      os: "ubuntu-latest"
+      ghc: "9.4.4"
+    outputs:
+      hash_sdist: ${{ steps.hash_sdist.outputs.hash_sdist }}
+      hash_execs: ${{ steps.hash_execs.outputs.hash_execs }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Haskell Compiler (cabal)
+        id: setup-haskell
+        uses: haskell/actions/setup@93635e8c4ac823f55cf3444537a63d3f2fd589de # v2.1.0
+        with:
+          ghc-version: ${{ env.ghc }}
+
+      - name: Cache dist-newstyle
+        uses: actions/cache@4723a57e26efda3a62cbde1812113b730952852d # v3.2.2
+        with:
+          path: dist-newstyle
+          key: dist-newstyle-${{ env.os }}-${{ env.ghc }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('internal/**','src/**','app/**','tests/**','benchmarks/**') }}
+          restore-keys: |
+            dist-newstyle-${{ env.os }}-${{ env.ghc }}-${{ hashFiles('**/*.cabal') }}-
+            dist-newstyle-${{ env.os }}-${{ env.ghc }}-
+
+      - name: Cache ~/.cabal/store
+        uses: actions/cache@4723a57e26efda3a62cbde1812113b730952852d # v3.2.2
+        with:
+          path: ${{ steps.setup-haskell.outputs.cabal-store }}
+          key: cabal-store-${{ env.os }}-${{ env.ghc }}-${{ hashFiles('**/*.cabal') }}
+          restore-keys: cabal-store-${{ env.os }}-${{ env.ghc }}-
+
+      - name: Build executables
+        run: cabal build all:exes
+
+      - name: Generate source distribution
+        run: cabal sdist --output .
+
+      - name: Generate documentation
+        run: cabal haddock --haddock-for-hackage --enable-doc --builddir=.
+
+      - name: Generate subject for provenance of source distribution
+        id: hash_sdist
+        run: |
+          set -euo pipefail
+          echo "hash_sdist=$(sha256sum io-manager-*.tar.gz | base64 -w0)" >> "${GITHUB_OUTPUT}"
+
+      # Wehn uploading we pick a fixed name since we don't yet have access to
+      # the version string in the tarball. This can be fixed with some
+      # scripting if needed, but it works for our use cases as it is.
+      # TODO(mihaimaruseac): Maybe fix to upload the path as needed
+      - name: Upload sdist as an artifact for later jobs in workflow
+        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+        with:
+          path: io-manager-*.tar.gz
+          name: sdist.zip # When downloading it is a zip containing the sdist tarball
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Copy all executables to root directory for ease of release
+        run: mkdir .execs && cp $(cabal list-bin all:exes) .execs
+
+      # TODO(mihaimaruseac): Strip executables
+
+      - name: Generate subject for provenance of executables
+        id: hash_execs
+        run: |
+          set -euo pipefail
+          echo "hash_execs=$(sha256sum .execs/* | base64 -w0)" >> "${GITHUB_OUTPUT}"
+
+      # When uploading executables we push them all to the same archive and
+      # later the action that downloads it automatically unpacks it. So, in
+      # effect this allows us to be transparent on what the executables we
+      # generate.
+      # However, on the CI run this will result in an artifact (short lived!)
+      # that has all of the executables in it. If we want to upload each
+      # executable by itself, maybe we can use automatic matrix generation[1]
+      # for this.
+      # [1]: https://frontside.com/blog/2022-12-12-dynamic-github-action-jobs/
+      # TODO(mihaimaruseac): Maybe use automatic matrix generation here
+      - name: Upload executables as an artifact for later jobs in workflow
+        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+        with:
+          path: .execs/
+          name: executables.zip # When downloading it is a zip with all executables
+          if-no-files-found: error
+          retention-days: 1
+
+  provenance-sdist:
+    needs: [build]
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hash_sdist }}"
+      upload-assets: true
+      provenance-name: source-distribution.intoto.jsonl
+
+  provenance-execs:
+    needs: [build]
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hash_execs }}"
+      upload-assets: true
+      provenance-name: executables.intoto.jsonl
+
+  release:
+    needs: [build, provenance-sdist, provenance-execs]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # v3.0.1
+        with:
+          name: executables.zip
+
+      - name: Download artifact
+        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # v3.0.1
+        with:
+          name: sdist.zip
+
+      - name: Upload assets
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        with:
+          files: ./*
+
+      # TODO(mihaimaruseac): Upload haddock and build report to Hackage
+      # Not doing this now because we don't want to store user/pass in GitHub
+      # secrets and there is no OIDC way to upload.
