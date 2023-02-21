@@ -65,3 +65,10 @@ jobs:
 
       - name: Generate documentation
         run: stack haddock --resolver=${{ matrix.resolver }}
+
+      - name: Validate cabal file is properly generated from HPack
+        run: |
+          mv hindent.cabal hindent.cabal.original
+          # See https://github.com/commercialhaskell/stack/issues/3697#issuecomment-353729540.
+          stack build --dry-run
+          diff -u hindent.cabal.original hindent.cabal
