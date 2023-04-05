@@ -12,7 +12,7 @@
 
 ### Fixed
 
-- ...
+- Fixed module names being removed from uses of qualified `do` ([#696]).
 
 ### Removed
 
