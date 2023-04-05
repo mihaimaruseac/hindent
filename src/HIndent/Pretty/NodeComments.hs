@@ -126,6 +126,12 @@ instance CommentExtraction (HsExpr GhcPs) where
 instance CommentExtraction LambdaCase where
   nodeComments (LambdaCase x _) = nodeComments x
 
+instance CommentExtraction DoOrMdo where
+  nodeComments = const emptyNodeComments
+
+instance CommentExtraction QualifiedDo where
+  nodeComments = const emptyNodeComments
+
 nodeCommentsHsExpr :: HsExpr GhcPs -> NodeComments
 nodeCommentsHsExpr HsVar {} = emptyNodeComments
 nodeCommentsHsExpr (HsUnboundVar x _) = nodeComments x
