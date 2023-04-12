@@ -19,6 +19,11 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         ghc: ["8.10.7", "9.2.5", "9.4.4"]
     steps:
+      # Without this, self-validation will fail on Windows because HIndent
+      # converts newlines to LF while the cloned source code contains CRLF.
+      - name: Modify the git setting not to convert LF to CRLF
+        run: git config --global core.autocrlf input
+
       - name: "Checkout code"
         uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
         with:
@@ -63,5 +68,4 @@ jobs:
 
       # TODO(mihaimaruseac): Move to using a custom action that can be reused
       - name: Validate code formatting (self-validate)
-        if: matrix.os != 'windows-latest' # TODO(mihaimaruseac): Why does this fail on Windows (path issue)?
         run: cabal run hindent -- **/*.hs --validate
