@@ -18,6 +18,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         ghc: ["8.10.7", "9.2.5", "9.4.4"]
+    # The default shell on Windows is `pwsh`. However, it doesn't expand
+    # asterisks. That's why we always use `bash`.
     defaults:
       run:
         shell: bash
