@@ -1,6 +1,6 @@
 cabal-version: 2.0
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -67,6 +67,8 @@ library
       HIndent.Printer
   other-modules:
       Paths_hindent
+  autogen-modules:
+      Paths_hindent
   hs-source-dirs:
       src
   ghc-options: -Wall -O2
@@ -91,18 +93,20 @@ library
     , unicode-show
     , utf8-string
     , yaml
+  default-language: Haskell2010
   if impl(ghc >= 9.4.1)
     build-depends:
         ghc-lib-parser >=9.4.1.20220807 && <9.5
   else
     build-depends:
         ghc-lib-parser >=9.2.3.20220527 && <9.3
-  default-language: Haskell2010
 
 library hindent-internal
   exposed-modules:
       HIndent.Internal.Test.Markdone
   other-modules:
+      Paths_hindent
+  autogen-modules:
       Paths_hindent
   hs-source-dirs:
       internal
@@ -129,13 +133,13 @@ library hindent-internal
     , unicode-show
     , utf8-string
     , yaml
+  default-language: Haskell2010
   if impl(ghc >= 9.4.1)
     build-depends:
         ghc-lib-parser >=9.4.1.20220807 && <9.5
   else
     build-depends:
         ghc-lib-parser >=9.2.3.20220527 && <9.3
-  default-language: Haskell2010
 
 executable hindent
   main-is: Main.hs
@@ -169,18 +173,20 @@ executable hindent
     , unicode-show
     , utf8-string
     , yaml
+  default-language: Haskell2010
   if impl(ghc >= 9.4.1)
     build-depends:
         ghc-lib-parser >=9.4.1.20220807 && <9.5
   else
     build-depends:
         ghc-lib-parser >=9.2.3.20220527 && <9.3
-  default-language: Haskell2010
 
 test-suite hindent-test
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
+      Paths_hindent
+  autogen-modules:
       Paths_hindent
   hs-source-dirs:
       tests
@@ -210,18 +216,20 @@ test-suite hindent-test
     , unicode-show
     , utf8-string
     , yaml
+  default-language: Haskell2010
   if impl(ghc >= 9.4.1)
     build-depends:
         ghc-lib-parser >=9.4.1.20220807 && <9.5
   else
     build-depends:
         ghc-lib-parser >=9.2.3.20220527 && <9.3
-  default-language: Haskell2010
 
 benchmark hindent-bench
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
+      Paths_hindent
+  autogen-modules:
       Paths_hindent
   hs-source-dirs:
       benchmarks
@@ -251,10 +259,10 @@ benchmark hindent-bench
     , unicode-show
     , utf8-string
     , yaml
+  default-language: Haskell2010
   if impl(ghc >= 9.4.1)
     build-depends:
         ghc-lib-parser >=9.4.1.20220807 && <9.5
   else
     build-depends:
         ghc-lib-parser >=9.2.3.20220527 && <9.3
-  default-language: Haskell2010
