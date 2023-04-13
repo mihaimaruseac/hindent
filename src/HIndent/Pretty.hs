@@ -553,12 +553,13 @@ prettyHsExpr (HsIf _ cond t f) = do
     branch :: String -> LHsExpr GhcPs -> Printer ()
     branch str e =
       case e of
-        (L _ (HsDo _ DoExpr {} xs)) -> doStmt "do" xs
-        (L _ (HsDo _ MDoExpr {} xs)) -> doStmt "mdo" xs
+        (L _ (HsDo _ (DoExpr m) xs)) -> doStmt (QualifiedDo m Do) xs
+        (L _ (HsDo _ (MDoExpr m) xs)) -> doStmt (QualifiedDo m Mdo) xs
         _ -> string str |=> pretty e
       where
-        doStmt pref stmts = do
-          string $ str ++ pref
+        doStmt qDo stmts = do
+          string str
+          pretty qDo
           newline
           indentedBlock $ printCommentsAnd stmts (lined . fmap pretty)
 prettyHsExpr (HsMultiIf _ guards) =
@@ -578,8 +579,10 @@ prettyHsExpr (HsDo _ MonadComp {} (L _ [])) =
   error "Not enough arguments are passed to pretty-print a list comprehension."
 prettyHsExpr (HsDo _ MonadComp {} (L l (lhs:rhs))) =
   pretty $ L l $ ListComprehension lhs rhs
-prettyHsExpr (HsDo _ DoExpr {} (L l xs)) = pretty $ L l $ DoExpression xs Do
-prettyHsExpr (HsDo _ MDoExpr {} (L l xs)) = pretty $ L l $ DoExpression xs Mdo
+prettyHsExpr (HsDo _ (DoExpr m) (L l xs)) =
+  pretty $ L l $ DoExpression xs (QualifiedDo m Do)
+prettyHsExpr (HsDo _ (MDoExpr m) (L l xs)) =
+  pretty $ L l $ DoExpression xs (QualifiedDo m Mdo)
 prettyHsExpr (HsDo _ GhciStmtCtxt {} _) = error "We're not using GHCi, are we?"
 prettyHsExpr (ExplicitList _ xs) = horizontal <-|> vertical
   where
@@ -1165,18 +1168,18 @@ instance Pretty GRHSExpr where
     space
     rhsSeparator grhsExprType
     case unLoc body of
-      HsDo _ DoExpr {} stmts ->
-        printCommentsAnd body (const (doExpr "do" stmts))
-      HsDo _ MDoExpr {} stmts ->
-        printCommentsAnd body (const (doExpr "mdo" stmts))
+      HsDo _ (DoExpr m) stmts ->
+        printCommentsAnd body (const (doExpr (QualifiedDo m Do) stmts))
+      HsDo _ (MDoExpr m) stmts ->
+        printCommentsAnd body (const (doExpr (QualifiedDo m Mdo) stmts))
       _ ->
         let hor = space >> pretty body
             ver = newline >> indentedBlock (pretty body)
          in hor <-|> ver
     where
-      doExpr pref stmts = do
+      doExpr qDo stmts = do
         space
-        string pref
+        pretty qDo
         newline
         indentedBlock $ printCommentsAnd stmts (lined . fmap pretty)
   pretty' (GRHSExpr {grhsExpr = (GRHS _ guards body), ..}) = do
@@ -1188,16 +1191,16 @@ instance Pretty GRHSExpr where
       space
       rhsSeparator grhsExprType
       printCommentsAnd body $ \case
-        HsDo _ DoExpr {} stmts -> doExpr "do" stmts
-        HsDo _ MDoExpr {} stmts -> doExpr "mdo" stmts
+        HsDo _ (DoExpr m) stmts -> doExpr (QualifiedDo m Do) stmts
+        HsDo _ (MDoExpr m) stmts -> doExpr (QualifiedDo m Mdo) stmts
         x ->
           let hor = space >> pretty x
               ver = newline >> indentedBlock (pretty x)
            in hor <-|> ver
     where
-      doExpr pref stmts = do
+      doExpr qDo stmts = do
         space
-        string pref
+        pretty qDo
         let hor = space >> printCommentsAnd stmts (lined . fmap pretty)
             ver = do
               newline
@@ -1480,12 +1483,14 @@ instance Pretty InfixApp where
               pretty (InfixExpr op)
               return newline
         case unLoc rhs of
-          (HsDo _ (DoExpr _) xs) -> do
-            string " do"
+          (HsDo _ (DoExpr m) xs) -> do
+            space
+            pretty (QualifiedDo m Do)
             newline
             indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-          (HsDo _ (MDoExpr _) xs) -> do
-            string " mdo"
+          (HsDo _ (MDoExpr m) xs) -> do
+            space
+            pretty (QualifiedDo m Mdo)
             newline
             indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
           HsLam {} -> do
@@ -2157,12 +2162,18 @@ instance Pretty ListComprehension where
 
 instance Pretty DoExpression where
   pretty' DoExpression {..} =
-    (string pref >> space) |=> lined (fmap pretty doStmts)
-    where
-      pref =
-        case doOrMdo of
-          Do -> "do"
-          Mdo -> "mdo"
+    (pretty qualifiedDo >> space) |=> lined (fmap pretty doStmts)
+
+instance Pretty DoOrMdo where
+  pretty' Do = string "do"
+  pretty' Mdo = string "mdo"
+
+instance Pretty QualifiedDo where
+  pretty' (QualifiedDo (Just m) d) = do
+    pretty m
+    string "."
+    pretty d
+  pretty' (QualifiedDo Nothing d) = pretty d
 
 instance Pretty LetIn where
   pretty' LetIn {..} =
