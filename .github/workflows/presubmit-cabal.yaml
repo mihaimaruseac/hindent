@@ -18,20 +18,30 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         ghc: ["8.10.7", "9.2.5", "9.4.4", "9.6.1"]
+    defaults:
+      run:
+        # The default shell on Windows is `pwsh`. However, it doesn't expand
+        # asterisks. That's why we always use `bash`.
+        shell: bash
     steps:
+      # Without this, self-validation will fail on Windows because HIndent converts
+      # newlines to LF while the cloned source code contains CRLF.
+      - name: Modify the git setting not to convert LF to CRLF
+        run: git config --global core.autocrlf input
+
       - name: "Checkout code"
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           persist-credentials: false
 
       - name: Setup Haskell Compiler (cabal)
         id: setup-haskell
-        uses: haskell/actions/setup@93635e8c4ac823f55cf3444537a63d3f2fd589de # v2.1.0
+        uses: haskell/actions/setup@5ff2575cfa27ef8693b7252e0ed1cb0ad87af57e # v2.3.7
         with:
           ghc-version: ${{ matrix.ghc }}
 
       - name: Cache dist-newstyle
-        uses: actions/cache@4723a57e26efda3a62cbde1812113b730952852d # v3.2.2
+        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
         with:
           path: dist-newstyle
           key: dist-newstyle-${{ matrix.os }}-${{ matrix.ghc }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('internal/**','src/**','app/**','tests/**','benchmarks/**') }}
@@ -40,7 +50,7 @@ jobs:
             dist-newstyle-${{ matrix.os }}-${{ matrix.ghc }}-
 
       - name: Cache ~/.cabal/store
-        uses: actions/cache@4723a57e26efda3a62cbde1812113b730952852d # v3.2.2
+        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
         with:
           path: ${{ steps.setup-haskell.outputs.cabal-store }}
           key: cabal-store-${{ matrix.os }}-${{ matrix.ghc }}-${{ hashFiles('**/*.cabal') }}
@@ -63,5 +73,4 @@ jobs:
 
       # TODO(mihaimaruseac): Move to using a custom action that can be reused
       - name: Validate code formatting (self-validate)
-        if: matrix.os != 'windows-latest' # TODO(mihaimaruseac): Why does this fail on Windows (path issue)?
         run: cabal run hindent -- **/*.hs --validate
