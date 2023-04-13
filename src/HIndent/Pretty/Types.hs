@@ -45,6 +45,7 @@ module HIndent.Pretty.Types
   , ListComprehension(..)
   , DoExpression(..)
   , DoOrMdo(..)
+  , QualifiedDo(..)
   , LetIn(..)
   , NodeComments(..)
   , GRHSExprType(..)
@@ -277,7 +278,7 @@ data ListComprehension = ListComprehension
 -- | Use this type to pretty-print a do expression.
 data DoExpression = DoExpression
   { doStmts :: [ExprLStmt GhcPs]
-  , doOrMdo :: DoOrMdo
+  , qualifiedDo :: QualifiedDo
   }
 
 -- | Use this type to pretty-print a @let ... in ...@ expression.
@@ -297,6 +298,11 @@ data NodeComments = NodeComments
 data DoOrMdo
   = Do
   | Mdo
+
+-- | Values indicating whether the `do` is qualified with a module name (and
+-- whether `do` or `mdo` is used)
+data QualifiedDo =
+  QualifiedDo (Maybe ModuleName) DoOrMdo
 
 -- | Values indicating in which context a RHS is located.
 data GRHSExprType
