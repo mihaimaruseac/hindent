@@ -51,6 +51,15 @@ jobs:
           key: stack-root-${{ matrix.os }}-${{ matrix.resolver }}-${{ hashFiles('stack.yaml', '**/*.cabal') }}
           restore-keys: stack-root-${{ matrix.os }}-${{ matrix.resolver }}-
 
+      # Check this before building, otherwise stack will overwrite the cabal file.
+      - name: Validate cabal file is properly generated from HPack
+        if: matrix.os != 'windows-latest' # Since we're using `diff -u`, cannot run on Windows
+        run: |
+          mv hindent.cabal hindent.cabal.original
+          # See https://github.com/commercialhaskell/stack/issues/3697#issuecomment-353729540.
+          stack build --resolver=${{ matrix.resolver }} --dry-run
+          diff -u hindent.cabal.original hindent.cabal
+
       - name: Get dependencies
         run: stack build --resolver=${{ matrix.resolver }} --only-dependencies --test --bench --no-run-tests --no-run-benchmarks
 
@@ -65,11 +74,3 @@ jobs:
 
       - name: Generate documentation
         run: stack haddock --resolver=${{ matrix.resolver }}
-
-      - name: Validate cabal file is properly generated from HPack
-        if: matrix.os != 'windows-latest' # Since we're using `diff -u`, cannot run on Windows
-        run: |
-          mv hindent.cabal hindent.cabal.original
-          # See https://github.com/commercialhaskell/stack/issues/3697#issuecomment-353729540.
-          stack build --resolver=${{ matrix.resolver }} --dry-run
-          diff -u hindent.cabal.original hindent.cabal
