@@ -47,11 +47,16 @@ dependencies:
   - yaml
 
 when:
-  - condition: impl(ghc >= 9.4.1)
+  - condition: impl(ghc >= 9.6.1)
     then:
-      dependencies: ghc-lib-parser >= 9.4.1.20220807 && < 9.5
+      dependencies: ghc-lib-parser >= 9.6.1.20230312 && < 9.7
     else:
-      dependencies: ghc-lib-parser >= 9.2.3.20220527 && < 9.3
+      when:
+        - condition: impl(ghc >= 9.4.1)
+          then:
+            dependencies: ghc-lib-parser >= 9.4.1.20220807 && < 9.5
+          else:
+            dependencies: ghc-lib-parser >= 9.2.3.20220527 && < 9.3
 
 library:
   source-dirs: src
