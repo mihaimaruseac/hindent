@@ -2299,6 +2299,29 @@ g = mdo
   bar
 ```
 
+#### `QualifiedDo`
+
+Qualified do
+
+```haskell
+{-# LANGUAGE QualifiedDo #-}
+
+f = Module.Path.do
+  a <- foo
+  return a
+```
+
+Qualified do with `mdo`
+
+```haskell
+{-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE QualifiedDo #-}
+
+f = Module.Path.mdo
+  a <- foo
+  return a
+```
+
 ### Function applications
 
 Long line, tuple

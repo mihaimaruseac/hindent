@@ -14,15 +14,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           persist-credentials: false
 
       - name: Set up HLint
-        uses: haskell/actions/hlint-setup@93635e8c4ac823f55cf3444537a63d3f2fd589de # v2.1.0
+        uses: haskell/actions/hlint-setup@5ff2575cfa27ef8693b7252e0ed1cb0ad87af57e # v2.3.7
 
       - name: Run HLint
-        uses: haskell/actions/hlint-setup@93635e8c4ac823f55cf3444537a63d3f2fd589de # v2.1.0
+        uses: haskell/actions/hlint-setup@5ff2575cfa27ef8693b7252e0ed1cb0ad87af57e # v2.3.7
         with:
           path: .
           fail-on: warning
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           persist-credentials: false
 
