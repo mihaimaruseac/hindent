@@ -4,7 +4,7 @@
 
 ### Added
 
-- Support GHC 9.6 ([#699])
+- Support for GHC 9.6 ([#699])
 
 ### Changed
 
