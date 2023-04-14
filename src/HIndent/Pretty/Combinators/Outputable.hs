@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- | Printer combinators for printing values of types implementing
 -- 'Outputable'.
 module HIndent.Pretty.Combinators.Outputable
@@ -33,4 +34,8 @@ showOutputable = showPpr dynFlags
 
 -- | 'DynFlags' for calling 'showPpr'
 dynFlags :: DynFlags
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
+dynFlags = defaultDynFlags fakeSettings 
+#else
 dynFlags = defaultDynFlags fakeSettings fakeLlvmConfig
+#endif
