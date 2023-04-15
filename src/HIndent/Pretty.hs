@@ -556,14 +556,14 @@ instance Pretty (HsDataDefn GhcPs) where
         --       newline
         --       -- string "= " |=> vBarSep (fmap pretty dd_cons)
         --       derivingsAfterNewline
-    where
-      isGADT =
-        case dd_cons of
-          (DataTypeCons _ (L _  ConDeclGADT {}:_)) -> True
-          _ -> False
-      derivingsAfterNewline =
-        unless (null dd_derivs) $ newline >> printDerivings
-      printDerivings = lined $ fmap pretty dd_derivs
+    -- where
+    --   isGADT =
+    --     case dd_cons of
+    --       (DataTypeCons _ (L _  ConDeclGADT {}:_)) -> True
+    --       _ -> False
+    --   derivingsAfterNewline =
+    --     unless (null dd_derivs) $ newline >> printDerivings
+    --   printDerivings = lined $ fmap pretty dd_derivs
 #else
 instance Pretty (HsDataDefn GhcPs) where
   pretty' HsDataDefn {..} =
@@ -881,6 +881,10 @@ prettyHsExpr HsBinTick {} = forHpc
 prettyHsExpr (HsBracket _ inner) = pretty inner
 prettyHsExpr HsRnBracketOut {} = notGeneratedByParser
 prettyHsExpr HsTcBracketOut {} = notGeneratedByParser
+#endif
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
+prettyHsExpr HsTypedSplice{}=undefined
+prettyHsExpr HsUntypedSplice{}=undefined
 #endif
 instance Pretty LambdaCase where
   pretty' (LambdaCase matches caseOrCases) = do

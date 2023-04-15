@@ -294,6 +294,13 @@ data NodeComments = NodeComments
   , commentsAfter :: [LEpaComment]
   }
 
+instance Semigroup NodeComments where
+  x <> y = NodeComments{
+    commentsBefore=commentsBefore x<>commentsBefore y,
+    commentsOnSameLine=commentsOnSameLine x<>commentsOnSameLine y,
+    commentsAfter =commentsAfter x<>commentsAfter y
+  }
+
 -- | Values indicating whether `do` or `mdo` is used.
 data DoOrMdo
   = Do

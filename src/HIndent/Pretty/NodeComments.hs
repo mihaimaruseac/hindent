@@ -24,6 +24,7 @@ import GHC.Unit
 import HIndent.Pretty.Pragma
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
+import Data.Map.Internal.Debug (node)
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 import GHC.Core.DataCon
 #endif
@@ -245,6 +246,11 @@ nodeCommentsHsExpr HsRecSel {} = emptyNodeComments
 nodeCommentsHsExpr (HsTypedBracket x _) = nodeComments x
 nodeCommentsHsExpr (HsUntypedBracket x _) = nodeComments x
 #endif
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
+nodeCommentsHsExpr (HsTypedSplice (x,y) _)=nodeComments x<>nodeComments y
+nodeCommentsHsExpr (HsUntypedSplice x _) =nodeComments x
+#endif
+
 instance CommentExtraction (HsSigType GhcPs) where
   nodeComments HsSig {} = emptyNodeComments
 
