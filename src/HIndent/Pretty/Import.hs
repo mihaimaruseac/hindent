@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+
 -- | Helper functions for dealing with import declarations.
 module HIndent.Pretty.Import
   ( importsExist
@@ -10,7 +11,6 @@ module HIndent.Pretty.Import
 import GHC.Hs
 import GHC.Types.SrcLoc
 import HIndent.Pretty.Import.Sort
-
 -- | Returns if the module has import declarations.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 importsExist :: (HsModule GhcPs) -> Bool
@@ -18,7 +18,6 @@ importsExist :: (HsModule GhcPs) -> Bool
 importsExist :: HsModule -> Bool
 #endif
 importsExist = not . null . hsmodImports
-
 -- | Extracts import declarations from the given module. Adjacent import
 -- declarations are grouped as a single list.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
@@ -27,7 +26,6 @@ extractImports :: (HsModule GhcPs) -> [[LImportDecl GhcPs]]
 extractImports :: HsModule -> [[LImportDecl GhcPs]]
 #endif
 extractImports = groupImports . sortImportsByLocation . hsmodImports
-
 -- | Extracts import declarations from the given module and sorts them by
 -- their names. Adjacent import declarations are grouped as a single list.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)

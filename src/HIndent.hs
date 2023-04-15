@@ -123,10 +123,9 @@ reformat config mexts mfilepath =
                else x' <> "\n")
           (f x)
       | otherwise = f x
-
 -- | Generate an AST from the given module for debugging.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-testAst::ByteString->Either String (HsModule GhcPs)
+testAst :: ByteString -> Either String (HsModule GhcPs)
 #else
 testAst :: ByteString -> Either String HsModule
 #endif
@@ -145,7 +144,6 @@ testAst x =
 -- | Does the strict bytestring have a trailing newline?
 hasTrailingLine :: ByteString -> Bool
 hasTrailingLine xs = not (S8.null xs) && S8.last xs == '\n'
-
 -- | Print the module.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 prettyPrint :: Config -> (HsModule GhcPs) -> Builder

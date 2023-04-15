@@ -116,7 +116,6 @@ class CommentExtraction a =>
       Pretty a
   where
   pretty' :: a -> Printer ()
-
 -- Do nothing if there are no pragmas, module headers, imports, or
 -- declarations. Otherwise, extra blank lines will be inserted if only
 -- comments are present in the source code. See
@@ -138,7 +137,7 @@ instance Pretty (HsModule GhcPs) where
         error "The module declaration does not exist."
       prettyModuleDecl HsModule { hsmodName = Just name
                                 , hsmodExports = Nothing
-                                , hsmodExt=XModulePs{..}
+                                , hsmodExt = XModulePs {..}
                                 , ..
                                 } = do
         pretty $ fmap ModuleNameWithPrefix name
@@ -148,7 +147,7 @@ instance Pretty (HsModule GhcPs) where
         string " where"
       prettyModuleDecl HsModule { hsmodName = Just name
                                 , hsmodExports = Just exports
-                                , hsmodExt=XModulePs{..}
+                                , hsmodExt = XModulePs {..}
                                 , ..
                                 } = do
         pretty $ fmap ModuleNameWithPrefix name
@@ -236,7 +235,6 @@ instance Pretty HsModule where
           True -> pure $ extractImportsSorted m
           False -> pure $ extractImports m
 #endif
-
 instance (CommentExtraction l, Pretty e) => Pretty (GenLocated l e) where
   pretty' (L _ e) = pretty e
 
@@ -290,8 +288,8 @@ prettyTyClDecl DataDecl {..} = do
   where
     printDataNewtype =
       case dd_cons tcdDataDefn of
-        DataTypeCons{} -> string "data "
-        NewTypeCon{} -> string "newtype "
+        DataTypeCons {} -> string "data "
+        NewTypeCon {} -> string "newtype "
 #elif MIN_VERSION_ghc_lib_parser(9,4,1)
 prettyTyClDecl DataDecl {..} = do
   printDataNewtype |=> do
@@ -389,7 +387,6 @@ prettyHsBind VarBind {} = notGeneratedByParser
 prettyHsBind AbsBinds {} = notGeneratedByParser
 #endif
 prettyHsBind (PatSynBind _ x) = pretty x
-
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (Sig GhcPs) where
   pretty' (TypeSig _ funName params) = do
@@ -520,7 +517,6 @@ instance Pretty (Sig GhcPs) where
       , string "#-}"
       ]
 #endif
-
 instance Pretty DeclSig where
   pretty' (DeclSig (TypeSig _ funName params)) = do
     printFunName
@@ -542,10 +538,9 @@ instance Pretty DeclSig where
               pretty $ HsSigTypeInsideDeclSig <$> hswc_body params
       printFunName = hCommaSep $ fmap pretty funName
   pretty' (DeclSig x) = pretty x
-
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (HsDataDefn GhcPs) where
-  pretty' HsDataDefn {..} = 
+  pretty' HsDataDefn {..} =
     if isGADT
       then do
         whenJust dd_kindSig $ \x -> do
@@ -553,7 +548,7 @@ instance Pretty (HsDataDefn GhcPs) where
           pretty x
         string " where"
         indentedBlock $ newlinePrefixed $ fmap pretty cons
-      else do 
+      else do
         case cons of
           [] -> indentedBlock derivingsAfterNewline
           [x@(L _ ConDeclH98 {con_args = RecCon {}})] -> do
@@ -572,12 +567,13 @@ instance Pretty (HsDataDefn GhcPs) where
               string "= " |=> vBarSep (fmap pretty cons)
               derivingsAfterNewline
     where
-      cons=case dd_cons of
-        NewTypeCon x->[x]
-        DataTypeCons _ xs->xs
+      cons =
+        case dd_cons of
+          NewTypeCon x -> [x]
+          DataTypeCons _ xs -> xs
       isGADT =
         case dd_cons of
-          (DataTypeCons _ (L _  ConDeclGADT {}:_)) -> True
+          (DataTypeCons _ (L _ ConDeclGADT {}:_)) -> True
           _ -> False
       derivingsAfterNewline =
         unless (null dd_derivs) $ newline >> printDerivings
@@ -619,7 +615,6 @@ instance Pretty (HsDataDefn GhcPs) where
         unless (null dd_derivs) $ newline >> printDerivings
       printDerivings = lined $ fmap pretty dd_derivs
 #endif
-
 instance Pretty (ClsInstDecl GhcPs) where
   pretty' ClsInstDecl {..} = do
     string "instance " |=> do
@@ -901,8 +896,8 @@ prettyHsExpr HsRnBracketOut {} = notGeneratedByParser
 prettyHsExpr HsTcBracketOut {} = notGeneratedByParser
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-prettyHsExpr (HsTypedSplice _ x) =string "$$">>pretty x
-prettyHsExpr (HsUntypedSplice _ x)=pretty x
+prettyHsExpr (HsTypedSplice _ x) = string "$$" >> pretty x
+prettyHsExpr (HsUntypedSplice _ x) = pretty x
 #endif
 instance Pretty LambdaCase where
   pretty' (LambdaCase matches caseOrCases) = do
@@ -1000,18 +995,15 @@ prettyConDecl ConDeclGADT {..} = do
       (space >> pretty (Context ctx)) <-|> (newline >> pretty (Context ctx))
       newline
       prefixed "=> " verArgs
-    
     withCtxOnly ctx =
       (pretty (Context ctx) >> string " => " >> horArgs) <-|>
       (pretty (Context ctx) >> prefixed "=> " verArgs)
-    
     horArgs =
       case con_g_args of
         PrefixConGADT xs ->
           inter (string " -> ") $
           fmap (\(HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
         RecConGADT xs _ -> inter (string " -> ") [recArg xs, pretty con_res_ty]
-    
     verArgs =
       case con_g_args of
         PrefixConGADT xs ->
@@ -1019,7 +1011,6 @@ prettyConDecl ConDeclGADT {..} = do
           fmap (\(HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
         RecConGADT xs _ -> prefixedLined "-> " [recArg xs, pretty con_res_ty]
     recArg xs = printCommentsAnd xs $ \xs' -> vFields' $ fmap pretty xs'
-    
     forallNeeded =
       case unLoc con_bndrs of
         HsOuterImplicit {} -> False
@@ -1501,7 +1492,6 @@ instance Pretty EpaCommentTok where
 
 instance Pretty (SpliceDecl GhcPs) where
   pretty' (SpliceDecl _ sp _) = pretty sp
-
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (HsSplice GhcPs) where
   pretty' (HsTypedSplice _ _ _ body) = string "$$" >> pretty body
@@ -1521,7 +1511,6 @@ instance Pretty (HsSplice GhcPs) where
       printers ps s (x:xs) = printers ps (x : s) xs
   pretty' HsSpliced {} = notGeneratedByParser
 #endif
-
 instance Pretty (Pat GhcPs) where
   pretty' = prettyPat
 
@@ -1786,7 +1775,6 @@ instance Pretty (FieldLabelStrings GhcPs) where
 instance Pretty (AmbiguousFieldOcc GhcPs) where
   pretty' (Unambiguous _ name) = pretty name
   pretty' (Ambiguous _ name) = pretty name
-
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (ImportDecl GhcPs) where
   pretty' decl@ImportDecl {..} = do
@@ -1802,7 +1790,7 @@ instance Pretty (ImportDecl GhcPs) where
       string " as "
       pretty x
     whenJust ideclImportList $ \(x, ps) -> do
-      when (x==EverythingBut) (string " hiding")
+      when (x == EverythingBut) (string " hiding")
       (string " " >> printCommentsAnd ps (hTuple . fmap pretty)) <-|>
         (newline >> indentedBlock (printCommentsAnd ps (vTuple . fmap pretty)))
 #else
@@ -1824,7 +1812,6 @@ instance Pretty (ImportDecl GhcPs) where
       (string " " >> printCommentsAnd ps (hTuple . fmap pretty)) <-|>
         (newline >> indentedBlock (printCommentsAnd ps (vTuple . fmap pretty)))
 #endif
-
 packageName :: ImportDecl GhcPs -> Maybe StringLiteral
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 packageName (ideclPkgQual -> RawPkgQual name) = Just name
@@ -2059,12 +2046,11 @@ instance Pretty (HsQuote GhcPs) where
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (WarnDecls GhcPs) where
-  pretty' (Warnings  _ x) = lined $ fmap pretty x
+  pretty' (Warnings _ x) = lined $ fmap pretty x
 #else
 instance Pretty (WarnDecls GhcPs) where
   pretty' (Warnings _ _ x) = lined $ fmap pretty x
 #endif
-
 instance Pretty (WarnDecl GhcPs) where
   pretty' (Warning _ names deprecatedOrWarning) =
     case deprecatedOrWarning of
@@ -2109,12 +2095,11 @@ instance Pretty (HsFieldLabel GhcPs) where
 instance Pretty (RuleDecls GhcPs) where
   pretty' HsRules {..} =
     lined $ string "{-# RULES" : fmap pretty rds_rules ++ [string " #-}"]
-
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (RuleDecl GhcPs) where
   pretty' HsRule {..} =
     spaced
-      [ printCommentsAnd rd_name (doubleQuotes . string . unpackFS )
+      [ printCommentsAnd rd_name (doubleQuotes . string . unpackFS)
       , lhs
       , string "="
       , pretty rd_rhs
@@ -2149,7 +2134,6 @@ instance Pretty (RuleDecl GhcPs) where
             space
             pretty rd_lhs
 #endif
-
 instance Pretty OccName where
   pretty' = output
 
@@ -2205,11 +2189,11 @@ instance Pretty (ForeignDecl GhcPs) where
       , string "::"
       , pretty fd_sig_ty
       ]
-
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (ForeignImport GhcPs) where
-  pretty' (CImport (L _ (SourceText s)) conv safety _ _)=spaced [pretty conv, pretty safety, string s]
-  pretty' (CImport _ conv safety _ _)=spaced [pretty conv, pretty safety]
+  pretty' (CImport (L _ (SourceText s)) conv safety _ _) =
+    spaced [pretty conv, pretty safety, string s]
+  pretty' (CImport _ conv safety _ _) = spaced [pretty conv, pretty safety]
 #else
 instance Pretty ForeignImport where
   pretty' (CImport conv safety _ _ (L _ (SourceText s))) =
@@ -2219,14 +2203,13 @@ instance Pretty ForeignImport where
 
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (ForeignExport GhcPs) where
-  pretty' (CExport (L _ (SourceText s)) conv)=spaced [pretty conv, string s]
-  pretty' (CExport _ conv)=pretty conv
+  pretty' (CExport (L _ (SourceText s)) conv) = spaced [pretty conv, string s]
+  pretty' (CExport _ conv) = pretty conv
 #else
 instance Pretty ForeignExport where
   pretty' (CExport conv (L _ (SourceText s))) = spaced [pretty conv, string s]
   pretty' (CExport conv _) = pretty conv
 #endif
-
 instance Pretty CExportSpec where
   pretty' (CExportStatic _ _ x) = pretty x
 
@@ -2234,14 +2217,13 @@ instance Pretty Safety where
   pretty' PlaySafe = string "safe"
   pretty' PlayInterruptible = string "interruptible"
   pretty' PlayRisky = string "unsafe"
-
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (AnnDecl GhcPs) where
-  pretty' (HsAnnotation  _ (ValueAnnProvenance name) expr) =
+  pretty' (HsAnnotation _ (ValueAnnProvenance name) expr) =
     spaced [string "{-# ANN", pretty name, pretty expr, string "#-}"]
-  pretty' (HsAnnotation  _ (TypeAnnProvenance name) expr) =
+  pretty' (HsAnnotation _ (TypeAnnProvenance name) expr) =
     spaced [string "{-# ANN type", pretty name, pretty expr, string "#-}"]
-  pretty' (HsAnnotation  _ ModuleAnnProvenance expr) =
+  pretty' (HsAnnotation _ ModuleAnnProvenance expr) =
     spaced [string "{-# ANN module", pretty expr, string "#-}"]
 #else
 instance Pretty (AnnDecl GhcPs) where
@@ -2252,7 +2234,6 @@ instance Pretty (AnnDecl GhcPs) where
   pretty' (HsAnnotation _ _ ModuleAnnProvenance expr) =
     spaced [string "{-# ANN module", pretty expr, string "#-}"]
 #endif
-
 instance Pretty (RoleAnnotDecl GhcPs) where
   pretty' (RoleAnnotDecl _ name roles) =
     spaced $
@@ -2384,18 +2365,15 @@ instance Pretty (HsLit GhcPs) where
               newline
               indentedWithSpace (-1) $
                 lined $ fmap (string . dropWhile (/= '\\')) ss
-
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (HsPragE GhcPs) where
-  pretty' (HsPragSCC  _ x) = spaced [string "{-# SCC", pretty x, string "#-}"]
+  pretty' (HsPragSCC _ x) = spaced [string "{-# SCC", pretty x, string "#-}"]
 #else
 instance Pretty (HsPragE GhcPs) where
   pretty' (HsPragSCC _ _ x) = spaced [string "{-# SCC", pretty x, string "#-}"]
 #endif
-
 instance Pretty HsIPName where
   pretty' (HsIPName x) = string $ unpackFS x
-
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (HsTyLit GhcPs) where
   pretty' (HsNumTy _ x) = string $ show x
@@ -2407,8 +2385,6 @@ instance Pretty HsTyLit where
   pretty' (HsStrTy _ x) = string $ ushow x
   pretty' (HsCharTy _ x) = string $ show x
 #endif
-
-
 instance Pretty (HsPatSigType GhcPs) where
   pretty' HsPS {..} = pretty hsps_body
 
@@ -2571,13 +2547,12 @@ instance Pretty (HsOuterSigTyVarBndrs GhcPs) where
     string "forall"
     spacePrefixed $ fmap pretty hso_bndrs
     dot
-
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty FieldLabelString where
-  pretty'=output
+  pretty' = output
 
 instance Pretty (HsUntypedSplice GhcPs) where
-  pretty' (HsUntypedSpliceExpr _ x)=string "$">>pretty x
+  pretty' (HsUntypedSpliceExpr _ x) = string "$" >> pretty x
   -- The body of a quasi-quote must not be changed by a formatter.
   -- Changing it will modify the actual behavior of the code.
   --
@@ -2585,15 +2560,16 @@ instance Pretty (HsUntypedSplice GhcPs) where
   pretty' (HsQuasiQuote _ l r) =
     brackets $ do
       pretty l
-      printCommentsAnd r (wrapWithBars .
-        indentedWithFixedLevel 0 . sequence_ . printers [] "" . unpackFS)
+      printCommentsAnd
+        r
+        (wrapWithBars .
+         indentedWithFixedLevel 0 . sequence_ . printers [] "" . unpackFS)
     where
       printers ps s [] = reverse (string (reverse s) : ps)
       printers ps s ('\n':xs) =
         printers (newline : string (reverse s) : ps) "" xs
       printers ps s (x:xs) = printers ps (x : s) xs
 #endif
-
 -- | Marks an AST node as never appearing in an AST.
 --
 -- Some AST node types are only defined in `ghc-lib-parser` and not

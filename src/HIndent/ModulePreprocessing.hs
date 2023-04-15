@@ -21,7 +21,6 @@ import Generics.SYB hiding (GT, typeOf, typeRep)
 import HIndent.ModulePreprocessing.CommentRelocation
 import Language.Haskell.GhclibParserEx.Fixity
 import Type.Reflection
-
 -- | This function modifies the given module AST for pretty-printing.
 --
 -- Pretty-printing a module without calling this function for it before may
@@ -45,7 +44,6 @@ modifyASTForPrettyPrinting m = relocateComments (beforeRelocation m) allComments
     allComments = listify (not . isEofComment . ac_tok . unLoc) m
     isEofComment EpaEofComment = True
     isEofComment _ = False
-
 -- | This function modifies the given module AST to apply fixities of infix
 -- operators defined in the 'base' package.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
@@ -54,7 +52,6 @@ fixFixities :: (HsModule GhcPs) -> (HsModule GhcPs)
 fixFixities :: HsModule -> HsModule
 #endif
 fixFixities = applyFixities baseFixities
-
 -- | This function sets an 'LGRHS's end position to the end position of the
 -- last RHS in the 'grhssGRHSs'.
 --
@@ -68,7 +65,6 @@ resetLGRHSEndPositionInModule :: (HsModule GhcPs) -> (HsModule GhcPs)
 resetLGRHSEndPositionInModule :: HsModule -> HsModule
 #endif
 resetLGRHSEndPositionInModule = everywhere (mkT resetLGRHSEndPosition)
-
 -- | This function sorts lists of statements in order their positions.
 --
 -- For example, the last element of 'HsDo' of 'HsExpr' is the element
@@ -84,7 +80,6 @@ sortExprLStmt m@HsModule {hsmodDecls = xs} = m {hsmodDecls = sorted}
     sorted = everywhere (mkT sortByLoc) xs
     sortByLoc :: [ExprLStmt GhcPs] -> [ExprLStmt GhcPs]
     sortByLoc = sortBy (compare `on` srcSpanToRealSrcSpan . locA . getLoc)
-
 -- | This function removes all comments from the given module not to
 -- duplicate them on comment relocation.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
@@ -93,7 +88,6 @@ removeComments :: (HsModule GhcPs) -> (HsModule GhcPs)
 removeComments :: HsModule -> HsModule
 #endif
 removeComments = everywhere (mkT $ const emptyComments)
-
 -- | This function replaces all 'EpAnnNotUsed's in 'SrcSpanAnn''s with
 -- 'EpAnn's to make it possible to locate comments on them.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
@@ -127,7 +121,6 @@ replaceAllNotUsedAnns = everywhere app
     emptyNameAnn = NameAnnTrailing []
     emptyAddEpAnn = AddEpAnn AnnAnyclass emptyEpaLocation
     emptyEpaLocation = EpaDelta (SameLine 0) []
-
 -- | This function sets the start column of 'hsmodName' of the given
 -- 'HsModule' to 1 to correctly locate comments above the module name.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
@@ -145,7 +138,6 @@ resetModuleNameColumn m@HsModule {hsmodName = Just (L (SrcSpanAnn epa@EpAnn {..}
         (realSrcSpanEnd anc)
     anc = anchor entry
 resetModuleNameColumn m = m
-
 -- | This function replaces the 'EpAnn' of 'fun_id' in 'FunBind' with
 -- 'EpAnnNotUsed'.
 --
@@ -163,7 +155,6 @@ closeEpAnnOfFunBindFunId = everywhere (mkT closeEpAnn)
     closeEpAnn bind@FunBind {fun_id = (L (SrcSpanAnn _ l) name)} =
       bind {fun_id = L (SrcSpanAnn EpAnnNotUsed l) name}
     closeEpAnn x = x
-
 -- | This function replaces the 'EpAnn' of 'm_ext' in 'Match' with
 -- 'EpAnnNotUsed.
 --
@@ -186,7 +177,6 @@ closeEpAnnOfMatchMExt = everywhere closeEpAnn
       , Just HRefl <- eqTypeRep g (typeRep @Match)
       , Just HRefl <- eqTypeRep h (typeRep @GhcPs) = x {m_ext = EpAnnNotUsed}
       | otherwise = x
-
 -- | This function replaces the 'EpAnn' of the first argument of 'HsFunTy'
 -- of 'HsType'.
 --
@@ -202,7 +192,6 @@ closeEpAnnOfHsFunTy = everywhere (mkT closeEpAnn)
     closeEpAnn :: HsType GhcPs -> HsType GhcPs
     closeEpAnn (HsFunTy _ p l r) = HsFunTy EpAnnNotUsed p l r
     closeEpAnn x = x
-
 -- | This function replaces all 'EpAnn's that contain placeholder anchors
 -- to locate comments correctly. A placeholder anchor is an anchor pointing
 -- on (-1, -1).
@@ -223,7 +212,6 @@ closePlaceHolderEpAnns = everywhere closeEpAnn
       , (EpAnn (Anchor sp _) _ _) <- x
       , srcSpanEndLine sp == -1 && srcSpanEndCol sp == -1 = EpAnnNotUsed
       | otherwise = x
-
 -- | This function removes all 'DocD's from the given module. They have
 -- haddocks, but the same information is stored in 'EpaCommentTok's. Thus,
 -- we need to remove the duplication.

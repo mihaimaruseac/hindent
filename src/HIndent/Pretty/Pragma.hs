@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+
 -- | Pretty-printing pragmas
 module HIndent.Pretty.Pragma
   ( prettyPragmas
@@ -18,7 +19,6 @@ import HIndent.Pretty.Combinators.Lineup
 import HIndent.Pretty.Combinators.String
 import HIndent.Printer
 import Text.Regex.TDFA
-
 -- | This function pretty-prints the module's pragmas
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 prettyPragmas :: HsModule GhcPs -> Printer ()
@@ -26,7 +26,6 @@ prettyPragmas :: HsModule GhcPs -> Printer ()
 prettyPragmas :: HsModule -> Printer ()
 #endif
 prettyPragmas = lined . fmap string . collectPragmas
-
 -- | This function returns a 'True' if the module has pragmas.
 -- Otherwise, it returns a 'False'.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
@@ -35,7 +34,6 @@ pragmaExists :: HsModule GhcPs -> Bool
 pragmaExists :: HsModule -> Bool
 #endif
 pragmaExists = not . null . collectPragmas
-
 -- | This function collects pragma comments from the
 -- given module and modifies them into 'String's.
 --
@@ -52,7 +50,6 @@ collectPragmas =
   fmap (uncurry constructPragma) .
   mapMaybe extractPragma . listify isBlockComment . hsmodAnn
 #endif
-
 -- | This function returns a 'Just' value with the pragma
 -- extracted from the passed 'EpaCommentTok' if it has one. Otherwise, it
 -- returns a 'Nothing'.
@@ -72,8 +69,7 @@ isPragma _ = False
 -- | Construct a pragma.
 constructPragma :: String -> [String] -> String
 constructPragma optionOrPragma xs =
-  "{-# " ++
-  fmap toUpper optionOrPragma ++ " " ++ intercalate ", " xs ++ " #-}"
+  "{-# " ++ fmap toUpper optionOrPragma ++ " " ++ intercalate ", " xs ++ " #-}"
 
 -- | Checks if the given comment is a block one.
 isBlockComment :: EpaCommentTok -> Bool

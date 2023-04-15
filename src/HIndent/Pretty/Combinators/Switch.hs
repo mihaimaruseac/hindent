@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase,CPP #-}
+{-# LANGUAGE LambdaCase, CPP #-}
 
 -- | Printer combinators for switching printers depending on situations.
 module HIndent.Pretty.Combinators.Switch
@@ -11,7 +11,6 @@ import HIndent.Printer
 #if MIN_VERSION_GLASGOW_HASKELL(9,6,0,0)
 import Control.Monad
 #endif
-
 -- | This function runs the first printer if the result of running it fits
 -- in a single line. Otherwise, it runs the second printer.
 (<-|>) :: Printer a -> Printer a -> Printer a

@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+
 -- | Import declaration sorting for pretty-printing.
 module HIndent.Pretty.Import.Sort
   ( sortImportsByName

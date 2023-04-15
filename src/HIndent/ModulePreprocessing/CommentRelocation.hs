@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GADTs,CPP #-}
+{-# LANGUAGE GADTs, CPP #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -53,7 +53,6 @@ import Type.Reflection
 #if MIN_VERSION_GLASGOW_HASKELL(9,6,0,0)
 import Control.Monad
 #endif
-
 -- | A wrapper type used in everywhereMEpAnnsBackwards' to collect all
 -- 'EpAnn's to apply a function with them in order their positions.
 data Wrapper =
@@ -62,7 +61,6 @@ data Wrapper =
 
 -- | 'State' with comments.
 type WithComments = State [LEpaComment]
-
 -- | This function collects all comments from the passed 'HsModule', and
 -- modifies all 'EpAnn's so that all 'EpAnn's have 'EpaCommentsBalanced's.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
@@ -83,13 +81,12 @@ relocateComments = evalState . relocate
     assertAllCommentsAreConsumed x = do
       cs <- get
       assert (null cs) (pure x)
-
 -- | This function locates pragmas to the module's EPA.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-relocatePragmas :: HsModule GhcPs -> WithComments (HsModule  GhcPs)
-relocatePragmas m@HsModule {hsmodExt=xmod@XModulePs{hsmodAnn = epa@EpAnn {}}} = do
+relocatePragmas :: HsModule GhcPs -> WithComments (HsModule GhcPs)
+relocatePragmas m@HsModule {hsmodExt = xmod@XModulePs {hsmodAnn = epa@EpAnn {}}} = do
   newAnn <- insertComments (isPragma . ac_tok . unLoc) insertPriorComments epa
-  return m {hsmodExt = xmod{hsmodAnn=newAnn}}
+  return m {hsmodExt = xmod {hsmodAnn = newAnn}}
 #else
 relocatePragmas :: HsModule -> WithComments HsModule
 relocatePragmas m@HsModule {hsmodAnn = epa@EpAnn {}} = do
@@ -97,15 +94,14 @@ relocatePragmas m@HsModule {hsmodAnn = epa@EpAnn {}} = do
   return m {hsmodAnn = newAnn}
 #endif
 relocatePragmas m = pure m
-
 -- | This function locates comments that are located before pragmas to the
 -- module's EPA.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 relocateCommentsBeforePragmas :: HsModule GhcPs -> WithComments (HsModule GhcPs)
-relocateCommentsBeforePragmas m@HsModule {hsmodExt=xmod@XModulePs{hsmodAnn = ann}}
+relocateCommentsBeforePragmas m@HsModule {hsmodExt = xmod@XModulePs {hsmodAnn = ann}}
   | pragmaExists m = do
     newAnn <- insertCommentsByPos (< startPosOfPragmas) insertPriorComments ann
-    pure m {hsmodExt=xmod{hsmodAnn = newAnn}}
+    pure m {hsmodExt = xmod {hsmodAnn = newAnn}}
   | otherwise = pure m
   where
     startPosOfPragmas = anchor $ getLoc $ head $ priorComments $ comments ann
@@ -143,10 +139,10 @@ relocateCommentsInExportList m@HsModule {hsmodExports = Just (L listSp@SrcSpanAn
       srcSpanStartLine comAnc < srcSpanStartLine anc &&
       realSrcSpanStart (anchor listAnn) < realSrcSpanStart comAnc
 relocateCommentsInExportList x = pure x
-
 -- | This function locates comments located before top-level declarations.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-relocateCommentsBeforeTopLevelDecls :: HsModule GhcPs -> WithComments (HsModule GhcPs)
+relocateCommentsBeforeTopLevelDecls ::
+     HsModule GhcPs -> WithComments (HsModule GhcPs)
 #else
 relocateCommentsBeforeTopLevelDecls :: HsModule -> WithComments HsModule
 #endif
@@ -159,7 +155,6 @@ relocateCommentsBeforeTopLevelDecls = everywhereM (applyM f)
       srcSpanStartCol anc == 1 &&
       srcSpanStartCol comAnc == 1 &&
       srcSpanStartLine comAnc < srcSpanStartLine anc
-
 -- | This function scans the given AST from bottom to top and locates
 -- comments that are on the same line as the node.  Comments are stored in
 -- the 'followingComments' of 'EpaCommentsBalanced'.
@@ -179,11 +174,11 @@ relocateCommentsSameLine = everywhereMEpAnnsBackwards f
     isOnSameLine anc comAnc =
       srcSpanStartLine comAnc == srcSpanStartLine anc &&
       srcSpanStartLine comAnc == srcSpanEndLine anc
-
 -- | This function locates comments above the top-level declarations in
 -- a 'where' clause in the topmost declaration.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-relocateCommentsTopLevelWhereClause :: HsModule GhcPs -> WithComments (HsModule GhcPs)
+relocateCommentsTopLevelWhereClause ::
+     HsModule GhcPs -> WithComments (HsModule GhcPs)
 #else
 relocateCommentsTopLevelWhereClause :: HsModule -> WithComments HsModule
 #endif
@@ -229,7 +224,6 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
     isAbove comAnc anc =
       srcSpanStartCol comAnc == srcSpanStartCol anc &&
       srcSpanEndLine comAnc + 1 == srcSpanStartLine anc
-
 -- | This function scans the given AST from bottom to top and locates
 -- comments in the comment pool after each node on it.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
