@@ -530,40 +530,43 @@ instance Pretty DeclSig where
 
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (HsDataDefn GhcPs) where
-  pretty' HsDataDefn {..} = undefined
-    -- if isGADT
-    --   then do
-    --     whenJust dd_kindSig $ \x -> do
-    --       string " :: "
-    --       pretty x
-    --     string " where"
-    --     indentedBlock $ newlinePrefixed $ fmap pretty dd_cons
-    --   else do undefined
-        -- case dd_cons of
-        --   [] -> indentedBlock derivingsAfterNewline
-        --   [x@(L _ ConDeclH98 {con_args = RecCon {}})] -> do
-        --     string " = "
-        --     pretty x
-        --     unless (null dd_derivs) $ space |=> printDerivings
-        --   [x] -> do
-        --     string " ="
-        --     newline
-        --     indentedBlock $ do
-        --       pretty x
-        --       derivingsAfterNewline
-        --   _ ->
-        --     indentedBlock $ do
-        --       newline
-        --       -- string "= " |=> vBarSep (fmap pretty dd_cons)
-        --       derivingsAfterNewline
-    -- where
-    --   isGADT =
-    --     case dd_cons of
-    --       (DataTypeCons _ (L _  ConDeclGADT {}:_)) -> True
-    --       _ -> False
-    --   derivingsAfterNewline =
-    --     unless (null dd_derivs) $ newline >> printDerivings
-    --   printDerivings = lined $ fmap pretty dd_derivs
+  pretty' HsDataDefn {..} = 
+    if isGADT
+      then do
+        whenJust dd_kindSig $ \x -> do
+          string " :: "
+          pretty x
+        string " where"
+        indentedBlock $ newlinePrefixed $ fmap pretty cons
+      else do 
+        case cons of
+          [] -> indentedBlock derivingsAfterNewline
+          [x@(L _ ConDeclH98 {con_args = RecCon {}})] -> do
+            string " = "
+            pretty x
+            unless (null dd_derivs) $ space |=> printDerivings
+          [x] -> do
+            string " ="
+            newline
+            indentedBlock $ do
+              pretty x
+              derivingsAfterNewline
+          _ ->
+            indentedBlock $ do
+              newline
+              string "= " |=> vBarSep (fmap pretty cons)
+              derivingsAfterNewline
+    where
+      cons=case dd_cons of
+        NewTypeCon x->[x]
+        DataTypeCons _ xs->xs
+      isGADT =
+        case dd_cons of
+          (DataTypeCons _ (L _  ConDeclGADT {}:_)) -> True
+          _ -> False
+      derivingsAfterNewline =
+        unless (null dd_derivs) $ newline >> printDerivings
+      printDerivings = lined $ fmap pretty dd_derivs
 #else
 instance Pretty (HsDataDefn GhcPs) where
   pretty' HsDataDefn {..} =
