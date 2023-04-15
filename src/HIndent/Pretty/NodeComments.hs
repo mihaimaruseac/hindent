@@ -991,7 +991,8 @@ instance CommentExtraction (HsOuterSigTyVarBndrs GhcPs) where
 instance CommentExtraction FieldLabelString where
   nodeComments=undefined
 instance CommentExtraction(HsUntypedSplice GhcPs) where
-  nodeComments=undefined
+  nodeComments (HsUntypedSpliceExpr x _)=nodeComments x
+  nodeComments HsQuasiQuote{}=emptyNodeComments
 #endif
 
 -- | Marks an AST node as never appearing in the AST.

@@ -883,8 +883,8 @@ prettyHsExpr HsRnBracketOut {} = notGeneratedByParser
 prettyHsExpr HsTcBracketOut {} = notGeneratedByParser
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-prettyHsExpr HsTypedSplice{}=undefined
-prettyHsExpr HsUntypedSplice{}=undefined
+prettyHsExpr (HsTypedSplice _ x) =string "$$">>pretty x
+prettyHsExpr (HsUntypedSplice _ x)=pretty x
 #endif
 instance Pretty LambdaCase where
   pretty' (LambdaCase matches caseOrCases) = do
@@ -1925,7 +1925,7 @@ instance Pretty PrefixOp where
       string "."
       pretty name
   pretty' (PrefixOp Orig {}) = notUsedInParsedStage
-  pretty' (PrefixOp (Exact name)) = parensIfSymbol occ $ pretty occ
+  pretty' (PrefixOp (Exact name)) = parensIfSymbol occ $ output name
     where
       occ = occName name
 
@@ -2557,7 +2557,21 @@ instance Pretty FieldLabelString where
   pretty'=undefined
 
 instance Pretty (HsUntypedSplice GhcPs) where
-  pretty'=undefined
+  pretty' (HsUntypedSpliceExpr _ x)=string "$">>pretty x
+  -- The body of a quasi-quote must not be changed by a formatter.
+  -- Changing it will modify the actual behavior of the code.
+  --
+  -- TODO: Remove duplicated code
+  pretty' (HsQuasiQuote _ l r) =
+    brackets $ do
+      pretty l
+      printCommentsAnd r (wrapWithBars .
+        indentedWithFixedLevel 0 . sequence_ . printers [] "" . unpackFS)
+    where
+      printers ps s [] = reverse (string (reverse s) : ps)
+      printers ps s ('\n':xs) =
+        printers (newline : string (reverse s) : ps) "" xs
+      printers ps s (x:xs) = printers ps (x : s) xs
 #endif
 
 -- | Marks an AST node as never appearing in an AST.
