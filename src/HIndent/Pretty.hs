@@ -2063,7 +2063,7 @@ instance Pretty (WithHsDocIdentifiers StringLiteral GhcPs) where
 
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 -- | 'Pretty' for 'LIEWrappedName (IdP GhcPs)'
-instance Pretty (IEWrappedName RdrName) where
+instance Pretty (IEWrappedName GhcPs) where
   pretty' (IEName _ name) = pretty name
   pretty' (IEPattern _ name) = spaced [string "pattern", pretty name]
   pretty' (IEType _ name) = string "type " >> pretty name
@@ -2550,7 +2550,10 @@ instance Pretty (HsOuterSigTyVarBndrs GhcPs) where
 
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty FieldLabelString where
-  pretty'=output
+  pretty'=undefined
+
+instance Pretty (HsUntypedSplice GhcPs) where
+  pretty'=undefined
 #endif
 
 -- | Marks an AST node as never appearing in an AST.

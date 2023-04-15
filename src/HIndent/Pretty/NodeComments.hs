@@ -682,11 +682,18 @@ instance CommentExtraction (WarnDecl GhcPs) where
 instance CommentExtraction (WithHsDocIdentifiers StringLiteral GhcPs) where
   nodeComments WithHsDocIdentifiers {} = emptyNodeComments
 #endif
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
+instance CommentExtraction (IEWrappedName GhcPs) where
+  nodeComments IEName {} = emptyNodeComments
+  nodeComments IEPattern {} = emptyNodeComments
+  nodeComments IEType {} = emptyNodeComments
+#else
 -- | 'Pretty' for 'LIEWrappedName (IdP GhcPs)'
 instance CommentExtraction (IEWrappedName RdrName) where
   nodeComments IEName {} = emptyNodeComments
   nodeComments IEPattern {} = emptyNodeComments
   nodeComments IEType {} = emptyNodeComments
+#endif
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance CommentExtraction (DotFieldOcc GhcPs) where
   nodeComments DotFieldOcc {..} = nodeComments dfoExt
@@ -976,7 +983,9 @@ instance CommentExtraction (HsOuterSigTyVarBndrs GhcPs) where
 
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction FieldLabelString where
-  nodeComments=const emptyNodeComments
+  nodeComments=undefined
+instance CommentExtraction(HsUntypedSplice GhcPs) where
+  nodeComments=undefined
 #endif
 
 -- | Marks an AST node as never appearing in the AST.
