@@ -51,6 +51,7 @@ import HIndent.Printer
 import Text.Show.Unicode
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 import qualified Data.Foldable as NonEmpty
+import GHC.Core.DataCon
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 import GHC.Types.PkgQual
@@ -2546,6 +2547,11 @@ instance Pretty (HsOuterSigTyVarBndrs GhcPs) where
     string "forall"
     spacePrefixed $ fmap pretty hso_bndrs
     dot
+
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
+instance Pretty FieldLabelString where
+  pretty'=output
+#endif
 
 -- | Marks an AST node as never appearing in an AST.
 --

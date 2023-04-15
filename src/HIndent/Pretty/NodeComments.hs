@@ -24,6 +24,9 @@ import GHC.Unit
 import HIndent.Pretty.Pragma
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
+import GHC.Core.DataCon
+#endif
 
 -- | An interface to extract comments from an AST node.
 class CommentExtraction a where
@@ -970,6 +973,11 @@ instance CommentExtraction SrcStrictness where
 instance CommentExtraction (HsOuterSigTyVarBndrs GhcPs) where
   nodeComments HsOuterImplicit {} = emptyNodeComments
   nodeComments HsOuterExplicit {..} = nodeComments hso_xexplicit
+
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
+instance CommentExtraction FieldLabelString where
+  nodeComments=const emptyNodeComments
+#endif
 
 -- | Marks an AST node as never appearing in the AST.
 --
