@@ -989,7 +989,7 @@ instance CommentExtraction (HsOuterSigTyVarBndrs GhcPs) where
 
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction FieldLabelString where
-  nodeComments=undefined
+  nodeComments=const emptyNodeComments
 instance CommentExtraction(HsUntypedSplice GhcPs) where
   nodeComments (HsUntypedSpliceExpr x _)=nodeComments x
   nodeComments HsQuasiQuote{}=emptyNodeComments

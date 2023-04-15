@@ -2557,7 +2557,7 @@ instance Pretty (HsOuterSigTyVarBndrs GhcPs) where
 
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty FieldLabelString where
-  pretty'=undefined
+  pretty'=output
 
 instance Pretty (HsUntypedSplice GhcPs) where
   pretty' (HsUntypedSpliceExpr _ x)=string "$">>pretty x
