@@ -111,7 +111,7 @@ newtype GRHSProc =
 -- | A pattern match against a record.
 newtype RecConPat =
   RecConPat (HsRecFields GhcPs (LPat GhcPs))
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 -- | A record field in a pattern match.
 newtype RecConField =
   RecConField (HsFieldBind (LFieldOcc GhcPs) (LPat GhcPs))
@@ -211,7 +211,7 @@ newtype DeclSig =
 -- | A top-level type family instance declaration.
 newtype TopLevelTyFamInstDecl =
   TopLevelTyFamInstDecl (TyFamInstDecl GhcPs)
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 -- | A wrapper type for type class constraints; e.g., (Eq a, Ord a) of (Eq
 -- a, Ord a) => [a] -> [a]. Either 'HorizontalContext' or 'VerticalContext'
 -- is used internally.
@@ -260,7 +260,7 @@ data LambdaCase = LambdaCase
   { lamCaseGroup :: MatchGroup GhcPs (LHsExpr GhcPs)
   , caseOrCases :: CaseOrCases
   }
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 -- | A deprecation pragma for a module.
 newtype ModuleDeprecatedPragma =
   ModuleDeprecatedPragma (WarningTxt GhcPs)

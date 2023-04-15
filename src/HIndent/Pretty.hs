@@ -7,7 +7,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ViewPatterns #-}
-
+#include "macros.h"
 -- | Pretty printing.
 --
 -- Some instances define top-level functions to handle CPP.
@@ -49,11 +49,11 @@ import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
 import HIndent.Printer
 import Text.Show.Unicode
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 import qualified Data.Foldable as NonEmpty
 import GHC.Core.DataCon
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 import GHC.Types.PkgQual
 #endif
 -- | This function pretty-prints the given AST node with comments.
@@ -120,7 +120,7 @@ class CommentExtraction a =>
 -- declarations. Otherwise, extra blank lines will be inserted if only
 -- comments are present in the source code. See
 -- https://github.com/mihaimaruseac/hindent/issues/586#issuecomment-1374992624.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 instance Pretty (HsModule GhcPs) where
   pretty' m@HsModule {hsmodName = Nothing, hsmodImports = [], hsmodDecls = []}
     | not (pragmaExists m) = pure ()
@@ -275,7 +275,7 @@ prettyTyClDecl SynDecl {..} = do
   where
     hor = string " = " >> pretty tcdRhs
     ver = newline >> indentedBlock (string "= " |=> pretty tcdRhs)
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 prettyTyClDecl DataDecl {..} = do
   printDataNewtype |=> do
     whenJust (dd_ctxt tcdDataDefn) $ \x -> do
@@ -387,7 +387,7 @@ prettyHsBind VarBind {} = notGeneratedByParser
 prettyHsBind AbsBinds {} = notGeneratedByParser
 #endif
 prettyHsBind (PatSynBind _ x) = pretty x
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 instance Pretty (Sig GhcPs) where
   pretty' (TypeSig _ funName params) = do
     printFunName
@@ -538,7 +538,7 @@ instance Pretty DeclSig where
               pretty $ HsSigTypeInsideDeclSig <$> hswc_body params
       printFunName = hCommaSep $ fmap pretty funName
   pretty' (DeclSig x) = pretty x
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 instance Pretty (HsDataDefn GhcPs) where
   pretty' HsDataDefn {..} =
     if isGADT
@@ -647,7 +647,7 @@ instance Pretty (HsExpr GhcPs) where
 prettyHsExpr :: HsExpr GhcPs -> Printer ()
 prettyHsExpr (HsVar _ bind) = pretty $ fmap PrefixOp bind
 prettyHsExpr (HsUnboundVar _ x) = pretty x
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 prettyHsExpr (HsOverLabel _ _ l) = string "#" >> string (unpackFS l)
 #else
 prettyHsExpr (HsOverLabel _ l) = string "#" >> string (unpackFS l)
@@ -656,7 +656,7 @@ prettyHsExpr (HsIPVar _ var) = string "?" >> pretty var
 prettyHsExpr (HsOverLit _ x) = pretty x
 prettyHsExpr (HsLit _ l) = pretty l
 prettyHsExpr (HsLam _ body) = pretty body
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyHsExpr (HsLamCase _ LamCase matches) = pretty $ LambdaCase matches Case
 prettyHsExpr (HsLamCase _ LamCases matches) = pretty $ LambdaCase matches Cases
 #else
@@ -692,7 +692,7 @@ prettyHsExpr (HsApp _ l r) = horizontal <-|> vertical
     insertComments cs (L s@SrcSpanAnn {ann = e@EpAnn {comments = cs'}} r') =
       L (s {ann = e {comments = cs <> cs'}}) r'
     insertComments _ x = x
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 prettyHsExpr (HsAppType _ l _ r) = do
   pretty l
   string " @"
@@ -705,7 +705,7 @@ prettyHsExpr (HsAppType _ l r) = do
 #endif
 prettyHsExpr (OpApp _ l o r) = pretty (InfixApp l o r False)
 prettyHsExpr (NegApp _ x _) = string "-" >> pretty x
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyHsExpr (HsPar _ _ expr _) = parens $ pretty expr
 #else
 prettyHsExpr (HsPar _ expr) = parens $ pretty expr
@@ -757,7 +757,7 @@ prettyHsExpr (HsIf _ cond t f) = do
 prettyHsExpr (HsMultiIf _ guards) =
   string "if " |=>
   lined (fmap (pretty . fmap (GRHSExpr GRHSExprMultiWayIf)) guards)
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyHsExpr (HsLet _ _ binds _ exprs) = pretty $ LetIn binds exprs
 #else
 prettyHsExpr (HsLet _ binds exprs) = pretty $ LetIn binds exprs
@@ -786,7 +786,7 @@ prettyHsExpr (RecordCon _ name fields) = horizontal <-|> vertical
     vertical = do
       pretty name
       (space >> pretty fields) <-|> (newline >> indentedBlock (pretty fields))
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyHsExpr (RecordUpd _ name fields) = hor <-|> ver
   where
     hor = spaced [pretty name, either printHorFields printHorFields fields]
@@ -878,7 +878,7 @@ prettyHsExpr (HsProc _ pat body) = hor <-|> ver
       indentedBlock (pretty body)
 prettyHsExpr (HsStatic _ x) = spaced [string "static", pretty x]
 prettyHsExpr (HsPragE _ p x) = spaced [pretty p, pretty x]
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyHsExpr HsRecSel {} = notGeneratedByParser
 prettyHsExpr (HsTypedBracket _ inner) = typedBrackets $ pretty inner
 prettyHsExpr (HsUntypedBracket _ inner) = pretty inner
@@ -895,7 +895,7 @@ prettyHsExpr (HsBracket _ inner) = pretty inner
 prettyHsExpr HsRnBracketOut {} = notGeneratedByParser
 prettyHsExpr HsTcBracketOut {} = notGeneratedByParser
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 prettyHsExpr (HsTypedSplice _ x) = string "$$" >> pretty x
 prettyHsExpr (HsUntypedSplice _ x) = pretty x
 #endif
@@ -971,7 +971,7 @@ instance Pretty (ConDecl GhcPs) where
   pretty' = prettyConDecl
 
 prettyConDecl :: ConDecl GhcPs -> Printer ()
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 prettyConDecl ConDeclGADT {..} = do
   hCommaSep $ fmap pretty $ NonEmpty.toList con_names
   hor <-|> ver
@@ -1034,7 +1034,7 @@ prettyConDecl ConDeclGADT {..} = do
       pretty con_bndrs
       (space >> horArgs) <-|> (newline >> verArgs)
     noForallCtx = horArgs <-|> verArgs
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
     withForallCtx ctx = do
       pretty con_bndrs
       (space >> pretty (Context ctx)) <-|> (newline >> pretty (Context ctx))
@@ -1091,7 +1091,7 @@ prettyConDecl ConDeclGADT {..} = do
         HsOuterImplicit {} -> False
         HsOuterExplicit {} -> True
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyConDecl ConDeclH98 {con_forall = True, ..} =
   (do string "forall "
       spaced $ fmap pretty con_ex_tvs
@@ -1138,7 +1138,7 @@ prettyMatchExpr Match {m_ctxt = LambdaExpr, ..} = do
 prettyMatchExpr Match {m_ctxt = CaseAlt, ..} = do
   mapM_ pretty m_pats
   pretty $ GRHSsExpr GRHSExprCase m_grhss
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyMatchExpr Match {m_ctxt = LamCaseAlt {}, ..} = do
   spaced $ fmap pretty m_pats
   pretty $ GRHSsExpr GRHSExprCase m_grhss
@@ -1171,7 +1171,7 @@ prettyMatchProc Match {m_ctxt = LambdaExpr, ..} = do
   spaced $ fmap pretty m_pats ++ [pretty m_grhss]
 prettyMatchProc Match {m_ctxt = CaseAlt, ..} =
   spaced [mapM_ pretty m_pats, pretty m_grhss]
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyMatchProc Match {m_ctxt = LamCaseAlt {}, ..} = do
   spaced [mapM_ pretty m_pats, pretty m_grhss]
 #endif
@@ -1303,7 +1303,7 @@ prettyHsType (HsSumTy _ xs) = hvUnboxedSum' $ fmap pretty xs
   -- a type with the same name. However, infix data constructors never
   -- share their names with types because types cannot contain symbols.
   -- Thus there is no ambiguity.
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyHsType (HsOpTy _ _ l op r) = do
   lineBreak <- gets (configLineBreaks . psConfig)
   if showOutputable op `elem` lineBreak
@@ -1391,7 +1391,7 @@ prettyHsMatchContext StmtCtxt {} = notGeneratedByParser
 prettyHsMatchContext ThPatSplice {} = notGeneratedByParser
 prettyHsMatchContext ThPatQuote {} = notGeneratedByParser
 prettyHsMatchContext PatSyn {} = notGeneratedByParser
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyHsMatchContext LamCaseAlt {} = notUsedInParsedStage
 #endif
 instance Pretty (ParStmtBlock GhcPs GhcPs) where
@@ -1523,12 +1523,12 @@ prettyPat :: Pat GhcPs -> Printer ()
 prettyPat WildPat {} = string "_"
 prettyPat (VarPat _ x) = pretty x
 prettyPat (LazyPat _ x) = string "~" >> pretty x
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 prettyPat (AsPat _ a _ b) = pretty a >> string "@" >> pretty b
 #else
 prettyPat (AsPat _ a b) = pretty a >> string "@" >> pretty b
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyPat (ParPat _ _ inner _) = parens $ pretty inner
 #else
 prettyPat (ParPat _ inner) = parens $ pretty inner
@@ -1613,7 +1613,7 @@ instance Pretty (HsValBindsLR GhcPs GhcPs) where
 instance Pretty (HsTupArg GhcPs) where
   pretty' (Present _ e) = pretty e
   pretty' Missing {} = pure () -- This appears in a tuple section.
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 instance Pretty RecConField where
   pretty' (RecConField HsFieldBind {..}) = do
     pretty hfbLHS
@@ -1639,7 +1639,7 @@ instance Pretty
       horizontal = space >> pretty hsRecFieldArg
       vertical = newline >> indentedBlock (pretty hsRecFieldArg)
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 -- | For pattern matchings against records.
 instance Pretty
            (HsFieldBind
@@ -1668,7 +1668,7 @@ instance Pretty RecConField where
       string " = "
       pretty hsRecFieldArg
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 instance Pretty (FieldOcc GhcPs) where
   pretty' FieldOcc {..} = pretty foLabel
 #else
@@ -1775,7 +1775,7 @@ instance Pretty (FieldLabelStrings GhcPs) where
 instance Pretty (AmbiguousFieldOcc GhcPs) where
   pretty' (Unambiguous _ name) = pretty name
   pretty' (Ambiguous _ name) = pretty name
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 instance Pretty (ImportDecl GhcPs) where
   pretty' decl@ImportDecl {..} = do
     string "import "
@@ -1813,7 +1813,7 @@ instance Pretty (ImportDecl GhcPs) where
         (newline >> indentedBlock (printCommentsAnd ps (vTuple . fmap pretty)))
 #endif
 packageName :: ImportDecl GhcPs -> Maybe StringLiteral
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 packageName (ideclPkgQual -> RawPkgQual name) = Just name
 packageName _ = Nothing
 #else
@@ -1937,7 +1937,7 @@ instance Pretty PrefixOp where
 instance Pretty Context where
   pretty' (Context xs) =
     pretty (HorizontalContext xs) <-|> pretty (VerticalContext xs)
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 instance Pretty HorizontalContext where
   pretty' (HorizontalContext xs) =
     constraintsParens $ printCommentsAnd xs (hCommaSep . fmap pretty)
@@ -2033,7 +2033,7 @@ instance Pretty
   pretty' (HsValArg x) = pretty x
   pretty' (HsTypeArg _ x) = string "@" >> pretty x
   pretty' HsArgPar {} = notUsedInParsedStage
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 instance Pretty (HsQuote GhcPs) where
   pretty' (ExpBr _ x) = brackets $ wrapWithBars $ pretty x
   pretty' (PatBr _ x) = brackets $ string "p" >> wrapWithBars (pretty x)
@@ -2044,7 +2044,7 @@ instance Pretty (HsQuote GhcPs) where
   pretty' (VarBr _ True x) = string "'" >> pretty x
   pretty' (VarBr _ False x) = string "''" >> pretty x
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 instance Pretty (WarnDecls GhcPs) where
   pretty' (Warnings _ x) = lined $ fmap pretty x
 #else
@@ -2064,12 +2064,12 @@ instance Pretty (WarnDecl GhcPs) where
               [hCommaSep $ fmap pretty names, hCommaSep $ fmap pretty reasons]
           , string " #-}"
           ]
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 instance Pretty (WithHsDocIdentifiers StringLiteral GhcPs) where
   pretty' WithHsDocIdentifiers {..} = pretty hsDocString
 #endif
 
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 -- | 'Pretty' for 'LIEWrappedName (IdP GhcPs)'
 instance Pretty (IEWrappedName GhcPs) where
   pretty' (IEName _ name) = pretty name
@@ -2082,7 +2082,7 @@ instance Pretty (IEWrappedName RdrName) where
   pretty' (IEPattern _ name) = spaced [string "pattern", pretty name]
   pretty' (IEType _ name) = string "type " >> pretty name
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 instance Pretty (DotFieldOcc GhcPs) where
   pretty' DotFieldOcc {..} = printCommentsAnd dfoLabel pretty
 #elif MIN_VERSION_ghc_lib_parser(9,4,1)
@@ -2095,7 +2095,7 @@ instance Pretty (HsFieldLabel GhcPs) where
 instance Pretty (RuleDecls GhcPs) where
   pretty' HsRules {..} =
     lined $ string "{-# RULES" : fmap pretty rds_rules ++ [string " #-}"]
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 instance Pretty (RuleDecl GhcPs) where
   pretty' HsRule {..} =
     spaced
@@ -2189,7 +2189,7 @@ instance Pretty (ForeignDecl GhcPs) where
       , string "::"
       , pretty fd_sig_ty
       ]
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 instance Pretty (ForeignImport GhcPs) where
   pretty' (CImport (L _ (SourceText s)) conv safety _ _) =
     spaced [pretty conv, pretty safety, string s]
@@ -2201,7 +2201,7 @@ instance Pretty ForeignImport where
   pretty' (CImport conv safety _ _ _) = spaced [pretty conv, pretty safety]
 #endif
 
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 instance Pretty (ForeignExport GhcPs) where
   pretty' (CExport (L _ (SourceText s)) conv) = spaced [pretty conv, string s]
   pretty' (CExport _ conv) = pretty conv
@@ -2217,7 +2217,7 @@ instance Pretty Safety where
   pretty' PlaySafe = string "safe"
   pretty' PlayInterruptible = string "interruptible"
   pretty' PlayRisky = string "unsafe"
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 instance Pretty (AnnDecl GhcPs) where
   pretty' (HsAnnotation _ (ValueAnnProvenance name) expr) =
     spaced [string "{-# ANN", pretty name, pretty expr, string "#-}"]
@@ -2315,7 +2315,7 @@ prettyInlineSpec NoInline {} = string "NOINLINE"
 prettyInlineSpec NoUserInlinePrag =
   error
     "This branch is executed if the inline pragma is not written, but executing this branch means that the pragma is already about to be output, which indicates something goes wrong."
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyInlineSpec Opaque {} = string "OPAQUE"
 #endif
 instance Pretty (HsPatSynDir GhcPs) where
@@ -2365,7 +2365,7 @@ instance Pretty (HsLit GhcPs) where
               newline
               indentedWithSpace (-1) $
                 lined $ fmap (string . dropWhile (/= '\\')) ss
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 instance Pretty (HsPragE GhcPs) where
   pretty' (HsPragSCC _ x) = spaced [string "{-# SCC", pretty x, string "#-}"]
 #else
@@ -2374,7 +2374,7 @@ instance Pretty (HsPragE GhcPs) where
 #endif
 instance Pretty HsIPName where
   pretty' (HsIPName x) = string $ unpackFS x
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 instance Pretty (HsTyLit GhcPs) where
   pretty' (HsNumTy _ x) = string $ show x
   pretty' (HsStrTy _ x) = string $ ushow x
@@ -2395,7 +2395,7 @@ instance Pretty (IPBind GhcPs) where
   pretty' = prettyIPBind
 
 prettyIPBind :: IPBind GhcPs -> Printer ()
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyIPBind (IPBind _ l r) =
   spaced [string "?" >> pretty l, string "=", pretty r]
 #else
@@ -2434,7 +2434,7 @@ prettyHsCmd (HsCmdArrForm _ f _ _ args) =
   bananaBrackets $ spaced $ pretty f : fmap pretty args
 prettyHsCmd (HsCmdApp _ f arg) = spaced [pretty f, pretty arg]
 prettyHsCmd (HsCmdLam _ x) = pretty x
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyHsCmd (HsCmdPar _ _ x _) = parens $ pretty x
 #else
 prettyHsCmd (HsCmdPar _ x) = parens $ pretty x
@@ -2443,7 +2443,7 @@ prettyHsCmd (HsCmdCase _ cond arms) = do
   spaced [string "case", pretty cond, string "of"]
   newline
   indentedBlock $ pretty arms
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyHsCmd (HsCmdLamCase _ _ arms) = do
   string "\\case"
   newline
@@ -2459,7 +2459,7 @@ prettyHsCmd (HsCmdIf _ _ cond t f) = do
   pretty cond
   newline
   indentedBlock $ lined [string "then " >> pretty t, string "else " >> pretty f]
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if GLP941
 prettyHsCmd (HsCmdLet _ _ binds _ expr) =
   lined [string "let " |=> pretty binds, string " in " |=> pretty expr]
 #else
@@ -2547,7 +2547,7 @@ instance Pretty (HsOuterSigTyVarBndrs GhcPs) where
     string "forall"
     spacePrefixed $ fmap pretty hso_bndrs
     dot
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 instance Pretty FieldLabelString where
   pretty' = output
 

@@ -124,7 +124,7 @@ reformat config mexts mfilepath =
           (f x)
       | otherwise = f x
 -- | Generate an AST from the given module for debugging.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 testAst :: ByteString -> Either String (HsModule GhcPs)
 #else
 testAst :: ByteString -> Either String HsModule
@@ -145,7 +145,7 @@ testAst x =
 hasTrailingLine :: ByteString -> Bool
 hasTrailingLine xs = not (S8.null xs) && S8.last xs == '\n'
 -- | Print the module.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 prettyPrint :: Config -> (HsModule GhcPs) -> Builder
 #else
 prettyPrint :: Config -> HsModule -> Builder

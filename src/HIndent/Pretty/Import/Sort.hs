@@ -44,7 +44,7 @@ sortByModuleName = sortBy (compare `on` unLoc . ideclName . unLoc)
 -- | This function sorts explicit imports in the given import declaration
 -- by their names.
 sortExplicitImportsInDecl :: LImportDecl GhcPs -> LImportDecl GhcPs
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 sortExplicitImportsInDecl (L l d@ImportDecl {ideclImportList = Just (x, imports)}) =
   L l d {ideclImportList = Just (x, sorted)}
   where

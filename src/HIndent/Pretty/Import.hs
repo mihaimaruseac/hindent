@@ -12,7 +12,7 @@ import GHC.Hs
 import GHC.Types.SrcLoc
 import HIndent.Pretty.Import.Sort
 -- | Returns if the module has import declarations.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 importsExist :: (HsModule GhcPs) -> Bool
 #else
 importsExist :: HsModule -> Bool
@@ -20,7 +20,7 @@ importsExist :: HsModule -> Bool
 importsExist = not . null . hsmodImports
 -- | Extracts import declarations from the given module. Adjacent import
 -- declarations are grouped as a single list.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 extractImports :: (HsModule GhcPs) -> [[LImportDecl GhcPs]]
 #else
 extractImports :: HsModule -> [[LImportDecl GhcPs]]
@@ -28,7 +28,7 @@ extractImports :: HsModule -> [[LImportDecl GhcPs]]
 extractImports = groupImports . sortImportsByLocation . hsmodImports
 -- | Extracts import declarations from the given module and sorts them by
 -- their names. Adjacent import declarations are grouped as a single list.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if GLP961
 extractImportsSorted :: (HsModule GhcPs) -> [[LImportDecl GhcPs]]
 #else
 extractImportsSorted :: HsModule -> [[LImportDecl GhcPs]]
