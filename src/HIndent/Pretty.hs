@@ -292,6 +292,21 @@ prettyTyClDecl DataDecl {..} = do
       case dd_cons tcdDataDefn of
         DataTypeCons{} -> string "data "
         NewTypeCon{} -> string "newtype "
+#elif MIN_VERSION_ghc_lib_parser(9,4,1)
+prettyTyClDecl DataDecl {..} = do
+  printDataNewtype |=> do
+    whenJust (dd_ctxt tcdDataDefn) $ \x -> do
+      pretty $ Context x
+      string " =>"
+      newline
+    pretty tcdLName
+  spacePrefixed $ pretty <$> hsq_explicit tcdTyVars
+  pretty tcdDataDefn
+  where
+    printDataNewtype =
+      case dd_cons tcdDataDefn of
+        DataType -> string "data "
+        NewType -> string "newtype "
 #else
 prettyTyClDecl DataDecl {..} = do
   printDataNewtype |=> do
