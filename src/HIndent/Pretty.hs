@@ -277,7 +277,7 @@ prettyTyClDecl SynDecl {..} = do
   where
     hor = string " = " >> pretty tcdRhs
     ver = newline >> indentedBlock (string "= " |=> pretty tcdRhs)
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 prettyTyClDecl DataDecl {..} = do
   printDataNewtype |=> do
     whenJust (dd_ctxt tcdDataDefn) $ \x -> do
