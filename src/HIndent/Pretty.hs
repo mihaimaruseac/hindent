@@ -2193,7 +2193,8 @@ instance Pretty (ForeignDecl GhcPs) where
 
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (ForeignImport GhcPs) where
-  pretty'=undefined
+  pretty' (CImport (L _ (SourceText s)) conv safety _ _)=spaced [pretty conv, pretty safety, string s]
+  pretty' (CImport _ conv safety _ _)=spaced [pretty conv, pretty safety]
 #else
 instance Pretty ForeignImport where
   pretty' (CImport conv safety _ _ (L _ (SourceText s))) =
@@ -2203,7 +2204,8 @@ instance Pretty ForeignImport where
 
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (ForeignExport GhcPs) where
-  pretty'=undefined
+  pretty' (CExport (L _ (SourceText s)) conv)=spaced [pretty conv, string s]
+  pretty' (CExport _ conv)=pretty conv
 #else
 instance Pretty ForeignExport where
   pretty' (CExport conv (L _ (SourceText s))) = spaced [pretty conv, string s]
