@@ -304,7 +304,7 @@ prettyTyClDecl DataDecl {..} = do
   pretty tcdDataDefn
   where
     printDataNewtype =
-      case dd_cons tcdDataDefn of
+      case dd_ND tcdDataDefn of
         DataType -> string "data "
         NewType -> string "newtype "
 #else
