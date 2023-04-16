@@ -22,8 +22,13 @@ import GHC.Utils.Outputable hiding ((<>), empty, text)
 #endif
 -- | This function parses the given Haskell source code with the given file
 -- path (if any) and parse options.
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
+parseModule ::
+     Maybe FilePath -> [GLP.Extension] -> String -> ParseResult (HsModule GhcPs)
+#else
 parseModule ::
      Maybe FilePath -> [GLP.Extension] -> String -> ParseResult HsModule
+#endif
 parseModule filepath exts src =
   case unP GLP.parseModule initState of
     POk s m -> POk s $ unLoc m

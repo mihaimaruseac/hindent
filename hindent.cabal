@@ -94,12 +94,16 @@ library
     , utf8-string
     , yaml
   default-language: Haskell2010
-  if impl(ghc >= 9.4.1)
+  if impl(ghc >= 9.6.1)
     build-depends:
-        ghc-lib-parser >=9.4.1.20220807 && <9.5
+        ghc-lib-parser >=9.6.1.20230312 && <9.7
   else
-    build-depends:
-        ghc-lib-parser >=9.2.3.20220527 && <9.3
+    if impl(ghc >= 9.4.1)
+      build-depends:
+          ghc-lib-parser >=9.4.1.20220807 && <9.5
+    else
+      build-depends:
+          ghc-lib-parser >=9.2.3.20220527 && <9.3
 
 library hindent-internal
   exposed-modules:
@@ -134,12 +138,16 @@ library hindent-internal
     , utf8-string
     , yaml
   default-language: Haskell2010
-  if impl(ghc >= 9.4.1)
+  if impl(ghc >= 9.6.1)
     build-depends:
-        ghc-lib-parser >=9.4.1.20220807 && <9.5
+        ghc-lib-parser >=9.6.1.20230312 && <9.7
   else
-    build-depends:
-        ghc-lib-parser >=9.2.3.20220527 && <9.3
+    if impl(ghc >= 9.4.1)
+      build-depends:
+          ghc-lib-parser >=9.4.1.20220807 && <9.5
+    else
+      build-depends:
+          ghc-lib-parser >=9.2.3.20220527 && <9.3
 
 executable hindent
   main-is: Main.hs
@@ -174,12 +182,16 @@ executable hindent
     , utf8-string
     , yaml
   default-language: Haskell2010
-  if impl(ghc >= 9.4.1)
+  if impl(ghc >= 9.6.1)
     build-depends:
-        ghc-lib-parser >=9.4.1.20220807 && <9.5
+        ghc-lib-parser >=9.6.1.20230312 && <9.7
   else
-    build-depends:
-        ghc-lib-parser >=9.2.3.20220527 && <9.3
+    if impl(ghc >= 9.4.1)
+      build-depends:
+          ghc-lib-parser >=9.4.1.20220807 && <9.5
+    else
+      build-depends:
+          ghc-lib-parser >=9.2.3.20220527 && <9.3
 
 test-suite hindent-test
   type: exitcode-stdio-1.0
@@ -217,12 +229,16 @@ test-suite hindent-test
     , utf8-string
     , yaml
   default-language: Haskell2010
-  if impl(ghc >= 9.4.1)
+  if impl(ghc >= 9.6.1)
     build-depends:
-        ghc-lib-parser >=9.4.1.20220807 && <9.5
+        ghc-lib-parser >=9.6.1.20230312 && <9.7
   else
-    build-depends:
-        ghc-lib-parser >=9.2.3.20220527 && <9.3
+    if impl(ghc >= 9.4.1)
+      build-depends:
+          ghc-lib-parser >=9.4.1.20220807 && <9.5
+    else
+      build-depends:
+          ghc-lib-parser >=9.2.3.20220527 && <9.3
 
 benchmark hindent-bench
   type: exitcode-stdio-1.0
@@ -260,9 +276,13 @@ benchmark hindent-bench
     , utf8-string
     , yaml
   default-language: Haskell2010
-  if impl(ghc >= 9.4.1)
+  if impl(ghc >= 9.6.1)
     build-depends:
-        ghc-lib-parser >=9.4.1.20220807 && <9.5
+        ghc-lib-parser >=9.6.1.20230312 && <9.7
   else
-    build-depends:
-        ghc-lib-parser >=9.2.3.20220527 && <9.3
+    if impl(ghc >= 9.4.1)
+      build-depends:
+          ghc-lib-parser >=9.4.1.20220807 && <9.5
+    else
+      build-depends:
+          ghc-lib-parser >=9.2.3.20220527 && <9.3

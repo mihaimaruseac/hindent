@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 -- | Import declaration sorting for pretty-printing.
 module HIndent.Pretty.Import.Sort
   ( sortImportsByName
@@ -42,10 +44,17 @@ sortByModuleName = sortBy (compare `on` unLoc . ideclName . unLoc)
 -- | This function sorts explicit imports in the given import declaration
 -- by their names.
 sortExplicitImportsInDecl :: LImportDecl GhcPs -> LImportDecl GhcPs
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
+sortExplicitImportsInDecl (L l d@ImportDecl {ideclImportList = Just (x, imports)}) =
+  L l d {ideclImportList = Just (x, sorted)}
+  where
+    sorted = fmap (fmap sortVariants . sortExplicitImports) imports
+#else
 sortExplicitImportsInDecl (L l d@ImportDecl {ideclHiding = Just (x, imports)}) =
   L l d {ideclHiding = Just (x, sorted)}
   where
     sorted = fmap (fmap sortVariants . sortExplicitImports) imports
+#endif
 sortExplicitImportsInDecl x = x
 
 -- | This function sorts the given explicit imports by their names.

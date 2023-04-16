@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 -- | Printer combinators related to print strings.
 module HIndent.Pretty.Combinators.String
   ( string
@@ -13,7 +15,9 @@ import qualified Data.ByteString.Builder as S
 import GHC.Stack
 import HIndent.Config
 import HIndent.Printer
-
+#if MIN_VERSION_GLASGOW_HASKELL(9,6,0,0)
+import Control.Monad
+#endif
 -- | This function prints the given string.
 --
 -- The string must not include '\n's. Use 'newline' to print them.
