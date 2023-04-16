@@ -1182,7 +1182,7 @@ Infix constructor pattern
 
 ```haskell
 -- https://github.com/mihaimaruseac/hindent/issues/424
-from $ \(author `InnerJoin` post) -> pure ()
+a = from $ \(author `InnerJoin` post) -> pure ()
 ```
 
 Unboxed sum pattern matching.
@@ -1634,7 +1634,6 @@ f :: (forall a. Data a => a -> a) -> (forall a b. Data a => a -> b)
 g :: forall a b. a -> b
 ```
 
-
 An infix operator containing `#`
 
 ```haskell
@@ -1671,7 +1670,7 @@ foo ::
 
 Class constraints should leave `::` on same line
 
-``` haskell
+```haskell
 -- see https://github.com/chrisdone/hindent/pull/266#issuecomment-244182805
 fun ::
      (Class a, Class b)
@@ -2005,7 +2004,7 @@ Type application
 ```haskell
 {-# LANGUAGE TypeApplications #-}
 
-fun @Int 12
+a = fun @Int 12
 ```
 
 An expression with a SCC pragma
@@ -2327,32 +2326,33 @@ f = Module.Path.mdo
 Long line, tuple
 
 ```haskell
-test
-  (alphaBetaGamma, deltaEpsilonZeta, etaThetaIota, kappaLambdaMu, nuXiOmicro79)
-  (alphaBetaGamma, deltaEpsilonZeta, etaThetaIota, kappaLambdaMu, nuXiOmicron80)
-  ( alphaBetaGamma
-  , deltaEpsilonZeta
-  , etaThetaIota
-  , kappaLambdaMu
-  , nuXiOmicronP81)
+a =
+  test
+    (alphaBetaGamma, deltaEpsilonZeta, etaThetaIota, kappaLambdaMu, nuXiOmic79)
+    (alphaBetaGamma, deltaEpsilonZeta, etaThetaIota, kappaLambdaMu, nuXiOmicr80)
+    ( alphaBetaGamma
+    , deltaEpsilonZeta
+    , etaThetaIota
+    , kappaLambdaMu
+    , nuXiOmicro81)
 ```
 
 Long line, tuple section
 
 ```haskell
-test
-  (, alphaBetaGamma, , deltaEpsilonZeta, , etaThetaIota, kappaLambdaMu, nu79, )
-  (, alphaBetaGamma, , deltaEpsilonZeta, , etaThetaIota, kappaLambdaMu, , n80, )
-  (
-  , alphaBetaGamma
-  ,
-  , deltaEpsilonZeta
-  ,
-  , etaThetaIota
-  , kappaLambdaMu
-  ,
-  , nu81
-  ,)
+a =
+  test
+    (, alphaBetaGamma, , deltaEpsilonZeta, , etaThetaIota, kappaLambdaMu, nu79)
+    (, alphaBetaGamma, , deltaEpsilonZeta, , etaThetaIota, kappaLambdaMu, nuX80)
+    (
+    , alphaBetaGamma
+    ,
+    , deltaEpsilonZeta
+    ,
+    , etaThetaIota
+    , kappaLambdaMu
+    , nuXi81
+    ,)
 ```
 
 Linebreaks after very short names if the total line length goes over the limit
@@ -2392,9 +2392,10 @@ f = \ !a -> undefined
 An infix operator with a lambda expression
 
 ```haskell
-for xs $ \x -> do
-  left x
-  right x
+a =
+  for xs $ \x -> do
+    left x
+    right x
 ```
 
 Nested lambdas
@@ -2551,16 +2552,18 @@ x =
 With `do`
 
 ```haskell
-for xs $ do
-  left x
-  right x
+a =
+  for xs $ do
+    left x
+    right x
 ```
 
 With lambda-case
 
 ```haskell
-for xs $ \case
-  Left x -> x
+a =
+  for xs $ \case
+    Left x -> x
 ```
 
 `$` chain
@@ -2625,7 +2628,8 @@ Force indent and print RHS in a top-level expression
 
 ```haskell
 -- https://github.com/mihaimaruseac/hindent/issues/473
-template $
+a =
+  template $
   haskell
     [ SomeVeryLongName
     , AnotherLongNameEvenLongToBreakTheLine
@@ -2741,6 +2745,7 @@ f =
   [s|foo
 |]
 ```
+
 ### Ranges
 
 from

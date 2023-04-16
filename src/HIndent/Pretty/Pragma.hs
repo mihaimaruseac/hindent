@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 -- | Pretty-printing pragmas
 module HIndent.Pretty.Pragma
   ( prettyPragmas
@@ -17,33 +19,37 @@ import HIndent.Pretty.Combinators.Lineup
 import HIndent.Pretty.Combinators.String
 import HIndent.Printer
 import Text.Regex.TDFA
-
 -- | This function pretty-prints the module's pragmas
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
+prettyPragmas :: HsModule GhcPs -> Printer ()
+#else
 prettyPragmas :: HsModule -> Printer ()
+#endif
 prettyPragmas = lined . fmap string . collectPragmas
-
 -- | This function returns a 'True' if the module has pragmas.
 -- Otherwise, it returns a 'False'.
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
+pragmaExists :: HsModule GhcPs -> Bool
+#else
 pragmaExists :: HsModule -> Bool
+#endif
 pragmaExists = not . null . collectPragmas
-
 -- | This function collects pragma comments from the
 -- given module and modifies them into 'String's.
 --
 -- A pragma's name is converted to the @SHOUT_CASE@ (e.g., @lAnGuAgE@ ->
 -- @LANGUAGE@).
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
+collectPragmas :: HsModule GhcPs -> [String]
+collectPragmas =
+  fmap (uncurry constructPragma) .
+  mapMaybe extractPragma . listify isBlockComment . hsmodAnn . hsmodExt
+#else
 collectPragmas :: HsModule -> [String]
 collectPragmas =
   fmap (uncurry constructPragma) .
-  mapMaybe extractPragma . listify matchToComment . hsmodAnn
-  where
-    matchToComment :: EpaCommentTok -> Bool
-    matchToComment EpaBlockComment {} = True
-    matchToComment _ = False
-    constructPragma optionOrPragma xs =
-      "{-# " ++
-      fmap toUpper optionOrPragma ++ " " ++ intercalate ", " xs ++ " #-}"
-
+  mapMaybe extractPragma . listify isBlockComment . hsmodAnn
+#endif
 -- | This function returns a 'Just' value with the pragma
 -- extracted from the passed 'EpaCommentTok' if it has one. Otherwise, it
 -- returns a 'Nothing'.
@@ -59,3 +65,13 @@ extractPragma _ = Nothing
 isPragma :: EpaCommentTok -> Bool
 isPragma (EpaBlockComment c) = match pragmaRegex c
 isPragma _ = False
+
+-- | Construct a pragma.
+constructPragma :: String -> [String] -> String
+constructPragma optionOrPragma xs =
+  "{-# " ++ fmap toUpper optionOrPragma ++ " " ++ intercalate ", " xs ++ " #-}"
+
+-- | Checks if the given comment is a block one.
+isBlockComment :: EpaCommentTok -> Bool
+isBlockComment EpaBlockComment {} = True
+isBlockComment _ = False
