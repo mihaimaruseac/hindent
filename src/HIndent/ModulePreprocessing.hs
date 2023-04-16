@@ -26,7 +26,7 @@ import Type.Reflection
 -- Pretty-printing a module without calling this function for it before may
 -- raise an error or not print it correctly.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-modifyASTForPrettyPrinting :: (HsModule GhcPs) -> (HsModule GhcPs)
+modifyASTForPrettyPrinting :: HsModule GhcPs -> HsModule GhcPs
 #else
 modifyASTForPrettyPrinting :: HsModule -> HsModule
 #endif
@@ -47,7 +47,7 @@ modifyASTForPrettyPrinting m = relocateComments (beforeRelocation m) allComments
 -- | This function modifies the given module AST to apply fixities of infix
 -- operators defined in the 'base' package.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-fixFixities :: (HsModule GhcPs) -> (HsModule GhcPs)
+fixFixities :: HsModule GhcPs -> HsModule GhcPs
 #else
 fixFixities :: HsModule -> HsModule
 #endif
@@ -60,7 +60,7 @@ fixFixities = applyFixities baseFixities
 -- relocation. This function prevents it by fixing the 'L?GRHS''s source
 -- span.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-resetLGRHSEndPositionInModule :: (HsModule GhcPs) -> (HsModule GhcPs)
+resetLGRHSEndPositionInModule :: HsModule GhcPs -> HsModule GhcPs
 #else
 resetLGRHSEndPositionInModule :: HsModule -> HsModule
 #endif
@@ -71,7 +71,7 @@ resetLGRHSEndPositionInModule = everywhere (mkT resetLGRHSEndPosition)
 -- before a bar, and the elements are not sorted by their locations. This
 -- function fixes the orderings.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-sortExprLStmt :: (HsModule GhcPs) -> (HsModule GhcPs)
+sortExprLStmt :: HsModule GhcPs -> HsModule GhcPs
 #else
 sortExprLStmt :: HsModule -> HsModule
 #endif
@@ -83,7 +83,7 @@ sortExprLStmt m@HsModule {hsmodDecls = xs} = m {hsmodDecls = sorted}
 -- | This function removes all comments from the given module not to
 -- duplicate them on comment relocation.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-removeComments :: (HsModule GhcPs) -> (HsModule GhcPs)
+removeComments :: HsModule GhcPs -> HsModule GhcPs
 #else
 removeComments :: HsModule -> HsModule
 #endif
@@ -91,7 +91,7 @@ removeComments = everywhere (mkT $ const emptyComments)
 -- | This function replaces all 'EpAnnNotUsed's in 'SrcSpanAnn''s with
 -- 'EpAnn's to make it possible to locate comments on them.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-replaceAllNotUsedAnns :: (HsModule GhcPs) -> (HsModule GhcPs)
+replaceAllNotUsedAnns :: HsModule GhcPs -> HsModule GhcPs
 #else
 replaceAllNotUsedAnns :: HsModule -> HsModule
 #endif
@@ -124,7 +124,7 @@ replaceAllNotUsedAnns = everywhere app
 -- | This function sets the start column of 'hsmodName' of the given
 -- 'HsModule' to 1 to correctly locate comments above the module name.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-resetModuleNameColumn :: (HsModule GhcPs) -> (HsModule GhcPs)
+resetModuleNameColumn :: HsModule GhcPs -> HsModule GhcPs
 #else
 resetModuleNameColumn :: HsModule -> HsModule
 #endif
@@ -145,7 +145,7 @@ resetModuleNameColumn m = m
 -- also contains the name, and we use the latter one. This function
 -- prevents comments from being located in 'fun_id'.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-closeEpAnnOfFunBindFunId :: (HsModule GhcPs) -> (HsModule GhcPs)
+closeEpAnnOfFunBindFunId :: HsModule GhcPs -> HsModule GhcPs
 #else
 closeEpAnnOfFunBindFunId :: HsModule -> HsModule
 #endif
@@ -162,7 +162,7 @@ closeEpAnnOfFunBindFunId = everywhere (mkT closeEpAnn)
 -- information is also stored inside the 'Match'. This function removes the
 -- duplication not to locate comments on a wrong point.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-closeEpAnnOfMatchMExt :: (HsModule GhcPs) -> (HsModule GhcPs)
+closeEpAnnOfMatchMExt :: HsModule GhcPs -> HsModule GhcPs
 #else
 closeEpAnnOfMatchMExt :: HsModule -> HsModule
 #endif
@@ -183,7 +183,7 @@ closeEpAnnOfMatchMExt = everywhere closeEpAnn
 -- 'HsFunTy' should not have any comments. Instead, its LHS and RHS should
 -- have them.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-closeEpAnnOfHsFunTy :: (HsModule GhcPs) -> (HsModule GhcPs)
+closeEpAnnOfHsFunTy :: HsModule GhcPs -> HsModule GhcPs
 #else
 closeEpAnnOfHsFunTy :: HsModule -> HsModule
 #endif
@@ -196,7 +196,7 @@ closeEpAnnOfHsFunTy = everywhere (mkT closeEpAnn)
 -- to locate comments correctly. A placeholder anchor is an anchor pointing
 -- on (-1, -1).
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-closePlaceHolderEpAnns :: (HsModule GhcPs) -> (HsModule GhcPs)
+closePlaceHolderEpAnns :: HsModule GhcPs -> HsModule GhcPs
 #else
 closePlaceHolderEpAnns :: HsModule -> HsModule
 #endif
@@ -216,7 +216,7 @@ closePlaceHolderEpAnns = everywhere closeEpAnn
 -- haddocks, but the same information is stored in 'EpaCommentTok's. Thus,
 -- we need to remove the duplication.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-removeAllDocDs :: (HsModule GhcPs) -> (HsModule GhcPs)
+removeAllDocDs :: HsModule GhcPs -> HsModule GhcPs
 #else
 removeAllDocDs :: HsModule -> HsModule
 #endif

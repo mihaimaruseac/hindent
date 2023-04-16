@@ -146,7 +146,7 @@ hasTrailingLine :: ByteString -> Bool
 hasTrailingLine xs = not (S8.null xs) && S8.last xs == '\n'
 -- | Print the module.
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-prettyPrint :: Config -> (HsModule GhcPs) -> Builder
+prettyPrint :: Config -> HsModule GhcPs -> Builder
 #else
 prettyPrint :: Config -> HsModule -> Builder
 #endif
