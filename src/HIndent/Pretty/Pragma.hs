@@ -20,7 +20,7 @@ import HIndent.Pretty.Combinators.String
 import HIndent.Printer
 import Text.Regex.TDFA
 -- | This function pretty-prints the module's pragmas
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 prettyPragmas :: HsModule GhcPs -> Printer ()
 #else
 prettyPragmas :: HsModule -> Printer ()
@@ -28,7 +28,7 @@ prettyPragmas :: HsModule -> Printer ()
 prettyPragmas = lined . fmap string . collectPragmas
 -- | This function returns a 'True' if the module has pragmas.
 -- Otherwise, it returns a 'False'.
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 pragmaExists :: HsModule GhcPs -> Bool
 #else
 pragmaExists :: HsModule -> Bool
@@ -39,7 +39,7 @@ pragmaExists = not . null . collectPragmas
 --
 -- A pragma's name is converted to the @SHOUT_CASE@ (e.g., @lAnGuAgE@ ->
 -- @LANGUAGE@).
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 collectPragmas :: HsModule GhcPs -> [String]
 collectPragmas =
   fmap (uncurry constructPragma) .

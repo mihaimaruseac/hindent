@@ -25,13 +25,13 @@ import GHC.Unit
 import HIndent.Pretty.Pragma
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 import GHC.Core.DataCon
 #endif
 -- | An interface to extract comments from an AST node.
 class CommentExtraction a where
   nodeComments :: a -> NodeComments
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction (HsModule GhcPs) where
   nodeComments =
     nodeComments . filterOutEofAndPragmasFromAnn . hsmodAnn . hsmodExt
@@ -84,7 +84,7 @@ instance CommentExtraction (HsDecl GhcPs) where
   nodeComments DocD {} =
     error "Document comments should be treated as normal ones."
   nodeComments RoleAnnotD {} = emptyNodeComments
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction (TyClDecl GhcPs) where
   nodeComments FamDecl {} = emptyNodeComments
   nodeComments SynDecl {..} = nodeComments tcdSExt
@@ -102,7 +102,7 @@ instance CommentExtraction (InstDecl GhcPs) where
 
 nodeCommentsInstDecl :: InstDecl GhcPs -> NodeComments
 nodeCommentsInstDecl ClsInstD {} = emptyNodeComments
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 nodeCommentsInstDecl DataFamInstD {} = emptyNodeComments
 #else
 nodeCommentsInstDecl DataFamInstD {..} = nodeComments dfid_ext
@@ -120,7 +120,7 @@ nodeCommentsHsBind VarBind {} = emptyNodeComments
 nodeCommentsHsBind AbsBinds {} = emptyNodeComments
 #endif
 nodeCommentsHsBind PatSynBind {} = emptyNodeComments
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction (Sig GhcPs) where
   nodeComments (TypeSig x _ _) = nodeComments x
   nodeComments (PatSynSig x _ _) = nodeComments x
@@ -177,7 +177,7 @@ nodeCommentsHsExpr (HsUnboundVar x _) = nodeComments x
 nodeCommentsHsExpr HsConLikeOut {} = emptyNodeComments
 nodeCommentsHsExpr HsRecFld {} = emptyNodeComments
 #endif
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 nodeCommentsHsExpr (HsOverLabel x _ _) = nodeComments x
 #else
 nodeCommentsHsExpr (HsOverLabel x _) = nodeComments x
@@ -186,7 +186,7 @@ nodeCommentsHsExpr (HsIPVar x _) = nodeComments x
 nodeCommentsHsExpr (HsOverLit x _) = nodeComments x
 nodeCommentsHsExpr (HsLit x _) = nodeComments x
 nodeCommentsHsExpr HsLam {} = emptyNodeComments
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 nodeCommentsHsExpr (HsLamCase x _ _) = nodeComments x
 #else
 nodeCommentsHsExpr (HsLamCase x _) = nodeComments x
@@ -195,7 +195,7 @@ nodeCommentsHsExpr (HsApp x _ _) = nodeComments x
 nodeCommentsHsExpr HsAppType {} = emptyNodeComments
 nodeCommentsHsExpr (OpApp x _ _ _) = nodeComments x
 nodeCommentsHsExpr (NegApp x _ _) = nodeComments x
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 nodeCommentsHsExpr (HsPar x _ _ _) = nodeComments x
 #else
 nodeCommentsHsExpr (HsPar x _) = nodeComments x
@@ -207,7 +207,7 @@ nodeCommentsHsExpr (ExplicitSum x _ _ _) = nodeComments x
 nodeCommentsHsExpr (HsCase x _ _) = nodeComments x
 nodeCommentsHsExpr (HsIf x _ _ _) = nodeComments x
 nodeCommentsHsExpr (HsMultiIf x _) = nodeComments x
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 nodeCommentsHsExpr (HsLet x _ _ _ _) = nodeComments x
 #else
 nodeCommentsHsExpr (HsLet x _ _) = nodeComments x
@@ -235,12 +235,12 @@ nodeCommentsHsExpr HsTick {} = emptyNodeComments
 nodeCommentsHsExpr HsBinTick {} = emptyNodeComments
 #endif
 nodeCommentsHsExpr HsPragE {} = emptyNodeComments
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 nodeCommentsHsExpr HsRecSel {} = emptyNodeComments
 nodeCommentsHsExpr (HsTypedBracket x _) = nodeComments x
 nodeCommentsHsExpr (HsUntypedBracket x _) = nodeComments x
 #endif
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 nodeCommentsHsExpr (HsTypedSplice (x, y) _) = nodeComments x <> nodeComments y
 nodeCommentsHsExpr (HsUntypedSplice x _) = nodeComments x
 #endif
@@ -346,7 +346,7 @@ nodeCommentsMatchContext StmtCtxt {} = emptyNodeComments
 nodeCommentsMatchContext ThPatSplice {} = emptyNodeComments
 nodeCommentsMatchContext ThPatQuote {} = emptyNodeComments
 nodeCommentsMatchContext PatSyn {} = emptyNodeComments
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 nodeCommentsMatchContext LamCaseAlt {} = emptyNodeComments
 #endif
 instance CommentExtraction (ParStmtBlock GhcPs GhcPs) where
@@ -392,12 +392,12 @@ nodeCommentsPat :: Pat GhcPs -> NodeComments
 nodeCommentsPat WildPat {} = emptyNodeComments
 nodeCommentsPat VarPat {} = emptyNodeComments
 nodeCommentsPat (LazyPat x _) = nodeComments x
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 nodeCommentsPat (AsPat x _ _ _) = nodeComments x
 #else
 nodeCommentsPat (AsPat x _ _) = nodeComments x
 #endif
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 nodeCommentsPat (ParPat x _ _ _) = nodeComments x
 #else
 nodeCommentsPat (ParPat x _) = nodeComments x
@@ -469,7 +469,7 @@ instance CommentExtraction (HsValBindsLR GhcPs GhcPs) where
 instance CommentExtraction (HsTupArg GhcPs) where
   nodeComments (Present x _) = nodeComments x
   nodeComments (Missing x) = nodeComments x
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance CommentExtraction RecConField where
   nodeComments (RecConField x) = nodeComments x
 #else
@@ -483,7 +483,7 @@ instance CommentExtraction
            (HsRecField' (FieldOcc GhcPs) (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
   nodeComments HsRecField {..} = nodeComments hsRecFieldAnn
 #endif
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 -- | For pattern matchings against records.
 instance CommentExtraction
            (HsFieldBind
@@ -501,7 +501,7 @@ instance CommentExtraction
 instance CommentExtraction RecConField where
   nodeComments (RecConField x) = nodeComments x
 #endif
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance CommentExtraction (FieldOcc GhcPs) where
   nodeComments FieldOcc {} = emptyNodeComments
 #else
@@ -547,7 +547,7 @@ instance CommentExtraction (AmbiguousFieldOcc GhcPs) where
 
 instance CommentExtraction (ImportDecl GhcPs) where
   nodeComments ImportDecl {..} = nodeComments ideclExt
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction XImportDeclPass where
   nodeComments XImportDeclPass {..} = nodeComments ideclAnn
 #endif
@@ -602,7 +602,7 @@ instance CommentExtraction PrefixOp where
 
 instance CommentExtraction Context where
   nodeComments Context {} = emptyNodeComments
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance CommentExtraction HorizontalContext where
   nodeComments HorizontalContext {} = emptyNodeComments
 
@@ -652,7 +652,7 @@ instance CommentExtraction
   nodeComments HsValArg {} = emptyNodeComments
   nodeComments HsTypeArg {} = emptyNodeComments
   nodeComments HsArgPar {} = emptyNodeComments
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance CommentExtraction (HsQuote GhcPs) where
   nodeComments ExpBr {} = emptyNodeComments
   nodeComments PatBr {} = emptyNodeComments
@@ -662,7 +662,7 @@ instance CommentExtraction (HsQuote GhcPs) where
   nodeComments VarBr {} = emptyNodeComments
 #endif
 
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction (WarnDecls GhcPs) where
   nodeComments Warnings {..} = nodeComments $ fst wd_ext
 #else
@@ -671,11 +671,11 @@ instance CommentExtraction (WarnDecls GhcPs) where
 #endif
 instance CommentExtraction (WarnDecl GhcPs) where
   nodeComments (Warning x _ _) = nodeComments x
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance CommentExtraction (WithHsDocIdentifiers StringLiteral GhcPs) where
   nodeComments WithHsDocIdentifiers {} = emptyNodeComments
 #endif
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction (IEWrappedName GhcPs) where
   nodeComments IEName {} = emptyNodeComments
   nodeComments IEPattern {} = emptyNodeComments
@@ -687,7 +687,7 @@ instance CommentExtraction (IEWrappedName RdrName) where
   nodeComments IEPattern {} = emptyNodeComments
   nodeComments IEType {} = emptyNodeComments
 #endif
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance CommentExtraction (DotFieldOcc GhcPs) where
   nodeComments DotFieldOcc {..} = nodeComments dfoExt
 #else
@@ -695,7 +695,7 @@ instance CommentExtraction (HsFieldLabel GhcPs) where
   nodeComments HsFieldLabel {..} = nodeComments hflExt
 #endif
 
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction (RuleDecls GhcPs) where
   nodeComments HsRules {..} = nodeComments $ fst rds_ext
 #else
@@ -703,7 +703,7 @@ instance CommentExtraction (RuleDecls GhcPs) where
   nodeComments HsRules {..} = nodeComments rds_ext
 #endif
 
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction (RuleDecl GhcPs) where
   nodeComments HsRule {..} = nodeComments $ fst rd_ext
 #else
@@ -735,7 +735,7 @@ instance CommentExtraction (DefaultDecl GhcPs) where
 instance CommentExtraction (ForeignDecl GhcPs) where
   nodeComments ForeignImport {..} = nodeComments fd_i_ext
   nodeComments ForeignExport {..} = nodeComments fd_e_ext
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction (ForeignImport GhcPs) where
   nodeComments CImport {} = emptyNodeComments
 #else
@@ -743,7 +743,7 @@ instance CommentExtraction ForeignImport where
   nodeComments CImport {} = emptyNodeComments
 #endif
 
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction (ForeignExport GhcPs) where
   nodeComments CExport {} = emptyNodeComments
 #else
@@ -757,7 +757,7 @@ instance CommentExtraction Safety where
   nodeComments PlaySafe = emptyNodeComments
   nodeComments PlayInterruptible = emptyNodeComments
   nodeComments PlayRisky = emptyNodeComments
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction (AnnDecl GhcPs) where
   nodeComments (HsAnnotation (x, _) _ _) = nodeComments x
 #else
@@ -819,7 +819,7 @@ nodeCommentsInlineSpec Inline {} = emptyNodeComments
 nodeCommentsInlineSpec Inlinable {} = emptyNodeComments
 nodeCommentsInlineSpec NoInline {} = emptyNodeComments
 nodeCommentsInlineSpec NoUserInlinePrag {} = emptyNodeComments
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 nodeCommentsInlineSpec Opaque {} = emptyNodeComments
 #endif
 instance CommentExtraction (HsPatSynDir GhcPs) where
@@ -855,7 +855,7 @@ instance CommentExtraction (HsLit GhcPs) where
   nodeComments HsRat {} = emptyNodeComments
   nodeComments HsFloatPrim {} = emptyNodeComments
   nodeComments HsDoublePrim {} = emptyNodeComments
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction (HsPragE GhcPs) where
   nodeComments (HsPragSCC (x, _) _) = nodeComments x
 #else
@@ -864,7 +864,7 @@ instance CommentExtraction (HsPragE GhcPs) where
 #endif
 instance CommentExtraction HsIPName where
   nodeComments HsIPName {} = emptyNodeComments
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction (HsTyLit GhcPs) where
   nodeComments HsNumTy {} = emptyNodeComments
   nodeComments HsStrTy {} = emptyNodeComments
@@ -907,19 +907,19 @@ nodeCommentsHsCmd (HsCmdArrApp x _ _ _ _) = nodeComments x
 nodeCommentsHsCmd (HsCmdArrForm x _ _ _ _) = nodeComments x
 nodeCommentsHsCmd (HsCmdApp x _ _) = nodeComments x
 nodeCommentsHsCmd HsCmdLam {} = emptyNodeComments
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 nodeCommentsHsCmd (HsCmdPar x _ _ _) = nodeComments x
 #else
 nodeCommentsHsCmd (HsCmdPar x _) = nodeComments x
 #endif
 nodeCommentsHsCmd (HsCmdCase x _ _) = nodeComments x
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 nodeCommentsHsCmd (HsCmdLamCase x _ _) = nodeComments x
 #else
 nodeCommentsHsCmd (HsCmdLamCase x _) = nodeComments x
 #endif
 nodeCommentsHsCmd (HsCmdIf x _ _ _ _) = nodeComments x
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 nodeCommentsHsCmd (HsCmdLet x _ _ _ _) = nodeComments x
 #else
 nodeCommentsHsCmd (HsCmdLet x _ _) = nodeComments x
@@ -961,7 +961,7 @@ instance CommentExtraction SrcStrictness where
 instance CommentExtraction (HsOuterSigTyVarBndrs GhcPs) where
   nodeComments HsOuterImplicit {} = emptyNodeComments
   nodeComments HsOuterExplicit {..} = nodeComments hso_xexplicit
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction FieldLabelString where
   nodeComments = const emptyNodeComments
 

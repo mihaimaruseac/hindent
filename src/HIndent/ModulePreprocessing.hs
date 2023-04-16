@@ -25,7 +25,7 @@ import Type.Reflection
 --
 -- Pretty-printing a module without calling this function for it before may
 -- raise an error or not print it correctly.
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 modifyASTForPrettyPrinting :: (HsModule GhcPs) -> (HsModule GhcPs)
 #else
 modifyASTForPrettyPrinting :: HsModule -> HsModule
@@ -46,7 +46,7 @@ modifyASTForPrettyPrinting m = relocateComments (beforeRelocation m) allComments
     isEofComment _ = False
 -- | This function modifies the given module AST to apply fixities of infix
 -- operators defined in the 'base' package.
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 fixFixities :: (HsModule GhcPs) -> (HsModule GhcPs)
 #else
 fixFixities :: HsModule -> HsModule
@@ -59,7 +59,7 @@ fixFixities = applyFixities baseFixities
 -- locates comments in the wrong position in the process of comment
 -- relocation. This function prevents it by fixing the 'L?GRHS''s source
 -- span.
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 resetLGRHSEndPositionInModule :: (HsModule GhcPs) -> (HsModule GhcPs)
 #else
 resetLGRHSEndPositionInModule :: HsModule -> HsModule
@@ -70,7 +70,7 @@ resetLGRHSEndPositionInModule = everywhere (mkT resetLGRHSEndPosition)
 -- For example, the last element of 'HsDo' of 'HsExpr' is the element
 -- before a bar, and the elements are not sorted by their locations. This
 -- function fixes the orderings.
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 sortExprLStmt :: (HsModule GhcPs) -> (HsModule GhcPs)
 #else
 sortExprLStmt :: HsModule -> HsModule
@@ -82,7 +82,7 @@ sortExprLStmt m@HsModule {hsmodDecls = xs} = m {hsmodDecls = sorted}
     sortByLoc = sortBy (compare `on` srcSpanToRealSrcSpan . locA . getLoc)
 -- | This function removes all comments from the given module not to
 -- duplicate them on comment relocation.
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 removeComments :: (HsModule GhcPs) -> (HsModule GhcPs)
 #else
 removeComments :: HsModule -> HsModule
@@ -90,7 +90,7 @@ removeComments :: HsModule -> HsModule
 removeComments = everywhere (mkT $ const emptyComments)
 -- | This function replaces all 'EpAnnNotUsed's in 'SrcSpanAnn''s with
 -- 'EpAnn's to make it possible to locate comments on them.
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 replaceAllNotUsedAnns :: (HsModule GhcPs) -> (HsModule GhcPs)
 #else
 replaceAllNotUsedAnns :: HsModule -> HsModule
@@ -123,7 +123,7 @@ replaceAllNotUsedAnns = everywhere app
     emptyEpaLocation = EpaDelta (SameLine 0) []
 -- | This function sets the start column of 'hsmodName' of the given
 -- 'HsModule' to 1 to correctly locate comments above the module name.
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 resetModuleNameColumn :: (HsModule GhcPs) -> (HsModule GhcPs)
 #else
 resetModuleNameColumn :: HsModule -> HsModule
@@ -144,7 +144,7 @@ resetModuleNameColumn m = m
 -- The 'fun_id' contains the function's name. However, 'FunRhs' of 'Match'
 -- also contains the name, and we use the latter one. This function
 -- prevents comments from being located in 'fun_id'.
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 closeEpAnnOfFunBindFunId :: (HsModule GhcPs) -> (HsModule GhcPs)
 #else
 closeEpAnnOfFunBindFunId :: HsModule -> HsModule
@@ -161,7 +161,7 @@ closeEpAnnOfFunBindFunId = everywhere (mkT closeEpAnn)
 -- The field contains the annotation of the match LHS. However, the same
 -- information is also stored inside the 'Match'. This function removes the
 -- duplication not to locate comments on a wrong point.
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 closeEpAnnOfMatchMExt :: (HsModule GhcPs) -> (HsModule GhcPs)
 #else
 closeEpAnnOfMatchMExt :: HsModule -> HsModule
@@ -182,7 +182,7 @@ closeEpAnnOfMatchMExt = everywhere closeEpAnn
 --
 -- 'HsFunTy' should not have any comments. Instead, its LHS and RHS should
 -- have them.
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 closeEpAnnOfHsFunTy :: (HsModule GhcPs) -> (HsModule GhcPs)
 #else
 closeEpAnnOfHsFunTy :: HsModule -> HsModule
@@ -195,7 +195,7 @@ closeEpAnnOfHsFunTy = everywhere (mkT closeEpAnn)
 -- | This function replaces all 'EpAnn's that contain placeholder anchors
 -- to locate comments correctly. A placeholder anchor is an anchor pointing
 -- on (-1, -1).
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 closePlaceHolderEpAnns :: (HsModule GhcPs) -> (HsModule GhcPs)
 #else
 closePlaceHolderEpAnns :: HsModule -> HsModule
@@ -215,7 +215,7 @@ closePlaceHolderEpAnns = everywhere closeEpAnn
 -- | This function removes all 'DocD's from the given module. They have
 -- haddocks, but the same information is stored in 'EpaCommentTok's. Thus,
 -- we need to remove the duplication.
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 removeAllDocDs :: (HsModule GhcPs) -> (HsModule GhcPs)
 #else
 removeAllDocDs :: HsModule -> HsModule
@@ -232,7 +232,7 @@ removeAllDocDs x@HsModule {hsmodDecls = decls} =
 -- See the documentation of 'resetLGRHSEndPositionInModule' for the reason.
 resetLGRHSEndPosition ::
      LGRHS GhcPs (LHsExpr GhcPs) -> LGRHS GhcPs (LHsExpr GhcPs)
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 resetLGRHSEndPosition (L (SrcSpanAnn locAnn@EpAnn {} sp) (GRHS ext@EpAnn {..} stmt body)) =
   let lastPosition =
         maximum $ realSrcSpanEnd . anchor <$> listify collectAnchor body

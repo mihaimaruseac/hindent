@@ -16,13 +16,13 @@ import qualified GHC.Parser as GLP
 import GHC.Parser.Lexer hiding (buffer)
 import GHC.Stack
 import GHC.Types.SrcLoc
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 import GHC.Utils.Error
 import GHC.Utils.Outputable hiding ((<>), empty, text)
 #endif
 -- | This function parses the given Haskell source code with the given file
 -- path (if any) and parse options.
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 parseModule ::
      Maybe FilePath -> [GLP.Extension] -> String -> ParseResult (HsModule GhcPs)
 #else
@@ -54,7 +54,7 @@ lexCode code
 -- The 'StarIsType' extension is always enabled to compile a code using
 -- kinds like '* -> *'.
 parserOptsFromExtensions :: [GLP.Extension] -> ParserOpts
-#if GLP941
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
 parserOptsFromExtensions opts =
   mkParserOpts
     opts'

@@ -35,7 +35,7 @@ showOutputable = showPpr dynFlags
 
 -- | 'DynFlags' for calling 'showPpr'
 dynFlags :: DynFlags
-#if GLP961
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
 dynFlags = defaultDynFlags fakeSettings
 #else
 dynFlags = defaultDynFlags fakeSettings fakeLlvmConfig
