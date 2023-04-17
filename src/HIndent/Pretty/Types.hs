@@ -58,9 +58,10 @@ module HIndent.Pretty.Types
 
 import GHC.Hs
 import GHC.Types.Name.Reader
-import GHC.Unit
 import GHC.Unit.Module.Warnings
-
+#if !MIN_VERSION_ghc_lib_parser(9,6,1)
+import GHC.Unit
+#endif
 -- | `LHsExpr` used as a infix operator
 newtype InfixExpr =
   InfixExpr (LHsExpr GhcPs)
