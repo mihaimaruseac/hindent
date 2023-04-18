@@ -7,6 +7,7 @@ module HIndent.GhcLibParserWrapper.GHC.Hs
   ) where
 
 import GHC.Hs
+-- | The wrapper for `HsModule'`
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 type HsModule' = HsModule GhcPs
 #else
