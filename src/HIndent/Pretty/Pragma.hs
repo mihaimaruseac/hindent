@@ -13,26 +13,18 @@ import Data.Generics.Schemes
 import Data.List
 import Data.List.Split
 import Data.Maybe
-import GHC.Hs
+import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.Pragma
 import HIndent.Pretty.Combinators.Lineup
 import HIndent.Pretty.Combinators.String
 import HIndent.Printer
 import Text.Regex.TDFA
 -- | This function pretty-prints the module's pragmas
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-prettyPragmas :: HsModule GhcPs -> Printer ()
-#else
-prettyPragmas :: HsModule -> Printer ()
-#endif
+prettyPragmas :: HsModule' -> Printer ()
 prettyPragmas = lined . fmap string . collectPragmas
 -- | This function returns a 'True' if the module has pragmas.
 -- Otherwise, it returns a 'False'.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-pragmaExists :: HsModule GhcPs -> Bool
-#else
-pragmaExists :: HsModule -> Bool
-#endif
+pragmaExists :: HsModule' -> Bool
 pragmaExists = not . null . collectPragmas
 -- | This function collects pragma comments from the
 -- given module and modifies them into 'String's.

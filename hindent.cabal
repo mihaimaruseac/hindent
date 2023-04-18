@@ -37,6 +37,7 @@ library
       HIndent.CabalFile
       HIndent.CodeBlock
       HIndent.Config
+      HIndent.GhcLibParserWrapper.GHC.Hs
       HIndent.Language
       HIndent.LanguageExtension
       HIndent.LanguageExtension.Conversion
