@@ -31,11 +31,11 @@ import Data.Functor.Identity
 import Data.List hiding (stripPrefix)
 import Data.Maybe
 import Data.Monoid
-import GHC.Hs
 import GHC.Parser.Lexer hiding (buffer)
 import GHC.Types.SrcLoc
 import HIndent.CodeBlock
 import HIndent.Config
+import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.LanguageExtension
 import qualified HIndent.LanguageExtension.Conversion as CE
 import HIndent.LanguageExtension.Types
@@ -123,12 +123,9 @@ reformat config mexts mfilepath =
                else x' <> "\n")
           (f x)
       | otherwise = f x
+
 -- | Generate an AST from the given module for debugging.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-testAst :: ByteString -> Either String (HsModule GhcPs)
-#else
-testAst :: ByteString -> Either String HsModule
-#endif
+testAst :: ByteString -> Either String HsModule'
 testAst x =
   case parseModule Nothing exts (UTF8.toString x) of
     POk _ m -> Right $ modifyASTForPrettyPrinting m
@@ -144,12 +141,9 @@ testAst x =
 -- | Does the strict bytestring have a trailing newline?
 hasTrailingLine :: ByteString -> Bool
 hasTrailingLine xs = not (S8.null xs) && S8.last xs == '\n'
+
 -- | Print the module.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-prettyPrint :: Config -> HsModule GhcPs -> Builder
-#else
-prettyPrint :: Config -> HsModule -> Builder
-#endif
+prettyPrint :: Config -> HsModule' -> Builder
 prettyPrint config m =
   runPrinterStyle config (pretty $ modifyASTForPrettyPrinting m)
 

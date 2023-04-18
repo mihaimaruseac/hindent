@@ -8,31 +8,22 @@ module HIndent.Pretty.Import
   , groupImports
   ) where
 
-import GHC.Hs
 import GHC.Types.SrcLoc
+import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.Pretty.Import.Sort
+
 -- | Returns if the module has import declarations.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-importsExist :: HsModule GhcPs -> Bool
-#else
-importsExist :: HsModule -> Bool
-#endif
+importsExist :: HsModule' -> Bool
 importsExist = not . null . hsmodImports
+
 -- | Extracts import declarations from the given module. Adjacent import
 -- declarations are grouped as a single list.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-extractImports :: HsModule GhcPs -> [[LImportDecl GhcPs]]
-#else
-extractImports :: HsModule -> [[LImportDecl GhcPs]]
-#endif
+extractImports :: HsModule' -> [[LImportDecl GhcPs]]
 extractImports = groupImports . sortImportsByLocation . hsmodImports
+
 -- | Extracts import declarations from the given module and sorts them by
 -- their names. Adjacent import declarations are grouped as a single list.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-extractImportsSorted :: HsModule GhcPs -> [[LImportDecl GhcPs]]
-#else
-extractImportsSorted :: HsModule -> [[LImportDecl GhcPs]]
-#endif
+extractImportsSorted :: HsModule' -> [[LImportDecl GhcPs]]
 extractImportsSorted = fmap sortImportsByName . extractImports
 
 -- | Combines adjacent import declarations into a single list.
