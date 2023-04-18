@@ -8,16 +8,19 @@ module HIndent.Pretty.Import
   , groupImports
   ) where
 
-import HIndent.GhcLibParserWrapper.GHC.Hs
 import GHC.Types.SrcLoc
+import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.Pretty.Import.Sort
+
 -- | Returns if the module has import declarations.
 importsExist :: HsModule' -> Bool
 importsExist = not . null . hsmodImports
+
 -- | Extracts import declarations from the given module. Adjacent import
 -- declarations are grouped as a single list.
 extractImports :: HsModule' -> [[LImportDecl GhcPs]]
 extractImports = groupImports . sortImportsByLocation . hsmodImports
+
 -- | Extracts import declarations from the given module and sorts them by
 -- their names. Adjacent import declarations are grouped as a single list.
 extractImportsSorted :: HsModule' -> [[LImportDecl GhcPs]]

@@ -16,7 +16,6 @@ import GHC.Parser.Lexer hiding (buffer)
 import GHC.Stack
 import GHC.Types.SrcLoc
 import HIndent.GhcLibParserWrapper.GHC.Hs
-
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 import GHC.Utils.Error
 import GHC.Utils.Outputable hiding ((<>), empty, text)

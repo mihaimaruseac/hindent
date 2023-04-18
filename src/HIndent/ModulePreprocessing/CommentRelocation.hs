@@ -44,9 +44,9 @@ import Data.Foldable
 import Data.Function
 import Data.List
 import GHC.Data.Bag
-import HIndent.GhcLibParserWrapper.GHC.Hs
 import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)
+import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.Pretty.Pragma
 import HIndent.Pretty.SigBindFamily
 import Type.Reflection
@@ -61,6 +61,7 @@ data Wrapper =
 
 -- | 'State' with comments.
 type WithComments = State [LEpaComment]
+
 -- | This function collects all comments from the passed 'HsModule', and
 -- modifies all 'EpAnn's so that all 'EpAnn's have 'EpaCommentsBalanced's.
 relocateComments :: HsModule' -> [LEpaComment] -> HsModule'
@@ -111,7 +112,6 @@ relocateCommentsBeforePragmas m@HsModule {hsmodAnn = ann}
   where
     startPosOfPragmas = anchor $ getLoc $ head $ priorComments $ comments ann
 #endif
-
 -- | This function locates comments that are located before each element of
 -- an export list.
 relocateCommentsInExportList :: HsModule' -> WithComments HsModule'
@@ -131,6 +131,7 @@ relocateCommentsInExportList m@HsModule {hsmodExports = Just (L listSp@SrcSpanAn
       srcSpanStartLine comAnc < srcSpanStartLine anc &&
       realSrcSpanStart (anchor listAnn) < realSrcSpanStart comAnc
 relocateCommentsInExportList x = pure x
+
 -- | This function locates comments located before top-level declarations.
 relocateCommentsBeforeTopLevelDecls :: HsModule' -> WithComments HsModule'
 relocateCommentsBeforeTopLevelDecls = everywhereM (applyM f)
@@ -142,6 +143,7 @@ relocateCommentsBeforeTopLevelDecls = everywhereM (applyM f)
       srcSpanStartCol anc == 1 &&
       srcSpanStartCol comAnc == 1 &&
       srcSpanStartLine comAnc < srcSpanStartLine anc
+
 -- | This function scans the given AST from bottom to top and locates
 -- comments that are on the same line as the node.  Comments are stored in
 -- the 'followingComments' of 'EpaCommentsBalanced'.
@@ -157,6 +159,7 @@ relocateCommentsSameLine = everywhereMEpAnnsBackwards f
     isOnSameLine anc comAnc =
       srcSpanStartLine comAnc == srcSpanStartLine anc &&
       srcSpanStartLine comAnc == srcSpanEndLine anc
+
 -- | This function locates comments above the top-level declarations in
 -- a 'where' clause in the topmost declaration.
 relocateCommentsTopLevelWhereClause :: HsModule' -> WithComments HsModule'
@@ -202,6 +205,7 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
     isAbove comAnc anc =
       srcSpanStartCol comAnc == srcSpanStartCol anc &&
       srcSpanEndLine comAnc + 1 == srcSpanStartLine anc
+
 -- | This function scans the given AST from bottom to top and locates
 -- comments in the comment pool after each node on it.
 relocateCommentsAfter :: HsModule' -> WithComments HsModule'

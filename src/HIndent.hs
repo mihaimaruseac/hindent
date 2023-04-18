@@ -31,11 +31,11 @@ import Data.Functor.Identity
 import Data.List hiding (stripPrefix)
 import Data.Maybe
 import Data.Monoid
-import HIndent.GhcLibParserWrapper.GHC.Hs
 import GHC.Parser.Lexer hiding (buffer)
 import GHC.Types.SrcLoc
 import HIndent.CodeBlock
 import HIndent.Config
+import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.LanguageExtension
 import qualified HIndent.LanguageExtension.Conversion as CE
 import HIndent.LanguageExtension.Types
@@ -123,6 +123,7 @@ reformat config mexts mfilepath =
                else x' <> "\n")
           (f x)
       | otherwise = f x
+
 -- | Generate an AST from the given module for debugging.
 testAst :: ByteString -> Either String HsModule'
 testAst x =
@@ -140,6 +141,7 @@ testAst x =
 -- | Does the strict bytestring have a trailing newline?
 hasTrailingLine :: ByteString -> Bool
 hasTrailingLine xs = not (S8.null xs) && S8.last xs == '\n'
+
 -- | Print the module.
 prettyPrint :: Config -> HsModule' -> Builder
 prettyPrint config m =
