@@ -37,7 +37,6 @@ import GHC.Types.Name
 import GHC.Types.Name.Reader
 import GHC.Types.SourceText
 import GHC.Types.SrcLoc
-import GHC.Unit
 import GHC.Unit.Module.Warnings
 import HIndent.Applicative
 import HIndent.Config
@@ -52,6 +51,9 @@ import Text.Show.Unicode
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 import qualified Data.Foldable as NonEmpty
 import GHC.Core.DataCon
+#endif
+#if !MIN_VERSION_ghc_lib_parser(9,6,1)
+import GHC.Unit
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 import GHC.Types.PkgQual
@@ -138,7 +140,6 @@ instance Pretty (HsModule GhcPs) where
       prettyModuleDecl HsModule { hsmodName = Just name
                                 , hsmodExports = Nothing
                                 , hsmodExt = XModulePs {..}
-                                , ..
                                 } = do
         pretty $ fmap ModuleNameWithPrefix name
         whenJust hsmodDeprecMessage $ \x -> do
@@ -148,7 +149,6 @@ instance Pretty (HsModule GhcPs) where
       prettyModuleDecl HsModule { hsmodName = Just name
                                 , hsmodExports = Just exports
                                 , hsmodExt = XModulePs {..}
-                                , ..
                                 } = do
         pretty $ fmap ModuleNameWithPrefix name
         whenJust hsmodDeprecMessage $ \x -> do

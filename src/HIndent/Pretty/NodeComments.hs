@@ -8,7 +8,6 @@ module HIndent.Pretty.NodeComments
   , emptyNodeComments
   ) where
 
-import Data.Map.Internal.Debug (node)
 import Data.Void
 import GHC.Core.Coercion
 import GHC.Data.BooleanFormula
@@ -21,12 +20,14 @@ import GHC.Types.Name
 import GHC.Types.Name.Reader
 import GHC.Types.SourceText
 import GHC.Types.SrcLoc
-import GHC.Unit
 import HIndent.Pretty.Pragma
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 import GHC.Core.DataCon
+#endif
+#if !MIN_VERSION_ghc_lib_parser(9,6,1)
+import GHC.Unit
 #endif
 -- | An interface to extract comments from an AST node.
 class CommentExtraction a where
