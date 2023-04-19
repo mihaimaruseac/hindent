@@ -3104,6 +3104,15 @@ foo ::
 foo = undefined
 ```
 
+Haddock for a class method
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/607
+class Foo a where
+  -- | Doc
+  foo :: a
+```
+
 Module header with haddock comments
 
 ```haskell
