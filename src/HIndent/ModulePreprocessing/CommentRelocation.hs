@@ -140,7 +140,8 @@ relocateCommentsInClass = everywhereM (mkM f)
     f :: LHsDecl GhcPs -> WithComments (LHsDecl GhcPs)
     f (L classSp@SrcSpanAnn {ann = EpAnn {entry = classAnn}} (TyClD ext ClassDecl {..})) = do
       (sigs, binds, typeFamilies, tyFamInsts, _) <-
-        fmap destructLSigBindFamilyList $ mapM insertComments beforeBinds
+        fmap destructLSigBindFamilyList $
+        mapM insertCommentsBeforeElement beforeBinds
       pure $
         L
           classSp
@@ -161,14 +162,14 @@ relocateCommentsInClass = everywhereM (mkM f)
             tcdATs
             tcdATDefs
             []
-        insertComments (L sp@SrcSpanAnn {ann = entryAnn@EpAnn {}} x) = do
+        insertCommentsBeforeElement (L sp@SrcSpanAnn {ann = entryAnn@EpAnn {}} x) = do
           newEpa <-
             insertCommentsByPos
               (isBefore $ anchor $ entry entryAnn)
               insertPriorComments
               entryAnn
           pure $ L sp {ann = newEpa} x
-        insertComments x = pure x
+        insertCommentsBeforeElement x = pure x
         isBefore anc comAnc =
           srcSpanStartLine comAnc < srcSpanStartLine anc &&
           realSrcSpanStart (anchor classAnn) < realSrcSpanStart comAnc
