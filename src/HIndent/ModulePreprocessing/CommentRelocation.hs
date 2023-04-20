@@ -71,6 +71,7 @@ relocateComments = evalState . relocate
       relocatePragmas >=>
       relocateCommentsBeforePragmas >=>
       relocateCommentsInExportList >=>
+        relocateCommentsInClass>=>
       relocateCommentsBeforeTopLevelDecls >=>
       relocateCommentsSameLine >=>
       relocateCommentsTopLevelWhereClause >=>
@@ -131,6 +132,30 @@ relocateCommentsInExportList m@HsModule {hsmodExports = Just (L listSp@SrcSpanAn
       srcSpanStartLine comAnc < srcSpanStartLine anc &&
       realSrcSpanStart (anchor listAnn) < realSrcSpanStart comAnc
 relocateCommentsInExportList x = pure x
+
+-- | Locates comments before each class element.
+relocateCommentsInClass::HsModule'->WithComments HsModule'
+relocateCommentsInClass =everywhereM(mkM f)
+  where
+    f::LHsDecl GhcPs->WithComments (LHsDecl GhcPs)
+    f (L classSp@SrcSpanAnn{ann=EpAnn{entry=classAnn}} (TyClD ext ClassDecl{..}))=do
+      (sigs,binds,typeFamilies,tyFamInsts,_)<-fmap destructLSigBindFamilyList $ mapM insertComments beforeBinds
+      pure $ L classSp (TyClD ext ClassDecl{
+        tcdSigs=sigs,
+        tcdMeths=listToBag binds,
+        tcdATs=typeFamilies,
+        tcdATDefs=tyFamInsts,
+        ..
+      })
+      where beforeBinds=mkSortedLSigBindFamilyList tcdSigs (bagToList tcdMeths) tcdATs tcdATDefs []
+            insertComments (L sp@SrcSpanAnn{ann=entryAnn@EpAnn{}} x)=do
+              newEpa<-insertCommentsByPos (isBefore $ anchor $ entry entryAnn) insertPriorComments entryAnn
+              pure $ L sp{ann=newEpa} x
+            insertComments x=pure x
+            isBefore anc comAnc =
+              srcSpanStartLine comAnc < srcSpanStartLine anc &&
+              realSrcSpanStart (anchor classAnn) < realSrcSpanStart comAnc
+    f x=pure x
 
 -- | This function locates comments located before top-level declarations.
 relocateCommentsBeforeTopLevelDecls :: HsModule' -> WithComments HsModule'

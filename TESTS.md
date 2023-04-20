@@ -40,6 +40,7 @@ main = pure ()
 Empty module
 
 ```haskell
+
 ```
 
 ### Module headers
@@ -3050,15 +3051,6 @@ gamma = do
   where
     -- before alpha
     alpha = alpha
-```
-
-Comments in a class declaration
-
-```haskell
-class Foo a
-    -- A comment
-  where
-  foo :: a -> Int
 ```
 
 Comments in a class instance

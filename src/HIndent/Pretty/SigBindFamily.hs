@@ -7,6 +7,7 @@ module HIndent.Pretty.SigBindFamily
   , LSigBindFamily
   , mkSortedLSigBindFamilyList
   , mkLSigBindFamilyList
+  , destructLSigBindFamilyList
   , filterLSig
   , filterLBind
   ) where
@@ -56,6 +57,12 @@ mkLSigBindFamilyList sigs binds fams insts datafams =
   fmap (fmap TypeFamily) fams ++
   fmap (fmap TyFamInst) insts ++ fmap (fmap DataFamInst) datafams
 
+-- | Destructs a list of 'LSigBindFamily'
+
+destructLSigBindFamilyList::[LSigBindFamily]->
+  ([ LSig GhcPs ],[ LHsBindLR GhcPs GhcPs ],[  LFamilyDecl GhcPs ],[  LTyFamInstDecl GhcPs ],[LDataFamInstDecl GhcPs])
+destructLSigBindFamilyList=
+  (,,,,)<$>filterLSig<*>filterLBind<*>filterLTypeFamily<*>filterLTyFamInst<*>filterLDataFamInst
 -- | Filters out 'Sig's and extract the wrapped values.
 filterLSig :: [LSigBindFamily] -> [LSig GhcPs]
 filterLSig =
@@ -70,4 +77,29 @@ filterLBind =
   mapMaybe
     (\case
        (L l (Bind x)) -> Just $ L l x
+       _ -> Nothing)
+
+
+-- | Filters out 'TypeFamily's and extract the wrapped values.
+filterLTypeFamily :: [LSigBindFamily] -> [LFamilyDecl GhcPs]
+filterLTypeFamily =
+  mapMaybe
+    (\case
+       (L l (TypeFamily x)) -> Just $ L l x
+       _ -> Nothing)
+
+
+-- | Filters out 'TyFamInst's and extract the wrapped values.
+filterLTyFamInst :: [LSigBindFamily] -> [LTyFamInstDecl GhcPs]
+filterLTyFamInst =
+  mapMaybe
+    (\case
+       (L l (TyFamInst x)) -> Just $ L l x
+       _ -> Nothing)
+-- | Filters out 'DataFamInst's and extract the wrapped values.
+filterLDataFamInst :: [LSigBindFamily] -> [LDataFamInstDecl GhcPs]
+filterLDataFamInst =
+  mapMaybe
+    (\case
+       (L l (DataFamInst x)) -> Just $ L l x
        _ -> Nothing)
