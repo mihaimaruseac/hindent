@@ -53,7 +53,6 @@ import HIndent.Pretty.SigBindFamily
 import Type.Reflection
 #if MIN_VERSION_GLASGOW_HASKELL(9,6,0,0)
 import Control.Monad
-import GHC.Tc.Types.Constraint (cteTypeFamily)
 #endif
 -- | A wrapper type used in everywhereMEpAnnsBackwards' to collect all
 -- 'EpAnn's to apply a function with them in order their positions.
