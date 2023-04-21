@@ -4,6 +4,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | Comment relocation for pretty-printing comments correctly.
 --
@@ -71,6 +72,7 @@ relocateComments = evalState . relocate
       relocatePragmas >=>
       relocateCommentsBeforePragmas >=>
       relocateCommentsInExportList >=>
+      relocateCommentsInClass >=>
       relocateCommentsBeforeTopLevelDecls >=>
       relocateCommentsSameLine >=>
       relocateCommentsTopLevelWhereClause >=>
@@ -115,22 +117,65 @@ relocateCommentsBeforePragmas m@HsModule {hsmodAnn = ann}
 -- | This function locates comments that are located before each element of
 -- an export list.
 relocateCommentsInExportList :: HsModule' -> WithComments HsModule'
-relocateCommentsInExportList m@HsModule {hsmodExports = Just (L listSp@SrcSpanAnn {ann = EpAnn {entry = listAnn}} xs)} = do
-  newExports <- mapM insertCommentsBeforeElement xs
-  pure m {hsmodExports = Just (L listSp newExports)}
+relocateCommentsInExportList =
+  relocateCommentsBeforeEachElement
+    elemGetter
+    elemSetter
+    annGetter
+    annSetter
+    cond
   where
-    insertCommentsBeforeElement (L sp@SrcSpanAnn {ann = entryAnn@EpAnn {}} x) = do
-      newEpa <-
-        insertCommentsByPos
-          (isBefore $ anchor $ entry entryAnn)
-          insertPriorComments
-          entryAnn
-      pure $ L sp {ann = newEpa} x
-    insertCommentsBeforeElement x = pure x
-    isBefore anc comAnc =
-      srcSpanStartLine comAnc < srcSpanStartLine anc &&
-      realSrcSpanStart (anchor listAnn) < realSrcSpanStart comAnc
-relocateCommentsInExportList x = pure x
+    elemGetter :: HsModule' -> [LIE GhcPs]
+    elemGetter HsModule {hsmodExports = Just (L _ xs)} = xs
+    elemGetter _ = []
+    elemSetter xs HsModule {hsmodExports = Just (L sp _), ..} =
+      HsModule {hsmodExports = Just (L sp xs), ..}
+    elemSetter _ x = x
+    annGetter (L SrcSpanAnn {..} _) = ann
+    annSetter newAnn (L SrcSpanAnn {..} x) = L SrcSpanAnn {ann = newAnn, ..} x
+    cond HsModule {hsmodExports = Just (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = listAnc}}} _)} (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = elemAnc}}} _) comAnc =
+      srcSpanStartLine comAnc < srcSpanStartLine elemAnc &&
+      realSrcSpanStart listAnc < realSrcSpanStart comAnc
+    cond _ _ _ = False
+
+-- | Locates comments before each class element.
+relocateCommentsInClass :: HsModule' -> WithComments HsModule'
+relocateCommentsInClass =
+  relocateCommentsBeforeEachElement
+    elemGetter
+    elemSetter
+    annGetter
+    annSetter
+    cond
+  where
+    elemGetter :: LHsDecl GhcPs -> [LSigBindFamily]
+    elemGetter (L _ (TyClD _ ClassDecl {..})) =
+      mkSortedLSigBindFamilyList
+        tcdSigs
+        (bagToList tcdMeths)
+        tcdATs
+        tcdATDefs
+        []
+    elemGetter _ = []
+    elemSetter xs (L sp (TyClD ext ClassDecl {..})) = L sp (TyClD ext newDecl)
+      where
+        newDecl =
+          ClassDecl
+            { tcdSigs = sigs
+            , tcdMeths = listToBag binds
+            , tcdATs = typeFamilies
+            , tcdATDefs = tyFamInsts
+            , ..
+            }
+        (sigs, binds, typeFamilies, tyFamInsts, _) =
+          destructLSigBindFamilyList xs
+    elemSetter _ x = x
+    annGetter (L SrcSpanAnn {..} _) = ann
+    annSetter newAnn (L SrcSpanAnn {..} x) = L SrcSpanAnn {ann = newAnn, ..} x
+    cond (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = classAnchor}}} _) (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = elemAnchor}}} _) comAnc =
+      srcSpanStartLine comAnc < srcSpanStartLine elemAnchor &&
+      realSrcSpanStart classAnchor < realSrcSpanStart comAnc
+    cond _ _ _ = False
 
 -- | This function locates comments located before top-level declarations.
 relocateCommentsBeforeTopLevelDecls :: HsModule' -> WithComments HsModule'
@@ -215,6 +260,31 @@ relocateCommentsAfter = everywhereMEpAnnsBackwards f
       insertCommentsByPos (isAfter $ anchor entry) insertFollowingComments epa
     f EpAnnNotUsed = pure EpAnnNotUsed
     isAfter anc comAnc = srcSpanEndLine anc <= srcSpanStartLine comAnc
+
+-- | Locates comments before each element in a parent.
+relocateCommentsBeforeEachElement ::
+     forall a b c. Typeable a
+  => (a -> [b]) -- ^ Element getter
+  -> ([b] -> a -> a) -- ^ Element setter
+  -> (b -> EpAnn c) -- ^ Annotation getter
+  -> (EpAnn c -> b -> b) -- ^ Annotation setter
+  -> (a -> b -> RealSrcSpan -> Bool) -- ^ The function to decide whether to locate comments
+  -> HsModule'
+  -> WithComments HsModule'
+relocateCommentsBeforeEachElement elemGetter elemSetter annGetter annSetter cond =
+  everywhereM (mkM f)
+  where
+    f :: a -> WithComments a
+    f x = do
+      newElems <- mapM insertCommentsBeforeElement (elemGetter x)
+      pure $ elemSetter newElems x
+      where
+        insertCommentsBeforeElement element
+          | elemAnn@EpAnn {} <- annGetter element = do
+            newEpa <-
+              insertCommentsByPos (cond x element) insertPriorComments elemAnn
+            pure $ annSetter newEpa element
+          | otherwise = pure element
 
 -- | This function applies the given function to all 'EpAnn's.
 applyM ::

@@ -3052,15 +3052,6 @@ gamma = do
     alpha = alpha
 ```
 
-Comments in a class declaration
-
-```haskell
-class Foo a
-    -- A comment
-  where
-  foo :: a -> Int
-```
-
 Comments in a class instance
 
 ```haskell
@@ -3102,6 +3093,15 @@ foo ::
   -> Int -- ^ How many did you eat pizza?
   -> String -- ^ The report.
 foo = undefined
+```
+
+Haddock for a class method
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/607
+class Foo a where
+  -- | Doc
+  foo :: a
 ```
 
 Module header with haddock comments
