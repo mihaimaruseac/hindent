@@ -13,6 +13,7 @@
 ### Fixed
 
 - Fixed module names being removed from uses of qualified `do` ([#696]).
+- Misplaced haddocks for class declarations ([#706]).
 
 ### Removed
 
@@ -338,6 +339,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#706]: https://github.com/mihaimaruseac/hindent/pull/706
 [#699]: https://github.com/mihaimaruseac/hindent/pull/699
 [#696]: https://github.com/mihaimaruseac/hindent/pull/696
 [#672]: https://github.com/mihaimaruseac/hindent/pull/672
