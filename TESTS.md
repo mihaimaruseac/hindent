@@ -40,7 +40,6 @@ main = pure ()
 Empty module
 
 ```haskell
-
 ```
 
 ### Module headers
