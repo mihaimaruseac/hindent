@@ -3041,15 +3041,12 @@ gamma = do
   -- the very last block is detected differently
 ```
 
-Doesn't work yet (wrong comment position detection)
+Comments in a do expression
 
-```haskell pending
+```haskell
 gamma = do
   -- in the beginning of a do-block
   delta
-  where
-    -- before alpha
-    alpha = alpha
 ```
 
 Comments in a class instance

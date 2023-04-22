@@ -75,6 +75,7 @@ relocateComments = evalState . relocate
       relocateCommentsInClass >=>
       relocateCommentsBeforeTopLevelDecls >=>
       relocateCommentsSameLine >=>
+      relocateCommentsInDoExpr >=>
       relocateCommentsTopLevelWhereClause >=>
       relocateCommentsAfter >=> assertAllCommentsAreConsumed
     assertAllCommentsAreConsumed x = do
@@ -175,6 +176,32 @@ relocateCommentsInClass =
     cond (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = classAnchor}}} _) (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = elemAnchor}}} _) comAnc =
       srcSpanStartLine comAnc < srcSpanStartLine elemAnchor &&
       realSrcSpanStart classAnchor < realSrcSpanStart comAnc
+    cond _ _ _ = False
+
+-- | Locates comments before each statement in a do expression.
+relocateCommentsInDoExpr :: HsModule' -> WithComments HsModule'
+relocateCommentsInDoExpr =
+  relocateCommentsBeforeEachElement
+    elemGetter
+    elemSetter
+    annGetter
+    annSetter
+    cond
+  where
+    elemGetter :: LHsExpr GhcPs -> [ExprLStmt GhcPs]
+    elemGetter (L _ (HsDo _ DoExpr {} (L _ xs))) = xs
+    elemGetter (L _ (HsDo _ MDoExpr {} (L _ xs))) = xs
+    elemGetter _ = []
+    elemSetter xs (L sp (HsDo ext flavor@DoExpr {} (L sp' _))) =
+      L sp (HsDo ext flavor (L sp' xs))
+    elemSetter xs (L sp (HsDo ext flavor@MDoExpr {} (L sp' _))) =
+      L sp (HsDo ext flavor (L sp' xs))
+    elemSetter _ x = x
+    annGetter (L SrcSpanAnn {..} _) = ann
+    annSetter newAnn (L SrcSpanAnn {..} x) = L SrcSpanAnn {ann = newAnn, ..} x
+    cond (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = doAnchor}}} _) (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = elemAnchor}}} _) comAnc =
+      srcSpanStartLine comAnc < srcSpanStartLine elemAnchor &&
+      realSrcSpanStart doAnchor < realSrcSpanStart comAnc
     cond _ _ _ = False
 
 -- | This function locates comments located before top-level declarations.
