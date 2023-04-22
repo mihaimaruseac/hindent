@@ -76,6 +76,7 @@ relocateComments = evalState . relocate
       relocateCommentsBeforeTopLevelDecls >=>
       relocateCommentsSameLine >=>
       relocateCommentsInDoExpr >=>
+      relocateCommentsInCase >=>
       relocateCommentsTopLevelWhereClause >=>
       relocateCommentsAfter >=> assertAllCommentsAreConsumed
     assertAllCommentsAreConsumed x = do
@@ -137,6 +138,29 @@ relocateCommentsInExportList =
     cond HsModule {hsmodExports = Just (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = listAnc}}} _)} (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = elemAnc}}} _) comAnc =
       srcSpanStartLine comAnc < srcSpanStartLine elemAnc &&
       realSrcSpanStart listAnc < realSrcSpanStart comAnc
+    cond _ _ _ = False
+
+-- | Locates comments before each case branch.
+relocateCommentsInCase :: HsModule' -> WithComments HsModule'
+relocateCommentsInCase =
+  relocateCommentsBeforeEachElement
+    elemGetter
+    elemSetter
+    annGetter
+    annSetter
+    cond
+  where
+    elemGetter :: LHsExpr GhcPs -> [LMatch GhcPs (LHsExpr GhcPs)]
+    elemGetter (L _ (HsCase _ _ (MG {mg_alts = L _ xs}))) = xs
+    elemGetter _ = []
+    elemSetter xs (L sp (HsCase ext expr (MG {mg_alts = L sp' _, ..}))) =
+      L sp (HsCase ext expr (MG {mg_alts = L sp' xs, ..}))
+    elemSetter _ x = x
+    annGetter (L SrcSpanAnn {..} _) = ann
+    annSetter newAnn (L SrcSpanAnn {..} x) = L SrcSpanAnn {ann = newAnn, ..} x
+    cond (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = caseAnchor}}} _) (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = branchAnchor}}} _) comAnc =
+      srcSpanStartLine comAnc < srcSpanStartLine branchAnchor &&
+      realSrcSpanStart caseAnchor < realSrcSpanStart comAnc
     cond _ _ _ = False
 
 -- | Locates comments before each class element.

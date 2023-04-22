@@ -3058,6 +3058,17 @@ instance Pretty MatchForCase
   pretty' = undefined
 ```
 
+Comments in a case expression
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/553
+f x =
+  case x of
+    -- Bla bla
+    Nothing -> 0
+    Just y -> y
+```
+
 Haddock comments
 
 ```haskell
