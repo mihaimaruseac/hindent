@@ -14,7 +14,7 @@
 
 - Fixed module names being removed from uses of qualified `do` ([#696]).
 - Misplaced haddocks for class declarations ([#706]).
-- Misplaced comments in  do expressions  ([#707]).
+- Misplaced comments in do expressions ([#707]).
 
 ### Removed
 
