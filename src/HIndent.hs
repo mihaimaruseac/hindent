@@ -28,12 +28,9 @@ import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.UTF8 as UTF8
 import qualified Data.ByteString.Unsafe as S
 import Data.Char
-import Data.Either
-import Data.Function
 import Data.Functor.Identity
 import Data.List hiding (stripPrefix)
 import Data.Maybe
-import Data.Monoid
 import Data.Version
 import Foreign.C
 import GHC.IO.Exception
@@ -53,7 +50,6 @@ import HIndent.Pretty
 import HIndent.Printer
 import Options.Applicative hiding (action, style)
 import Paths_hindent
-import Prelude
 import qualified System.Directory as IO
 import System.Exit
 import qualified System.IO as IO
