@@ -36,6 +36,7 @@ library
       HIndent.Applicative
       HIndent.CabalFile
       HIndent.CodeBlock
+      HIndent.CommandlineOptions
       HIndent.Config
       HIndent.GhcLibParserWrapper.GHC.Hs
       HIndent.Language
@@ -84,6 +85,7 @@ library
     , ghc-lib-parser-ex
     , monad-loops
     , mtl
+    , optparse-applicative
     , path
     , path-io
     , regex-tdfa
@@ -128,6 +130,7 @@ library hindent-internal
     , ghc-lib-parser-ex
     , monad-loops
     , mtl
+    , optparse-applicative
     , path
     , path-io
     , regex-tdfa
@@ -219,6 +222,7 @@ test-suite hindent-test
     , hspec
     , monad-loops
     , mtl
+    , optparse-applicative
     , path
     , path-io
     , regex-tdfa
@@ -266,6 +270,7 @@ benchmark hindent-bench
     , hindent-internal
     , monad-loops
     , mtl
+    , optparse-applicative
     , path
     , path-io
     , regex-tdfa
