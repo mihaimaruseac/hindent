@@ -35,6 +35,7 @@ dependencies:
   - ghc-lib-parser-ex
   - monad-loops
   - mtl
+  - optparse-applicative
   - path
   - path-io
   - regex-tdfa
@@ -72,7 +73,6 @@ executable:
   source-dirs: app
   dependencies:
     - hindent
-    - optparse-applicative
   generated-other-modules:
     - Paths_hindent
 

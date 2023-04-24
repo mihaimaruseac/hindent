@@ -5,13 +5,16 @@
 
 -- | Haskell indenter.
 module HIndent
-  ( -- * Formatting functions.
+  ( hindent
+  , -- * Formatting functions.
     reformat
   , prettyPrint
   , -- * Testing
     testAst
   ) where
 
+import Control.Exception
+import Control.Monad
 import Control.Monad.State.Strict
 import Control.Monad.Trans.Maybe
 import Data.ByteString (ByteString)
@@ -25,15 +28,17 @@ import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.UTF8 as UTF8
 import qualified Data.ByteString.Unsafe as S
 import Data.Char
-import Data.Either
-import Data.Function
 import Data.Functor.Identity
 import Data.List hiding (stripPrefix)
 import Data.Maybe
-import Data.Monoid
-import GHC.Parser.Lexer hiding (buffer)
+import Data.Version
+import Foreign.C
+import GHC.IO.Exception
+import GHC.Parser.Lexer hiding (buffer, options)
 import GHC.Types.SrcLoc
+import HIndent.CabalFile
 import HIndent.CodeBlock
+import HIndent.CommandlineOptions
 import HIndent.Config
 import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.LanguageExtension
@@ -43,7 +48,58 @@ import HIndent.ModulePreprocessing
 import HIndent.Parse
 import HIndent.Pretty
 import HIndent.Printer
-import Prelude
+import Options.Applicative hiding (action, style)
+import Paths_hindent
+import qualified System.Directory as IO
+import System.Exit
+import qualified System.IO as IO
+
+-- | Runs HIndent with the given commandline options.
+hindent :: [String] -> IO ()
+hindent args = do
+  config <- getConfig
+  runMode <-
+    handleParseResult $
+    execParserPure
+      defaultPrefs
+      (info
+         (options config <**> helper)
+         (header "hindent - Reformat Haskell source code"))
+      args
+  case runMode of
+    ShowVersion -> putStrLn ("hindent " ++ showVersion version)
+    Run style exts action paths ->
+      if null paths
+        then L8.interact
+               (either error S.toLazyByteString .
+                reformat style (Just exts) Nothing . L8.toStrict)
+        else forM_ paths $ \filepath -> do
+               cabalexts <- getCabalExtensionsForSourcePath filepath
+               text <- S.readFile filepath
+               case reformat
+                      style
+                      (Just $ cabalexts ++ exts)
+                      (Just filepath)
+                      text of
+                 Left e -> error e
+                 Right out ->
+                   unless (L8.fromStrict text == S.toLazyByteString out) $
+                   case action of
+                     Validate -> do
+                       IO.putStrLn $ filepath ++ " is not formatted"
+                       exitWith (ExitFailure 1)
+                     Reformat -> do
+                       tmpDir <- IO.getTemporaryDirectory
+                       (fp, h) <- IO.openTempFile tmpDir "hindent.hs"
+                       L8.hPutStr h (S.toLazyByteString out)
+                       IO.hFlush h
+                       IO.hClose h
+                       let exdev e =
+                             if ioe_errno e == Just ((\(Errno a) -> a) eXDEV)
+                               then IO.copyFile fp filepath >> IO.removeFile fp
+                               else throw e
+                       IO.copyPermissions filepath fp
+                       IO.renameFile fp filepath `catch` exdev
 
 -- | Format the given source.
 reformat ::
