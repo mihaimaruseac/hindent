@@ -1,3 +1,4 @@
+-- | Types and functions related to HIndent's commandline options.
 module HIndent.CommandlineOptions
   ( Action(..)
   , RunMode(..)
@@ -11,13 +12,15 @@ import HIndent.LanguageExtension
 import HIndent.LanguageExtension.Types
 import Options.Applicative hiding (action, style)
 
+-- | HIndent actions.
 data Action
-  = Validate
-  | Reformat
+  = Validate -- ^ Validate if the code is formatted.
+  | Reformat -- ^ Format the code.
 
+-- | HIndent running mode.
 data RunMode
-  = ShowVersion
-  | Run Config [Extension] Action [FilePath]
+  = ShowVersion -- ^ Show HIndent's version.
+  | Run Config [Extension] Action [FilePath] -- ^ Format or validate the code.
 
 -- | Program options.
 options :: Config -> Parser RunMode

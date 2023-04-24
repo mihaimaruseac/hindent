@@ -54,6 +54,7 @@ import qualified System.Directory as IO
 import System.Exit
 import qualified System.IO as IO
 
+-- | Runs HIndent with the given commandline options.
 hindent :: [String] -> IO ()
 hindent args = do
   config <- getConfig
