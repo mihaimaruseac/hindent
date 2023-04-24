@@ -5,7 +5,7 @@
 ### Added
 
 - Support for GHC 9.6 ([#699])
-- The `hindent` function for the easy use within a project ([#709]).
+- The `hindent` function for easy use within a project ([#709]).
 
 ### Changed
 
