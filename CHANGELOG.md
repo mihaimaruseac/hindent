@@ -8,7 +8,7 @@
 
 ### Changed
 
-- ...
+- `reformat` now takes a list of `Extension`s instead of a `Maybe` value containing the list ([#712]).
 
 ### Fixed
 
@@ -341,6 +341,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#712]: https://github.com/mihaimaruseac/hindent/pull/712
 [#708]: https://github.com/mihaimaruseac/hindent/pull/708
 [#707]: https://github.com/mihaimaruseac/hindent/pull/707
 [#706]: https://github.com/mihaimaruseac/hindent/pull/706
