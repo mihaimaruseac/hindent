@@ -37,7 +37,7 @@ toCriterion = go
                    (either error S.toLazyByteString .
                     reformat
                       HIndent.Config.defaultConfig
-                      (Just defaultExtensions)
+                      defaultExtensions
                       Nothing)
                    code)) :
              go next
