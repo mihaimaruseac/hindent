@@ -72,15 +72,11 @@ hindent args = do
       if null paths
         then L8.interact
                (either error S.toLazyByteString .
-                reformat style (Just exts) Nothing . L8.toStrict)
+                reformat style exts Nothing . L8.toStrict)
         else forM_ paths $ \filepath -> do
                cabalexts <- getCabalExtensionsForSourcePath filepath
                text <- S.readFile filepath
-               case reformat
-                      style
-                      (Just $ cabalexts ++ exts)
-                      (Just filepath)
-                      text of
+               case reformat style (cabalexts ++ exts) (Just filepath) text of
                  Left e -> error e
                  Right out ->
                    unless (L8.fromStrict text == S.toLazyByteString out) $
@@ -104,7 +100,7 @@ hindent args = do
 -- | Format the given source.
 reformat ::
      Config
-  -> Maybe [Extension]
+  -> [Extension]
   -> Maybe FilePath
   -> ByteString
   -> Either String Builder
@@ -120,11 +116,11 @@ reformat config mexts mfilepath =
           prefix = findPrefix ls
           code = unlines' (map (stripPrefix prefix) ls)
           allExts =
-            fromMaybe allExtensions mexts ++
+            CE.uniqueExtensions $
+            mexts ++
             configExtensions config ++
             collectLanguageExtensionsFromSource (UTF8.toString code)
-          exts = CE.uniqueExtensions allExts
-       in case parseModule mfilepath exts (UTF8.toString code) of
+       in case parseModule mfilepath allExts (UTF8.toString code) of
             POk _ m ->
               Right $
               S.lazyByteString $
