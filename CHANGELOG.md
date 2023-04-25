@@ -5,6 +5,7 @@
 ### Added
 
 - Support for GHC 9.6 ([#699])
+- The `hindent` function for easy use within a project ([#709]).
 
 ### Changed
 
@@ -342,6 +343,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@toku-sa-n]: https://github.com/toku-sa-n
 
 [#712]: https://github.com/mihaimaruseac/hindent/pull/712
+[#709]: https://github.com/mihaimaruseac/hindent/pull/709
 [#708]: https://github.com/mihaimaruseac/hindent/pull/708
 [#707]: https://github.com/mihaimaruseac/hindent/pull/707
 [#706]: https://github.com/mihaimaruseac/hindent/pull/706
