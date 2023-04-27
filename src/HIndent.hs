@@ -200,21 +200,20 @@ prettyPrint config m =
 -- | Pretty print the given printable thing.
 runPrinterStyle :: Config -> Printer () -> Builder
 runPrinterStyle config m =
-  maybe
-    (error "Printer failed with mzero call.")
-    psOutput
-    (execStateT
-       (runPrinter m)
-       (PrintState
-          { psIndentLevel = 0
-          , psOutput = mempty
-          , psNewline = False
-          , psColumn = 0
-          , psLine = 1
-          , psConfig = config
-          , psFitOnOneLine = False
-          , psEolComment = False
-          }))
+  maybe (error "Printer failed with mzero call.") psOutput $
+  execStateT (runPrinter m) initState
+  where
+    initState =
+      PrintState
+        { psIndentLevel = 0
+        , psOutput = mempty
+        , psNewline = False
+        , psColumn = 0
+        , psLine = 1
+        , psConfig = config
+        , psFitOnOneLine = False
+        , psEolComment = False
+        }
 
 s8_stripPrefix :: ByteString -> ByteString -> Maybe ByteString
 s8_stripPrefix bs1@(S.PS _ _ l1) bs2
