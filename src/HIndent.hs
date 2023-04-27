@@ -16,7 +16,6 @@ module HIndent
 import Control.Exception
 import Control.Monad
 import Control.Monad.State.Strict
-import Control.Monad.Trans.Maybe
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import Data.ByteString.Builder (Builder)
@@ -28,7 +27,6 @@ import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.UTF8 as UTF8
 import qualified Data.ByteString.Unsafe as S
 import Data.Char
-import Data.Functor.Identity
 import Data.List hiding (stripPrefix)
 import Data.Maybe
 import Data.Version
@@ -205,20 +203,18 @@ runPrinterStyle config m =
   maybe
     (error "Printer failed with mzero call.")
     psOutput
-    (runIdentity
-       (runMaybeT
-          (execStateT
-             (runPrinter m)
-             (PrintState
-                { psIndentLevel = 0
-                , psOutput = mempty
-                , psNewline = False
-                , psColumn = 0
-                , psLine = 1
-                , psConfig = config
-                , psFitOnOneLine = False
-                , psEolComment = False
-                }))))
+    (execStateT
+       (runPrinter m)
+       (PrintState
+          { psIndentLevel = 0
+          , psOutput = mempty
+          , psNewline = False
+          , psColumn = 0
+          , psLine = 1
+          , psConfig = config
+          , psFitOnOneLine = False
+          , psEolComment = False
+          }))
 
 s8_stripPrefix :: ByteString -> ByteString -> Maybe ByteString
 s8_stripPrefix bs1@(S.PS _ _ l1) bs2
