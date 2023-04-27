@@ -13,15 +13,13 @@ module HIndent.Printer
 import Control.Applicative
 import Control.Monad
 import Control.Monad.State.Strict (MonadState(..), StateT)
-import Control.Monad.Trans.Maybe
 import Data.ByteString.Builder
-import Data.Functor.Identity
 import Data.Int (Int64)
 import HIndent.Config
 
 -- | A pretty printing monad.
 newtype Printer a = Printer
-  { runPrinter :: StateT PrintState (MaybeT Identity) a
+  { runPrinter :: StateT PrintState Maybe a
   } deriving ( Applicative
              , Monad
              , Functor
