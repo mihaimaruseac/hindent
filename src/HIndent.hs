@@ -38,6 +38,7 @@ import HIndent.CabalFile
 import HIndent.CodeBlock
 import HIndent.CommandlineOptions
 import HIndent.Config
+import HIndent.Error
 import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.LanguageExtension
 import qualified HIndent.LanguageExtension.Conversion as CE
@@ -46,7 +47,7 @@ import HIndent.ModulePreprocessing
 import HIndent.Parse
 import HIndent.Pretty
 import HIndent.Printer
-import Options.Applicative hiding (action, style)
+import Options.Applicative hiding (ParseError, action, style)
 import Paths_hindent
 import qualified System.Directory as IO
 import System.Exit
@@ -69,13 +70,13 @@ hindent args = do
     Run style exts action paths ->
       if null paths
         then L8.interact
-               (either error S.toLazyByteString .
+               (either (error . prettyParseError) S.toLazyByteString .
                 reformat style exts Nothing . L8.toStrict)
         else forM_ paths $ \filepath -> do
                cabalexts <- getCabalExtensionsForSourcePath filepath
                text <- S.readFile filepath
                case reformat style (cabalexts ++ exts) (Just filepath) text of
-                 Left e -> error e
+                 Left e -> error $ prettyParseError e
                  Right out ->
                    unless (L8.fromStrict text == S.toLazyByteString out) $
                    case action of
@@ -101,12 +102,12 @@ reformat ::
   -> [Extension]
   -> Maybe FilePath
   -> ByteString
-  -> Either String Builder
+  -> Either ParseError Builder
 reformat config mexts mfilepath =
   preserveTrailingNewline
     (fmap (mconcat . intersperse "\n") . mapM processBlock . cppSplitBlocks)
   where
-    processBlock :: CodeBlock -> Either String Builder
+    processBlock :: CodeBlock -> Either ParseError Builder
     processBlock (Shebang text) = Right $ S.byteString text
     processBlock (CPPDirectives text) = Right $ S.byteString text
     processBlock (HaskellSource yPos text) =
@@ -125,9 +126,12 @@ reformat config mexts mfilepath =
               addPrefix prefix $ S.toLazyByteString $ prettyPrint config m
             PFailed st ->
               let rawErrLoc = psRealLoc $ loc st
-                  adjustedLoc =
-                    (srcLocLine rawErrLoc + yPos, srcLocCol rawErrLoc)
-               in Left $ "Parse failed near " ++ show adjustedLoc
+               in Left $
+                  ParseError
+                    { errorRow = srcLocLine rawErrLoc + yPos
+                    , errorCol = srcLocCol rawErrLoc
+                    , errorFile = fromMaybe "<interactive>" mfilepath
+                    }
     unlines' = S.concat . intersperse "\n"
     unlines'' = L.concat . intersperse "\n"
     addPrefix :: ByteString -> L8.ByteString -> L8.ByteString
@@ -175,14 +179,14 @@ reformat config mexts mfilepath =
       | otherwise = f x
 
 -- | Generate an AST from the given module for debugging.
-testAst :: ByteString -> Either String HsModule'
+testAst :: ByteString -> Either ParseError HsModule'
 testAst x =
   case parseModule Nothing exts (UTF8.toString x) of
     POk _ m -> Right $ modifyASTForPrettyPrinting m
     PFailed st ->
       Left $
-      "Parse failed near " ++
-      show ((,) <$> srcLocLine <*> srcLocCol $ psRealLoc $ loc st)
+      ParseError <$> srcLocLine <*> srcLocCol <*> pure "<interactive>" $
+      psRealLoc $ loc st
   where
     exts =
       CE.uniqueExtensions $
