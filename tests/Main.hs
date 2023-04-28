@@ -18,6 +18,7 @@ import Data.Version
 import qualified HIndent
 import HIndent.CodeBlock
 import HIndent.Config
+import HIndent.Error
 import HIndent.Internal.Test.Markdone
 import qualified HIndent.LanguageExtension as HIndent
 import qualified System.Info
@@ -37,7 +38,7 @@ main = do
 
 reformat :: Config -> S.ByteString -> ByteString
 reformat cfg code =
-  either (("-- " <>) . L8.pack) S.toLazyByteString $
+  either (("-- " <>) . L8.pack . prettyParseError) S.toLazyByteString $
   HIndent.reformat cfg HIndent.defaultExtensions Nothing code
 
 -- | Convert the Markdone document to Spec benchmarks.
