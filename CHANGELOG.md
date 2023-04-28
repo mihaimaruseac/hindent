@@ -10,6 +10,7 @@
 ### Changed
 
 - `reformat` now takes a list of `Extension`s instead of a `Maybe` value containing the list ([#712]).
+- `reformat` now returns a `ParseError` on errer ([#715]).
 
 ### Fixed
 
@@ -342,6 +343,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#715]: https://github.com/mihaimaruseac/hindent/pull/715
 [#712]: https://github.com/mihaimaruseac/hindent/pull/712
 [#709]: https://github.com/mihaimaruseac/hindent/pull/709
 [#708]: https://github.com/mihaimaruseac/hindent/pull/708
