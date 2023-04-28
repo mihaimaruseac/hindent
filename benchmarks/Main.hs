@@ -34,7 +34,7 @@ toCriterion = go
         then (bench
                 (UTF8.toString desc)
                 (nf
-                   (either error S.toLazyByteString .
+                   (either (error . show) S.toLazyByteString .
                     reformat
                       HIndent.Config.defaultConfig
                       defaultExtensions
