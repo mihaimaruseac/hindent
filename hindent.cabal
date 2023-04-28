@@ -38,6 +38,7 @@ library
       HIndent.CodeBlock
       HIndent.CommandlineOptions
       HIndent.Config
+      HIndent.Error
       HIndent.GhcLibParserWrapper.GHC.Hs
       HIndent.Language
       HIndent.LanguageExtension
