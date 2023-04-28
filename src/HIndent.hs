@@ -128,7 +128,7 @@ reformat config mexts mfilepath =
               let rawErrLoc = psRealLoc $ loc st
                in Left $
                   ParseError
-                    { errorRow = srcLocLine rawErrLoc + yPos
+                    { errorLine = srcLocLine rawErrLoc + yPos
                     , errorCol = srcLocCol rawErrLoc
                     , errorFile = fromMaybe "<interactive>" mfilepath
                     }

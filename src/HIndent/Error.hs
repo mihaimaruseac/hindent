@@ -8,7 +8,7 @@ module HIndent.Error
 
 -- | Parse error type with the location.
 data ParseError = ParseError
-  { errorRow :: Int -- ^ The row of the parse error's location.
+  { errorLine :: Int -- ^ The row of the parse error's location.
   , errorCol :: Int -- ^ The column of the parse error's location.
   , errorFile :: FilePath -- ^ The filename HIndent failed to parse.
   } deriving (Eq, Ord, Show, Read)
@@ -17,4 +17,4 @@ data ParseError = ParseError
 prettyParseError :: ParseError -> String
 prettyParseError ParseError {..} =
   "Parse failed at (" <>
-  show errorRow <> ", " <> show errorCol <> ") in " <> errorFile <> "."
+  show errorLine <> ", " <> show errorCol <> ") in " <> errorFile <> "."
