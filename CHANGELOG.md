@@ -10,7 +10,7 @@
 ### Changed
 
 - `reformat` now takes a list of `Extension`s instead of a `Maybe` value containing the list ([#712]).
-- `reformat` now returns a `ParseError` on errer ([#715]).
+- `reformat` and `testAst` now returns a `ParseError` on errer ([#715]).
 
 ### Fixed
 
