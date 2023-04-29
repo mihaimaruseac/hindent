@@ -21,7 +21,6 @@ import qualified Data.ByteString as S
 import Data.ByteString.Builder (Builder)
 import qualified Data.ByteString.Builder as S
 import qualified Data.ByteString.Char8 as S8
-import qualified Data.ByteString.Internal as S
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.UTF8 as UTF8
@@ -220,6 +219,6 @@ runPrinterStyle config m =
         }
 
 s8_stripPrefix :: ByteString -> ByteString -> Maybe ByteString
-s8_stripPrefix bs1@(S.PS _ _ l1) bs2
-  | bs1 `S.isPrefixOf` bs2 = Just (S.unsafeDrop l1 bs2)
+s8_stripPrefix bs1 bs2
+  | bs1 `S.isPrefixOf` bs2 = Just (S.unsafeDrop (S.length bs1) bs2)
   | otherwise = Nothing
