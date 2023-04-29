@@ -136,11 +136,8 @@ reformat config mexts mfilepath =
     addPrefix :: ByteString -> L8.ByteString -> L8.ByteString
     addPrefix prefix = unlines'' . map (L8.fromStrict prefix <>) . L8.lines
     stripPrefix :: ByteString -> ByteString -> ByteString
-    stripPrefix prefix line =
-      if S.null (S8.dropWhile (== '\n') line)
-        then line
-        else fromMaybe (error "Missing expected prefix") . s8_stripPrefix prefix $
-             line
+    stripPrefix prefix =
+      fromMaybe (error "Missing expected prefix") . s8_stripPrefix prefix
     findPrefix :: [ByteString] -> ByteString
     findPrefix = takePrefix False . findSmallestPrefix . dropNewlines
     dropNewlines :: [ByteString] -> [ByteString]
