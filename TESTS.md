@@ -3364,7 +3364,7 @@ Escaped newlines
   x
 ```
 
-## Literature Haskell
+## Literate Haskell
 
 Code with `>`s
 
