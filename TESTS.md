@@ -3363,3 +3363,13 @@ Escaped newlines
 #define SHORT_MACRO_DEFINITION \
   x
 ```
+
+## Literature Haskell
+
+Code with `>`s
+
+```haskell
+> -- https://github.com/mihaimaruseac/hindent/issues/103
+> foo :: a
+> foo = undefined
+```
