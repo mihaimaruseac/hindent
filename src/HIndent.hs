@@ -142,16 +142,11 @@ reformat config mexts mfilepath =
     dropNewlines = filter (not . S.null . S8.dropWhile (== '\n'))
     takePrefix :: Bool -> ByteString -> ByteString
     takePrefix bracketUsed txt =
-      case S8.uncons txt of
-        Nothing -> ""
-        Just ('>', txt') ->
-          if not bracketUsed
-            then S8.cons '>' (takePrefix True txt')
-            else ""
-        Just (c, txt') ->
-          if c == ' ' || c == '\t'
-            then S8.cons c (takePrefix bracketUsed txt')
-            else ""
+      case (S8.uncons txt, bracketUsed) of
+        (Just ('>', txt'), False) -> S8.cons '>' (takePrefix True txt')
+        (Just (c, txt'), _)
+          | c == ' ' || c == '\t' -> S8.cons c (takePrefix bracketUsed txt')
+        _ -> ""
     findSmallestPrefix :: [ByteString] -> ByteString
     findSmallestPrefix [] = ""
     findSmallestPrefix ("":_) = ""
