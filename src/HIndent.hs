@@ -21,8 +21,6 @@ import qualified Data.ByteString as S
 import Data.ByteString.Builder (Builder)
 import qualified Data.ByteString.Builder as S
 import qualified Data.ByteString.Char8 as S8
-import qualified Data.ByteString.Lazy as L
-import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.UTF8 as UTF8
 import qualified Data.ByteString.Unsafe as S
 import Data.Char
@@ -68,16 +66,16 @@ hindent args = do
     ShowVersion -> putStrLn ("hindent " ++ showVersion version)
     Run style exts action paths ->
       if null paths
-        then L8.interact
-               (either (error . prettyParseError) S.toLazyByteString .
-                reformat style exts Nothing . L8.toStrict)
+        then S8.interact
+               (either (error . prettyParseError) id .
+                reformat style exts Nothing)
         else forM_ paths $ \filepath -> do
                cabalexts <- getCabalExtensionsForSourcePath filepath
                text <- S.readFile filepath
                case reformat style (cabalexts ++ exts) (Just filepath) text of
                  Left e -> error $ prettyParseError e
                  Right out ->
-                   unless (L8.fromStrict text == S.toLazyByteString out) $
+                   unless (text == out) $
                    case action of
                      Validate -> do
                        IO.putStrLn $ filepath ++ " is not formatted"
@@ -85,7 +83,7 @@ hindent args = do
                      Reformat -> do
                        tmpDir <- IO.getTemporaryDirectory
                        (fp, h) <- IO.openTempFile tmpDir "hindent.hs"
-                       L8.hPutStr h (S.toLazyByteString out)
+                       S8.hPutStr h out
                        IO.hFlush h
                        IO.hClose h
                        let exdev e =
@@ -101,14 +99,14 @@ reformat ::
   -> [Extension]
   -> Maybe FilePath
   -> ByteString
-  -> Either ParseError Builder
+  -> Either ParseError ByteString
 reformat config mexts mfilepath =
   preserveTrailingNewline
     (fmap (mconcat . intersperse "\n") . mapM processBlock . cppSplitBlocks)
   where
-    processBlock :: CodeBlock -> Either ParseError Builder
-    processBlock (Shebang text) = Right $ S.byteString text
-    processBlock (CPPDirectives text) = Right $ S.byteString text
+    processBlock :: CodeBlock -> Either ParseError ByteString
+    processBlock (Shebang text) = Right text
+    processBlock (CPPDirectives text) = Right text
     processBlock (HaskellSource yPos text) =
       let ls = S8.lines text
           prefix = findPrefix ls
@@ -121,8 +119,8 @@ reformat config mexts mfilepath =
        in case parseModule mfilepath allExts (UTF8.toString code) of
             POk _ m ->
               Right $
-              S.lazyByteString $
-              addPrefix prefix $ S.toLazyByteString $ prettyPrint config m
+              addPrefix prefix $
+              S.toStrict $ S.toLazyByteString $ prettyPrint config m
             PFailed st ->
               let rawErrLoc = psRealLoc $ loc st
                in Left $
@@ -132,9 +130,8 @@ reformat config mexts mfilepath =
                     , errorFile = fromMaybe "<interactive>" mfilepath
                     }
     unlines' = S.concat . intersperse "\n"
-    unlines'' = L.concat . intersperse "\n"
-    addPrefix :: ByteString -> L8.ByteString -> L8.ByteString
-    addPrefix prefix = unlines'' . map (L8.fromStrict prefix <>) . L8.lines
+    addPrefix :: ByteString -> ByteString -> ByteString
+    addPrefix prefix = unlines' . map (prefix <>) . S8.lines
     stripPrefix :: ByteString -> ByteString -> ByteString
     stripPrefix prefix =
       fromMaybe (error "Missing expected prefix") . s8_stripPrefix prefix
@@ -168,7 +165,7 @@ reformat config mexts mfilepath =
       | hasTrailingLine x || configTrailingNewline config =
         fmap
           (\x' ->
-             if hasTrailingLine (L.toStrict (S.toLazyByteString x'))
+             if hasTrailingLine x'
                then x'
                else x' <> "\n")
           (f x)
