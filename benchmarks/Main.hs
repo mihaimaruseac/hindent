@@ -31,15 +31,15 @@ toCriterion = go
       bgroup (S8.unpack name) (go children) : go next
     go (PlainText desc:CodeFence lang code:next) =
       if lang == "haskell"
-        then (bench
-                (UTF8.toString desc)
-                (nf
-                   (either (error . show) S.toLazyByteString .
-                    reformat
-                      HIndent.Config.defaultConfig
-                      defaultExtensions
-                      Nothing)
-                   code)) :
+        then bench
+               (UTF8.toString desc)
+               (nf
+                  (either (error . show) id .
+                   reformat
+                     HIndent.Config.defaultConfig
+                     defaultExtensions
+                     Nothing)
+                  code) :
              go next
         else go next
     go (PlainText {}:next) = go next
