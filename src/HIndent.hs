@@ -21,6 +21,7 @@ import qualified Data.ByteString as S
 import Data.ByteString.Builder (Builder)
 import qualified Data.ByteString.Builder as S
 import qualified Data.ByteString.Char8 as S8
+import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.UTF8 as UTF8
 import qualified Data.ByteString.Unsafe as S
 import Data.Char
@@ -120,7 +121,7 @@ reformat config mexts mfilepath =
             POk _ m ->
               Right $
               addPrefix prefix $
-              S.toStrict $ S.toLazyByteString $ prettyPrint config m
+              L.toStrict $ S.toLazyByteString $ prettyPrint config m
             PFailed st ->
               let rawErrLoc = psRealLoc $ loc st
                in Left $
