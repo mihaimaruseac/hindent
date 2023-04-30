@@ -11,6 +11,7 @@
 
 - `reformat` now takes a list of `Extension`s instead of a `Maybe` value containing the list ([#712]).
 - `reformat` and `testAst` now returns a `ParseError` on error ([#715]).
+- `reformat` now returns the formatted code as a `ByteString` instead of a `Builder`. ([#720]).
 
 ### Fixed
 
@@ -343,6 +344,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#720]: https://github.com/mihaimaruseac/hindent/pull/720
 [#715]: https://github.com/mihaimaruseac/hindent/pull/715
 [#712]: https://github.com/mihaimaruseac/hindent/pull/712
 [#709]: https://github.com/mihaimaruseac/hindent/pull/709
