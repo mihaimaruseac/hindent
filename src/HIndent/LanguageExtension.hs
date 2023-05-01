@@ -15,7 +15,6 @@ import Data.Char
 import Data.List
 import Data.List.Split
 import Data.Maybe
-import qualified Data.Text as T
 import qualified GHC.Driver.Session as GLP
 import qualified GHC.LanguageExtensions as GLP
 import HIndent.LanguageExtension.Conversion
@@ -48,8 +47,8 @@ collectLanguageExtensionsFromSource =
   collectLanguageExtensionsFromSourceViaOptionsPragma
 
 -- | Consume an extensions list from arguments.
-getExtensions :: [T.Text] -> [Extension]
-getExtensions = foldr (f . T.unpack) defaultExtensions
+getExtensions :: [String] -> [Extension]
+getExtensions = foldr f defaultExtensions
   where
     f "Haskell98" _ = []
     f x a =

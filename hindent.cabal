@@ -92,7 +92,6 @@ library
     , regex-tdfa
     , split
     , syb
-    , text
     , transformers
     , unicode-show
     , utf8-string
@@ -137,7 +136,6 @@ library hindent-internal
     , regex-tdfa
     , split
     , syb
-    , text
     , transformers
     , unicode-show
     , utf8-string
@@ -181,7 +179,6 @@ executable hindent
     , regex-tdfa
     , split
     , syb
-    , text
     , transformers
     , unicode-show
     , utf8-string
@@ -229,7 +226,6 @@ test-suite hindent-test
     , regex-tdfa
     , split
     , syb
-    , text
     , transformers
     , unicode-show
     , utf8-string
@@ -277,7 +273,6 @@ benchmark hindent-bench
     , regex-tdfa
     , split
     , syb
-    , text
     , transformers
     , unicode-show
     , utf8-string

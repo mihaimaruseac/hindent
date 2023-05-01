@@ -1,97 +1,96 @@
 spec-version: 0.30.0
 
-name:         hindent
-version:      6.0.1
-synopsis:     Extensible Haskell pretty printer
-description:  "Extensible Haskell pretty printer. Both a library and an executable. See the GitHub page for usage / explanation: <https://github.com/mihaimaruseac/hindent>"
-category:     Development
-stability:    Unstable
-homepage:     https://github.com/mihaimaruseac/hindent
-bug-reports:  https://github.com/mihaimaruseac/hindent/issues
-author:       Mihai Maruseac, Chris Done, Andrew Gibiansky, Tobias Pflug, Pierre Radermecker
-maintainer:   Mihai Maruseac
-copyright:    2014 Chris Done, 2015 Andrew Gibiansky, 2021 Mihai Maruseac
-license:      BSD3
+name: hindent
+version: 6.0.1
+synopsis: Extensible Haskell pretty printer
+description: "Extensible Haskell pretty printer. Both a library and an executable. See the GitHub page for usage / explanation: <https://github.com/mihaimaruseac/hindent>"
+category: Development
+stability: Unstable
+homepage: https://github.com/mihaimaruseac/hindent
+bug-reports: https://github.com/mihaimaruseac/hindent/issues
+author: Mihai Maruseac, Chris Done, Andrew Gibiansky, Tobias Pflug, Pierre Radermecker
+maintainer: Mihai Maruseac
+copyright: 2014 Chris Done, 2015 Andrew Gibiansky, 2021 Mihai Maruseac
+license: BSD3
 license-file: LICENSE.md
-build-type:   Simple
+build-type: Simple
 extra-source-files:
-  - README.md
-  - CHANGELOG.md
-  - BENCHMARKS.md
-  - TESTS.md
-data-files:   elisp/hindent.el
-github:       mihaimaruseac/hindent
+    - README.md
+    - CHANGELOG.md
+    - BENCHMARKS.md
+    - TESTS.md
+data-files: elisp/hindent.el
+github: mihaimaruseac/hindent
 
 ghc-options: -Wall -O2
 
 dependencies:
-  - Cabal
-  - base >= 4.7 && < 5
-  - bytestring
-  - containers
-  - directory
-  - exceptions
-  - filepath
-  - ghc-lib-parser-ex
-  - monad-loops
-  - mtl
-  - optparse-applicative
-  - path
-  - path-io
-  - regex-tdfa
-  - split
-  - syb
-  - text
-  - transformers
-  - unicode-show
-  - utf8-string
-  - yaml
+    - Cabal
+    - base >= 4.7 && < 5
+    - bytestring
+    - containers
+    - directory
+    - exceptions
+    - filepath
+    - ghc-lib-parser-ex
+    - monad-loops
+    - mtl
+    - optparse-applicative
+    - path
+    - path-io
+    - regex-tdfa
+    - split
+    - syb
+    - transformers
+    - unicode-show
+    - utf8-string
+    - yaml
 
 when:
-  - condition: impl(ghc >= 9.6.1)
-    then:
-      dependencies: ghc-lib-parser >= 9.6.1.20230312 && < 9.7
-    else:
-      when:
-        - condition: impl(ghc >= 9.4.1)
-          then:
-            dependencies: ghc-lib-parser >= 9.4.1.20220807 && < 9.5
-          else:
-            dependencies: ghc-lib-parser >= 9.2.3.20220527 && < 9.3
+    - condition: impl(ghc >= 9.6.1)
+      then:
+          dependencies: ghc-lib-parser >= 9.6.1.20230312 && < 9.7
+      else:
+          when:
+              - condition: impl(ghc >= 9.4.1)
+                then:
+                    dependencies: ghc-lib-parser >= 9.4.1.20220807 && < 9.5
+                else:
+                    dependencies: ghc-lib-parser >= 9.2.3.20220527 && < 9.3
 
 library:
-  source-dirs: src
+    source-dirs: src
 
 internal-libraries:
-  hindent-internal:
-    source-dirs: internal
-    dependencies:
-      - deepseq
+    hindent-internal:
+        source-dirs: internal
+        dependencies:
+            - deepseq
 
 executable:
-  main: Main.hs
-  source-dirs: app
-  dependencies:
-    - hindent
-  generated-other-modules:
-    - Paths_hindent
+    main: Main.hs
+    source-dirs: app
+    dependencies:
+        - hindent
+    generated-other-modules:
+        - Paths_hindent
 
 tests:
-  hindent-test:
-    main: Main.hs
-    source-dirs: tests
-    dependencies:
-      - Diff
-      - hindent
-      - hindent-internal
-      - hspec
+    hindent-test:
+        main: Main.hs
+        source-dirs: tests
+        dependencies:
+            - Diff
+            - hindent
+            - hindent-internal
+            - hspec
 
 benchmarks:
-  hindent-bench:
-    main: Main.hs
-    source-dirs: benchmarks
-    dependencies:
-      - criterion
-      - deepseq
-      - hindent
-      - hindent-internal
+    hindent-bench:
+        main: Main.hs
+        source-dirs: benchmarks
+        dependencies:
+            - criterion
+            - deepseq
+            - hindent
+            - hindent-internal
