@@ -8,7 +8,6 @@ import Control.DeepSeq
 import Criterion
 import Criterion.Main
 import qualified Data.ByteString as S
-import qualified Data.ByteString.Builder as S
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.UTF8 as UTF8
 import HIndent
