@@ -6,7 +6,6 @@ module HIndent.CommandlineOptions
   ) where
 
 import Data.Maybe
-import qualified Data.Text as T
 import HIndent.Config
 import HIndent.LanguageExtension
 import HIndent.LanguageExtension.Types
@@ -40,8 +39,7 @@ options config =
       fmap
         getExtensions
         (many
-           (T.pack <$>
-            strOption
+           (strOption
               (short 'X' <> help "Language extension" <> metavar "GHCEXT")))
     indentSpaces =
       option
