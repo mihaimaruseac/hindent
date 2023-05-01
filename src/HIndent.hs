@@ -23,7 +23,6 @@ import qualified Data.ByteString.Builder as S
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.UTF8 as UTF8
-import qualified Data.ByteString.Unsafe as S
 import Data.Char
 import Data.List hiding (stripPrefix)
 import Data.Maybe
@@ -135,7 +134,7 @@ reformat config mexts mfilepath =
     addPrefix prefix = unlines' . map (prefix <>) . S8.lines
     stripPrefix :: ByteString -> ByteString -> ByteString
     stripPrefix prefix =
-      fromMaybe (error "Missing expected prefix") . s8_stripPrefix prefix
+      fromMaybe (error "Missing expected prefix") . S.stripPrefix prefix
     findPrefix :: [ByteString] -> ByteString
     findPrefix = takePrefix False . findSmallestPrefix . dropNewlines
     dropNewlines :: [ByteString] -> [ByteString]
@@ -207,8 +206,3 @@ runPrinterStyle config m =
         , psFitOnOneLine = False
         , psEolComment = False
         }
-
-s8_stripPrefix :: ByteString -> ByteString -> Maybe ByteString
-s8_stripPrefix bs1 bs2
-  | bs1 `S.isPrefixOf` bs2 = Just (S.unsafeDrop (S.length bs1) bs2)
-  | otherwise = Nothing
