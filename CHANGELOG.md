@@ -19,6 +19,7 @@
 - Misplaced haddocks for class declarations ([#706]).
 - Misplaced comments in do expressions ([#707]).
 - Misplaced comments in case expressions  ([#708]).
+- The bug of extensions specified via pragmas not enabling implied ones ([#727]).
 
 ### Removed
 
@@ -344,6 +345,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#727]: https://github.com/mihaimaruseac/hindent/pull/727
 [#720]: https://github.com/mihaimaruseac/hindent/pull/720
 [#715]: https://github.com/mihaimaruseac/hindent/pull/715
 [#712]: https://github.com/mihaimaruseac/hindent/pull/712

@@ -150,5 +150,4 @@ getCabalExtensions srcpath = do
 getCabalExtensionsForSourcePath :: FilePath -> IO [Extension]
 getCabalExtensionsForSourcePath srcpath = do
   (lang, exts) <- getCabalExtensions srcpath
-  let allExts = exts ++ implicitExtensions (convertLanguage lang)
-  return $ concatMap extensionImplies allExts
+  return $ exts ++ implicitExtensions (convertLanguage lang)
