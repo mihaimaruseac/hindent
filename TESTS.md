@@ -2201,6 +2201,8 @@ f =
 cases
 
 ```haskell since 9.4.1
+{-# LANGUANGE LambdaCase #-}
+
 foo =
   \cases
     1 1 -> 1
