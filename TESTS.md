@@ -2201,6 +2201,7 @@ f =
 cases
 
 ```haskell since 9.4.1
+{-# LANGUAGE Arrows #-}
 {-# LANGUANGE LambdaCase #-}
 
 foo =
