@@ -39,7 +39,7 @@ main = do
 reformat :: Config -> S.ByteString -> ByteString
 reformat cfg code =
   either (("-- " <>) . L8.pack . prettyParseError) L.fromStrict $
-  HIndent.reformat cfg HIndent.defaultExtensions Nothing code
+  HIndent.reformat cfg [] Nothing code
 
 -- | Convert the Markdone document to Spec benchmarks.
 toSpec :: [Markdone] -> Spec

@@ -255,6 +255,8 @@ import qualified MegaModule as M
 Pretty import specification
 
 ```haskell
+{-# LANGUAGE ForeignFunctionInterface #-}
+
 import A hiding
   ( foobarbazqux
   , foobarbazqux
@@ -1161,6 +1163,8 @@ head' (x:_) = Just x
 n+k patterns
 
 ```haskell
+{-# LANGUAGE NPlusKPatterns #-}
+
 f (n+5) = 0
 ```
 
@@ -1593,19 +1597,17 @@ fooooooooo ::
 Implicit parameters
 
 ```haskell
+{-# LANGUAGE ImplicitParams #-}
+
 f :: (?x :: Int) => Int
 ```
 
 Quasiquotes in types
 
 ```haskell
+{-# LANGUAGE QuasiQuotes #-}
+
 fun :: [a|bc|]
-```
-
-Implicit parameters
-
-```haskell
-f :: (?x :: Int) => Int
 ```
 
 Tuples
@@ -2022,6 +2024,8 @@ foo = 3 + _
 Implicit value
 
 ```haskell
+{-# LANGUAGE ImplicitParams #-}
+
 foo = ?undefined
 ```
 
@@ -2430,6 +2434,8 @@ f =
 With implicit parameters
 
 ```haskell
+{-# LANGUAGE ImplicitParams #-}
+
 f =
   let ?x = 42
    in f
@@ -2678,24 +2684,32 @@ a = 0xa5
 Unboxed integers
 
 ```haskell
+{-# LANGUAGE MagicHash #-}
+
 a = 0#
 ```
 
 Unboxed floating point numbers
 
 ```haskell
+{-# LANGUAGE MagicHash #-}
+
 a = 3.3#
 ```
 
 Unboxed `Char`
 
 ```haskell
+{-# LANGUAGE MagicHash #-}
+
 a = 'c'#
 ```
 
 Unboxed `String`
 
 ```haskell
+{-# LANGUAGE MagicHash #-}
+
 a = "Foo"#
 ```
 
@@ -2925,12 +2939,16 @@ add1 x = [|x + 1|]
 Pattern brackets
 
 ```haskell
+{-# LANGUAGE TemplateHaskell #-}
+
 mkPat = [p|(x, y)|]
 ```
 
 Type brackets
 
 ```haskell
+{-# LANGUAGE TemplateHaskell #-}
+
 foo :: $([t|Bool|]) -> a
 ```
 
@@ -2938,6 +2956,8 @@ A quoted TH name from a type name
 
 ```haskell
 -- https://github.com/mihaimaruseac/hindent/issues/412
+{-# LANGUAGE TemplateHaskell #-}
+
 data (-)
 
 q = ''(-)
@@ -2946,12 +2966,16 @@ q = ''(-)
 Quoted list constructors
 
 ```haskell
+{-# LANGUAGE TemplateHaskell #-}
+
 cons = '(:)
 ```
 
 Pattern splices
 
 ```haskell
+{-# LANGUAGE TemplateHaskell #-}
+
 f $pat = ()
 
 g =
@@ -2963,6 +2987,8 @@ g =
 Typed splice
 
 ```haskell
+{-# LANGUAGE TemplateHaskell #-}
+
 foo = $$bar
 ```
 
@@ -3269,6 +3295,8 @@ main = print (2 @: 2)
 A complex, slow-to-print decl
 
 ```haskell
+{-# LANGUAGE TemplateHaskell #-}
+
 quasiQuotes =
   [ ( ''[]
     , \(typeVariable:_) _automaticPrinter ->
@@ -3327,6 +3355,8 @@ exp' (App _ op a) = do
 Quasi quotes
 
 ```haskell
+{-# LANGUAGE QuasiQuotes #-}
+
 exp = [name|exp|]
 
 f [qq|pattern|] = ()

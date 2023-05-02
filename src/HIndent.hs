@@ -113,6 +113,7 @@ reformat config mexts mfilepath =
           code = unlines' (map (stripPrefix prefix) ls)
           allExts =
             CE.uniqueExtensions $
+            concatMap (\x -> x : extensionImplies x) $
             mexts ++
             configExtensions config ++
             collectLanguageExtensionsFromSource (UTF8.toString code)
