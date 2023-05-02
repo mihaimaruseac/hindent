@@ -3,6 +3,8 @@
 Bunch of declarations
 
 ``` haskell
+{-# LANGUGAE QuasiQuotes #-}
+
 listPrinters =
   [(''[]
    ,\(typeVariable:_) _automaticPrinter ->
@@ -59,6 +61,8 @@ infixApp :: Exp NodeInfo
 Bunch of declarations - sans comments
 
 ``` haskell
+{-# LANGUGAE QuasiQuotes #-}
+
 listPrinters =
   [(''[]
    ,\(typeVariable:_) _automaticPrinter ->
@@ -116,6 +120,8 @@ infixApp :: Exp NodeInfo
 Quasi-quotes with nested lets and operators
 
 ``` haskell
+{-# LANGUGAE QuasiQuotes #-}
+
 quasiQuotes =
   [(''[]
    ,\(typeVariable:_) _automaticPrinter ->
