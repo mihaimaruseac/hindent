@@ -34,10 +34,7 @@ toCriterion = go
                (UTF8.toString desc)
                (nf
                   (either (error . show) id .
-                   reformat
-                     HIndent.Config.defaultConfig
-                     defaultExtensions
-                     Nothing)
+                   reformat HIndent.Config.defaultConfig [] Nothing)
                   code) :
              go next
         else go next

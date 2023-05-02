@@ -20,7 +20,6 @@ import HIndent.CodeBlock
 import HIndent.Config
 import HIndent.Error
 import HIndent.Internal.Test.Markdone
-import qualified HIndent.LanguageExtension as HIndent
 import qualified System.Info
 import Test.Hspec
 import Text.Read
