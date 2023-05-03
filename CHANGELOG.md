@@ -13,6 +13,7 @@
 - `reformat` and `testAst` now return a `ParseError` on error ([#715]).
 - `reformat` now returns the formatted code as a `ByteString` instead of a `Builder`. ([#720]).
 - HIndent now assumes no extensions are enabled by default ([#728]).
+- All modules except for `HIndent` are now private, and the minimum necessary definitions are exposed from the module ([#729]).
 
 ### Fixed
 
@@ -347,6 +348,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#729]: https://github.com/mihaimaruseac/hindent/pull/729
 [#728]: https://github.com/mihaimaruseac/hindent/pull/728
 [#727]: https://github.com/mihaimaruseac/hindent/pull/727
 [#720]: https://github.com/mihaimaruseac/hindent/pull/720
