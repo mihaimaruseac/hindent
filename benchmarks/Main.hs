@@ -11,9 +11,7 @@ import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.UTF8 as UTF8
 import HIndent
-import HIndent.Config
 import HIndent.Internal.Test.Markdone
-import HIndent.LanguageExtension
 
 -- | Main benchmarks.
 main :: IO ()
@@ -34,7 +32,7 @@ toCriterion = go
                (UTF8.toString desc)
                (nf
                   (either (error . show) id .
-                   reformat HIndent.Config.defaultConfig [] Nothing)
+                   reformat HIndent.defaultConfig [] Nothing)
                   code) :
              go next
         else go next
