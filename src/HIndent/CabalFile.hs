@@ -84,10 +84,10 @@ packageStanzas pd =
           BenchmarkExeV10 _ path -> [path]
           _ -> []
    in mconcat
-        [ maybeToList $ fmap libStanza $ library pd
-        , fmap exeStanza $ executables pd
-        , fmap testStanza $ testSuites pd
-        , fmap benchStanza $ benchmarks pd
+        [ maybeToList $ libStanza <$> library pd
+        , exeStanza <$> executables pd
+        , testStanza <$> testSuites pd
+        , benchStanza <$> benchmarks pd
         ]
 
 -- | Find cabal files that are "above" the source path
@@ -100,7 +100,7 @@ findCabalFiles dir rel = do
     []
       | dir == "/" -> return Nothing
     [] -> findCabalFiles (takeDirectory dir) (takeFileName dir </> rel)
-    _ -> return $ Just (fmap (\n -> dir </> n) cabalnames, rel)
+    _ -> return $ Just (fmap (dir </>) cabalnames, rel)
 
 getGenericPackageDescription :: FilePath -> IO (Maybe GenericPackageDescription)
 #if MIN_VERSION_Cabal(2, 2, 0)
@@ -129,8 +129,7 @@ getCabalStanza srcpath = do
             Just gpd -> do
               return $ packageStanzas $ flattenPackageDescription gpd
       return $
-        case filter (\stanza -> stanzaIsSourceFilePath stanza relpath) $
-             mconcat stanzass of
+        case filter (`stanzaIsSourceFilePath` relpath) $ mconcat stanzass of
           [] -> Nothing
           (stanza:_) -> Just stanza -- just pick the first one
     Nothing -> return Nothing
