@@ -5,12 +5,22 @@
 
 -- | Haskell indenter.
 module HIndent
-  ( hindent
+  ( -- * The entry point.
+    hindent
   , -- * Formatting functions.
     reformat
-  , prettyPrint
+  , -- * Config
+    Config(..)
+  , defaultConfig
+  , getConfig
+  , -- * Extension
+    Extension(..)
+  , -- * Error
+    ParseError(..)
+  , prettyParseError
   , -- * Testing
     testAst
+  , HsModule'
   ) where
 
 import Control.Exception

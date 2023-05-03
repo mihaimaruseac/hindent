@@ -33,6 +33,7 @@ source-repository head
 library
   exposed-modules:
       HIndent
+  other-modules:
       HIndent.Applicative
       HIndent.CabalFile
       HIndent.CodeBlock
@@ -68,7 +69,6 @@ library
       HIndent.Pretty.SigBindFamily
       HIndent.Pretty.Types
       HIndent.Printer
-  other-modules:
       Paths_hindent
   autogen-modules:
       Paths_hindent
