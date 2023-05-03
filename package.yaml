@@ -60,6 +60,8 @@ when:
 
 library:
   source-dirs: src
+  exposed-modules:
+    - HIndent
 
 internal-libraries:
   hindent-internal:
