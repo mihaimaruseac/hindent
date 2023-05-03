@@ -22,7 +22,7 @@ jobs:
         uses: haskell/actions/hlint-setup@14f59b6b6cfb9fec5e47296d6604e9c4e961a5b1 # v2.3.8
 
       - name: Run HLint
-        uses: haskell/actions/hlint-setup@14f59b6b6cfb9fec5e47296d6604e9c4e961a5b1 # v2.3.8
+        uses: haskell/actions/hlint-run@14f59b6b6cfb9fec5e47296d6604e9c4e961a5b1 # v2.3.8
         with:
           path: .
           fail-on: warning
