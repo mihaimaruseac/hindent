@@ -3397,6 +3397,17 @@ Escaped newlines
   x
 ```
 
+Language extensions are effective across CPP boundaries.
+
+```haskell
+{-# LANGUAGE PatternSynonyms #-}
+#if 1
+pattern Foo :: Int -> Bar
+#else
+pattern Foo :: Int -> Bar
+#endif
+```
+
 ## Literate Haskell
 
 Code with `>`s

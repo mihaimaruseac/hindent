@@ -110,9 +110,10 @@ reformat ::
   -> Maybe FilePath
   -> ByteString
   -> Either ParseError ByteString
-reformat config mexts mfilepath =
+reformat config mexts mfilepath rawCode =
   preserveTrailingNewline
     (fmap (mconcat . intersperse "\n") . mapM processBlock . cppSplitBlocks)
+    rawCode
   where
     processBlock :: CodeBlock -> Either ParseError ByteString
     processBlock (Shebang text) = Right text
@@ -121,12 +122,6 @@ reformat config mexts mfilepath =
       let ls = S8.lines text
           prefix = findPrefix ls
           code = unlines' (map (stripPrefix prefix) ls)
-          allExts =
-            CE.uniqueExtensions $
-            concatMap (\x -> x : extensionImplies x) $
-            mexts ++
-            configExtensions config ++
-            collectLanguageExtensionsFromSource (UTF8.toString code)
        in case parseModule mfilepath allExts (UTF8.toString code) of
             POk _ m ->
               Right $
@@ -176,6 +171,16 @@ reformat config mexts mfilepath =
                else x' <> "\n")
           (f x)
       | otherwise = f x
+    allExts =
+      CE.uniqueExtensions $
+      concatMap (\x -> x : extensionImplies x) $
+      mexts ++ configExtensions config ++ allExtsFromCode
+    allExtsFromCode = concatMap f codeBlocks
+      where
+        f (HaskellSource _ text) =
+          collectLanguageExtensionsFromSource $ UTF8.toString text
+        f _ = []
+    codeBlocks = cppSplitBlocks rawCode
 
 -- | Generate an AST from the given module for debugging.
 testAst :: ByteString -> Either ParseError HsModule'
