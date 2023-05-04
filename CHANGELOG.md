@@ -22,6 +22,7 @@
 - Misplaced comments in do expressions ([#707]).
 - Misplaced comments in case expressions  ([#708]).
 - The bug of extensions specified via pragmas not enabling implied ones ([#727]).
+- Language extensions enabled via pragmas were not effective across CPP boundaries ([#731]).
 
 ### Removed
 
@@ -348,6 +349,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#731]: https://github.com/mihaimaruseac/hindent/pull/731
 [#729]: https://github.com/mihaimaruseac/hindent/pull/729
 [#728]: https://github.com/mihaimaruseac/hindent/pull/728
 [#727]: https://github.com/mihaimaruseac/hindent/pull/727
