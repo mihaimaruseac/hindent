@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+-- | Helper functions to manipulate `ByteString`.
 module HIndent.ByteString
   ( findPrefix
   , stripPrefix
