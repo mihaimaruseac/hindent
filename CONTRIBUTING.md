@@ -27,3 +27,7 @@ information on using pull requests.
 
 This project follows
 [Google's Open Source Community Guidelines](https://opensource.google/conduct/).
+
+## ghcid
+
+With [`ghcid`](https://github.com/ndmitchell/ghcid), you can run tests automatically on every code change. Just run `ghcid` on the project root on a terminal.

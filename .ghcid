@@ -1,0 +1,3 @@
+--command "stack repl hindent:lib hindent:test:hindent-test --main-is hindent:test:hindent-test"
+--test ":main"
+--restart=package.yaml
