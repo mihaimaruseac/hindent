@@ -41,6 +41,7 @@ import Foreign.C
 import GHC.IO.Exception
 import GHC.Parser.Lexer hiding (buffer, options)
 import GHC.Types.SrcLoc
+import HIndent.ByteString
 import HIndent.CabalFile
 import HIndent.CodeBlock
 import HIndent.CommandlineOptions
@@ -135,32 +136,6 @@ reformat config mexts mfilepath rawCode =
                     , errorCol = srcLocCol rawErrLoc
                     , errorFile = fromMaybe "<interactive>" mfilepath
                     }
-    unlines' = S.concat . intersperse "\n"
-    addPrefix :: ByteString -> ByteString -> ByteString
-    addPrefix prefix = unlines' . map (prefix <>) . S8.lines
-    stripPrefix :: ByteString -> ByteString -> ByteString
-    stripPrefix prefix =
-      fromMaybe (error "Missing expected prefix") . S.stripPrefix prefix
-    findPrefix :: [ByteString] -> ByteString
-    findPrefix = takePrefix False . findSmallestPrefix . dropNewlines
-    dropNewlines :: [ByteString] -> [ByteString]
-    dropNewlines = filter (not . S.null . S8.dropWhile (== '\n'))
-    takePrefix :: Bool -> ByteString -> ByteString
-    takePrefix bracketUsed txt =
-      case (S8.uncons txt, bracketUsed) of
-        (Just ('>', txt'), False) -> S8.cons '>' (takePrefix True txt')
-        (Just (c, txt'), _)
-          | c == ' ' || c == '\t' -> S8.cons c (takePrefix bracketUsed txt')
-        _ -> ""
-    findSmallestPrefix :: [ByteString] -> ByteString
-    findSmallestPrefix [] = ""
-    findSmallestPrefix ("":_) = ""
-    findSmallestPrefix (p:ps) =
-      let first = S8.head p
-          startsWithChar c x = S8.length x > 0 && S8.head x == c
-       in if all (startsWithChar first) ps
-            then S8.cons first (findSmallestPrefix (S.tail p : map S.tail ps))
-            else ""
     preserveTrailingNewline f x
       | S8.null x || S8.all isSpace x = return mempty
       | hasTrailingLine x || configTrailingNewline config =
@@ -195,10 +170,6 @@ testAst x =
     exts =
       CE.uniqueExtensions $
       collectLanguageExtensionsFromSource $ UTF8.toString x
-
--- | Does the strict bytestring have a trailing newline?
-hasTrailingLine :: ByteString -> Bool
-hasTrailingLine xs = not (S8.null xs) && S8.last xs == '\n'
 
 -- | Print the module.
 prettyPrint :: Config -> HsModule' -> Builder
