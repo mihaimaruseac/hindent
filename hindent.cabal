@@ -35,6 +35,7 @@ library
       HIndent
   other-modules:
       HIndent.Applicative
+      HIndent.ByteString
       HIndent.CabalFile
       HIndent.CodeBlock
       HIndent.CommandlineOptions
