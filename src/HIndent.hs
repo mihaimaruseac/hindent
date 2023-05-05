@@ -34,7 +34,6 @@ import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.UTF8 as UTF8
 import Data.Char
-import Data.List hiding (stripPrefix)
 import Data.Maybe
 import Data.Version
 import Foreign.C
@@ -113,7 +112,7 @@ reformat ::
   -> Either ParseError ByteString
 reformat config mexts mfilepath rawCode =
   preserveTrailingNewline
-    (fmap (mconcat . intersperse "\n") . mapM processBlock . cppSplitBlocks)
+    (fmap unlines' . mapM processBlock . cppSplitBlocks)
     rawCode
   where
     processBlock :: CodeBlock -> Either ParseError ByteString
