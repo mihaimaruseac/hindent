@@ -2876,12 +2876,12 @@ f = undefined
     g h =
       let x = undefined
        in do
-        foo
-        pure
-          h
-            { grhssLocalBinds =
-                HsValBinds x (ValBinds (newSigs newSigMethods))
-            }
+            foo
+            pure
+              h
+                { grhssLocalBinds =
+                    HsValBinds x (ValBinds (newSigs newSigMethods))
+                }
 ```
 
 `OverloadedRecordDot`
