@@ -929,10 +929,11 @@ instance Pretty HsSigType' where
                   ver = do
                     newline
                     pretty $ VerticalContext hst_ctxt
-               in do hor <-|> ver
-                     newline
-                     prefixed "=> " $
-                       prefixedLined "-> " $ pretty <$> flatten hst_body
+               in do
+                    hor <-|> ver
+                    newline
+                    prefixed "=> " $
+                      prefixedLined "-> " $ pretty <$> flatten hst_body
           _ ->
             let hor = space >> pretty (fmap HsTypeInsideDeclSig sig_body)
                 ver =
@@ -1093,26 +1094,30 @@ prettyConDecl ConDeclGADT {..} = do
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 prettyConDecl ConDeclH98 {con_forall = True, ..} =
-  (do string "forall "
-      spaced $ fmap pretty con_ex_tvs
-      string ". ") |=>
-  (do whenJust con_mb_cxt $ \c -> do
-        pretty $ Context c
-        string " =>"
-        newline
-      pretty con_name
-      pretty con_args)
+  (do
+     string "forall "
+     spaced $ fmap pretty con_ex_tvs
+     string ". ") |=>
+  (do
+     whenJust con_mb_cxt $ \c -> do
+       pretty $ Context c
+       string " =>"
+       newline
+     pretty con_name
+     pretty con_args)
 #else
 prettyConDecl ConDeclH98 {con_forall = True, ..} =
-  (do string "forall "
-      spaced $ fmap pretty con_ex_tvs
-      string ". ") |=>
-  (do whenJust con_mb_cxt $ \_ -> do
-        pretty $ Context con_mb_cxt
-        string " =>"
-        newline
-      pretty con_name
-      pretty con_args)
+  (do
+     string "forall "
+     spaced $ fmap pretty con_ex_tvs
+     string ". ") |=>
+  (do
+     whenJust con_mb_cxt $ \_ -> do
+       pretty $ Context con_mb_cxt
+       string " =>"
+       newline
+     pretty con_name
+     pretty con_args)
 #endif
 prettyConDecl ConDeclH98 {con_forall = False, ..} =
   case con_args of
@@ -1416,6 +1421,8 @@ instance Pretty GRHSExpr where
         printCommentsAnd body (const (doExpr (QualifiedDo m Do) stmts))
       HsDo _ (MDoExpr m) stmts ->
         printCommentsAnd body (const (doExpr (QualifiedDo m Mdo) stmts))
+      OpApp _ (L _ (HsDo _ DoExpr {} _)) _ _ -> space >> pretty body
+      OpApp _ (L _ (HsDo _ MDoExpr {} _)) _ _ -> space >> pretty body
       _ ->
         let hor = space >> pretty body
             ver = newline >> indentedBlock (pretty body)
@@ -1445,11 +1452,8 @@ instance Pretty GRHSExpr where
       doExpr qDo stmts = do
         space
         pretty qDo
-        let hor = space >> printCommentsAnd stmts (lined . fmap pretty)
-            ver = do
-              newline
-              indentedBlock (printCommentsAnd stmts (lined . fmap pretty))
-        hor <-|> ver
+        newline
+        indentedBlock (printCommentsAnd stmts (lined . fmap pretty))
 
 instance Pretty GRHSProc where
   pretty' (GRHSProc (GRHS _ guards body)) =
@@ -1718,18 +1722,21 @@ instance Pretty InfixApp where
       horizontal = spaced [pretty lhs, pretty (InfixExpr op), pretty rhs]
       vertical = do
         lhsVer
-        beforeRhs <-
+        rhsPrinter <-
           case unLoc lhs of
             (HsDo _ DoExpr {} _) -> do
-              indentedWithSpace 3 (newline >> pretty (InfixExpr op)) -- 3 for "do "
-              return space
+              newline
+              return $ \x -> indentedBlock $ spaced [pretty $ InfixExpr op, x]
             (HsDo _ MDoExpr {} _) -> do
-              indentedWithSpace 4 (newline >> pretty (InfixExpr op)) -- 4 for "mdo "
-              return space
+              newline
+              newline
+              return $ \x -> indentedBlock $ spaced [pretty $ InfixExpr op, x]
             _ -> do
               space
               pretty (InfixExpr op)
-              return newline
+              return $ \x -> do
+                newline
+                x
         case unLoc rhs of
           (HsDo _ (DoExpr m) xs) -> do
             space
@@ -1751,12 +1758,13 @@ instance Pretty InfixApp where
             (if immediatelyAfterDo
                then indentedBlock
                else id) $ do
-              beforeRhs
-              col <- startingColumn
-              (if col == 0
-                 then indentedBlock
-                 else id) $
-                pretty rhs
+              rhsPrinter
+                (do
+                   col <- startingColumn
+                   (if col == 0
+                      then indentedBlock
+                      else id) $
+                     pretty rhs)
       lhsVer =
         case lhs of
           (L loc (OpApp _ l o r)) ->
@@ -2489,8 +2497,10 @@ instance Pretty ListComprehension where
       stmtsAndPrefixes l = ("| ", head l) : fmap (", ", ) (tail l)
 
 instance Pretty DoExpression where
-  pretty' DoExpression {..} =
-    (pretty qualifiedDo >> space) |=> lined (fmap pretty doStmts)
+  pretty' DoExpression {..} = do
+    pretty qualifiedDo
+    newline
+    indentedBlock $ lined $ fmap pretty doStmts
 
 instance Pretty DoOrMdo where
   pretty' Do = string "do"

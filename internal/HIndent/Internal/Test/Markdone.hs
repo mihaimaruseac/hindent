@@ -94,9 +94,10 @@ parse = go (0 :: Int)
                      Heading nextN _ -> nextN > n
                      _ -> True)
                   rest
-           in do childs <- go (level + 1) children
-                 siblings <- go level rest'
-                 return (Section label childs : siblings)
+           in do
+                childs <- go (level + 1) children
+                siblings <- go level rest'
+                return (Section label childs : siblings)
         (BeginFence label:rest)
           | level > 0 ->
             let (content, rest') =

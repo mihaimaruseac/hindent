@@ -1064,7 +1064,8 @@ f x
   , x <- Just x =
     case x of
       Just x -> e
-  | otherwise = do e
+  | otherwise = do
+    e
   where
     x = y
 ```
@@ -2231,10 +2232,10 @@ Do as a left-hand side of an infix operation
 ```haskell
 -- https://github.com/mihaimaruseac/hindent/issues/238
 -- https://github.com/mihaimaruseac/hindent/issues/296
-block =
-  do ds <- inBraces $ inWhiteSpace declarations
-     return $ Block ds
-     <?> "block"
+block = do
+  ds <- inBraces $ inWhiteSpace declarations
+  return $ Block ds
+  <?> "block"
 ```
 
 #### Bindings
@@ -2874,12 +2875,13 @@ f = undefined
   where
     g h =
       let x = undefined
-       in do foo
-             pure
-               h
-                 { grhssLocalBinds =
-                     HsValBinds x (ValBinds (newSigs newSigMethods))
-                 }
+       in do
+            foo
+            pure
+              h
+                { grhssLocalBinds =
+                    HsValBinds x (ValBinds (newSigs newSigMethods))
+                }
 ```
 
 `OverloadedRecordDot`
