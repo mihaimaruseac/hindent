@@ -33,8 +33,8 @@ main = do
 
 reformat :: Config -> S.ByteString -> ByteString
 reformat cfg code =
-  either (("-- " <>) . L8.pack . HIndent.prettyParseError) L.fromStrict $
-  HIndent.reformat cfg [] Nothing code
+  either (("-- " <>) . L8.pack . HIndent.prettyParseError) L.fromStrict
+    $ HIndent.reformat cfg [] Nothing code
 
 -- | Convert the Markdone document to Spec benchmarks.
 toSpec :: [Markdone] -> Spec
@@ -47,19 +47,19 @@ toSpec = go
     go (PlainText desc:CodeFence lang code:next) =
       case lang of
         "haskell" -> do
-          it (UTF8.toString desc) $
-            shouldBeReadable (reformat cfg code) (L.fromStrict code)
+          it (UTF8.toString desc)
+            $ shouldBeReadable (reformat cfg code) (L.fromStrict code)
           go next
         "haskell 4" -> do
           let cfg' = cfg {configIndentSpaces = 4}
-          it (UTF8.toString desc) $
-            shouldBeReadable (reformat cfg' code) (L.fromStrict code)
+          it (UTF8.toString desc)
+            $ shouldBeReadable (reformat cfg' code) (L.fromStrict code)
           go next
         "haskell given" ->
           case skipEmptyLines next of
             CodeFence "haskell expect" codeExpect:next' -> do
-              it (UTF8.toString desc) $
-                shouldBeReadable (reformat cfg code) (L.fromStrict codeExpect)
+              it (UTF8.toString desc)
+                $ shouldBeReadable (reformat cfg code) (L.fromStrict codeExpect)
               go next'
             _ ->
               error
@@ -71,8 +71,8 @@ toSpec = go
           | Just from <- fromVersion $ UTF8.toString s ->
             if compilerVersion >= from
               then do
-                it (UTF8.toString desc) $
-                  shouldBeReadable (reformat cfg code) (L.fromStrict code)
+                it (UTF8.toString desc)
+                  $ shouldBeReadable (reformat cfg code) (L.fromStrict code)
                 go next
               else do
                 it
@@ -84,9 +84,11 @@ toSpec = go
     go (CodeFence {}:next) = go next
     go [] = return ()
     pendingForVersionMsg from =
-      "The test is for GHC versions since " ++
-      showVersion from ++
-      " but you are using GHC version " ++ showVersion compilerVersion ++ "."
+      "The test is for GHC versions since "
+        ++ showVersion from
+        ++ " but you are using GHC version "
+        ++ showVersion compilerVersion
+        ++ "."
     fromVersion :: String -> Maybe Version
     fromVersion s
       | (_, _, _, [x, y, z]) <-
@@ -114,11 +116,11 @@ instance Eq Readable where
 
 instance Show Readable where
   show (Readable x d') =
-    "\n" ++
-    LUTF8.toString x ++
-    (case d' of
-       Just d -> "\nThe diff:\n" ++ d
-       Nothing -> "")
+    "\n"
+      ++ LUTF8.toString x
+      ++ (case d' of
+            Just d -> "\nThe diff:\n" ++ d
+            Nothing -> "")
 
 -- | A diff display.
 diff :: ByteString -> ByteString -> String
@@ -134,27 +136,30 @@ markdoneSpec = do
     it "should tokenize plain text" $ do
       let input =
             "this is a line\nthis is another line\n\nthis is a new paragraph\n"
-      tokenize input `shouldBe`
-        [ PlainLine "this is a line"
-        , PlainLine "this is another line"
-        , PlainLine ""
-        , PlainLine "this is a new paragraph"
-        ]
+      tokenize input
+        `shouldBe` [ PlainLine "this is a line"
+                   , PlainLine "this is another line"
+                   , PlainLine ""
+                   , PlainLine "this is a new paragraph"
+                   ]
     it "should tokenize headings" $ do
       tokenize "# Heading" `shouldBe` [Heading 1 "Heading"]
     it "should tokenize code fence beginnings with labels" $ do
       tokenize "``` haskell\n" `shouldBe` [BeginFence "haskell"]
       tokenize "```haskell expect\n" `shouldBe` [BeginFence "haskell expect"]
-      tokenize "before\n```code\nafter\n" `shouldBe`
-        [PlainLine "before", BeginFence "code", PlainLine "after"]
+      tokenize "before\n```code\nafter\n"
+        `shouldBe` [PlainLine "before", BeginFence "code", PlainLine "after"]
     it "should tokenize full code fences" $ do
-      tokenize "```haskell\ncode goes here\n```" `shouldBe`
-        [BeginFence "haskell", PlainLine "code goes here", EndFence]
+      tokenize "```haskell\ncode goes here\n```"
+        `shouldBe` [BeginFence "haskell", PlainLine "code goes here", EndFence]
     it "should tokenize lines inside code fences as plain text" $ do
-      tokenize "```haskell\n#!/usr/bin/env stack\n```" `shouldBe`
-        [BeginFence "haskell", PlainLine "#!/usr/bin/env stack", EndFence]
-      tokenize "```haskell\n# not a heading\n```" `shouldBe`
-        [BeginFence "haskell", PlainLine "# not a heading", EndFence]
+      tokenize "```haskell\n#!/usr/bin/env stack\n```"
+        `shouldBe` [ BeginFence "haskell"
+                   , PlainLine "#!/usr/bin/env stack"
+                   , EndFence
+                   ]
+      tokenize "```haskell\n# not a heading\n```"
+        `shouldBe` [BeginFence "haskell", PlainLine "# not a heading", EndFence]
   describe "markdown parser" $ do
     it "should parse a heading followed by text as a section" $ do
       let input =
@@ -163,11 +168,11 @@ markdoneSpec = do
             , PlainLine "split across two lines."
             ]
       output <- parse input
-      output `shouldBe`
-        [ Section
-            "This is a heading"
-            [PlainText "This is plain text\nsplit across two lines."]
-        ]
+      output
+        `shouldBe` [ Section
+                       "This is a heading"
+                       [PlainText "This is plain text\nsplit across two lines."]
+                   ]
 
 -- | Returns the version of the compiler used to build this program.
 --

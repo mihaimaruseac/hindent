@@ -24,17 +24,20 @@ data RunMode
 -- | Program options.
 options :: Config -> Parser RunMode
 options config =
-  flag' ShowVersion (long "version" <> help "Print the version") <|>
-  (Run <$> style <*> exts <*> action <*> files)
+  flag' ShowVersion (long "version" <> help "Print the version")
+    <|> (Run <$> style <*> exts <*> action <*> files)
   where
     style =
-      (makeStyle config <$> lineLen <*> indentSpaces <*> trailingNewline <*>
-       sortImports) <*
-      optional
-        (strOption
-           (long "style" <>
-            help "Style to print with (historical, now ignored)" <>
-            metavar "STYLE") :: Parser String)
+      (makeStyle config
+         <$> lineLen
+         <*> indentSpaces
+         <*> trailingNewline
+         <*> sortImports)
+        <* optional
+             (strOption
+                (long "style"
+                   <> help "Style to print with (historical, now ignored)"
+                   <> metavar "STYLE") :: Parser String)
     exts =
       fmap
         getExtensions
@@ -44,40 +47,44 @@ options config =
     indentSpaces =
       option
         auto
-        (long "indent-size" <>
-         help "Indentation size in spaces" <>
-         value (configIndentSpaces config) <> showDefault) <|>
-      option
-        auto
-        (long "tab-size" <> help "Same as --indent-size, for compatibility")
+        (long "indent-size"
+           <> help "Indentation size in spaces"
+           <> value (configIndentSpaces config)
+           <> showDefault)
+        <|> option
+              auto
+              (long "tab-size"
+                 <> help "Same as --indent-size, for compatibility")
     lineLen =
       option
         auto
-        (long "line-length" <>
-         help "Desired length of lines" <>
-         value (configMaxColumns config) <> showDefault)
+        (long "line-length"
+           <> help "Desired length of lines"
+           <> value (configMaxColumns config)
+           <> showDefault)
     trailingNewline =
-      not <$>
-      flag
-        (not (configTrailingNewline config))
-        (configTrailingNewline config)
-        (long "no-force-newline" <>
-         help "Don't force a trailing newline" <> showDefault)
+      not
+        <$> flag
+              (not (configTrailingNewline config))
+              (configTrailingNewline config)
+              (long "no-force-newline"
+                 <> help "Don't force a trailing newline"
+                 <> showDefault)
     sortImports =
       flag
         Nothing
         (Just True)
-        (long "sort-imports" <> help "Sort imports in groups" <> showDefault) <|>
-      flag
-        Nothing
-        (Just False)
-        (long "no-sort-imports" <> help "Don't sort imports")
+        (long "sort-imports" <> help "Sort imports in groups" <> showDefault)
+        <|> flag
+              Nothing
+              (Just False)
+              (long "no-sort-imports" <> help "Don't sort imports")
     action =
       flag
         Reformat
         Validate
-        (long "validate" <>
-         help "Check if files are formatted without changing them")
+        (long "validate"
+           <> help "Check if files are formatted without changing them")
     makeStyle s mlen tabs trailing imports =
       s
         { configMaxColumns = mlen

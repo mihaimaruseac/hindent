@@ -40,8 +40,9 @@ extensionImplies _ = []
 -- | Collect pragmas specified in the source code.
 collectLanguageExtensionsFromSource :: String -> [Extension]
 collectLanguageExtensionsFromSource =
-  (++) <$> collectLanguageExtensionsSpecifiedViaLanguagePragma <*>
-  collectLanguageExtensionsFromSourceViaOptionsPragma
+  (++)
+    <$> collectLanguageExtensionsSpecifiedViaLanguagePragma
+    <*> collectLanguageExtensionsFromSourceViaOptionsPragma
 
 -- | Consume an extensions list from arguments.
 getExtensions :: [String] -> [Extension]
@@ -60,18 +61,21 @@ getExtensions = foldr f []
 -- This function ignores language extensions not supported by Cabal.
 collectLanguageExtensionsSpecifiedViaLanguagePragma :: String -> [Extension]
 collectLanguageExtensionsSpecifiedViaLanguagePragma =
-  mapMaybe (strToExt . stripSpaces) .
-  concatMap (splitOn ",") .
-  fmap snd . filter ((== "LANGUAGE") . fst) . extractPragmasFromCode
+  mapMaybe (strToExt . stripSpaces)
+    . concatMap (splitOn ",")
+    . fmap snd
+    . filter ((== "LANGUAGE") . fst)
+    . extractPragmasFromCode
 
 -- | Extracts the language extensions specified by @-XFOO@ from @OPTIONS@
 -- or @OPTIONS_GHC@ pragmas
 collectLanguageExtensionsFromSourceViaOptionsPragma :: String -> [Extension]
 collectLanguageExtensionsFromSourceViaOptionsPragma =
-  mapMaybe (strToExt . stripSpaces) .
-  concatMap extractLanguageExtensionsFromOptions .
-  fmap snd .
-  filter ((`elem` ["OPTIONS", "OPTIONS_GHC"]) . fst) . extractPragmasFromCode
+  mapMaybe (strToExt . stripSpaces)
+    . concatMap extractLanguageExtensionsFromOptions
+    . fmap snd
+    . filter ((`elem` ["OPTIONS", "OPTIONS_GHC"]) . fst)
+    . extractPragmasFromCode
 
 -- | Extracts the language extensions specified in the '-XFOO' format from
 -- the given string

@@ -31,10 +31,10 @@ toCriterion = go
         then bench
                (UTF8.toString desc)
                (nf
-                  (either (error . show) id .
-                   reformat HIndent.defaultConfig [] Nothing)
-                  code) :
-             go next
+                  (either (error . show) id
+                     . reformat HIndent.defaultConfig [] Nothing)
+                  code)
+               : go next
         else go next
     go (PlainText {}:next) = go next
     go (CodeFence {}:next) = go next

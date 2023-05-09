@@ -50,8 +50,8 @@ mkStanza bi mnames fpaths =
           case toRelative dir path of
             Nothing -> False
             Just relpath ->
-              any (equalFilePath $ dropExtension relpath) modpaths ||
-              any (equalFilePath relpath) fpaths
+              any (equalFilePath $ dropExtension relpath) modpaths
+                || any (equalFilePath relpath) fpaths
      in any inDir $ hsSourceDirs' bi
   where
 
@@ -79,10 +79,10 @@ packageStanzas pd =
              _ -> [])
       benchStanza :: Benchmark -> Stanza
       benchStanza bn =
-        mkStanza (benchmarkBuildInfo bn) [] $
-        case benchmarkInterface bn of
-          BenchmarkExeV10 _ path -> [path]
-          _ -> []
+        mkStanza (benchmarkBuildInfo bn) []
+          $ case benchmarkInterface bn of
+              BenchmarkExeV10 _ path -> [path]
+              _ -> []
    in mconcat
         [ maybeToList $ libStanza <$> library pd
         , exeStanza <$> executables pd
@@ -128,22 +128,22 @@ getCabalStanza srcpath = do
             Nothing -> return []
             Just gpd -> do
               return $ packageStanzas $ flattenPackageDescription gpd
-      return $
-        case filter (`stanzaIsSourceFilePath` relpath) $ mconcat stanzass of
-          [] -> Nothing
-          (stanza:_) -> Just stanza -- just pick the first one
+      return
+        $ case filter (`stanzaIsSourceFilePath` relpath) $ mconcat stanzass of
+            [] -> Nothing
+            (stanza:_) -> Just stanza -- just pick the first one
     Nothing -> return Nothing
 
 -- | Get language and extensions from the cabal file for this source path
 getCabalExtensions :: FilePath -> IO (Language, [Extension])
 getCabalExtensions srcpath = do
   mstanza <- getCabalStanza srcpath
-  return $
-    case mstanza of
-      Nothing -> (Haskell98, [])
-      Just (MkStanza bi _) ->
-        ( fromMaybe Haskell98 $ defaultLanguage bi
-        , mapMaybe fromCabalExtension $ defaultExtensions bi)
+  return
+    $ case mstanza of
+        Nothing -> (Haskell98, [])
+        Just (MkStanza bi _) ->
+          ( fromMaybe Haskell98 $ defaultLanguage bi
+          , mapMaybe fromCabalExtension $ defaultExtensions bi)
 
 -- | Get extensions from the cabal file for this source path
 getCabalExtensionsForSourcePath :: FilePath -> IO [Extension]

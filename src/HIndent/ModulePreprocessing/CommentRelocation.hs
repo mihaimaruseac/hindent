@@ -68,16 +68,17 @@ relocateComments :: HsModule' -> [LEpaComment] -> HsModule'
 relocateComments = evalState . relocate
   where
     relocate =
-      relocatePragmas >=>
-      relocateCommentsBeforePragmas >=>
-      relocateCommentsInExportList >=>
-      relocateCommentsInClass >=>
-      relocateCommentsBeforeTopLevelDecls >=>
-      relocateCommentsSameLine >=>
-      relocateCommentsInDoExpr >=>
-      relocateCommentsInCase >=>
-      relocateCommentsTopLevelWhereClause >=>
-      relocateCommentsAfter >=> assertAllCommentsAreConsumed
+      relocatePragmas
+        >=> relocateCommentsBeforePragmas
+        >=> relocateCommentsInExportList
+        >=> relocateCommentsInClass
+        >=> relocateCommentsBeforeTopLevelDecls
+        >=> relocateCommentsSameLine
+        >=> relocateCommentsInDoExpr
+        >=> relocateCommentsInCase
+        >=> relocateCommentsTopLevelWhereClause
+        >=> relocateCommentsAfter
+        >=> assertAllCommentsAreConsumed
     assertAllCommentsAreConsumed x = do
       cs <- get
       assert (null cs) (pure x)
@@ -135,8 +136,8 @@ relocateCommentsInExportList =
     annGetter (L SrcSpanAnn {..} _) = ann
     annSetter newAnn (L SrcSpanAnn {..} x) = L SrcSpanAnn {ann = newAnn, ..} x
     cond HsModule {hsmodExports = Just (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = listAnc}}} _)} (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = elemAnc}}} _) comAnc =
-      srcSpanStartLine comAnc < srcSpanStartLine elemAnc &&
-      realSrcSpanStart listAnc < realSrcSpanStart comAnc
+      srcSpanStartLine comAnc < srcSpanStartLine elemAnc
+        && realSrcSpanStart listAnc < realSrcSpanStart comAnc
     cond _ _ _ = False
 
 -- | Locates comments before each case branch.
@@ -158,8 +159,8 @@ relocateCommentsInCase =
     annGetter (L SrcSpanAnn {..} _) = ann
     annSetter newAnn (L SrcSpanAnn {..} x) = L SrcSpanAnn {ann = newAnn, ..} x
     cond (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = caseAnchor}}} _) (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = branchAnchor}}} _) comAnc =
-      srcSpanStartLine comAnc < srcSpanStartLine branchAnchor &&
-      realSrcSpanStart caseAnchor < realSrcSpanStart comAnc
+      srcSpanStartLine comAnc < srcSpanStartLine branchAnchor
+        && realSrcSpanStart caseAnchor < realSrcSpanStart comAnc
     cond _ _ _ = False
 
 -- | Locates comments before each class element.
@@ -197,8 +198,8 @@ relocateCommentsInClass =
     annGetter (L SrcSpanAnn {..} _) = ann
     annSetter newAnn (L SrcSpanAnn {..} x) = L SrcSpanAnn {ann = newAnn, ..} x
     cond (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = classAnchor}}} _) (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = elemAnchor}}} _) comAnc =
-      srcSpanStartLine comAnc < srcSpanStartLine elemAnchor &&
-      realSrcSpanStart classAnchor < realSrcSpanStart comAnc
+      srcSpanStartLine comAnc < srcSpanStartLine elemAnchor
+        && realSrcSpanStart classAnchor < realSrcSpanStart comAnc
     cond _ _ _ = False
 
 -- | Locates comments before each statement in a do expression.
@@ -223,8 +224,8 @@ relocateCommentsInDoExpr =
     annGetter (L SrcSpanAnn {..} _) = ann
     annSetter newAnn (L SrcSpanAnn {..} x) = L SrcSpanAnn {ann = newAnn, ..} x
     cond (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = doAnchor}}} _) (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = elemAnchor}}} _) comAnc =
-      srcSpanStartLine comAnc < srcSpanStartLine elemAnchor &&
-      realSrcSpanStart doAnchor < realSrcSpanStart comAnc
+      srcSpanStartLine comAnc < srcSpanStartLine elemAnchor
+        && realSrcSpanStart doAnchor < realSrcSpanStart comAnc
     cond _ _ _ = False
 
 -- | This function locates comments located before top-level declarations.
@@ -235,9 +236,9 @@ relocateCommentsBeforeTopLevelDecls = everywhereM (applyM f)
       insertCommentsByPos (isBefore $ anchor entry) insertPriorComments epa
     f EpAnnNotUsed = pure EpAnnNotUsed
     isBefore anc comAnc =
-      srcSpanStartCol anc == 1 &&
-      srcSpanStartCol comAnc == 1 &&
-      srcSpanStartLine comAnc < srcSpanStartLine anc
+      srcSpanStartCol anc == 1
+        && srcSpanStartCol comAnc == 1
+        && srcSpanStartLine comAnc < srcSpanStartLine anc
 
 -- | This function scans the given AST from bottom to top and locates
 -- comments that are on the same line as the node.  Comments are stored in
@@ -252,8 +253,8 @@ relocateCommentsSameLine = everywhereMEpAnnsBackwards f
         epa
     f EpAnnNotUsed = pure EpAnnNotUsed
     isOnSameLine anc comAnc =
-      srcSpanStartLine comAnc == srcSpanStartLine anc &&
-      srcSpanStartLine comAnc == srcSpanEndLine anc
+      srcSpanStartLine comAnc == srcSpanStartLine anc
+        && srcSpanStartLine comAnc == srcSpanEndLine anc
 
 -- | This function locates comments above the top-level declarations in
 -- a 'where' clause in the topmost declaration.
@@ -289,17 +290,17 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       pure $ L (SrcSpanAnn epa' sp) x
     addCommentsBeforeEpAnn x = pure x
     partitionAboveNotAbove cs sp =
-      fst $
-      foldr'
-        (\c@(L l _) ((ls, rs), lastSpan) ->
-           if anchor l `isAbove` anchor lastSpan
-             then ((ls, c : rs), l)
-             else ((c : ls, rs), lastSpan))
-        (([], []), sp)
-        cs
+      fst
+        $ foldr'
+            (\c@(L l _) ((ls, rs), lastSpan) ->
+               if anchor l `isAbove` anchor lastSpan
+                 then ((ls, c : rs), l)
+                 else ((c : ls, rs), lastSpan))
+            (([], []), sp)
+            cs
     isAbove comAnc anc =
-      srcSpanStartCol comAnc == srcSpanStartCol anc &&
-      srcSpanEndLine comAnc + 1 == srcSpanStartLine anc
+      srcSpanStartCol comAnc == srcSpanStartCol anc
+        && srcSpanEndLine comAnc + 1 == srcSpanStartLine anc
 
 -- | This function scans the given AST from bottom to top and locates
 -- comments in the comment pool after each node on it.
@@ -407,9 +408,9 @@ everywhereMEpAnnsInOrder ::
   -> a
   -> WithComments a
 everywhereMEpAnnsInOrder cmp f hm =
-  collectEpAnnsInOrderEverywhereMTraverses >>=
-  applyFunctionInOrderEpAnnEndPositions >>=
-  putModifiedEpAnnsToModule
+  collectEpAnnsInOrderEverywhereMTraverses
+    >>= applyFunctionInOrderEpAnnEndPositions
+    >>= putModifiedEpAnnsToModule
   where
     collectEpAnnsInOrderEverywhereMTraverses
       -- This function uses 'everywhereM' to collect 'EpAnn's because they
