@@ -1012,8 +1012,10 @@ f
 
 ```haskell
 foo =
-  if fooooooo ||
-     baaaaaaaaaaaaaaaaaaaaa || apsdgiuhasdpfgiuahdfpgiuah || bazzzzzzzzzzzzz
+  if fooooooo
+       || baaaaaaaaaaaaaaaaaaaaa
+       || apsdgiuhasdpfgiuahdfpgiuah
+       || bazzzzzzzzzzzzz
     then a
     else b
 ```
@@ -2498,8 +2500,8 @@ With operators
 
 ```haskell
 defaultExtensions =
-  [e | e@EnableExtension {} <- knownExtensions] \\
-  map EnableExtension badExtensions
+  [e | e@EnableExtension {} <- knownExtensions]
+    \\ map EnableExtension badExtensions
 ```
 
 Transform list comprehensions
@@ -2541,24 +2543,6 @@ fun xs ys =
 
 ### Operators
 
-Bad
-
-```haskell
-x =
-  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
-  Just thisissolong <*>
-  Just stilllonger <*>
-  evenlonger
-```
-
-Good
-
-```haskell pending
-x =
-  Value <$> thing <*> secondThing <*> thirdThing <*> fourthThing <*>
-  Just thisissolong <*> Just stilllonger <*> evenlonger
-```
-
 With `do`
 
 ```haskell
@@ -2574,14 +2558,6 @@ With lambda-case
 a =
   for xs $ \case
     Left x -> x
-```
-
-`$` chain
-
-```haskell
-f =
-  Right $
-  S.lazyByteStrings $ addPrefix prefix $ S.toLazyByteString $ prettyPrint m
 ```
 
 Qualified operator as an argument
@@ -2639,12 +2615,48 @@ Force indent and print RHS in a top-level expression
 ```haskell
 -- https://github.com/mihaimaruseac/hindent/issues/473
 a =
-  template $
-  haskell
-    [ SomeVeryLongName
-    , AnotherLongNameEvenLongToBreakTheLine
-    , LastLongNameInList
-    ]
+  template
+    $ haskell
+        [ SomeVeryLongName
+        , AnotherLongNameEvenLongToBreakTheLine
+        , LastLongNameInList
+        ]
+```
+
+#### Operator chains
+
+Applicative style
+
+```haskell
+x =
+  Value
+    <$> thing
+    <*> secondThing
+    <*> thirdThing
+    <*> fourthThing
+    <*> Just thisissolong
+    <*> Just stilllonger
+    <*> evenlonger
+```
+
+`$` chain
+
+```haskell
+f =
+  Right
+    $ S.lazyByteStrings
+    $ addPrefix prefix
+    $ S.toLazyByteString
+    $ prettyPrint m
+```
+
+Arithmetic operations
+
+```haskell
+f =
+  aaaaaaaaaa * bbbbbbbbbbbbbb / cccccccccccccccccccccc
+    + dddddddddddddd * eeeeeeeeeeeeeeee
+    - ffffffffffffffff / -ggggggggggggg
 ```
 
 ### Primitive type values
@@ -3033,17 +3045,21 @@ bob -- after bob
        Just -- after Just
         -> do
          justice -- after justice
-          *
-           foo
-             (blah * blah + z + 2 / 4 + a - -- before a line break
-              2 * -- inside this mess
-              z /
-              2 /
-              2 /
-              aooooo /
-              aaaaa -- bob comment
-              ) +
-           (sdfsdfsd fsdfsdf) -- blah comment
+           * foo
+               (blah * blah
+                  + z
+                  + 2 / 4
+                  + a
+                  - -- before a line break
+                   2
+                     * -- inside this mess
+                      z
+                     / 2
+                     / 2
+                     / aooooo
+                     / aaaaa -- bob comment
+                )
+           + (sdfsdfsd fsdfsdf) -- blah comment
          putStrLn "")
     [1, 2, 3]
     [ 1 -- foo
@@ -3186,17 +3202,21 @@ bob {- after bob -}
        Just {- after Just -}
         -> do
          justice {- after justice -}
-          *
-           foo
-             (blah * blah + z + 2 / 4 + a - {- before a line break -}
-              2 * {- inside this mess -}
-              z /
-              2 /
-              2 /
-              aooooo /
-              aaaaa {- bob comment -}
-              ) +
-           (sdfsdfsd fsdfsdf) {- blah comment -}
+           * foo
+               (blah * blah
+                  + z
+                  + 2 / 4
+                  + a
+                  - {- before a line break -}
+                   2
+                     * {- inside this mess -}
+                      z
+                     / 2
+                     / 2
+                     / aooooo
+                     / aaaaa {- bob comment -}
+                )
+           + (sdfsdfsd fsdfsdf) {- blah comment -}
          putStrLn "")
     [1, 2, 3]
     [ 1 {- foo -}

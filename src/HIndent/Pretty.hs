@@ -47,6 +47,8 @@ import HIndent.Pretty.Pragma
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
 import HIndent.Printer
+import Language.Haskell.GhclibParserEx.Fixity hiding (fixity)
+import Language.Haskell.GhclibParserEx.GHC.Hs.Expr
 import Text.Show.Unicode
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 import qualified Data.Foldable as NonEmpty
@@ -1720,56 +1722,58 @@ instance Pretty InfixApp where
   pretty' InfixApp {..} = horizontal <-|> vertical
     where
       horizontal = spaced [pretty lhs, pretty (InfixExpr op), pretty rhs]
-      vertical = do
-        lhsVer
-        rhsPrinter <-
-          case unLoc lhs of
-            (HsDo _ DoExpr {} _) -> do
+      vertical =
+        case findFixity op of
+          Fixity _ _ InfixL -> leftAssoc
+          Fixity _ _ InfixR -> rightAssoc
+          Fixity _ _ InfixN -> noAssoc
+      leftAssoc = prettyOps allOperantsAndOperatorsLeftAssoc
+      rightAssoc = prettyOps allOperantsAndOperatorsRightAssoc
+      noAssoc
+        | L _ (OpApp _ _ o _) <- lhs
+        , isSameAssoc o = leftAssoc
+        | otherwise = rightAssoc
+      prettyOps [l, o, L _ (HsDo _ (DoExpr m) xs)] = do
+        spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Do]
+        newline
+        indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
+      prettyOps [l, o, L _ (HsDo _ (MDoExpr m) xs)] = do
+        spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Mdo]
+        newline
+        indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
+      prettyOps [l, o, r@(L _ HsLam {})] = do
+        spaced [pretty l, pretty $ InfixExpr o, pretty r]
+      prettyOps [l, o, r@(L _ HsLamCase {})] = do
+        spaced [pretty l, pretty $ InfixExpr o, pretty r]
+      prettyOps (l:xs) = do
+        pretty l
+        newline
+        indentedBlock $ f xs
+        where
+          f (o:r:rems) = do
+            (pretty (InfixExpr o) >> space) |=> pretty r
+            unless (null rems) $ do
               newline
-              return $ \x -> indentedBlock $ spaced [pretty $ InfixExpr op, x]
-            (HsDo _ MDoExpr {} _) -> do
-              newline
-              newline
-              return $ \x -> indentedBlock $ spaced [pretty $ InfixExpr op, x]
-            _ -> do
-              space
-              pretty (InfixExpr op)
-              return $ \x -> do
-                newline
-                x
-        case unLoc rhs of
-          (HsDo _ (DoExpr m) xs) -> do
-            space
-            pretty (QualifiedDo m Do)
-            newline
-            indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-          (HsDo _ (MDoExpr m) xs) -> do
-            space
-            pretty (QualifiedDo m Mdo)
-            newline
-            indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-          HsLam {} -> do
-            space
-            pretty rhs
-          HsLamCase {} -> do
-            space
-            pretty rhs
-          _ ->
-            (if immediatelyAfterDo
-               then indentedBlock
-               else id) $ do
-              rhsPrinter
-                (do
-                   col <- startingColumn
-                   (if col == 0
-                      then indentedBlock
-                      else id) $
-                     pretty rhs)
-      lhsVer =
-        case lhs of
-          (L loc (OpApp _ l o r)) ->
-            pretty (L loc (InfixApp l o r immediatelyAfterDo))
-          _ -> pretty lhs
+              f rems
+          f _ =
+            error
+              "The number of the sum of operants and operators should be odd."
+      prettyOps _ = error "Too short list."
+      findFixity o = fromMaybe defaultFixity $ lookup (varToStr o) baseFixities
+      allOperantsAndOperatorsLeftAssoc = reverse $ rhs : op : collect lhs
+        where
+          collect :: LHsExpr GhcPs -> [LHsExpr GhcPs]
+          collect (L _ (OpApp _ l o r))
+            | isSameAssoc o = r : o : collect l
+          collect x = [x]
+      allOperantsAndOperatorsRightAssoc = lhs : op : collect rhs
+        where
+          collect :: LHsExpr GhcPs -> [LHsExpr GhcPs]
+          collect (L _ (OpApp _ l o r))
+            | isSameAssoc o = l : o : collect r
+          collect x = [x]
+      isSameAssoc (findFixity -> Fixity _ lv d) = lv == level && d == dir
+      Fixity _ level dir = findFixity op
 
 instance Pretty a => Pretty (BooleanFormula a) where
   pretty' (Var x) = pretty x
