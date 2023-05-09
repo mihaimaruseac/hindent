@@ -65,43 +65,45 @@ hindent :: [String] -> IO ()
 hindent args = do
   config <- getConfig
   runMode <-
-    handleParseResult $
-    execParserPure
-      defaultPrefs
-      (info
-         (options config <**> helper)
-         (header "hindent - Reformat Haskell source code"))
-      args
+    handleParseResult
+      $ execParserPure
+          defaultPrefs
+          (info
+             (options config <**> helper)
+             (header "hindent - Reformat Haskell source code"))
+          args
   case runMode of
     ShowVersion -> putStrLn ("hindent " ++ showVersion version)
     Run style exts action paths ->
       if null paths
         then S8.interact
-               (either (error . prettyParseError) id .
-                reformat style exts Nothing)
+               (either (error . prettyParseError) id
+                  . reformat style exts Nothing)
         else forM_ paths $ \filepath -> do
                cabalexts <- getCabalExtensionsForSourcePath filepath
                text <- S.readFile filepath
                case reformat style (cabalexts ++ exts) (Just filepath) text of
                  Left e -> error $ prettyParseError e
                  Right out ->
-                   unless (text == out) $
-                   case action of
-                     Validate -> do
-                       IO.putStrLn $ filepath ++ " is not formatted"
-                       exitWith (ExitFailure 1)
-                     Reformat -> do
-                       tmpDir <- IO.getTemporaryDirectory
-                       (fp, h) <- IO.openTempFile tmpDir "hindent.hs"
-                       S8.hPutStr h out
-                       IO.hFlush h
-                       IO.hClose h
-                       let exdev e =
-                             if ioe_errno e == Just ((\(Errno a) -> a) eXDEV)
-                               then IO.copyFile fp filepath >> IO.removeFile fp
-                               else throw e
-                       IO.copyPermissions filepath fp
-                       IO.renameFile fp filepath `catch` exdev
+                   unless (text == out)
+                     $ case action of
+                         Validate -> do
+                           IO.putStrLn $ filepath ++ " is not formatted"
+                           exitWith (ExitFailure 1)
+                         Reformat -> do
+                           tmpDir <- IO.getTemporaryDirectory
+                           (fp, h) <- IO.openTempFile tmpDir "hindent.hs"
+                           S8.hPutStr h out
+                           IO.hFlush h
+                           IO.hClose h
+                           let exdev e =
+                                 if ioe_errno e
+                                      == Just ((\(Errno a) -> a) eXDEV)
+                                   then IO.copyFile fp filepath
+                                          >> IO.removeFile fp
+                                   else throw e
+                           IO.copyPermissions filepath fp
+                           IO.renameFile fp filepath `catch` exdev
 
 -- | Format the given source.
 reformat ::
@@ -124,17 +126,19 @@ reformat config mexts mfilepath rawCode =
           code = unlines' (map (stripPrefix prefix) ls)
        in case parseModule mfilepath allExts (UTF8.toString code) of
             POk _ m ->
-              Right $
-              addPrefix prefix $
-              L.toStrict $ S.toLazyByteString $ prettyPrint config m
+              Right
+                $ addPrefix prefix
+                $ L.toStrict
+                $ S.toLazyByteString
+                $ prettyPrint config m
             PFailed st ->
               let rawErrLoc = psRealLoc $ loc st
-               in Left $
-                  ParseError
-                    { errorLine = srcLocLine rawErrLoc + yPos
-                    , errorCol = srcLocCol rawErrLoc
-                    , errorFile = fromMaybe "<interactive>" mfilepath
-                    }
+               in Left
+                    $ ParseError
+                        { errorLine = srcLocLine rawErrLoc + yPos
+                        , errorCol = srcLocCol rawErrLoc
+                        , errorFile = fromMaybe "<interactive>" mfilepath
+                        }
     preserveTrailingNewline f x
       | S8.null x || S8.all isSpace x = return mempty
       | hasTrailingLine x || configTrailingNewline config =
@@ -146,9 +150,9 @@ reformat config mexts mfilepath rawCode =
           (f x)
       | otherwise = f x
     allExts =
-      CE.uniqueExtensions $
-      concatMap (\x -> x : extensionImplies x) $
-      mexts ++ configExtensions config ++ allExtsFromCode
+      CE.uniqueExtensions
+        $ concatMap (\x -> x : extensionImplies x)
+        $ mexts ++ configExtensions config ++ allExtsFromCode
     allExtsFromCode = concatMap f codeBlocks
       where
         f (HaskellSource _ text) =
@@ -162,13 +166,15 @@ testAst x =
   case parseModule Nothing exts (UTF8.toString x) of
     POk _ m -> Right $ modifyASTForPrettyPrinting m
     PFailed st ->
-      Left $
-      ParseError <$> srcLocLine <*> srcLocCol <*> pure "<interactive>" $
-      psRealLoc $ loc st
+      Left
+        $ ParseError <$> srcLocLine <*> srcLocCol <*> pure "<interactive>"
+        $ psRealLoc
+        $ loc st
   where
     exts =
-      CE.uniqueExtensions $
-      collectLanguageExtensionsFromSource $ UTF8.toString x
+      CE.uniqueExtensions
+        $ collectLanguageExtensionsFromSource
+        $ UTF8.toString x
 
 -- | Print the module.
 prettyPrint :: Config -> HsModule' -> Builder
@@ -178,8 +184,8 @@ prettyPrint config m =
 -- | Pretty print the given printable thing.
 runPrinterStyle :: Config -> Printer () -> Builder
 runPrinterStyle config m =
-  maybe (error "Printer failed with mzero call.") psOutput $
-  execStateT (runPrinter m) initState
+  maybe (error "Printer failed with mzero call.") psOutput
+    $ execStateT (runPrinter m) initState
   where
     initState =
       PrintState

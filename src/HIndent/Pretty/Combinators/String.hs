@@ -24,8 +24,8 @@ import Control.Monad
 string :: HasCallStack => String -> Printer ()
 string x
   | '\n' `elem` x =
-    error $
-    "You tried to print " ++ show x ++ ". Use `newline` to print '\\n's."
+    error
+      $ "You tried to print " ++ show x ++ ". Use `newline` to print '\\n's."
   | otherwise = do
     eol <- gets psEolComment
     hardFail <- gets psFitOnOneLine

@@ -36,13 +36,18 @@ pragmaExists = not . null . collectPragmas
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 collectPragmas :: HsModule GhcPs -> [String]
 collectPragmas =
-  fmap (uncurry constructPragma) .
-  mapMaybe extractPragma . listify isBlockComment . hsmodAnn . hsmodExt
+  fmap (uncurry constructPragma)
+    . mapMaybe extractPragma
+    . listify isBlockComment
+    . hsmodAnn
+    . hsmodExt
 #else
 collectPragmas :: HsModule -> [String]
 collectPragmas =
-  fmap (uncurry constructPragma) .
-  mapMaybe extractPragma . listify isBlockComment . hsmodAnn
+  fmap (uncurry constructPragma)
+    . mapMaybe extractPragma
+    . listify isBlockComment
+    . hsmodAnn
 #endif
 -- | This function returns a 'Just' value with the pragma
 -- extracted from the passed 'EpaCommentTok' if it has one. Otherwise, it

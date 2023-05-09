@@ -40,8 +40,8 @@ mkSortedLSigBindFamilyList ::
   -> [LDataFamInstDecl GhcPs]
   -> [LSigBindFamily]
 mkSortedLSigBindFamilyList sigs binds fams datafams =
-  sortBy (compare `on` realSrcSpan . locA . getLoc) .
-  mkLSigBindFamilyList sigs binds fams datafams
+  sortBy (compare `on` realSrcSpan . locA . getLoc)
+    . mkLSigBindFamilyList sigs binds fams datafams
 
 -- | Creates a list of 'LSigBindFamily' from arguments.
 mkLSigBindFamilyList ::
@@ -52,10 +52,11 @@ mkLSigBindFamilyList ::
   -> [LDataFamInstDecl GhcPs]
   -> [LSigBindFamily]
 mkLSigBindFamilyList sigs binds fams insts datafams =
-  fmap (fmap Sig) sigs ++
-  fmap (fmap Bind) binds ++
-  fmap (fmap TypeFamily) fams ++
-  fmap (fmap TyFamInst) insts ++ fmap (fmap DataFamInst) datafams
+  fmap (fmap Sig) sigs
+    ++ fmap (fmap Bind) binds
+    ++ fmap (fmap TypeFamily) fams
+    ++ fmap (fmap TyFamInst) insts
+    ++ fmap (fmap DataFamInst) datafams
 
 -- | Destructs a list of 'LSigBindFamily'
 destructLSigBindFamilyList ::
@@ -66,9 +67,12 @@ destructLSigBindFamilyList ::
      , [LTyFamInstDecl GhcPs]
      , [LDataFamInstDecl GhcPs])
 destructLSigBindFamilyList =
-  (,,,,) <$> filterLSig <*> filterLBind <*> filterLTypeFamily <*>
-  filterLTyFamInst <*>
-  filterLDataFamInst
+  (,,,,)
+    <$> filterLSig
+    <*> filterLBind
+    <*> filterLTypeFamily
+    <*> filterLTyFamInst
+    <*> filterLDataFamInst
 
 -- | Filters out 'Sig's and extract the wrapped values.
 filterLSig :: [LSigBindFamily] -> [LSig GhcPs]

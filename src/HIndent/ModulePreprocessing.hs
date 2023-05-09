@@ -31,14 +31,17 @@ modifyASTForPrettyPrinting :: HsModule' -> HsModule'
 modifyASTForPrettyPrinting m = relocateComments (beforeRelocation m) allComments
   where
     beforeRelocation =
-      resetLGRHSEndPositionInModule .
-      removeAllDocDs .
-      closeEpAnnOfHsFunTy .
-      closeEpAnnOfMatchMExt .
-      closePlaceHolderEpAnns .
-      closeEpAnnOfFunBindFunId .
-      resetModuleNameColumn .
-      replaceAllNotUsedAnns . removeComments . sortExprLStmt . fixFixities
+      resetLGRHSEndPositionInModule
+        . removeAllDocDs
+        . closeEpAnnOfHsFunTy
+        . closeEpAnnOfMatchMExt
+        . closePlaceHolderEpAnns
+        . closeEpAnnOfFunBindFunId
+        . resetModuleNameColumn
+        . replaceAllNotUsedAnns
+        . removeComments
+        . sortExprLStmt
+        . fixFixities
     allComments = listify (not . isEofComment . ac_tok . unLoc) m
     isEofComment EpaEofComment = True
     isEofComment _ = False
@@ -92,10 +95,12 @@ replaceAllNotUsedAnns = everywhere app
               try ann = do
                 HRefl <- eqTypeRep (typeOf ann) z
                 pure sp {ann = EpAnn (spanAsAnchor $ locA sp) ann emptyComments}
-          try emptyListItem <|> try emptyList <|> try emptyPragma <|>
-            try emptyContext <|>
-            try emptyNameAnn <|>
-            try NoEpAnns
+          try emptyListItem
+            <|> try emptyList
+            <|> try emptyPragma
+            <|> try emptyContext
+            <|> try emptyNameAnn
+            <|> try NoEpAnns
     app x = x
     emptyListItem = AnnListItem []
     emptyList = AnnList Nothing Nothing Nothing [] []

@@ -223,11 +223,11 @@ prefixedLined pref (x:xs) = do
 -- separator.
 vWrappedLineup :: Char -> (String, String) -> [Printer ()] -> Printer ()
 vWrappedLineup sep (prefix, suffix) ps =
-  string prefix >>
-  space |=> do
-    prefixedLined [sep, ' '] ps
-    newline
-    indentedWithSpace (-(fromIntegral (length prefix) + 1)) $ string suffix
+  string prefix
+    >> space |=> do
+         prefixedLined [sep, ' '] ps
+         newline
+         indentedWithSpace (-(fromIntegral (length prefix) + 1)) $ string suffix
 
 -- | Similar to 'vWrappedLineup' but the suffix is in the same line as the
 -- last element.
@@ -235,10 +235,10 @@ vWrappedLineup' :: Char -> (String, String) -> [Printer ()] -> Printer ()
 vWrappedLineup' _ (prefix, suffix) [x] =
   spaced [string prefix, x, string suffix]
 vWrappedLineup' sep (prefix, suffix) ps =
-  string prefix >>
-  space |=> do
-    prefixedLined [sep, ' '] ps
-    string suffix
+  string prefix
+    >> space |=> do
+         prefixedLined [sep, ' '] ps
+         string suffix
 
 -- Inserts the first printer between each element of the list passed as the
 -- second argument and runs them.

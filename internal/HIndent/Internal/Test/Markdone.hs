@@ -65,14 +65,14 @@ tokenize input =
         Normal ->
           if S8.isPrefixOf "#" line
             then let (hashes, title) = S8.span (== '#') line
-                  in return $
-                     Heading (S8.length hashes) (S8.dropWhile isSpace title)
+                  in return
+                       $ Heading (S8.length hashes) (S8.dropWhile isSpace title)
             else if S8.isPrefixOf "```" line
                    then do
                      put Fenced
-                     return $
-                       BeginFence
-                         (S8.dropWhile (\c -> c == '`' || c == ' ') line)
+                     return
+                       $ BeginFence
+                           (S8.dropWhile (\c -> c == '`' || c == ' ') line)
                    else return $ PlainLine line
         Fenced ->
           if line == "```"

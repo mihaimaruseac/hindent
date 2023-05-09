@@ -16,5 +16,10 @@ data ParseError = ParseError
 -- | Pretty-print `ParseError`.
 prettyParseError :: ParseError -> String
 prettyParseError ParseError {..} =
-  "Parse failed at (" <>
-  show errorLine <> ", " <> show errorCol <> ") in " <> errorFile <> "."
+  "Parse failed at ("
+    <> show errorLine
+    <> ", "
+    <> show errorCol
+    <> ") in "
+    <> errorFile
+    <> "."

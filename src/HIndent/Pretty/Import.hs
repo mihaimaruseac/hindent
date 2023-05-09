@@ -40,8 +40,8 @@ groupImports = groupImports' []
       | z `isAdjacentTo` y = groupImports' ((y : z : zs) : xs) ys
       | otherwise = groupImports' ([y] : (z : zs) : xs) ys
     a `isAdjacentTo` b =
-      srcSpanEndLine (sp a) + 1 == srcSpanStartLine (sp b) ||
-      srcSpanEndLine (sp b) + 1 == srcSpanStartLine (sp a)
+      srcSpanEndLine (sp a) + 1 == srcSpanStartLine (sp b)
+        || srcSpanEndLine (sp b) + 1 == srcSpanStartLine (sp a)
     sp x =
       case locA $ getLoc x of
         RealSrcSpan x' _ -> x'
