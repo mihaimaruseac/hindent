@@ -2659,6 +2659,17 @@ f =
     - ffffffffffffffff / -ggggggggggggg
 ```
 
+Lens operators
+
+```haskell
+updateUsr usr =
+  usr
+    & userFirstName .~ "newfirst"
+    & userLastName .~ "newlast"
+    & userEmail .~ "newemail"
+    & userPassword .~ "newpass"
+```
+
 ### Primitive type values
 
 `Char`

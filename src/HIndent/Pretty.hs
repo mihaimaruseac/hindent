@@ -40,6 +40,7 @@ import GHC.Types.SrcLoc
 import GHC.Unit.Module.Warnings
 import HIndent.Applicative
 import HIndent.Config
+import HIndent.Fixity
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.Import
 import HIndent.Pretty.NodeComments
@@ -47,7 +48,6 @@ import HIndent.Pretty.Pragma
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
 import HIndent.Printer
-import Language.Haskell.GhclibParserEx.Fixity hiding (fixity)
 import Language.Haskell.GhclibParserEx.GHC.Hs.Expr
 import Text.Show.Unicode
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
@@ -1774,7 +1774,7 @@ instance Pretty InfixApp where
             error
               "The number of the sum of operants and operators should be odd."
       prettyOps _ = error "Too short list."
-      findFixity o = fromMaybe defaultFixity $ lookup (varToStr o) baseFixities
+      findFixity o = fromMaybe defaultFixity $ lookup (varToStr o) fixities
       allOperantsAndOperatorsLeftAssoc = reverse $ rhs : op : collect lhs
         where
           collect :: LHsExpr GhcPs -> [LHsExpr GhcPs]

@@ -18,6 +18,7 @@ import Data.Maybe
 import GHC.Hs
 import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)
+import HIndent.Fixity
 import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.ModulePreprocessing.CommentRelocation
 import Language.Haskell.GhclibParserEx.Fixity
@@ -49,7 +50,7 @@ modifyASTForPrettyPrinting m = relocateComments (beforeRelocation m) allComments
 -- | This function modifies the given module AST to apply fixities of infix
 -- operators defined in the 'base' package.
 fixFixities :: HsModule' -> HsModule'
-fixFixities = applyFixities baseFixities
+fixFixities = applyFixities fixities
 
 -- | This function sets an 'LGRHS's end position to the end position of the
 -- last RHS in the 'grhssGRHSs'.
