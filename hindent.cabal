@@ -41,6 +41,7 @@ library
       HIndent.CommandlineOptions
       HIndent.Config
       HIndent.Error
+      HIndent.Fixity
       HIndent.GhcLibParserWrapper.GHC.Hs
       HIndent.Language
       HIndent.LanguageExtension
