@@ -4,6 +4,9 @@
 -- information is not stored in an AST. While `ghc-lib-parser-ex` provides
 -- `fixitiesFromModule`, it is almost useless as operators are usually imported
 -- from other modules.
+--
+-- Ormolu is trying to resolve this issue by examing Hackage, but doing the same
+-- way in HIndent is not so easy.
 module HIndent.Fixity
   ( fixities
   ) where
@@ -11,9 +14,11 @@ module HIndent.Fixity
 import GHC.Types.Fixity
 import Language.Haskell.GhclibParserEx.Fixity
 
+-- | Operator fixities that HIndent supports.
 fixities :: [(String, Fixity)]
 fixities = baseFixities <> lensFixities
 
+-- | Fixities of operators defined in lens package.
 lensFixities :: [(String, Fixity)]
 lensFixities =
   concat
