@@ -4,6 +4,16 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+## [6.0.1] - 2023-05-17
+
+### Added
+
 - Support for GHC 9.6 ([#699])
 - The `hindent` function for easy use within a project ([#709]).
 
