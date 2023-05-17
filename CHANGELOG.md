@@ -331,7 +331,8 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - A bug in printing operators in statements.
 
-[unreleased]: https://github.com/mihaimaruseac/hindent/compare/v6.0.0...HEAD
+[unreleased]: https://github.com/mihaimaruseac/hindent/compare/v6.1.0...HEAD
+[6.1.0]: https://github.com/mihaimaruseac/hindent/compare/v6.0.0...v6.1.0
 [6.0.0]: https://github.com/mihaimaruseac/hindent/compare/v5.3.4...v6.0.0
 [5.3.4]: https://github.com/mihaimaruseac/hindent/compare/v5.3.3...v5.3.4
 [5.3.3]: https://github.com/mihaimaruseac/hindent/compare/v5.3.2...v5.3.3
