@@ -1,7 +1,7 @@
 spec-version: 0.30.0
 
 name:         hindent
-version:      6.0.1
+version:      6.1.0
 synopsis:     Extensible Haskell pretty printer
 description:  "Extensible Haskell pretty printer. Both a library and an executable. See the GitHub page for usage / explanation: <https://github.com/mihaimaruseac/hindent>"
 category:     Development
