@@ -16,9 +16,8 @@
 -- using an AST: parsing, renaming, and type checking, and GHC uses these
 -- constructors only in remaining and type checking.
 module HIndent.Pretty
-  ( pretty,
-  )
-where
+  ( pretty
+  ) where
 
 import Control.Monad
 import Control.Monad.RWS
@@ -72,7 +71,7 @@ pretty p = do
 -- | Prints comments included in the location information and then the
 -- AST node body.
 printCommentsAnd ::
-  (CommentExtraction l) => GenLocated l e -> (e -> Printer ()) -> Printer ()
+     (CommentExtraction l) => GenLocated l e -> (e -> Printer ()) -> Printer ()
 printCommentsAnd (L l e) f = do
   printCommentsBefore l
   f e
@@ -89,15 +88,14 @@ printCommentsBefore p =
 
 -- | Prints comments that are on the same line as the given AST node.
 printCommentOnSameLine :: CommentExtraction a => a -> Printer ()
-printCommentOnSameLine (commentsOnSameLine . nodeComments -> (c : cs)) = do
+printCommentOnSameLine (commentsOnSameLine . nodeComments -> (c:cs)) = do
   col <- gets psColumn
   if col == 0
-    then
-      indentedWithFixedLevel
-        (fromIntegral $ srcSpanStartCol $ anchor $ getLoc c)
-        $ spaced
-        $ fmap pretty
-        $ c : cs
+    then indentedWithFixedLevel
+           (fromIntegral $ srcSpanStartCol $ anchor $ getLoc c)
+           $ spaced
+           $ fmap pretty
+           $ c : cs
     else spacePrefixed $ fmap pretty $ c : cs
   eolCommentsArePrinted
 printCommentOnSameLine _ = return ()
@@ -120,12 +118,10 @@ printCommentsAfter p =
 -- 'FastString' does not implement this class because it may contain @\n@s
 -- and each type that may contain a 'FastString' value needs their own
 -- handlings.
-class
-  CommentExtraction a =>
-  Pretty a
+class CommentExtraction a =>
+      Pretty a
   where
   pretty' :: a -> Printer ()
-
 -- Do nothing if there are no pragmas, module headers, imports, or
 -- declarations. Otherwise, extra blank lines will be inserted if only
 -- comments are present in the source code. See
@@ -276,7 +272,7 @@ prettyTyClDecl SynDecl {..} = do
     Prefix -> spaced $ pretty tcdLName : fmap pretty (hsq_explicit tcdTyVars)
     Infix ->
       case hsq_explicit tcdTyVars of
-        (l : r : xs) -> do
+        (l:r:xs) -> do
           spaced [pretty l, pretty $ fmap InfixOp tcdLName, pretty r]
           forM_ xs $ \x -> do
             space
@@ -359,14 +355,13 @@ prettyTyClDecl ClassDecl {..} = do
         printNameAndTypeVariables
       unless (null tcdFDs) $ do
         newline
-        indentedBlock $
-          string "| "
-            |=> vCommaSep
-              ( flip fmap tcdFDs $ \x@(L _ FunDep {}) ->
-                  printCommentsAnd x $ \(FunDep _ from to) ->
-                    spaced $
-                      fmap pretty from ++ [string "->"] ++ fmap pretty to
-              )
+        indentedBlock
+          $ string "| "
+              |=> vCommaSep
+                    (flip fmap tcdFDs $ \x@(L _ FunDep {}) ->
+                       printCommentsAnd x $ \(FunDep _ from to) ->
+                         spaced
+                           $ fmap pretty from ++ [string "->"] ++ fmap pretty to)
       unless (null sigsMethodsFamilies) $ do
         newline
         indentedBlock $ string "where"
@@ -376,9 +371,9 @@ prettyTyClDecl ClassDecl {..} = do
           spaced $ pretty tcdLName : fmap pretty (hsq_explicit tcdTyVars)
         Infix ->
           case hsq_explicit tcdTyVars of
-            (l : r : xs) -> do
-              parens $
-                spaced [pretty l, pretty $ fmap InfixOp tcdLName, pretty r]
+            (l:r:xs) -> do
+              parens
+                $ spaced [pretty l, pretty $ fmap InfixOp tcdLName, pretty r]
               spacePrefixed $ fmap pretty xs
             _ -> error "Not enough parameters are given."
     sigsMethodsFamilies =
@@ -548,10 +543,10 @@ instance Pretty DeclSig where
           then space |=> pretty (HsSigTypeInsideDeclSig <$> hswc_body params)
           else do
             newline
-            indentedBlock $
-              indentedWithSpace 3 $
-                pretty $
-                  HsSigTypeInsideDeclSig <$> hswc_body params
+            indentedBlock
+              $ indentedWithSpace 3
+              $ pretty
+              $ HsSigTypeInsideDeclSig <$> hswc_body params
       printFunName = hCommaSep $ fmap pretty funName
   pretty' (DeclSig x) = pretty x
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
@@ -685,7 +680,7 @@ prettyHsExpr (HsApp _ l r) = horizontal <-|> vertical
       let (f, args) =
             case flatten l ++ [r] of
               [] -> error "Invalid function application."
-              (f' : args') -> (f', args')
+              (f':args') -> (f', args')
       col <- gets psColumn
       spaces <- getIndentSpaces
       pretty f
@@ -694,8 +689,8 @@ prettyHsExpr (HsApp _ l r) = horizontal <-|> vertical
             col'
               - col
               - if col == 0
-                then spaces
-                else 0
+                  then spaces
+                  else 0
       if diff + 1 <= spaces
         then space
         else newline
@@ -733,9 +728,9 @@ prettyHsExpr (ExplicitTuple _ full _) = horizontal <-|> vertical
   where
     horizontal = hTuple $ fmap pretty full
     vertical =
-      parens $
-        prefixedLined "," $
-          fmap (\e -> unless (isMissing e) (space |=> pretty e)) full
+      parens
+        $ prefixedLined ","
+        $ fmap (\e -> unless (isMissing e) (space |=> pretty e)) full
     isMissing Missing {} = True
     isMissing _ = False
 prettyHsExpr (ExplicitSum _ position numElem expr) = do
@@ -781,12 +776,12 @@ prettyHsExpr (HsLet _ binds exprs) = pretty $ LetIn binds exprs
 #endif
 prettyHsExpr (HsDo _ ListComp {} (L _ [])) =
   error "Not enough arguments are passed to pretty-print a list comprehension."
-prettyHsExpr (HsDo _ ListComp {} (L l (lhs : rhs))) =
+prettyHsExpr (HsDo _ ListComp {} (L l (lhs:rhs))) =
   pretty $ L l $ ListComprehension lhs rhs
 -- While the name contains 'Monad', 'MonadComp' is for list comprehensions.
 prettyHsExpr (HsDo _ MonadComp {} (L _ [])) =
   error "Not enough arguments are passed to pretty-print a list comprehension."
-prettyHsExpr (HsDo _ MonadComp {} (L l (lhs : rhs))) =
+prettyHsExpr (HsDo _ MonadComp {} (L l (lhs:rhs))) =
   pretty $ L l $ ListComprehension lhs rhs
 prettyHsExpr (HsDo _ (DoExpr m) (L l xs)) =
   pretty $ L l $ DoExpression xs (QualifiedDo m Do)
@@ -869,9 +864,9 @@ prettyHsExpr (HsGetField _ e f) = do
   dot
   pretty f
 prettyHsExpr HsProjection {..} =
-  parens $
-    forM_ proj_flds $
-      \x -> do
+  parens
+    $ forM_ proj_flds
+    $ \x -> do
         string "."
         pretty x
 prettyHsExpr (ExprWithTySig _ e sig) = do
@@ -885,8 +880,8 @@ prettyHsExpr (HsSpliceE _ x) = pretty x
 prettyHsExpr (HsProc _ pat x@(L _ (HsCmdTop _ (L _ (HsCmdDo _ xs))))) = do
   spaced [string "proc", pretty pat, string "-> do"]
   newline
-  indentedBlock $
-    printCommentsAnd x (const (printCommentsAnd xs (lined . fmap pretty)))
+  indentedBlock
+    $ printCommentsAnd x (const (printCommentsAnd xs (lined . fmap pretty)))
 prettyHsExpr (HsProc _ pat body) = hor <-|> ver
   where
     hor = spaced [string "proc", pretty pat, string "->", pretty body]
@@ -950,9 +945,9 @@ instance Pretty HsSigType' where
                in do
                     hor <-|> ver
                     newline
-                    prefixed "=> " $
-                      prefixedLined "-> " $
-                        pretty <$> flatten hst_body
+                    prefixed "=> "
+                      $ prefixedLined "-> "
+                      $ pretty <$> flatten hst_body
           _ ->
             let hor = space >> pretty (fmap HsTypeInsideDeclSig sig_body)
                 ver =
@@ -1152,11 +1147,11 @@ instance Pretty (Match GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
 prettyMatchExpr :: Match GhcPs (LHsExpr GhcPs) -> Printer ()
 prettyMatchExpr Match {m_ctxt = LambdaExpr, ..} = do
   string "\\"
-  unless (null m_pats) $
-    case unLoc $ head m_pats of
-      LazyPat {} -> space
-      BangPat {} -> space
-      _ -> return ()
+  unless (null m_pats)
+    $ case unLoc $ head m_pats of
+        LazyPat {} -> space
+        BangPat {} -> space
+        _ -> return ()
   spaced $ fmap pretty m_pats
   pretty $ GRHSsExpr GRHSExprLambda m_grhss
 prettyMatchExpr Match {m_ctxt = CaseAlt, ..} = do
@@ -1175,10 +1170,10 @@ prettyMatchExpr Match {..} =
       pretty m_grhss
     Infix -> do
       case (m_pats, m_ctxt) of
-        (l : r : xs, FunRhs {..}) -> do
-          spaced $
-            [pretty l, pretty $ fmap InfixOp mc_fun, pretty r]
-              ++ fmap pretty xs
+        (l:r:xs, FunRhs {..}) -> do
+          spaced
+            $ [pretty l, pretty $ fmap InfixOp mc_fun, pretty r]
+                ++ fmap pretty xs
           pretty m_grhss
         _ -> error "Not enough parameters are passed."
 
@@ -1188,11 +1183,11 @@ instance Pretty (Match GhcPs (GenLocated SrcSpanAnnA (HsCmd GhcPs))) where
 prettyMatchProc :: Match GhcPs (LHsCmd GhcPs) -> Printer ()
 prettyMatchProc Match {m_ctxt = LambdaExpr, ..} = do
   string "\\"
-  unless (null m_pats) $
-    case unLoc $ head m_pats of
-      LazyPat {} -> space
-      BangPat {} -> space
-      _ -> return ()
+  unless (null m_pats)
+    $ case unLoc $ head m_pats of
+        LazyPat {} -> space
+        BangPat {} -> space
+        _ -> return ()
   spaced $ fmap pretty m_pats ++ [pretty m_grhss]
 prettyMatchProc Match {m_ctxt = CaseAlt, ..} =
   spaced [mapM_ pretty m_pats, pretty m_grhss]
@@ -1323,7 +1318,6 @@ prettyHsType (HsTupleTy _ HsUnboxedTuple xs) = hvUnboxedTuple' $ fmap pretty xs
 prettyHsType (HsTupleTy _ HsBoxedOrConstraintTuple xs) =
   hvTuple' $ fmap pretty xs
 prettyHsType (HsSumTy _ xs) = hvUnboxedSum' $ fmap pretty xs
-
 -- For `HsOpTy`, we do not need a single quote for the infix operator. An
 -- explicit promotion is necessary if there is a data constructor and
 -- a type with the same name. However, infix data constructors never
@@ -1382,11 +1376,11 @@ instance Pretty GRHSsExpr where
           newline
           string "where " |=> pretty grhssLocalBinds
       (HsValBinds epa lr, _) ->
-        indentedWithSpace 2 $
-          newlinePrefixed
-            [ string "where",
-              printCommentsAnd (L epa lr) (indentedWithSpace 2 . pretty)
-            ]
+        indentedWithSpace 2
+          $ newlinePrefixed
+              [ string "where"
+              , printCommentsAnd (L epa lr) (indentedWithSpace 2 . pretty)
+              ]
       _ -> return ()
 
 instance Pretty (GRHSs GhcPs (GenLocated SrcSpanAnnA (HsCmd GhcPs))) where
@@ -1394,11 +1388,11 @@ instance Pretty (GRHSs GhcPs (GenLocated SrcSpanAnnA (HsCmd GhcPs))) where
     mapM_ (pretty . fmap GRHSProc) grhssGRHSs
     case grhssLocalBinds of
       (HsValBinds epa lr) ->
-        indentedWithSpace 2 $
-          newlinePrefixed
-            [ string "where",
-              printCommentsAnd (L epa lr) (indentedWithSpace 2 . pretty)
-            ]
+        indentedWithSpace 2
+          $ newlinePrefixed
+              [ string "where"
+              , printCommentsAnd (L epa lr) (indentedWithSpace 2 . pretty)
+              ]
       _ -> return ()
 
 instance Pretty (HsMatchContext GhcPs) where
@@ -1456,21 +1450,19 @@ instance Pretty GRHSExpr where
         indentedBlock $ printCommentsAnd stmts (lined . fmap pretty)
   pretty' (GRHSExpr {grhsExpr = (GRHS _ guards body), ..}) = do
     unless (grhsExprType == GRHSExprMultiWayIf) newline
-    ( if grhsExprType == GRHSExprMultiWayIf
-        then id
-        else indentedBlock
-      )
-      $ do
-        string "| " |=> vCommaSep (fmap pretty guards)
-        space
-        rhsSeparator grhsExprType
-        printCommentsAnd body $ \case
-          HsDo _ (DoExpr m) stmts -> doExpr (QualifiedDo m Do) stmts
-          HsDo _ (MDoExpr m) stmts -> doExpr (QualifiedDo m Mdo) stmts
-          x ->
-            let hor = space >> pretty x
-                ver = newline >> indentedBlock (pretty x)
-             in hor <-|> ver
+    (if grhsExprType == GRHSExprMultiWayIf
+       then id
+       else indentedBlock) $ do
+      string "| " |=> vCommaSep (fmap pretty guards)
+      space
+      rhsSeparator grhsExprType
+      printCommentsAnd body $ \case
+        HsDo _ (DoExpr m) stmts -> doExpr (QualifiedDo m Do) stmts
+        HsDo _ (MDoExpr m) stmts -> doExpr (QualifiedDo m Mdo) stmts
+        x ->
+          let hor = space >> pretty x
+              ver = newline >> indentedBlock (pretty x)
+           in hor <-|> ver
     where
       doExpr qDo stmts = do
         space
@@ -1509,7 +1501,7 @@ instance Pretty EpaCommentTok where
     case lines c of
       [] -> pure ()
       [x] -> string x
-      (x : xs) -> do
+      (x:xs) -> do
         string x
         newline
         -- 'indentedWithFixedLevel 0' is used because an 'EpaBlockComment'
@@ -1706,17 +1698,13 @@ instance Pretty (FieldOcc GhcPs) where
   pretty' FieldOcc {..} = pretty rdrNameFieldOcc
 #endif
 -- HsConDeclH98Details
-instance
-  Pretty
-    ( HsConDetails
-        Void
-        (HsScaled GhcPs (GenLocated SrcSpanAnnA (BangType GhcPs)))
-        ( GenLocated
-            SrcSpanAnnL
-            [GenLocated SrcSpanAnnA (ConDeclField GhcPs)]
-        )
-    )
-  where
+instance Pretty
+           (HsConDetails
+              Void
+              (HsScaled GhcPs (GenLocated SrcSpanAnnA (BangType GhcPs)))
+              (GenLocated
+                 SrcSpanAnnL
+                 [GenLocated SrcSpanAnnA (ConDeclField GhcPs)])) where
   pretty' (PrefixCon _ xs) = horizontal <-|> vertical
     where
       horizontal = spacePrefixed $ fmap pretty xs
@@ -1733,14 +1721,14 @@ instance Pretty a => Pretty (HsScaled GhcPs a) where
   pretty' (HsScaled _ x) = pretty x
 
 instance Pretty (ConDeclField GhcPs) where
-  pretty' ConDeclField {..} =
+  pretty' ConDeclField {..}
     -- Here, we *ignore* the 'cd_fld_doc' field because doc strings are
     -- also stored as comments, and printing both results in duplicated
     -- comments.
-    do
-      hCommaSep $ fmap pretty cd_fld_names
-      string " :: "
-      pretty cd_fld_type
+   = do
+    hCommaSep $ fmap pretty cd_fld_names
+    string " :: "
+    pretty cd_fld_type
 
 instance Pretty InfixExpr where
   pretty' (InfixExpr (L _ (HsVar _ bind))) = pretty $ fmap InfixOp bind
@@ -1758,9 +1746,8 @@ instance Pretty InfixApp where
       leftAssoc = prettyOps allOperantsAndOperatorsLeftAssoc
       rightAssoc = prettyOps allOperantsAndOperatorsRightAssoc
       noAssoc
-        | L _ (OpApp _ _ o _) <- lhs,
-          isSameAssoc o =
-            leftAssoc
+        | L _ (OpApp _ _ o _) <- lhs
+        , isSameAssoc o = leftAssoc
         | otherwise = rightAssoc
       prettyOps [l, o, L _ (HsDo _ (DoExpr m) xs)] = do
         spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Do]
@@ -1774,12 +1761,12 @@ instance Pretty InfixApp where
         spaced [pretty l, pretty $ InfixExpr o, pretty r]
       prettyOps [l, o, r@(L _ HsLamCase {})] = do
         spaced [pretty l, pretty $ InfixExpr o, pretty r]
-      prettyOps (l : xs) = do
+      prettyOps (l:xs) = do
         pretty l
         newline
         indentedBlock $ f xs
         where
-          f (o : r : rems) = do
+          f (o:r:rems) = do
             (pretty (InfixExpr o) >> space) |=> pretty r
             unless (null rems) $ do
               newline
@@ -1863,12 +1850,10 @@ packageName _ = Nothing
 packageName = ideclPkgQual
 #endif
 instance Pretty (HsDerivingClause GhcPs) where
-  pretty'
-    HsDerivingClause
-      { deriv_clause_strategy = Just strategy@(L _ ViaStrategy {}),
-        ..
-      } =
-      spaced [string "deriving", pretty deriv_clause_tys, pretty strategy]
+  pretty' HsDerivingClause { deriv_clause_strategy = Just strategy@(L _ ViaStrategy {})
+                           , ..
+                           } =
+    spaced [string "deriving", pretty deriv_clause_tys, pretty strategy]
   pretty' HsDerivingClause {..} = do
     string "deriving "
     whenJust deriv_clause_strategy $ \x -> do
@@ -1893,11 +1878,11 @@ instance Pretty StringLiteral where
 -- | This instance is for type family declarations inside a class declaration.
 instance Pretty (FamilyDecl GhcPs) where
   pretty' FamilyDecl {..} = do
-    string $
-      case fdInfo of
-        DataFamily -> "data"
-        OpenTypeFamily -> "type"
-        ClosedTypeFamily {} -> "type"
+    string
+      $ case fdInfo of
+          DataFamily -> "data"
+          OpenTypeFamily -> "type"
+          ClosedTypeFamily {} -> "type"
     case fdTopLevel of
       TopLevel -> string " family "
       NotTopLevel -> space
@@ -1942,8 +1927,8 @@ instance Pretty (ArithSeqInfo GhcPs) where
   pretty' (FromTo from to) =
     brackets $ spaced [pretty from, string "..", pretty to]
   pretty' (FromThenTo from next to) =
-    brackets $
-      spaced [pretty from >> comma >> pretty next, string "..", pretty to]
+    brackets
+      $ spaced [pretty from >> comma >> pretty next, string "..", pretty to]
 
 instance Pretty (HsForAllTelescope GhcPs) where
   pretty' HsForAllVis {..} = do
@@ -2071,13 +2056,10 @@ instance Pretty FamEqn' where
           DataFamInstDeclForInsideClassInst -> "data"
 
 -- | HsArg (LHsType GhcPs) (LHsType GhcPs)
-instance
-  Pretty
-    ( HsArg
-        (GenLocated SrcSpanAnnA (HsType GhcPs))
-        (GenLocated SrcSpanAnnA (HsType GhcPs))
-    )
-  where
+instance Pretty
+           (HsArg
+              (GenLocated SrcSpanAnnA (HsType GhcPs))
+              (GenLocated SrcSpanAnnA (HsType GhcPs))) where
   pretty' (HsValArg x) = pretty x
   pretty' (HsTypeArg _ x) = string "@" >> pretty x
   pretty' HsArgPar {} = notUsedInParsedStage
@@ -2107,10 +2089,10 @@ instance Pretty (WarnDecl GhcPs) where
     where
       prettyWithTitleReasons title reasons =
         lined
-          [ string $ "{-# " ++ title,
-            spaced
-              [hCommaSep $ fmap pretty names, hCommaSep $ fmap pretty reasons],
-            string " #-}"
+          [ string $ "{-# " ++ title
+          , spaced
+              [hCommaSep $ fmap pretty names, hCommaSep $ fmap pretty reasons]
+          , string " #-}"
           ]
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance Pretty (WithHsDocIdentifiers StringLiteral GhcPs) where
@@ -2186,17 +2168,15 @@ instance Pretty OccName where
   pretty' = output
 
 instance Pretty (DerivDecl GhcPs) where
-  pretty'
-    DerivDecl
-      { deriv_strategy = (Just deriv_strategy@(L _ ViaStrategy {})),
-        ..
-      } =
-      spaced
-        [ string "deriving",
-          pretty deriv_strategy,
-          string "instance",
-          pretty deriv_type
-        ]
+  pretty' DerivDecl { deriv_strategy = (Just deriv_strategy@(L _ ViaStrategy {}))
+                    , ..
+                    } =
+    spaced
+      [ string "deriving"
+      , pretty deriv_strategy
+      , string "instance"
+      , pretty deriv_type
+      ]
   pretty' DerivDecl {..} = do
     string "deriving "
     whenJust deriv_strategy $ \x -> do
@@ -2206,10 +2186,8 @@ instance Pretty (DerivDecl GhcPs) where
     pretty deriv_type
 
 -- | 'Pretty' for 'LHsSigWcType GhcPs'.
-instance
-  Pretty
-    (HsWildCardBndrs GhcPs (GenLocated SrcSpanAnnA (HsSigType GhcPs)))
-  where
+instance Pretty
+           (HsWildCardBndrs GhcPs (GenLocated SrcSpanAnnA (HsSigType GhcPs))) where
   pretty' HsWC {..} = pretty hswc_body
 
 -- | 'Pretty' for 'LHsWcType'
@@ -2227,19 +2205,19 @@ instance Pretty (DefaultDecl GhcPs) where
 instance Pretty (ForeignDecl GhcPs) where
   pretty' ForeignImport {..} =
     spaced
-      [ string "foreign import",
-        pretty fd_fi,
-        pretty fd_name,
-        string "::",
-        pretty fd_sig_ty
+      [ string "foreign import"
+      , pretty fd_fi
+      , pretty fd_name
+      , string "::"
+      , pretty fd_sig_ty
       ]
   pretty' ForeignExport {..} =
     spaced
-      [ string "foreign export",
-        pretty fd_fe,
-        pretty fd_name,
-        string "::",
-        pretty fd_sig_ty
+      [ string "foreign export"
+      , pretty fd_fe
+      , pretty fd_name
+      , string "::"
+      , pretty fd_sig_ty
       ]
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (ForeignImport GhcPs) where
@@ -2288,9 +2266,9 @@ instance Pretty (AnnDecl GhcPs) where
 #endif
 instance Pretty (RoleAnnotDecl GhcPs) where
   pretty' (RoleAnnotDecl _ name roles) =
-    spaced $
-      [string "type role", pretty name]
-        ++ fmap (maybe (string "_") pretty . unLoc) roles
+    spaced
+      $ [string "type role", pretty name]
+          ++ fmap (maybe (string "_") pretty . unLoc) roles
 
 instance Pretty Role where
   pretty' Nominal = string "nominal"
@@ -2326,14 +2304,11 @@ instance Pretty (PatSynBind GhcPs GhcPs) where
       _ -> pure ()
 
 -- | 'Pretty' for 'HsPatSynDetails'.
-instance
-  Pretty
-    ( HsConDetails
-        Void
-        (GenLocated SrcSpanAnnN RdrName)
-        [RecordPatSynField GhcPs]
-    )
-  where
+instance Pretty
+           (HsConDetails
+              Void
+              (GenLocated SrcSpanAnnN RdrName)
+              [RecordPatSynField GhcPs]) where
   pretty' (PrefixCon _ xs) = spaced $ fmap pretty xs
   pretty' (RecCon rec) = hFields $ fmap pretty rec
   pretty' InfixCon {} =
@@ -2414,13 +2389,13 @@ instance Pretty (HsLit GhcPs) where
         case lines $ showOutputable x of
           [] -> pure ()
           [l] -> string l
-          (s : ss) ->
+          (s:ss) ->
             string "" |=> do
               string s
               newline
-              indentedWithSpace (-1) $
-                lined $
-                  fmap (string . dropWhile (/= '\\')) ss
+              indentedWithSpace (-1)
+                $ lined
+                $ fmap (string . dropWhile (/= '\\')) ss
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (HsPragE GhcPs) where
   pretty' (HsPragSCC _ x) = spaced [string "{-# SCC", pretty x, string "#-}"]
@@ -2531,12 +2506,12 @@ instance Pretty ListComprehension where
   pretty' ListComprehension {..} = horizontal <-|> vertical
     where
       horizontal =
-        brackets $
-          spaced
-            [ pretty listCompLhs,
-              string "|",
-              hCommaSep $ fmap pretty listCompRhs
-            ]
+        brackets
+          $ spaced
+              [ pretty listCompLhs
+              , string "|"
+              , hCommaSep $ fmap pretty listCompRhs
+              ]
       vertical = do
         string "[ "
         pretty $ fmap StmtLRInsideVerticalList listCompLhs
@@ -2545,7 +2520,7 @@ instance Pretty ListComprehension where
           string p |=> pretty (fmap StmtLRInsideVerticalList x)
           newline
         string "]"
-      stmtsAndPrefixes l = ("| ", head l) : fmap (", ",) (tail l)
+      stmtsAndPrefixes l = ("| ", head l) : fmap (", ", ) (tail l)
 
 instance Pretty DoExpression where
   pretty' DoExpression {..} = do
