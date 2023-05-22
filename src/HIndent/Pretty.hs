@@ -139,6 +139,7 @@ instance Pretty (HsModule GhcPs) where
         , (importsExist m, prettyImports)
         , (declsExist m, prettyDecls)
         ]
+      prettyModuleDecl :: HsModule GhcPs -> Printer ()
       prettyModuleDecl HsModule {hsmodName = Nothing} =
         error "The module declaration does not exist."
       prettyModuleDecl HsModule { hsmodName = Just name
@@ -1317,11 +1318,11 @@ prettyHsType (HsTupleTy _ HsUnboxedTuple xs) = hvUnboxedTuple' $ fmap pretty xs
 prettyHsType (HsTupleTy _ HsBoxedOrConstraintTuple xs) =
   hvTuple' $ fmap pretty xs
 prettyHsType (HsSumTy _ xs) = hvUnboxedSum' $ fmap pretty xs
-  -- For `HsOpTy`, we do not need a single quote for the infix operator. An
-  -- explicit promotion is necessary if there is a data constructor and
-  -- a type with the same name. However, infix data constructors never
-  -- share their names with types because types cannot contain symbols.
-  -- Thus there is no ambiguity.
+-- For `HsOpTy`, we do not need a single quote for the infix operator. An
+-- explicit promotion is necessary if there is a data constructor and
+-- a type with the same name. However, infix data constructors never
+-- share their names with types because types cannot contain symbols.
+-- Thus there is no ambiguity.
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 prettyHsType (HsOpTy _ _ l op r) = do
   lineBreak <- gets (configLineBreaks . psConfig)
