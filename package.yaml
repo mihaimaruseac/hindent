@@ -5,7 +5,6 @@ version:      6.1.1
 synopsis:     Extensible Haskell pretty printer
 description:  |
   Extensible Haskell pretty printer. Both a library and an executable.
-
   See the GitHub page for usage \/ explanation: <https://github.com/mihaimaruseac/hindent>
 category:     Development
 stability:    Unstable
