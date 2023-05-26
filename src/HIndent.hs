@@ -25,7 +25,6 @@ module HIndent
 
 import Control.Exception
 import Control.Monad
-import Control.Monad.State.Strict
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import Data.ByteString.Builder (Builder)
@@ -180,21 +179,3 @@ testAst x =
 prettyPrint :: Config -> HsModule' -> Builder
 prettyPrint config m =
   runPrinterStyle config (pretty $ modifyASTForPrettyPrinting m)
-
--- | Pretty print the given printable thing.
-runPrinterStyle :: Config -> Printer () -> Builder
-runPrinterStyle config m =
-  maybe (error "Printer failed with mzero call.") psOutput
-    $ execStateT (runPrinter m) initState
-  where
-    initState =
-      PrintState
-        { psIndentLevel = 0
-        , psOutput = mempty
-        , psNewline = False
-        , psColumn = 0
-        , psLine = 1
-        , psConfig = config
-        , psFitOnOneLine = False
-        , psEolComment = False
-        }

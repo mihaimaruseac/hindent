@@ -8,11 +8,12 @@
 module HIndent.Printer
   ( Printer(..)
   , PrintState(..)
+  , runPrinterStyle
   ) where
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.State.Strict (MonadState(..), StateT)
+import Control.Monad.State.Strict 
 import Data.ByteString.Builder
 import Data.Int (Int64)
 import HIndent.Config
@@ -48,3 +49,21 @@ data PrintState = PrintState
     -- the maximum column.
   , psEolComment :: !Bool
   }
+
+-- | Pretty print the given printable thing.
+runPrinterStyle :: Config -> Printer () -> Builder
+runPrinterStyle config m =
+  maybe (error "Printer failed with mzero call.") psOutput
+    $ execStateT (runPrinter m) initState
+  where
+    initState =
+      PrintState
+        { psIndentLevel = 0
+        , psOutput = mempty
+        , psNewline = False
+        , psColumn = 0
+        , psLine = 1
+        , psConfig = config
+        , psFitOnOneLine = False
+        , psEolComment = False
+        }
