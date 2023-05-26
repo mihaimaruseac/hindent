@@ -56,11 +56,9 @@ default:
 indent-size: 2
 line-length: 80
 force-trailing-newline: true
-line-breaks: [":>", ":<|>"]
-extensions:
-  - DataKinds
-  - GADTs
-  - TypeApplications
+sort-imports: true
+line-breaks: []
+extensions: []
 ```
 
 By default, hindent preserves the newline or lack of newline in your input. With `force-trailing-newline`, it will make sure there is always a trailing newline.
