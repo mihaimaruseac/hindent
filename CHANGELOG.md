@@ -7,6 +7,7 @@
 ### Changed
 
 ### Fixed
+- Wrong default HIndent configuration in [`README.md`] ([#750]).
 
 ### Removed
 
@@ -362,6 +363,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#750]: https://github.com/mihaimaruseac/hindent/pull/750
 [#742]: https://github.com/mihaimaruseac/hindent/pull/742
 [#741]: https://github.com/mihaimaruseac/hindent/pull/741
 [#739]: https://github.com/mihaimaruseac/hindent/pull/739
@@ -407,5 +409,6 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 [`TESTS.md`]: TESTS.md
 [`BENCHMARKS.md`]: BENCHMARKS.md
+[`README.md`]: README.md
 
 [Johan Tibell's Haskell Style Guide]: https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md
