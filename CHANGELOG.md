@@ -7,7 +7,7 @@
 ### Changed
 
 ### Fixed
-- Wrong default HIndent configuration in README.md ([#750]).
+- Wrong default HIndent configuration in [`README.md`] ([#750]).
 
 ### Removed
 
@@ -409,5 +409,6 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 [`TESTS.md`]: TESTS.md
 [`BENCHMARKS.md`]: BENCHMARKS.md
+[`README.md`]: README.md
 
 [Johan Tibell's Haskell Style Guide]: https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md
