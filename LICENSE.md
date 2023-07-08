@@ -1,4 +1,6 @@
 Copyright (c) 2014, Chris Done
+Copyright (c) 2015, Andrew Gibiansky
+Copyright (c) 2021, Mihai Maruseac
 
 All rights reserved.
 
