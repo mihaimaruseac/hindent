@@ -19,10 +19,10 @@ jobs:
           persist-credentials: false
 
       - name: Set up HLint
-        uses: haskell/actions/hlint-setup@fc675398fab930927d01e9c00eee89066aa2ca12 # v2.4.4
+        uses: haskell/actions/hlint-setup@a99601b177e00b98c78b6f6de680a101cf1c619d # v2.4.6
 
       - name: Run HLint
-        uses: haskell/actions/hlint-run@fc675398fab930927d01e9c00eee89066aa2ca12 # v2.4.4
+        uses: haskell/actions/hlint-run@a99601b177e00b98c78b6f6de680a101cf1c619d # v2.4.6
         with:
           path: .
           fail-on: warning
