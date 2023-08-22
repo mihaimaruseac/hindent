@@ -715,7 +715,7 @@ prettyHsExpr (HsAppType _ l r) = do
   string " @"
   pretty r
 #endif
-prettyHsExpr (OpApp _ l o r) = pretty (InfixApp l o r False)
+prettyHsExpr (OpApp _ l o r) = pretty (InfixApp l o r)
 prettyHsExpr (NegApp _ x _) = string "-" >> pretty x
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 prettyHsExpr (HsPar _ _ expr _) = parens $ pretty expr
@@ -1208,7 +1208,7 @@ instance Pretty (StmtLR GhcPs GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))) whe
       ver = newline >> indentedBlock (pretty body)
   pretty' ApplicativeStmt {} = notGeneratedByParser
   pretty' (BodyStmt _ (L loc (OpApp _ l o r)) _ _) =
-    pretty (L loc (InfixApp l o r True))
+    pretty (L loc (InfixApp l o r))
   pretty' (BodyStmt _ body _ _) = pretty body
   pretty' (LetStmt _ l) = string "let " |=> pretty l
   pretty' (ParStmt _ xs _ _) = hvBarSep $ fmap pretty xs
