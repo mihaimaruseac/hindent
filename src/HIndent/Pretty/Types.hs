@@ -89,7 +89,6 @@ data InfixApp = InfixApp
   { lhs :: LHsExpr GhcPs
   , op :: LHsExpr GhcPs
   , rhs :: LHsExpr GhcPs
-  , immediatelyAfterDo :: Bool
   }
 
 -- | `GRHSs` with a label indicating in which context the RHS is located
