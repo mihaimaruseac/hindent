@@ -36,7 +36,7 @@ jobs:
           stack-no-global: true
 
       - name: Cache .stack-work
-        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
         with:
           path: .stack-work
           key: stack-work-${{ matrix.os }}-${{ matrix.resolver }}-${{ hashFiles('stack.yaml', '**/*.cabal') }}-${{ hashFiles('internal/**','src/**','app/**','tests/**','benchmarks/**') }}
@@ -45,7 +45,7 @@ jobs:
             stack-work-${{ matrix.os }}-${{ matrix.resolver }}-
 
       - name: Cache ~/.stack
-        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
         with:
           path: ${{ steps.setup-haskell.outputs.stack-root }}
           key: stack-root-${{ matrix.os }}-${{ matrix.resolver }}-${{ hashFiles('stack.yaml', '**/*.cabal') }}
