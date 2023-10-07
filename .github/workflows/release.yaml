@@ -5,6 +5,8 @@ on:
   release:
     types: [created]
 
+permissions: {}
+
 jobs:
   build:
     if: github.repository == 'mihaimaruseac/hindent' # Don't do this in forks
