@@ -14,8 +14,8 @@ jobs:
     # Keep these in sync with a subset of Cabal-based CI matrix. This way, we
     # are not building a new cache here, just reusing an existing one.
     env:
-      os: "ubuntu-latest"
-      ghc: "9.4.4"
+      os: ubuntu-latest
+      ghc: 9.4.4
     outputs:
       hash_sdist: ${{ steps.hash_sdist.outputs.hash_sdist }}
       hash_execs: ${{ steps.hash_execs.outputs.hash_execs }}
@@ -143,7 +143,7 @@ jobs:
           name: sdist.zip
 
       - name: Upload assets
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
         with:
           files: ./*
 
