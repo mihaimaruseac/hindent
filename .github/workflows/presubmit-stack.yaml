@@ -21,9 +21,9 @@ jobs:
         # whereas all others (including Cabal ones) barely reach 50MB. Instead,
         # we only use nightly as the resolver, as this should handle the newest
         # GHC and is also the place where failures will be reported from Stack.
-        resolver: ["nightly"]
+        resolver: [nightly]
     steps:
-      - name: "Checkout code"
+      - name: Checkout code
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
         with:
           persist-credentials: false
