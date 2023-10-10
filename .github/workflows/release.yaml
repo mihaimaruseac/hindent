@@ -15,7 +15,7 @@ jobs:
     # are not building a new cache here, just reusing an existing one.
     env:
       os: ubuntu-latest
-      ghc: 9.4.4
+      ghc: 9.6.3
     outputs:
       hash_sdist: ${{ steps.hash_sdist.outputs.hash_sdist }}
       hash_execs: ${{ steps.hash_execs.outputs.hash_execs }}
