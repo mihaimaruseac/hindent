@@ -34,7 +34,7 @@ dependencies:
   - directory
   - exceptions
   - filepath
-  - ghc-lib-parser >= 9.2 && < 9.7
+  - ghc-lib-parser >= 9.2 && < 9.9
   - ghc-lib-parser-ex
   - monad-loops
   - mtl
