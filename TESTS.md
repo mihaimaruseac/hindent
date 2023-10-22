@@ -3411,7 +3411,7 @@ isDebug = False
 #endif
 ```
 
-Conditionals inside a `where` and empty lines
+Conditionals inside a `where` with empty lines and CPP
 
 ```haskell
 -- https://github.com/mihaimaruseac/hindent/issues/779
