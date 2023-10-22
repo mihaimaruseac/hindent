@@ -3411,6 +3411,35 @@ isDebug = False
 #endif
 ```
 
+Conditionals inside a `where` and empty lines
+
+```haskell given
+foo = bar + baz
+  where
+#if 0
+    bar = 1
+
+    baz = 1
+#else
+    bar = 2
+
+    baz = 2
+#endif
+```
+
+```haskell expect
+foo = bar + baz
+  where
+#if 0
+    bar = 1
+    baz = 1
+#else
+    bar = 2
+    baz = 2
+#endif
+```
+
+
 Macro definitions (`#define`)
 
 ```haskell
