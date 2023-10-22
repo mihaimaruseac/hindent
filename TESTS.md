@@ -3414,6 +3414,7 @@ isDebug = False
 Conditionals inside a `where` and empty lines
 
 ```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/779
 foo = bar + baz
   where
 
