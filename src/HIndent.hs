@@ -122,7 +122,11 @@ reformat config mexts mfilepath rawCode =
     processBlock (HaskellSource yPos text) =
       let ls = S8.lines text
           prefix = findPrefix ls
-          code = unlines' (map (stripPrefix prefix) ls)
+          code = unlines' (map stripPrefixIfNotNull ls)
+          stripPrefixIfNotNull s =
+            if S.null s
+              then s
+              else stripPrefix prefix s
        in case parseModule mfilepath allExts (UTF8.toString code) of
             POk _ m ->
               Right

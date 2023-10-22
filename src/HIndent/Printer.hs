@@ -13,7 +13,7 @@ module HIndent.Printer
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.State.Strict 
+import Control.Monad.State.Strict
 import Data.ByteString.Builder
 import Data.Int (Int64)
 import HIndent.Config

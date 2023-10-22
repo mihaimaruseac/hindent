@@ -3411,6 +3411,24 @@ isDebug = False
 #endif
 ```
 
+Conditionals inside a `where` with empty lines and CPP
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/779
+foo = bar + baz
+  where
+
+#if 0
+    bar = 1
+    
+    baz = 1
+#else
+    bar = 2
+    
+    baz = 2
+#endif
+```
+
 Macro definitions (`#define`)
 
 ```haskell
