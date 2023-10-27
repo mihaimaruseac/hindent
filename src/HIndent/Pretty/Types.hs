@@ -33,7 +33,6 @@ module HIndent.Pretty.Types
   , pattern FamEqnInsideClassInst
   , StmtLRInsideVerticalList(..)
   , ParStmtBlockInsideVerticalList(..)
-  , DeclSig(..)
   , TopLevelTyFamInstDecl(..)
   , Context(..)
   , HorizontalContext(..)
@@ -203,10 +202,6 @@ newtype StmtLRInsideVerticalList =
 -- | `ParStmtBlock` inside a vertically printed list.
 newtype ParStmtBlockInsideVerticalList =
   ParStmtBlockInsideVerticalList (ParStmtBlock GhcPs GhcPs)
-
--- | A top-level function signature.
-newtype DeclSig =
-  DeclSig (Sig GhcPs)
 
 -- | A top-level type family instance declaration.
 newtype TopLevelTyFamInstDecl =
