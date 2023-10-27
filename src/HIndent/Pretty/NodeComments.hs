@@ -147,9 +147,6 @@ instance CommentExtraction (Sig GhcPs) where
   nodeComments (SCCFunSig x _ _ _) = nodeComments x
   nodeComments (CompleteMatchSig x _ _ _) = nodeComments x
 #endif
-instance CommentExtraction DeclSig where
-  nodeComments (DeclSig x) = nodeComments x
-
 instance CommentExtraction (HsDataDefn GhcPs) where
   nodeComments HsDataDefn {} = emptyNodeComments
 
