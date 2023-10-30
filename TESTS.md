@@ -1416,6 +1416,13 @@ Top-level `SPECIALISE`
 {-# SPECIALISE lookup :: [(Int, Int)] -> Int -> Maybe Int #-}
 ```
 
+Multiple signatures in a `SPECIALISE`
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/pull/784
+{-# SPECIALISE foo :: Int -> Int, Double -> Double #-}
+```
+
 A `SCC`
 
 ```haskell
