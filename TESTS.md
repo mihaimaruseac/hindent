@@ -1416,6 +1416,12 @@ Top-level `SPECIALISE`
 {-# SPECIALISE lookup :: [(Int, Int)] -> Int -> Maybe Int #-}
 ```
 
+Multiple signatures in a `SPECIALISE`
+
+```haskell
+{-# SPECIALISE foo :: Int -> Int, Double -> Double #-}
+```
+
 A `SCC`
 
 ```haskell
