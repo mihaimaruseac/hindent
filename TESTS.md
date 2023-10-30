@@ -1419,6 +1419,7 @@ Top-level `SPECIALISE`
 Multiple signatures in a `SPECIALISE`
 
 ```haskell
+-- https://github.com/mihaimaruseac/hindent/pull/784
 {-# SPECIALISE foo :: Int -> Int, Double -> Double #-}
 ```
 
