@@ -441,12 +441,12 @@ instance Pretty (Sig GhcPs) where
   pretty' (FixSig _ x) = pretty x
   pretty' (InlineSig _ name detail) =
     spaced [string "{-#", pretty detail, pretty name, string "#-}"]
-  pretty' (SpecSig _ name sig _) =
+  pretty' (SpecSig _ name sigs _) =
     spaced
       [ string "{-# SPECIALISE"
       , pretty name
       , string "::"
-      , pretty $ head sig
+      , hCommaSep $ fmap pretty sigs
       , string "#-}"
       ]
   pretty' (SpecInstSig _ sig) =
@@ -510,12 +510,12 @@ instance Pretty (Sig GhcPs) where
   pretty' (FixSig _ x) = pretty x
   pretty' (InlineSig _ name detail) =
     spaced [string "{-#", pretty detail, pretty name, string "#-}"]
-  pretty' (SpecSig _ name sig _) =
+  pretty' (SpecSig _ name sigs _) =
     spaced
       [ string "{-# SPECIALISE"
       , pretty name
       , string "::"
-      , pretty $ head sig
+      , hCommaSep $ fmap pretty sigs
       , string "#-}"
       ]
   pretty' (SpecInstSig _ _ sig) =
