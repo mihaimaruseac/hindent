@@ -788,26 +788,6 @@ prettyHsExpr (RecordUpd _ name fields) = hor <-|> ver
       pretty name
       newline
       indentedBlock $ pretty fields
-    printHorFields ::
-         (Pretty a, Pretty b, CommentExtraction l)
-      => [GenLocated l (HsFieldBind a b)]
-      -> Printer ()
-    printHorFields = hFields . fmap (`printCommentsAnd` horField)
-    printVerFields ::
-         (Pretty a, Pretty b, CommentExtraction l)
-      => [GenLocated l (HsFieldBind a b)]
-      -> Printer ()
-    printVerFields = vFields . fmap printField
-    printField x = printCommentsAnd x $ (<-|>) <$> horField <*> verField
-    horField HsFieldBind {..} = do
-      pretty hfbLHS
-      string " = "
-      pretty hfbRHS
-    verField HsFieldBind {..} = do
-      pretty hfbLHS
-      string " ="
-      newline
-      indentedBlock $ pretty hfbRHS
 #elif MIN_VERSION_ghc_lib_parser(9,4,1)
 prettyHsExpr (RecordUpd _ name fields) = hor <-|> ver
   where
