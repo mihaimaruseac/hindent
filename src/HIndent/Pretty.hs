@@ -250,7 +250,7 @@ instance Pretty (HsDecl GhcPs) where
   pretty' (InstD _ inst) = pretty inst
   pretty' (DerivD _ x) = pretty x
   pretty' (ValD _ bind) = pretty bind
-  pretty' (SigD _ s) = pretty  s
+  pretty' (SigD _ s) = pretty s
   pretty' (KindSigD _ x) = pretty x
   pretty' (DefD _ x) = pretty x
   pretty' (ForD _ x) = pretty x
@@ -783,11 +783,29 @@ prettyHsExpr (RecordCon _ name fields) = horizontal <-|> vertical
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 prettyHsExpr (RecordUpd _ name fields) = hor <-|> ver
   where
-    hor = spaced [pretty name, pretty fields]
+    hor = spaced [pretty name, printHorFields fields]
     ver = do
       pretty name
       newline
-      indentedBlock $ pretty fields
+      indentedBlock $ printHorFields fields <-|> printVerFields fields
+    printHorFields RegularRecUpdFields {..} =
+      hFields $ fmap (`printCommentsAnd` horField) recUpdFields
+    printHorFields OverloadedRecUpdFields {..} =
+      hFields $ fmap (`printCommentsAnd` horField) olRecUpdFields
+    printVerFields RegularRecUpdFields {..} =
+      vFields $ fmap printField recUpdFields
+    printVerFields OverloadedRecUpdFields {..} =
+      vFields $ fmap printField olRecUpdFields
+    printField x = printCommentsAnd x $ (<-|>) <$> horField <*> verField
+    horField HsFieldBind {..} = do
+      pretty hfbLHS
+      string " = "
+      pretty hfbRHS
+    verField HsFieldBind {..} = do
+      pretty hfbLHS
+      string " ="
+      newline
+      indentedBlock $ pretty hfbRHS
 #elif MIN_VERSION_ghc_lib_parser(9,4,1)
 prettyHsExpr (RecordUpd _ name fields) = hor <-|> ver
   where
@@ -901,11 +919,6 @@ prettyHsExpr HsTcBracketOut {} = notGeneratedByParser
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 prettyHsExpr (HsTypedSplice _ x) = string "$$" >> pretty x
 prettyHsExpr (HsUntypedSplice _ x) = pretty x
-#endif
-
-#if MIN_VERSION_ghc_lib_parser(9,8,1)
-instance Pretty (LHsRecUpdFields GhcPs) where
-  pretty' _ = undefined
 #endif
 instance Pretty LambdaCase where
   pretty' (LambdaCase matches caseOrCases) = do
@@ -1608,7 +1621,7 @@ instance Pretty (HsBracket GhcPs) where
   pretty' (TExpBr _ x) = typedBrackets $ pretty x
 #endif
 instance Pretty SigBindFamily where
-  pretty' (Sig x) = pretty  x
+  pretty' (Sig x) = pretty x
   pretty' (Bind x) = pretty x
   pretty' (TypeFamily x) = pretty x
   pretty' (TyFamInst x) = pretty x
