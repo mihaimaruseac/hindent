@@ -477,13 +477,14 @@ instance Pretty (Sig GhcPs) where
         headLen <- printerLength printFunName
         indentSpaces <- getIndentSpaces
         if headLen < indentSpaces
-          then space
-          else newline
-        indentedBlock
-          $ indentedWithSpace 3
-          $ pretty
-          $ HsSigTypeInsideVerticalFuncSig <$> hswc_body params
-      printFunName = pretty $ head funName
+          then space |=> pretty (HsSigTypeInsideDeclSig <$> hswc_body params)
+          else do
+            newline
+            indentedBlock
+              $ indentedWithSpace 3
+              $ pretty
+              $ HsSigTypeInsideDeclSig <$> hswc_body params
+      printFunName = hCommaSep $ fmap pretty funName
   pretty' (PatSynSig _ names sig) =
     spaced
       [string "pattern", hCommaSep $ fmap pretty names, string "::", pretty sig]
