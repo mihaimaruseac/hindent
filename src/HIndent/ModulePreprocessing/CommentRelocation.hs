@@ -316,11 +316,12 @@ relocateCommentsAfter = everywhereMEpAnnsBackwards f
 relocateCommentsBeforeEachElement ::
      forall a b c. Typeable a
   => (a -> [b]) -- ^ Element getter
-      -> ([b] -> a -> a) -- ^ Element setter
-          -> (b -> EpAnn c) -- ^ Annotation getter
-              -> (EpAnn c -> b -> b) -- ^ Annotation setter
-                  -> (a -> b -> RealSrcSpan -> Bool) -- ^ The function to decide whether to locate comments
-                      -> HsModule' -> WithComments HsModule'
+  -> ([b] -> a -> a) -- ^ Element setter
+  -> (b -> EpAnn c) -- ^ Annotation getter
+  -> (EpAnn c -> b -> b) -- ^ Annotation setter
+  -> (a -> b -> RealSrcSpan -> Bool) -- ^ The function to decide whether to locate comments
+  -> HsModule'
+  -> WithComments HsModule'
 relocateCommentsBeforeEachElement elemGetter elemSetter annGetter annSetter cond =
   everywhereM (mkM f)
   where
@@ -339,7 +340,8 @@ relocateCommentsBeforeEachElement elemGetter elemSetter annGetter annSetter cond
 -- | This function applies the given function to all 'EpAnn's.
 applyM ::
      forall a. Typeable a
-  => (forall b. EpAnn b -> WithComments (EpAnn b)) -> (a -> WithComments a)
+  => (forall b. EpAnn b -> WithComments (EpAnn b))
+  -> (a -> WithComments a)
 applyM f
   | App g _ <- typeRep @a
   , Just HRefl <- eqTypeRep g (typeRep @EpAnn) = f
@@ -421,7 +423,8 @@ everywhereMEpAnnsInOrder cmp f hm =
           pure x
         collectEpAnns ::
              forall a. Typeable a
-          => a -> ([Wrapper] -> [Wrapper])
+          => a
+          -> ([Wrapper] -> [Wrapper])
         collectEpAnns x
           -- If 'a' is 'EpAnn b' ('b' can be any type), wrap 'x' with a 'Wrapper'.
           | App g _ <- typeRep @a
@@ -443,7 +446,8 @@ everywhereMEpAnnsInOrder cmp f hm =
       where
         setEpAnn ::
              forall a. Typeable a
-          => a -> StateT [Int] WithComments a
+          => a
+          -> StateT [Int] WithComments a
         setEpAnn x
           -- This guard arm checks if 'a' is 'EpAnn b' ('b' can be any type).
           | App g g' <- typeRep @a

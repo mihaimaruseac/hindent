@@ -150,7 +150,8 @@ closeEpAnnOfMatchMExt = everywhere closeEpAnn
   where
     closeEpAnn ::
          forall a. Typeable a
-      => a -> a
+      => a
+      -> a
     closeEpAnn x
       | App (App g h) _ <- typeRep @a
       , Just HRefl <- eqTypeRep g (typeRep @Match)
@@ -177,7 +178,8 @@ closePlaceHolderEpAnns = everywhere closeEpAnn
   where
     closeEpAnn ::
          forall a. Typeable a
-      => a -> a
+      => a
+      -> a
     closeEpAnn x
       | App g _ <- typeRep @a
       , Just HRefl <- eqTypeRep g (typeRep @EpAnn)
