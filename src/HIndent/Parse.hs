@@ -20,6 +20,10 @@ import HIndent.GhcLibParserWrapper.GHC.Hs
 import GHC.Utils.Error
 import GHC.Utils.Outputable hiding ((<>), empty, text)
 #endif
+#if MIN_VERSION_ghc_lib_parser(9,8,1)
+import GHC.Unit.Module.Warnings
+#endif
+
 -- | This function parses the given Haskell source code with the given file
 -- path (if any) and parse options.
 parseModule ::
