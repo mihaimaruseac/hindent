@@ -642,7 +642,16 @@ instance CommentExtraction FamEqn' where
 instance CommentExtraction (FamEqn GhcPs (HsDataDefn GhcPs)) where
   nodeComments FamEqn {..} = nodeComments feqn_ext
 
--- | HsArg (LHsType GhcPs) (LHsType GhcPs)
+#if MIN_VERSION_ghc_lib_parser(9,8,1)
+instance CommentExtraction
+           (HsArg
+              GhcPs
+              (GenLocated SrcSpanAnnA (HsType GhcPs))
+              (GenLocated SrcSpanAnnA (HsType GhcPs))) where
+  nodeComments HsValArg {} = emptyNodeComments
+  nodeComments HsTypeArg {} = emptyNodeComments
+  nodeComments HsArgPar {} = emptyNodeComments
+#else
 instance CommentExtraction
            (HsArg
               (GenLocated SrcSpanAnnA (HsType GhcPs))
@@ -650,6 +659,8 @@ instance CommentExtraction
   nodeComments HsValArg {} = emptyNodeComments
   nodeComments HsTypeArg {} = emptyNodeComments
   nodeComments HsArgPar {} = emptyNodeComments
+#endif
+
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance CommentExtraction (HsQuote GhcPs) where
   nodeComments ExpBr {} = emptyNodeComments
