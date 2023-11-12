@@ -623,10 +623,17 @@ instance CommentExtraction ModuleNameWithPrefix where
 
 instance CommentExtraction (IE GhcPs) where
   nodeComments IEVar {} = emptyNodeComments
+#if MIN_VERSION_ghc_lib_parser(9,8,1)
+  nodeComments (IEThingAbs (_, x) _) = nodeComments x
+  nodeComments (IEThingAll (_, x) _) = nodeComments x
+  nodeComments (IEThingWith (_, x) _ _ _) = nodeComments x
+  nodeComments (IEModuleContents (_, x) _) = nodeComments x
+#else
   nodeComments (IEThingAbs x _) = nodeComments x
   nodeComments (IEThingAll x _) = nodeComments x
   nodeComments (IEThingWith x _ _ _) = nodeComments x
   nodeComments (IEModuleContents x _) = nodeComments x
+#endif
   nodeComments IEGroup {} = emptyNodeComments
   nodeComments IEDoc {} = emptyNodeComments
   nodeComments IEDocNamed {} = emptyNodeComments
