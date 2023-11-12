@@ -4,6 +4,8 @@
 
 ### Added
 
+- Support for GHC 9.8 ([#775]).
+
 ### Changed
 
 ### Fixed
@@ -368,6 +370,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 [#784]: https://github.com/mihaimaruseac/hindent/pull/784
 [#780]: https://github.com/mihaimaruseac/hindent/pull/780
+[#775]: https://github.com/mihaimaruseac/hindent/pull/775
 [#750]: https://github.com/mihaimaruseac/hindent/pull/750
 [#742]: https://github.com/mihaimaruseac/hindent/pull/742
 [#741]: https://github.com/mihaimaruseac/hindent/pull/741
