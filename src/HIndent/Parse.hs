@@ -48,13 +48,30 @@ lexCode code
 --
 -- The 'StarIsType' extension is always enabled to compile a code using
 -- kinds like '* -> *'.
+--
+-- Note: We currently support GHC 8.10.7 and newer and this implies we use
+-- `ghc-lib-parser` from 9.2.8 upwards (due to it supporting back two GHC
+-- versions). Due to API changes, we need to use preprocessor macros, as
+-- described here:
+--
+--   - For GHC 8.10, ghc-lib-parser-9.2.8 has one extra argument as first
+--     argument of `mkParserOpts`. All newer versions of ghc-lib-parser have
+--     2 additional arguments as second and third argument.
+--   - For GHC 9.4 and newer, ghc-lib-parser-9.8.1 has 2 more strict fields in
+--     the constructor for `DiagOpts`.
 parserOptsFromExtensions :: [GLP.Extension] -> ParserOpts
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
 parserOptsFromExtensions opts =
   mkParserOpts
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#else
+    -- TODO(mihaimaruseac): Remove when dropping GHC 8.10 support
+    ES.empty -- No compiler warnings are enabled
+#endif
     opts'
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
     diagOpts
-    [] -- There are no supported languages and extensions (this list is used only in error messages)
+    [] -- There are no supported languages and extensions (used only in errors)
+#endif
     False -- Safe imports are off.
     False -- Haddock comments are treated as normal comments.
     True -- Comments are kept in an AST.
@@ -65,20 +82,12 @@ parserOptsFromExtensions opts =
       DiagOpts
         { diag_warning_flags = ES.empty
         , diag_fatal_warning_flags = ES.empty
+#if MIN_VERSION_ghc_lib_parser(9,8,1)
+        , diag_custom_warning_categories = emptyWarningCategorySet
+        , diag_fatal_custom_warning_categories = emptyWarningCategorySet
+#endif
         , diag_warn_is_error = False
         , diag_reverse_errors = False
         , diag_max_errors = Nothing
         , diag_ppr_ctx = defaultSDocContext
         }
-#else
-parserOptsFromExtensions opts =
-  mkParserOpts
-    ES.empty -- No compiler warnings are enabled.
-    opts'
-    False -- Safe imports are off.
-    False -- Haddock comments are treated as normal comments.
-    True -- Comments are kept in an AST.
-    False -- Do not update the internal position of a comment.
-  where
-    opts' = ES.fromList $ GLP.StarIsType : opts
-#endif
