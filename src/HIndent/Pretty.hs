@@ -250,7 +250,7 @@ instance Pretty (HsDecl GhcPs) where
   pretty' (InstD _ inst) = pretty inst
   pretty' (DerivD _ x) = pretty x
   pretty' (ValD _ bind) = pretty bind
-  pretty' (SigD _ s) = pretty $ DeclSig s
+  pretty' (SigD _ s) = pretty  s
   pretty' (KindSigD _ x) = pretty x
   pretty' (DefD _ x) = pretty x
   pretty' (ForD _ x) = pretty x
@@ -1608,7 +1608,7 @@ instance Pretty (HsBracket GhcPs) where
   pretty' (TExpBr _ x) = typedBrackets $ pretty x
 #endif
 instance Pretty SigBindFamily where
-  pretty' (Sig x) = pretty $ DeclSig x
+  pretty' (Sig x) = pretty  x
   pretty' (Bind x) = pretty x
   pretty' (TypeFamily x) = pretty x
   pretty' (TyFamInst x) = pretty x
