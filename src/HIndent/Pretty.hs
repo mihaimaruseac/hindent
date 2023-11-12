@@ -2040,6 +2040,16 @@ instance Pretty FamEqn' where
           DataFamInstDeclForInsideClassInst -> "data"
 
 -- | HsArg (LHsType GhcPs) (LHsType GhcPs)
+#if MIN_VERSION_ghc_lib_parser(9,8,1)
+instance Pretty
+           (HsArg
+              GhcPs
+              (GenLocated SrcSpanAnnA (HsType GhcPs))
+              (GenLocated SrcSpanAnnA (HsType GhcPs))) where
+  pretty' (HsValArg x) = pretty x
+  pretty' (HsTypeArg _ x) = string "@" >> pretty x
+  pretty' HsArgPar {} = notUsedInParsedStage
+#else
 instance Pretty
            (HsArg
               (GenLocated SrcSpanAnnA (HsType GhcPs))
@@ -2047,6 +2057,8 @@ instance Pretty
   pretty' (HsValArg x) = pretty x
   pretty' (HsTypeArg _ x) = string "@" >> pretty x
   pretty' HsArgPar {} = notUsedInParsedStage
+#endif
+
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance Pretty (HsQuote GhcPs) where
   pretty' (ExpBr _ x) = brackets $ wrapWithBars $ pretty x
@@ -2058,6 +2070,7 @@ instance Pretty (HsQuote GhcPs) where
   pretty' (VarBr _ True x) = string "'" >> pretty x
   pretty' (VarBr _ False x) = string "''" >> pretty x
 #endif
+
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (WarnDecls GhcPs) where
   pretty' (Warnings _ x) = lined $ fmap pretty x
@@ -2065,6 +2078,7 @@ instance Pretty (WarnDecls GhcPs) where
 instance Pretty (WarnDecls GhcPs) where
   pretty' (Warnings _ _ x) = lined $ fmap pretty x
 #endif
+
 instance Pretty (WarnDecl GhcPs) where
   pretty' (Warning _ names deprecatedOrWarning) =
     case deprecatedOrWarning of
@@ -2078,6 +2092,7 @@ instance Pretty (WarnDecl GhcPs) where
               [hCommaSep $ fmap pretty names, hCommaSep $ fmap pretty reasons]
           , string " #-}"
           ]
+
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance Pretty (WithHsDocIdentifiers StringLiteral GhcPs) where
   pretty' WithHsDocIdentifiers {..} = pretty hsDocString
