@@ -78,6 +78,7 @@ parserOptsFromExtensions opts =
     False -- Do not update the internal position of a comment.
   where
     opts' = ES.fromList $ GLP.StarIsType : opts
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
     diagOpts =
       DiagOpts
         { diag_warning_flags = ES.empty
@@ -91,3 +92,4 @@ parserOptsFromExtensions opts =
         , diag_max_errors = Nothing
         , diag_ppr_ctx = defaultSDocContext
         }
+#endif
