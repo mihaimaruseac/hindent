@@ -27,7 +27,7 @@ jobs:
 
       - name: Setup Haskell Compiler (cabal)
         id: setup-haskell
-        uses: haskell-actions/setup@91c5a796c146b3acc330865028659afb2d078774 # v2.5.2
+        uses: haskell-actions/setup@7398b0c373cccf9ed5dfddae26f77ed02dea4967 # v2.5.3
         with:
           ghc-version: ${{ env.ghc }}
 
