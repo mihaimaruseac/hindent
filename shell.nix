@@ -1,7 +1,10 @@
-{ pkgs ? import <nixpkgs> {} }:
-with pkgs;
-mkShell {
-  buildInputs = [
+let
+  nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/tarball/nixos-23.05";
+  pkgs = import nixpkgs { config = {}; overlays = []; };
+in
+
+pkgs.mkShell {
+  packages = with pkgs; [
     cabal-install
     haskell.compiler.ghc925
     zlib.dev
