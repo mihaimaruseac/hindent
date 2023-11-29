@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
@@ -143,26 +144,17 @@ instance Pretty (HsModule GhcPs) where
       prettyModuleDecl HsModule {hsmodName = Nothing} =
         error "The module declaration does not exist."
       prettyModuleDecl HsModule { hsmodName = Just name
-                                , hsmodExports = Nothing
+                                , hsmodExports
                                 , hsmodExt = XModulePs {..}
                                 } = do
         pretty $ fmap ModuleNameWithPrefix name
         whenJust hsmodDeprecMessage $ \x -> do
           space
           pretty $ fmap ModuleDeprecatedPragma x
+        whenJust hsmodExports $ \exports -> do
+          newline
+          indentedBlock $ printCommentsAnd exports (vTuple . fmap pretty)
         string " where"
-      prettyModuleDecl HsModule { hsmodName = Just name
-                                , hsmodExports = Just exports
-                                , hsmodExt = XModulePs {..}
-                                } = do
-        pretty $ fmap ModuleNameWithPrefix name
-        whenJust hsmodDeprecMessage $ \x -> do
-          space
-          pretty $ fmap ModuleDeprecatedPragma x
-        newline
-        indentedBlock $ do
-          printCommentsAnd exports (vTuple . fmap pretty)
-          string " where"
       moduleDeclExists HsModule {hsmodName = Nothing} = False
       moduleDeclExists _ = True
       prettyDecls =
@@ -199,27 +191,15 @@ instance Pretty HsModule where
         ]
       prettyModuleDecl HsModule {hsmodName = Nothing} =
         error "The module declaration does not exist."
-      prettyModuleDecl HsModule { hsmodName = Just name
-                                , hsmodExports = Nothing
-                                , ..
-                                } = do
+      prettyModuleDecl HsModule {hsmodName = Just name, hsmodExports, ..} = do
         pretty $ fmap ModuleNameWithPrefix name
         whenJust hsmodDeprecMessage $ \x -> do
           space
           pretty $ fmap ModuleDeprecatedPragma x
+        whenJust hsmodExports $ \exports -> do
+          newline
+          indentedBlock $ printCommentsAnd exports (vTuple . fmap pretty)
         string " where"
-      prettyModuleDecl HsModule { hsmodName = Just name
-                                , hsmodExports = Just exports
-                                , ..
-                                } = do
-        pretty $ fmap ModuleNameWithPrefix name
-        whenJust hsmodDeprecMessage $ \x -> do
-          space
-          pretty $ fmap ModuleDeprecatedPragma x
-        newline
-        indentedBlock $ do
-          printCommentsAnd exports (vTuple . fmap pretty)
-          string " where"
       moduleDeclExists HsModule {hsmodName = Nothing} = False
       moduleDeclExists _ = True
       prettyDecls =
@@ -2266,9 +2246,9 @@ instance Pretty (ForeignImport GhcPs) where
   pretty' (CImport _ conv safety _ _) = spaced [pretty conv, pretty safety]
 #elif MIN_VERSION_ghc_lib_parser(9,6,0)
 instance Pretty (ForeignImport GhcPs) where
-  pretty' (CImport (L _ (SourceText s)) conv safety _ _ ) =
+  pretty' (CImport (L _ (SourceText s)) conv safety _ _) =
     spaced [pretty conv, pretty safety, string s]
-  pretty' (CImport _ conv safety _  _) = spaced [pretty conv, pretty safety]
+  pretty' (CImport _ conv safety _ _) = spaced [pretty conv, pretty safety]
 #else
 instance Pretty ForeignImport where
   pretty' (CImport conv safety _ _ (L _ (SourceText s))) =
