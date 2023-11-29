@@ -149,9 +149,9 @@ instance Pretty (HsModule GhcPs) where
         whenJust hsmodDeprecMessage $ \x -> do
           space
           pretty $ fmap ModuleDeprecatedPragma x
-        whenJust hsmodExports $ \exports ->
-          newline indentedBlock $
-          printCommentsAnd exports (vTuple . fmap pretty)
+        whenJust hsmodExports $ \exports -> do
+          newline
+          indentedBlock $ printCommentsAnd exports (vTuple . fmap pretty)
         string " where"
       moduleDeclExists HsModule {hsmodName = Nothing} = False
       moduleDeclExists _                              = True
