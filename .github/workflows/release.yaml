@@ -67,7 +67,7 @@ jobs:
       # scripting if needed, but it works for our use cases as it is.
       # TODO(mihaimaruseac): Maybe fix to upload the path as needed
       - name: Upload sdist as an artifact for later jobs in workflow
-        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4.3.0
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
           path: hindent-*.tar.gz
           name: sdist.zip # When downloading it is a zip containing the sdist tarball
@@ -96,7 +96,7 @@ jobs:
       # [1]: https://frontside.com/blog/2022-12-12-dynamic-github-action-jobs/
       # TODO(mihaimaruseac): Maybe use automatic matrix generation here
       - name: Upload executables as an artifact for later jobs in workflow
-        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4.3.0
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
           path: .execs/
           name: executables.zip # When downloading it is a zip with all executables
