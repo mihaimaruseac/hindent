@@ -27,7 +27,7 @@ import HIndent.Printer
 
 data Module = Module
   { pragmas :: FileHeaderPragmaCollection
-  , moduleDeclaration :: ModuleDeclaration
+  , moduleDeclaration :: Maybe ModuleDeclaration
   , module' :: GHC.HsModule'
   }
 

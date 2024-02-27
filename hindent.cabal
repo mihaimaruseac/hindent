@@ -41,6 +41,7 @@ library
       HIndent.Ast.FileHeaderPragma.Collection
       HIndent.Ast.Module
       HIndent.Ast.Module.Declaration
+      HIndent.Ast.Module.Name
       HIndent.Ast.NodeComments
       HIndent.Ast.WithComments
       HIndent.ByteString
