@@ -37,18 +37,17 @@ instance Pretty Module where
                                            , hsmodDecls = []
                                            }}
     | not (pragmaExists m) = pure ()
-  pretty' Module {module' = m, ..} = blanklined printers >> newline
+  pretty' Module {..} = blanklined printers >> newline
     where
       printers = snd <$> filter fst pairs
       pairs =
         [ (hasPragmas pragmas, pretty pragmas)
         , (isJust moduleDeclaration, prettyModuleDecl moduleDeclaration)
         , (hasImports imports, pretty imports)
-        , (declsExist m, pretty declarations)
+        , (hasDeclarations declarations, pretty declarations)
         ]
       prettyModuleDecl Nothing = error "The module declaration does not exist."
       prettyModuleDecl (Just decl) = pretty decl
-      declsExist = not . null . GHC.hsmodDecls
 
 mkModule :: GHC.HsModule' -> WithComments Module
 mkModule m = fromEpAnn (GHC.getModuleAnn m) $ Module {..}

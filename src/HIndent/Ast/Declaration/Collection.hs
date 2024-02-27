@@ -3,6 +3,7 @@
 module HIndent.Ast.Declaration.Collection
   ( DeclarationCollection
   , mkDeclarationCollection
+  , hasDeclarations
   ) where
 
 import Data.Maybe
@@ -36,3 +37,6 @@ instance Pretty DeclarationCollection where
 
 mkDeclarationCollection :: GHC.HsModule' -> DeclarationCollection
 mkDeclarationCollection GHC.HsModule {..} = DeclarationCollection hsmodDecls
+
+hasDeclarations :: DeclarationCollection -> Bool
+hasDeclarations (DeclarationCollection xs) = not $ null xs
