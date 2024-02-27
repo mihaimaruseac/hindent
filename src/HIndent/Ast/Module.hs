@@ -11,6 +11,7 @@ import Control.Monad.RWS
 import Data.Maybe
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.FileHeaderPragma.Collection
+import HIndent.Ast.Import.Collection
 import HIndent.Ast.Module.Declaration
 import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.WithComments
@@ -26,6 +27,7 @@ import HIndent.Printer
 data Module = Module
   { pragmas :: FileHeaderPragmaCollection
   , moduleDeclaration :: Maybe ModuleDeclaration
+  , imports :: ImportCollection
   , module' :: GHC.HsModule'
   }
 
@@ -74,4 +76,5 @@ mkModule m = fromEpAnn (GHC.getModuleAnn m) $ Module {..}
   where
     pragmas = mkFileHeaderPragmaCollection m
     moduleDeclaration = mkModuleDeclaration m
+    imports = mkImportCollection m
     module' = m
