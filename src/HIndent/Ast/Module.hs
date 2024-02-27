@@ -6,7 +6,7 @@ module HIndent.Ast.Module
   , mkModule
   ) where
 
-import HIndent.Ast.NodeComments
+import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
