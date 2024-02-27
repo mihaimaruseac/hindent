@@ -52,6 +52,7 @@ library
       HIndent.Error
       HIndent.Fixity
       HIndent.GhcLibParserWrapper.GHC.Hs
+      HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings
       HIndent.Language
       HIndent.LanguageExtension
       HIndent.LanguageExtension.Conversion
