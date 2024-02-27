@@ -37,6 +37,7 @@ library
   other-modules:
       HIndent.Applicative
       HIndent.Ast
+      HIndent.Ast.Declaration.Collection
       HIndent.Ast.FileHeaderPragma
       HIndent.Ast.FileHeaderPragma.Collection
       HIndent.Ast.Import.Collection

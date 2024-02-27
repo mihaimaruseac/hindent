@@ -9,10 +9,11 @@ module HIndent.Ast.Module
 
 import Data.Maybe
 import qualified GHC.Types.SrcLoc as GHC
+import HIndent.Ast.Declaration.Collection
 import HIndent.Ast.FileHeaderPragma.Collection
 import HIndent.Ast.Import.Collection
 import HIndent.Ast.Module.Declaration
-import HIndent.Ast.NodeComments (NodeComments(..))
+import HIndent.Ast.NodeComments hiding (fromEpAnn)
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pragma
@@ -24,6 +25,7 @@ data Module = Module
   { pragmas :: FileHeaderPragmaCollection
   , moduleDeclaration :: Maybe ModuleDeclaration
   , imports :: ImportCollection
+  , declarations :: DeclarationCollection
   , module' :: GHC.HsModule'
   }
 
@@ -67,4 +69,5 @@ mkModule m = fromEpAnn (GHC.getModuleAnn m) $ Module {..}
     pragmas = mkFileHeaderPragmaCollection m
     moduleDeclaration = mkModuleDeclaration m
     imports = mkImportCollection m
+    declarations = mkDeclarationCollection m
     module' = m
