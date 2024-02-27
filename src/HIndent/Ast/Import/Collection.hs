@@ -4,6 +4,7 @@
 module HIndent.Ast.Import.Collection
   ( ImportCollection
   , mkImportCollection
+  , hasImports
   ) where
 
 import Control.Monad.RWS
@@ -35,3 +36,6 @@ instance Pretty ImportCollection where
 
 mkImportCollection :: GHC.HsModule' -> ImportCollection
 mkImportCollection GHC.HsModule {..} = ImportCollection hsmodImports
+
+hasImports :: ImportCollection -> Bool
+hasImports (ImportCollection xs) = not $ null xs

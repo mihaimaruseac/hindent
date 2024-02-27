@@ -18,7 +18,6 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pragma
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.Import
 import HIndent.Pretty.NodeComments
 
 data Module = Module
@@ -43,7 +42,7 @@ instance Pretty Module where
       pairs =
         [ (hasPragmas pragmas, pretty pragmas)
         , (isJust moduleDeclaration, prettyModuleDecl moduleDeclaration)
-        , (importsExist m, pretty imports)
+        , (hasImports imports, pretty imports)
         , (declsExist m, prettyDecls)
         ]
       prettyModuleDecl Nothing = error "The module declaration does not exist."
