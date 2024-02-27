@@ -2,8 +2,7 @@
 
 -- | Pretty-printing pragmas
 module HIndent.Pretty.Pragma
-  ( prettyPragmas
-  , pragmaExists
+  ( pragmaExists
   , isPragma
   ) where
 
@@ -15,13 +14,6 @@ import Data.List.Split
 import Data.Maybe
 import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.Pragma
-import HIndent.Pretty.Combinators.Lineup
-import HIndent.Pretty.Combinators.String
-import HIndent.Printer
-
--- | This function pretty-prints the module's pragmas
-prettyPragmas :: HsModule' -> Printer ()
-prettyPragmas = lined . fmap string . collectPragmas
 
 -- | This function returns a 'True' if the module has pragmas.
 -- Otherwise, it returns a 'False'.
