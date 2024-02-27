@@ -3,8 +3,10 @@ module HIndent.Ast.FileHeaderPragma.Collection
   , mkFileHeaderPragmaCollection
   ) where
 
-data FileHeaderPragmaCollection =
-  FileHeaderPragmaCollection
+import HIndent.Ast.FileHeaderPragma
+
+newtype FileHeaderPragmaCollection =
+  FileHeaderPragmaCollection [FileHeaderPragma]
 
 mkFileHeaderPragmaCollection :: a -> FileHeaderPragmaCollection
-mkFileHeaderPragmaCollection _ = FileHeaderPragmaCollection
+mkFileHeaderPragmaCollection _ = FileHeaderPragmaCollection []
