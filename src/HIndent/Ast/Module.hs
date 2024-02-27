@@ -10,7 +10,6 @@ module HIndent.Ast.Module
 import Control.Monad.RWS
 import Data.Maybe
 import qualified GHC.Types.SrcLoc as GHC
-import HIndent.Applicative
 import HIndent.Ast.FileHeaderPragma.Collection
 import HIndent.Ast.Module.Declaration
 import HIndent.Ast.NodeComments (NodeComments(..))
@@ -22,7 +21,6 @@ import HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.Import
 import HIndent.Pretty.NodeComments
-import HIndent.Pretty.Types
 import HIndent.Printer
 
 data Module = Module
@@ -45,36 +43,12 @@ instance Pretty Module where
       printers = snd <$> filter fst pairs
       pairs =
         [ (hasPragmas pragmas, pretty pragmas)
-        , (moduleDeclExists m, prettyModuleDecl m)
+        , (isJust moduleDeclaration, prettyModuleDecl moduleDeclaration)
         , (importsExist m, prettyImports)
         , (declsExist m, prettyDecls)
         ]
-      prettyModuleDecl :: GHC.HsModule GHC.GhcPs -> Printer ()
-      prettyModuleDecl GHC.HsModule {hsmodName = Nothing} =
-        error "The module declaration does not exist."
-      prettyModuleDecl GHC.HsModule { hsmodName = Just name
-                                    , hsmodExports = Nothing
-                                    , hsmodExt = GHC.XModulePs {..}
-                                    } = do
-        pretty $ fmap ModuleNameWithPrefix name
-        whenJust hsmodDeprecMessage $ \x -> do
-          space
-          pretty $ fmap ModuleDeprecatedPragma x
-        string " where"
-      prettyModuleDecl GHC.HsModule { hsmodName = Just name
-                                    , hsmodExports = Just exports
-                                    , hsmodExt = GHC.XModulePs {..}
-                                    } = do
-        pretty $ fmap ModuleNameWithPrefix name
-        whenJust hsmodDeprecMessage $ \x -> do
-          space
-          pretty $ fmap ModuleDeprecatedPragma x
-        newline
-        indentedBlock $ do
-          printCommentsAnd exports (vTuple . fmap pretty)
-          string " where"
-      moduleDeclExists GHC.HsModule {hsmodName = Nothing} = False
-      moduleDeclExists _ = True
+      prettyModuleDecl Nothing = error "The module declaration does not exist."
+      prettyModuleDecl (Just decl) = pretty decl
       prettyDecls =
         mapM_ (\(x, sp) -> pretty x >> fromMaybe (return ()) sp)
           $ addDeclSeparator
@@ -106,33 +80,12 @@ instance Pretty Module where
       printers = snd <$> filter fst pairs
       pairs =
         [ (hasPragmas pragmas, pretty pragmas)
-        , (isJust moduleDeclaration, prettyModuleDecl m)
+        , (isJust moduleDeclaration, prettyModuleDecl moduleDeclaration)
         , (importsExist m, prettyImports)
         , (declsExist m, prettyDecls)
         ]
-      prettyModuleDecl GHC.HsModule {hsmodName = Nothing} =
-        error "The module declaration does not exist."
-      prettyModuleDecl GHC.HsModule { hsmodName = Just name
-                                    , hsmodExports = Nothing
-                                    , ..
-                                    } = do
-        pretty $ fmap ModuleNameWithPrefix name
-        whenJust hsmodDeprecMessage $ \x -> do
-          space
-          pretty $ fmap ModuleDeprecatedPragma x
-        string " where"
-      prettyModuleDecl GHC.HsModule { hsmodName = Just name
-                                    , hsmodExports = Just exports
-                                    , ..
-                                    } = do
-        pretty $ fmap ModuleNameWithPrefix name
-        whenJust hsmodDeprecMessage $ \x -> do
-          space
-          pretty $ fmap ModuleDeprecatedPragma x
-        newline
-        indentedBlock $ do
-          printCommentsAnd exports (vTuple . fmap pretty)
-          string " where"
+      prettyModuleDecl Nothing = error "The module declaration does not exist."
+      prettyModuleDecl (Just decl) = pretty decl
       prettyDecls =
         mapM_ (\(x, sp) -> pretty x >> fromMaybe (return ()) sp)
           $ addDeclSeparator
