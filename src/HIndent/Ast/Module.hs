@@ -39,15 +39,17 @@ instance Pretty Module where
           && isNothing moduleDeclaration
           && not (hasImports imports)
           && not (hasDeclarations declarations)
-      printers = snd <$> filter fst pairs
-      pairs =
-        [ (hasPragmas pragmas, pretty pragmas)
-        , (isJust moduleDeclaration, prettyModuleDecl moduleDeclaration)
-        , (hasImports imports, pretty imports)
-        , (hasDeclarations declarations, pretty declarations)
-        ]
-      prettyModuleDecl Nothing = error "The module declaration does not exist."
-      prettyModuleDecl (Just decl) = pretty decl
+      printers =
+        catMaybes
+          [ toMaybe (hasPragmas pragmas) (pretty pragmas)
+          , fmap pretty moduleDeclaration
+          , toMaybe (hasImports imports) (pretty imports)
+          , toMaybe (hasDeclarations declarations) (pretty declarations)
+          ]
+      toMaybe cond x =
+        if cond
+          then Just x
+          else Nothing
 
 mkModule :: GHC.HsModule' -> WithComments Module
 mkModule m = fromEpAnn (GHC.getModuleAnn m) $ Module {..}
