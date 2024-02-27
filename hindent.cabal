@@ -38,6 +38,7 @@ library
       HIndent.Applicative
       HIndent.Ast
       HIndent.Ast.Module
+      HIndent.Ast.NodeComments
       HIndent.Ast.WithComments
       HIndent.ByteString
       HIndent.CabalFile

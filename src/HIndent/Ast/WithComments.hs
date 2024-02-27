@@ -7,10 +7,10 @@ module HIndent.Ast.WithComments
 
 import qualified GHC.Hs as GHC
 import qualified GHC.Types.SrcLoc as GHC
+import HIndent.Ast.NodeComments
 import HIndent.Pretty
 import HIndent.Pretty.NodeComments
 import HIndent.Pretty.Pragma
-import HIndent.Pretty.Types
 
 data WithComments a = WithComments
   { comments :: NodeComments

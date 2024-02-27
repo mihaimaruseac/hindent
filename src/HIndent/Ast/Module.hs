@@ -6,11 +6,11 @@ module HIndent.Ast.Module
   , mkModule
   ) where
 
+import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
 import HIndent.Pretty.NodeComments
-import HIndent.Pretty.Types
 
 newtype Module =
   Module GHC.HsModule'

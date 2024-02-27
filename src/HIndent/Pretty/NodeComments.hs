@@ -20,6 +20,7 @@ import GHC.Types.Name
 import GHC.Types.Name.Reader
 import GHC.Types.SourceText
 import GHC.Types.SrcLoc
+import HIndent.Ast.NodeComments
 import HIndent.Pretty.Pragma
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
