@@ -16,7 +16,8 @@
 -- using an AST: parsing, renaming, and type checking, and GHC uses these
 -- constructors only in remaining and type checking.
 module HIndent.Pretty
-  ( pretty
+  ( Pretty(..)
+  , pretty
   ) where
 
 import Control.Monad
@@ -2266,9 +2267,9 @@ instance Pretty (ForeignImport GhcPs) where
   pretty' (CImport _ conv safety _ _) = spaced [pretty conv, pretty safety]
 #elif MIN_VERSION_ghc_lib_parser(9,6,0)
 instance Pretty (ForeignImport GhcPs) where
-  pretty' (CImport (L _ (SourceText s)) conv safety _ _ ) =
+  pretty' (CImport (L _ (SourceText s)) conv safety _ _) =
     spaced [pretty conv, pretty safety, string s]
-  pretty' (CImport _ conv safety _  _) = spaced [pretty conv, pretty safety]
+  pretty' (CImport _ conv safety _ _) = spaced [pretty conv, pretty safety]
 #else
 instance Pretty ForeignImport where
   pretty' (CImport conv safety _ _ (L _ (SourceText s))) =

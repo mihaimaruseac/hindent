@@ -37,6 +37,7 @@ library
   other-modules:
       HIndent.Applicative
       HIndent.Ast
+      HIndent.Ast.Module
       HIndent.ByteString
       HIndent.CabalFile
       HIndent.CodeBlock

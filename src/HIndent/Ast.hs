@@ -11,6 +11,8 @@
 -- Therefore, this module defines a custom AST for HIndent, allowing flexibility
 -- to adapt to changes in GHC's AST across different versions.
 --
-module HIndent.AST
-  (
+module HIndent.Ast
+  ( mkModule
   ) where
+
+import HIndent.Ast.Module
