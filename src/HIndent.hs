@@ -182,5 +182,5 @@ testAst x =
 
 -- | Print the module.
 prettyPrint :: Config -> HsModule' -> Builder
-prettyPrint config m =
-  runPrinterStyle config (pretty $ mkModule $ modifyASTForPrettyPrinting m)
+prettyPrint config =
+  runPrinterStyle config . pretty . mkModule . modifyASTForPrettyPrinting
