@@ -4,10 +4,11 @@
 module HIndent.Pragma
   ( extractPragmasFromCode
   , extractPragmaNameAndElement
-  , pragmaRegex
+  , isPragma
   ) where
 
 import Data.Maybe
+import GHC.Hs
 import GHC.Parser.Lexer
 import HIndent.Parse
 import Text.Regex.TDFA hiding (empty)
@@ -36,6 +37,12 @@ extractPragmaNameAndElement l
       match pragmaRegex l :: (String, String, String, [String]) =
     Just (name, element)
 extractPragmaNameAndElement _ = Nothing
+
+-- | This function returns a 'True' if the passed 'EpaCommentTok' is
+-- a pragma. Otherwise, it returns a 'False'.
+isPragma :: EpaCommentTok -> Bool
+isPragma (EpaBlockComment c) = match pragmaRegex c
+isPragma _ = False
 
 -- | A regex to match against a pragma.
 pragmaRegex :: Regex

@@ -18,7 +18,6 @@ import HIndent.Pragma
 import HIndent.Pretty.Combinators.Lineup
 import HIndent.Pretty.Combinators.String
 import HIndent.Printer
-import Text.Regex.TDFA
 
 -- | This function pretty-prints the module's pragmas
 prettyPragmas :: HsModule' -> Printer ()
@@ -58,12 +57,6 @@ extractPragma (EpaBlockComment c) =
   where
     strip = reverse . dropWhile isSpace . reverse . dropWhile isSpace
 extractPragma _ = Nothing
-
--- | This function returns a 'True' if the passed 'EpaCommentTok' is
--- a pragma. Otherwise, it returns a 'False'.
-isPragma :: EpaCommentTok -> Bool
-isPragma (EpaBlockComment c) = match pragmaRegex c
-isPragma _ = False
 
 -- | Construct a pragma.
 constructPragma :: String -> [String] -> String
