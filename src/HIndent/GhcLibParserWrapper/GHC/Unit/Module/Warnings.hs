@@ -6,7 +6,7 @@ module HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings
   ) where
 
 import GHC.Unit.Module.Warnings
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 import GHC.Hs
 
 type WarningTxt' = WarningTxt GhcPs
