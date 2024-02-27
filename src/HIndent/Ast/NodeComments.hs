@@ -7,7 +7,7 @@ module HIndent.Ast.NodeComments
 
 import qualified GHC.Hs as GHC
 import qualified GHC.Types.SrcLoc as GHC
-import HIndent.Pretty.Pragma
+import HIndent.Pragma
 
 -- | Comments belonging to an AST node.
 data NodeComments = NodeComments

@@ -1,5 +1,6 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GADTs, CPP #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -47,7 +48,7 @@ import GHC.Data.Bag
 import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)
 import HIndent.GhcLibParserWrapper.GHC.Hs
-import HIndent.Pretty.Pragma
+import HIndent.Pragma
 import HIndent.Pretty.SigBindFamily
 import Type.Reflection
 #if MIN_VERSION_GLASGOW_HASKELL(9,6,0,0)
@@ -106,7 +107,7 @@ relocateCommentsBeforePragmas m@HsModule {hsmodExt = xmod@XModulePs {hsmodAnn = 
   | otherwise = pure m
   where
     startPosOfPragmas = anchor $ getLoc $ head $ priorComments $ comments ann
-#else 
+#else
 relocateCommentsBeforePragmas :: HsModule -> WithComments HsModule
 relocateCommentsBeforePragmas m@HsModule {hsmodAnn = ann}
   | pragmaExists m = do

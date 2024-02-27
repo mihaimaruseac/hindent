@@ -75,7 +75,6 @@ library
       HIndent.Pretty.Import
       HIndent.Pretty.Import.Sort
       HIndent.Pretty.NodeComments
-      HIndent.Pretty.Pragma
       HIndent.Pretty.SigBindFamily
       HIndent.Pretty.Types
       HIndent.Printer

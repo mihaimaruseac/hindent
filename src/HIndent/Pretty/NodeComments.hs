@@ -21,7 +21,7 @@ import GHC.Types.Name.Reader
 import GHC.Types.SourceText
 import GHC.Types.SrcLoc
 import HIndent.Ast.NodeComments
-import HIndent.Pretty.Pragma
+import HIndent.Pragma
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
 #if MIN_VERSION_ghc_lib_parser(9,6,1)

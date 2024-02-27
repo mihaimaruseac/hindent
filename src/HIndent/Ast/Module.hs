@@ -17,11 +17,11 @@ import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.WithComments
 import HIndent.Config
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pragma
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.Import
 import HIndent.Pretty.NodeComments
-import HIndent.Pretty.Pragma
 import HIndent.Pretty.Types
 import HIndent.Printer
 
