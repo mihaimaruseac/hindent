@@ -40,11 +40,11 @@ instance Pretty Module where
                                            , hsmodDecls = []
                                            }}
     | not (pragmaExists m) = pure ()
-  pretty' Module {module' = m} = blanklined printers >> newline
+  pretty' Module {module' = m, ..} = blanklined printers >> newline
     where
       printers = snd <$> filter fst pairs
       pairs =
-        [ (pragmaExists m, prettyPragmas m)
+        [ (hasPragmas pragmas, prettyPragmas m)
         , (moduleDeclExists m, prettyModuleDecl m)
         , (importsExist m, prettyImports)
         , (declsExist m, prettyDecls)
@@ -101,11 +101,11 @@ instance Pretty Module where
                                            , hsmodDecls = []
                                            }}
     | not (pragmaExists m) = pure ()
-  pretty' Module {module' = m} = blanklined printers >> newline
+  pretty' Module {module' = m, ..} = blanklined printers >> newline
     where
       printers = snd <$> filter fst pairs
       pairs =
-        [ (pragmaExists m, prettyPragmas m)
+        [ (hasPragmas pragmas, prettyPragmas m)
         , (moduleDeclExists m, prettyModuleDecl m)
         , (importsExist m, prettyImports)
         , (declsExist m, prettyDecls)

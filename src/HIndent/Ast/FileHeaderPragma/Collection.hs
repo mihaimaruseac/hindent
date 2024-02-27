@@ -3,6 +3,7 @@
 module HIndent.Ast.FileHeaderPragma.Collection
   ( FileHeaderPragmaCollection
   , mkFileHeaderPragmaCollection
+  , hasPragmas
   ) where
 
 import Data.Bifunctor
@@ -31,6 +32,9 @@ instance Pretty FileHeaderPragmaCollection where
 mkFileHeaderPragmaCollection :: GHC.HsModule' -> FileHeaderPragmaCollection
 mkFileHeaderPragmaCollection =
   FileHeaderPragmaCollection . fmap mkFileHeaderPragma . collectPragmas
+
+hasPragmas :: FileHeaderPragmaCollection -> Bool
+hasPragmas (FileHeaderPragmaCollection xs) = not $ null xs
 
 -- | This function collects pragma comments from the
 -- given module and modifies them into 'String's.
