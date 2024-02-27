@@ -1,10 +1,15 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module HIndent.Ast.Import.Collection
   ( ImportCollection
   , mkImportCollection
   ) where
 
-data ImportCollection =
-  ImportCollection
+import qualified GHC.Hs as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 
-mkImportCollection :: a -> ImportCollection
-mkImportCollection _ = ImportCollection
+newtype ImportCollection =
+  ImportCollection [GHC.LImportDecl GHC.GhcPs]
+
+mkImportCollection :: GHC.HsModule' -> ImportCollection
+mkImportCollection GHC.HsModule {..} = ImportCollection hsmodImports
