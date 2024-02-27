@@ -15,7 +15,6 @@ import HIndent.Ast.Module.Declaration
 import HIndent.Ast.NodeComments hiding (fromEpAnn)
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import HIndent.Pragma
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
@@ -32,13 +31,15 @@ instance CommentExtraction Module where
   nodeComments Module {} = NodeComments [] [] []
 
 instance Pretty Module where
-  pretty' Module {module' = m@GHC.HsModule { hsmodName = Nothing
-                                           , hsmodImports = []
-                                           , hsmodDecls = []
-                                           }}
-    | not (pragmaExists m) = pure ()
-  pretty' Module {..} = blanklined printers >> newline
+  pretty' Module {..}
+    | isEmpty = pure ()
+    | otherwise = blanklined printers >> newline
     where
+      isEmpty =
+        not (hasPragmas pragmas)
+          && isNothing moduleDeclaration
+          && not (hasImports imports)
+          && not (hasDeclarations declarations)
       printers = snd <$> filter fst pairs
       pairs =
         [ (hasPragmas pragmas, pretty pragmas)
