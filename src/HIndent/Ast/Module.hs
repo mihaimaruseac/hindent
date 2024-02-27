@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Module
   ( Module
@@ -18,7 +19,7 @@ instance CommentExtraction Module where
   nodeComments Module {} = NodeComments [] [] []
 
 instance Pretty Module where
-  pretty' (Module x) = pretty x
+  pretty' (Module x) = pretty' x
 
 mkModule :: GHC.HsModule' -> WithComments Module
-mkModule = mkWithComments . Module
+mkModule m = fromEpAnn (GHC.getModuleAnn m) $ Module m
