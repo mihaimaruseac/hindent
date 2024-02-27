@@ -81,27 +81,19 @@ compOption =
 -- Otherwise, it returns a 'False'.
 pragmaExists :: HsModule' -> Bool
 pragmaExists = not . null . collectPragmas
+
 -- | This function collects pragma comments from the
 -- given module and modifies them into 'String's.
 --
 -- A pragma's name is converted to the @SHOUT_CASE@ (e.g., @lAnGuAgE@ ->
 -- @LANGUAGE@).
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-collectPragmas :: HsModule GhcPs -> [String]
+collectPragmas :: HsModule' -> [String]
 collectPragmas =
   fmap (uncurry constructPragma)
     . mapMaybe extractPragma
     . listify isBlockComment
-    . hsmodAnn
-    . hsmodExt
-#else
-collectPragmas :: HsModule -> [String]
-collectPragmas =
-  fmap (uncurry constructPragma)
-    . mapMaybe extractPragma
-    . listify isBlockComment
-    . hsmodAnn
-#endif
+    . getModuleAnn
+
 -- | This function returns a 'Just' value with the pragma
 -- extracted from the passed 'EpaCommentTok' if it has one. Otherwise, it
 -- returns a 'Nothing'.
