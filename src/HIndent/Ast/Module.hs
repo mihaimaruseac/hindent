@@ -105,7 +105,7 @@ instance Pretty Module where
     where
       printers = snd <$> filter fst pairs
       pairs =
-        [ (hasPragmas pragmas, prettyPragmas m)
+        [ (hasPragmas pragmas, pretty pragmas)
         , (moduleDeclExists m, prettyModuleDecl m)
         , (importsExist m, prettyImports)
         , (declsExist m, prettyDecls)
