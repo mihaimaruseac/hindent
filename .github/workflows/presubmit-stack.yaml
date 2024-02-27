@@ -30,13 +30,13 @@ jobs:
 
       - name: Setup Haskell Compiler (stack)
         id: setup-haskell
-        uses: haskell-actions/setup@7398b0c373cccf9ed5dfddae26f77ed02dea4967 # v2.5.3
+        uses: haskell-actions/setup@b1dc5f1786a382e9a2532d039e8c53cf56f21392 # v2.6.1
         with:
           enable-stack: true
           stack-no-global: true
 
       - name: Cache .stack-work
-        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
         with:
           path: .stack-work
           key: stack-work-${{ matrix.os }}-${{ matrix.resolver }}-${{ hashFiles('stack.yaml', '**/*.cabal') }}-${{ hashFiles('internal/**','src/**','app/**','tests/**','benchmarks/**') }}
@@ -45,7 +45,7 @@ jobs:
             stack-work-${{ matrix.os }}-${{ matrix.resolver }}-
 
       - name: Cache ~/.stack
-        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
         with:
           path: ${{ steps.setup-haskell.outputs.stack-root }}
           key: stack-root-${{ matrix.os }}-${{ matrix.resolver }}-${{ hashFiles('stack.yaml', '**/*.cabal') }}

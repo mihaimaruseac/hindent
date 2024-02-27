@@ -17,7 +17,7 @@ jobs:
       fail-fast: false # don't cancel other jobs if one fails
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        ghc: [8.10.7, 9.0.2, 9.2.8, 9.4.7, 9.6.3, 9.8.1]
+        ghc: [8.10.7, 9.0.2, 9.2.8, 9.4.8, 9.6.4, 9.8.1]
     defaults:
       run:
         # The default shell on Windows is `pwsh`. However, it doesn't expand
@@ -36,12 +36,12 @@ jobs:
 
       - name: Setup Haskell Compiler (cabal)
         id: setup-haskell
-        uses: haskell-actions/setup@7398b0c373cccf9ed5dfddae26f77ed02dea4967 # v2.5.3
+        uses: haskell-actions/setup@b1dc5f1786a382e9a2532d039e8c53cf56f21392 # v2.6.1
         with:
           ghc-version: ${{ matrix.ghc }}
 
       - name: Cache dist-newstyle
-        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
         with:
           path: dist-newstyle
           key: dist-newstyle-${{ matrix.os }}-${{ matrix.ghc }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('internal/**','src/**','app/**','tests/**','benchmarks/**') }}
@@ -50,7 +50,7 @@ jobs:
             dist-newstyle-${{ matrix.os }}-${{ matrix.ghc }}-
 
       - name: Cache ~/.cabal/store
-        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
         with:
           path: ${{ steps.setup-haskell.outputs.cabal-store }}
           key: cabal-store-${{ matrix.os }}-${{ matrix.ghc }}-${{ hashFiles('**/*.cabal') }}
