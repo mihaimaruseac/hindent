@@ -11,6 +11,7 @@ import Control.Monad.RWS
 import Data.Maybe
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Applicative
+import HIndent.Ast.FileHeaderPragma.Collection
 import HIndent.Ast.Module.Declaration
 import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.WithComments
@@ -25,7 +26,8 @@ import HIndent.Pretty.Types
 import HIndent.Printer
 
 data Module = Module
-  { moduleDeclaration :: ModuleDeclaration
+  { pragmas :: FileHeaderPragmaCollection
+  , moduleDeclaration :: ModuleDeclaration
   , module' :: GHC.HsModule'
   }
 
@@ -156,5 +158,6 @@ instance Pretty Module where
 mkModule :: GHC.HsModule' -> WithComments Module
 mkModule m = fromEpAnn (GHC.getModuleAnn m) $ Module {..}
   where
+    pragmas = mkFileHeaderPragmaCollection m
     moduleDeclaration = mkModuleDeclaration m
     module' = m
