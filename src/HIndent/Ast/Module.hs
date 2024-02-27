@@ -24,7 +24,6 @@ data Module = Module
   , moduleDeclaration :: Maybe ModuleDeclaration
   , imports :: ImportCollection
   , declarations :: DeclarationCollection
-  , module' :: GHC.HsModule'
   }
 
 instance CommentExtraction Module where
@@ -57,4 +56,3 @@ mkModule m = fromEpAnn (GHC.getModuleAnn m) $ Module {..}
     moduleDeclaration = mkModuleDeclaration m
     imports = mkImportCollection m
     declarations = mkDeclarationCollection m
-    module' = m
