@@ -9,8 +9,9 @@ import HIndent.Ast.Module.Name
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 
-newtype ModuleDeclaration = ModuleDeclaration
+data ModuleDeclaration = ModuleDeclaration
   { name :: WithComments ModuleName
+  , exports :: Maybe (GHC.LocatedL [GHC.LIE GHC.GhcPs])
   }
 
 mkModuleDeclaration :: GHC.HsModule' -> Maybe ModuleDeclaration
@@ -19,3 +20,4 @@ mkModuleDeclaration GHC.HsModule {..} =
     Nothing -> Nothing
     Just name' -> Just ModuleDeclaration {..}
       where name = mkModuleName <$> fromGenLocated name'
+            exports = hsmodExports
