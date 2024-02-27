@@ -8,7 +8,6 @@ module HIndent.Ast.Module
   ) where
 
 import Data.Maybe
-import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Declaration.Collection
 import HIndent.Ast.FileHeaderPragma.Collection
 import HIndent.Ast.Import.Collection
@@ -45,22 +44,10 @@ instance Pretty Module where
         [ (hasPragmas pragmas, pretty pragmas)
         , (isJust moduleDeclaration, prettyModuleDecl moduleDeclaration)
         , (hasImports imports, pretty imports)
-        , (declsExist m, prettyDecls)
+        , (declsExist m, pretty declarations)
         ]
       prettyModuleDecl Nothing = error "The module declaration does not exist."
       prettyModuleDecl (Just decl) = pretty decl
-      prettyDecls =
-        mapM_ (\(x, sp) -> pretty x >> fromMaybe (return ()) sp)
-          $ addDeclSeparator
-          $ GHC.hsmodDecls m
-      addDeclSeparator [] = []
-      addDeclSeparator [x] = [(x, Nothing)]
-      addDeclSeparator (x:xs) =
-        (x, Just $ declSeparator $ GHC.unLoc x) : addDeclSeparator xs
-      declSeparator (GHC.SigD _ GHC.TypeSig {}) = newline
-      declSeparator (GHC.SigD _ GHC.InlineSig {}) = newline
-      declSeparator (GHC.SigD _ GHC.PatSynSig {}) = newline
-      declSeparator _ = blankline
       declsExist = not . null . GHC.hsmodDecls
 
 mkModule :: GHC.HsModule' -> WithComments Module
