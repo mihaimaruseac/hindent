@@ -7,7 +7,6 @@ module HIndent.Ast.Module
   , mkModule
   ) where
 
-import Control.Monad.RWS
 import Data.Maybe
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.FileHeaderPragma.Collection
@@ -15,14 +14,12 @@ import HIndent.Ast.Import.Collection
 import HIndent.Ast.Module.Declaration
 import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.WithComments
-import HIndent.Config
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pragma
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.Import
 import HIndent.Pretty.NodeComments
-import HIndent.Printer
 
 data Module = Module
   { pragmas :: FileHeaderPragmaCollection
@@ -46,7 +43,7 @@ instance Pretty Module where
       pairs =
         [ (hasPragmas pragmas, pretty pragmas)
         , (isJust moduleDeclaration, prettyModuleDecl moduleDeclaration)
-        , (importsExist m, prettyImports)
+        , (importsExist m, pretty imports)
         , (declsExist m, prettyDecls)
         ]
       prettyModuleDecl Nothing = error "The module declaration does not exist."
@@ -64,12 +61,6 @@ instance Pretty Module where
       declSeparator (GHC.SigD _ GHC.PatSynSig {}) = newline
       declSeparator _ = blankline
       declsExist = not . null . GHC.hsmodDecls
-      prettyImports = importDecls >>= blanklined . fmap outputImportGroup
-      outputImportGroup = lined . fmap pretty
-      importDecls =
-        gets (configSortImports . psConfig) >>= \case
-          True -> pure $ extractImportsSorted m
-          False -> pure $ extractImports m
 
 mkModule :: GHC.HsModule' -> WithComments Module
 mkModule m = fromEpAnn (GHC.getModuleAnn m) $ Module {..}
