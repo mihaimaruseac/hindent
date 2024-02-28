@@ -4,11 +4,19 @@
 module HIndent.Pragma
   ( extractPragmasFromCode
   , extractPragmaNameAndElement
-  , pragmaRegex
+  , pragmaExists
+  , isPragma
   ) where
 
+import Data.Bifunctor
+import Data.Char
+import Data.Generics
+import Data.List
+import Data.List.Split
 import Data.Maybe
+import GHC.Hs
 import GHC.Parser.Lexer
+import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.Parse
 import Text.Regex.TDFA hiding (empty)
 
@@ -37,6 +45,12 @@ extractPragmaNameAndElement l
     Just (name, element)
 extractPragmaNameAndElement _ = Nothing
 
+-- | This function returns a 'True' if the passed 'EpaCommentTok' is
+-- a pragma. Otherwise, it returns a 'False'.
+isPragma :: EpaCommentTok -> Bool
+isPragma (EpaBlockComment c) = match pragmaRegex c
+isPragma _ = False
+
 -- | A regex to match against a pragma.
 pragmaRegex :: Regex
 pragmaRegex =
@@ -62,3 +76,40 @@ compOption =
     , newSyntax = True
     , lastStarGreedy = True
     }
+
+-- | This function returns a 'True' if the module has pragmas.
+-- Otherwise, it returns a 'False'.
+pragmaExists :: HsModule' -> Bool
+pragmaExists = not . null . collectPragmas
+
+-- | This function collects pragma comments from the
+-- given module and modifies them into 'String's.
+--
+-- A pragma's name is converted to the @SHOUT_CASE@ (e.g., @lAnGuAgE@ ->
+-- @LANGUAGE@).
+collectPragmas :: HsModule' -> [String]
+collectPragmas =
+  fmap (uncurry constructPragma)
+    . mapMaybe extractPragma
+    . listify isBlockComment
+    . getModuleAnn
+
+-- | This function returns a 'Just' value with the pragma
+-- extracted from the passed 'EpaCommentTok' if it has one. Otherwise, it
+-- returns a 'Nothing'.
+extractPragma :: EpaCommentTok -> Maybe (String, [String])
+extractPragma (EpaBlockComment c) =
+  second (fmap strip . splitOn ",") <$> extractPragmaNameAndElement c
+  where
+    strip = reverse . dropWhile isSpace . reverse . dropWhile isSpace
+extractPragma _ = Nothing
+
+-- | Construct a pragma.
+constructPragma :: String -> [String] -> String
+constructPragma optionOrPragma xs =
+  "{-# " ++ fmap toUpper optionOrPragma ++ " " ++ intercalate ", " xs ++ " #-}"
+
+-- | Checks if the given comment is a block one.
+isBlockComment :: EpaCommentTok -> Bool
+isBlockComment EpaBlockComment {} = True
+isBlockComment _ = False

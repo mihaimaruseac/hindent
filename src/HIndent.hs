@@ -39,6 +39,7 @@ import Foreign.C
 import GHC.IO.Exception
 import GHC.Parser.Lexer hiding (buffer, options)
 import GHC.Types.SrcLoc
+import HIndent.Ast
 import HIndent.ByteString
 import HIndent.CabalFile
 import HIndent.CodeBlock
@@ -181,5 +182,5 @@ testAst x =
 
 -- | Print the module.
 prettyPrint :: Config -> HsModule' -> Builder
-prettyPrint config m =
-  runPrinterStyle config (pretty $ modifyASTForPrettyPrinting m)
+prettyPrint config =
+  runPrinterStyle config . pretty . mkModule . modifyASTForPrettyPrinting

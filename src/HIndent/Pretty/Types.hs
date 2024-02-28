@@ -46,7 +46,6 @@ module HIndent.Pretty.Types
   , DoOrMdo(..)
   , QualifiedDo(..)
   , LetIn(..)
-  , NodeComments(..)
   , GRHSExprType(..)
   , GRHSProcType(..)
   , HsTypeFor(..)
@@ -281,21 +280,6 @@ data LetIn = LetIn
   { letBinds :: HsLocalBinds GhcPs
   , inExpr :: LHsExpr GhcPs
   }
-
--- | Comments belonging to an AST node.
-data NodeComments = NodeComments
-  { commentsBefore :: [LEpaComment]
-  , commentsOnSameLine :: [LEpaComment]
-  , commentsAfter :: [LEpaComment]
-  }
-
-instance Semigroup NodeComments where
-  x <> y =
-    NodeComments
-      { commentsBefore = commentsBefore x <> commentsBefore y
-      , commentsOnSameLine = commentsOnSameLine x <> commentsOnSameLine y
-      , commentsAfter = commentsAfter x <> commentsAfter y
-      }
 
 -- | Values indicating whether `do` or `mdo` is used.
 data DoOrMdo

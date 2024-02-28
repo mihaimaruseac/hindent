@@ -3,7 +3,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
@@ -17,7 +16,9 @@
 -- using an AST: parsing, renaming, and type checking, and GHC uses these
 -- constructors only in remaining and type checking.
 module HIndent.Pretty
-  ( pretty
+  ( Pretty(..)
+  , pretty
+  , printCommentsAnd
   ) where
 
 import Control.Monad
@@ -40,12 +41,11 @@ import GHC.Types.SourceText
 import GHC.Types.SrcLoc
 import GHC.Unit.Module.Warnings
 import HIndent.Applicative
+import HIndent.Ast.NodeComments
 import HIndent.Config
 import HIndent.Fixity
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.Import
 import HIndent.Pretty.NodeComments
-import HIndent.Pretty.Pragma
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
 import HIndent.Printer
@@ -123,105 +123,11 @@ class CommentExtraction a =>
       Pretty a
   where
   pretty' :: a -> Printer ()
+
 -- Do nothing if there are no pragmas, module headers, imports, or
 -- declarations. Otherwise, extra blank lines will be inserted if only
 -- comments are present in the source code. See
 -- https://github.com/mihaimaruseac/hindent/issues/586#issuecomment-1374992624.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-instance Pretty (HsModule GhcPs) where
-  pretty' m@HsModule {hsmodName = Nothing, hsmodImports = [], hsmodDecls = []}
-    | not (pragmaExists m) = pure ()
-  pretty' m = blanklined printers >> newline
-    where
-      printers = snd <$> filter fst pairs
-      pairs =
-        [ (pragmaExists m, prettyPragmas m)
-        , (moduleDeclExists m, prettyModuleDecl m)
-        , (importsExist m, prettyImports)
-        , (declsExist m, prettyDecls)
-        ]
-      prettyModuleDecl :: HsModule GhcPs -> Printer ()
-      prettyModuleDecl HsModule {hsmodName = Nothing} =
-        error "The module declaration does not exist."
-      prettyModuleDecl HsModule { hsmodName = Just name
-                                , hsmodExports
-                                , hsmodExt = XModulePs {..}
-                                } = do
-        pretty $ fmap ModuleNameWithPrefix name
-        whenJust hsmodDeprecMessage $ \x -> do
-          space
-          pretty $ fmap ModuleDeprecatedPragma x
-        whenJust hsmodExports $ \exports -> do
-          newline
-          indentedBlock $ printCommentsAnd exports (vTuple . fmap pretty)
-        string " where"
-      moduleDeclExists HsModule {hsmodName = Nothing} = False
-      moduleDeclExists _ = True
-      prettyDecls =
-        mapM_ (\(x, sp) -> pretty x >> fromMaybe (return ()) sp)
-          $ addDeclSeparator
-          $ hsmodDecls m
-      addDeclSeparator [] = []
-      addDeclSeparator [x] = [(x, Nothing)]
-      addDeclSeparator (x:xs) =
-        (x, Just $ declSeparator $ unLoc x) : addDeclSeparator xs
-      declSeparator (SigD _ TypeSig {}) = newline
-      declSeparator (SigD _ InlineSig {}) = newline
-      declSeparator (SigD _ PatSynSig {}) = newline
-      declSeparator _ = blankline
-      declsExist = not . null . hsmodDecls
-      prettyImports = importDecls >>= blanklined . fmap outputImportGroup
-      outputImportGroup = lined . fmap pretty
-      importDecls =
-        gets (configSortImports . psConfig) >>= \case
-          True -> pure $ extractImportsSorted m
-          False -> pure $ extractImports m
-#else
-instance Pretty HsModule where
-  pretty' m@HsModule {hsmodName = Nothing, hsmodImports = [], hsmodDecls = []}
-    | not (pragmaExists m) = pure ()
-  pretty' m = blanklined printers >> newline
-    where
-      printers = snd <$> filter fst pairs
-      pairs =
-        [ (pragmaExists m, prettyPragmas m)
-        , (moduleDeclExists m, prettyModuleDecl m)
-        , (importsExist m, prettyImports)
-        , (declsExist m, prettyDecls)
-        ]
-      prettyModuleDecl HsModule {hsmodName = Nothing} =
-        error "The module declaration does not exist."
-      prettyModuleDecl HsModule {hsmodName = Just name, hsmodExports, ..} = do
-        pretty $ fmap ModuleNameWithPrefix name
-        whenJust hsmodDeprecMessage $ \x -> do
-          space
-          pretty $ fmap ModuleDeprecatedPragma x
-        whenJust hsmodExports $ \exports -> do
-          newline
-          indentedBlock $ printCommentsAnd exports (vTuple . fmap pretty)
-        string " where"
-      moduleDeclExists HsModule {hsmodName = Nothing} = False
-      moduleDeclExists _ = True
-      prettyDecls =
-        mapM_ (\(x, sp) -> pretty x >> fromMaybe (return ()) sp)
-          $ addDeclSeparator
-          $ hsmodDecls m
-      addDeclSeparator [] = []
-      addDeclSeparator [x] = [(x, Nothing)]
-      addDeclSeparator (x:xs) =
-        (x, Just $ declSeparator $ unLoc x) : addDeclSeparator xs
-      declSeparator (SigD _ TypeSig {}) = newline
-      declSeparator (SigD _ InlineSig {}) = newline
-      declSeparator (SigD _ PatSynSig {}) = newline
-      declSeparator _ = blankline
-      declsExist = not . null . hsmodDecls
-      prettyImports = importDecls >>= blanklined . fmap outputImportGroup
-      outputImportGroup = lined . fmap pretty
-      importDecls =
-        gets (configSortImports . psConfig) >>= \case
-          True -> pure $ extractImportsSorted m
-          False -> pure $ extractImports m
-#endif
 instance (CommentExtraction l, Pretty e) => Pretty (GenLocated l e) where
   pretty' (L _ e) = pretty e
 

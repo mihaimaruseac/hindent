@@ -36,6 +36,16 @@ library
       HIndent
   other-modules:
       HIndent.Applicative
+      HIndent.Ast
+      HIndent.Ast.Declaration.Collection
+      HIndent.Ast.FileHeaderPragma
+      HIndent.Ast.FileHeaderPragma.Collection
+      HIndent.Ast.Import.Collection
+      HIndent.Ast.Module
+      HIndent.Ast.Module.Declaration
+      HIndent.Ast.Module.Name
+      HIndent.Ast.NodeComments
+      HIndent.Ast.WithComments
       HIndent.ByteString
       HIndent.CabalFile
       HIndent.CodeBlock
@@ -44,6 +54,7 @@ library
       HIndent.Error
       HIndent.Fixity
       HIndent.GhcLibParserWrapper.GHC.Hs
+      HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings
       HIndent.Language
       HIndent.LanguageExtension
       HIndent.LanguageExtension.Conversion
@@ -68,7 +79,6 @@ library
       HIndent.Pretty.Import
       HIndent.Pretty.Import.Sort
       HIndent.Pretty.NodeComments
-      HIndent.Pretty.Pragma
       HIndent.Pretty.SigBindFamily
       HIndent.Pretty.Types
       HIndent.Printer
