@@ -3,16 +3,16 @@ module HIndent.Ast.FileHeaderPragma
   , mkFileHeaderPragma
   ) where
 
-import           Data.Bifunctor
-import           Data.Char
-import           Data.List
-import           Data.List.Split
-import qualified GHC.Hs                      as GHC
-import           HIndent.Ast.NodeComments
-import           HIndent.Pragma
-import           HIndent.Pretty
-import           HIndent.Pretty.Combinators
-import           HIndent.Pretty.NodeComments
+import Data.Bifunctor
+import Data.Char
+import Data.List
+import Data.List.Split
+import qualified GHC.Hs as GHC
+import HIndent.Ast.NodeComments
+import HIndent.Pragma
+import HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
 
 newtype FileHeaderPragma =
   FileHeaderPragma String
