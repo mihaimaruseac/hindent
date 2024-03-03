@@ -73,4 +73,4 @@ jobs:
 
       # TODO(mihaimaruseac): Move to using a custom action that can be reused
       - name: Validate code formatting (self-validate)
-        run: cabal run hindent -- **/*.hs --validate
+        run: git ls-files -z '*.hs' | xargs -0 cabal run hindent -- --validate
