@@ -179,13 +179,19 @@ static = 3
 
 #### `WARNING`
 
-A `WARNING` for a module without an export list.
+Without messages and an export list.
+
+```haskell
+module Foo {-# WARNING [] #-} where
+```
+
+With a string without an export list.
 
 ```haskell
 module Foo {-# WARNING "Debug purpose only." #-} where
 ```
 
-A `WARNING` for a module with a list of reasons without an export list.
+With a list of reasons without an export list.
 
 ```haskell
 module Foo {-# WARNING ["Debug purpose only.", "Okay?"] #-} where
