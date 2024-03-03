@@ -44,6 +44,7 @@ library
       HIndent.Ast.Module
       HIndent.Ast.Module.Declaration
       HIndent.Ast.Module.Name
+      HIndent.Ast.Module.Warning
       HIndent.Ast.NodeComments
       HIndent.Ast.WithComments
       HIndent.ByteString
