@@ -77,16 +77,6 @@ module X
 
 ### Module-level pragmas
 
-A `DEPRECATED` for a module with an export list.
-
-```haskell
-module Foo {-# DEPRECATED "Use Bar." #-}
-  ( x
-  , y
-  , z
-  ) where
-```
-
 A pragma's name is converted to the SHOUT_CASE.
 
 ```haskell given
@@ -195,6 +185,18 @@ With a list of reasons without an export list.
 
 ```haskell
 module Foo {-# WARNING ["Debug purpose only.", "Okay?"] #-} where
+```
+
+#### `DEPRECATED`
+
+With a string and an export list.
+
+```haskell
+module Foo {-# DEPRECATED "Use Bar." #-}
+  ( x
+  , y
+  , z
+  ) where
 ```
 
 ## Imports, foreign imports, and foreign exports
