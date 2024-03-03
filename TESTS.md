@@ -195,14 +195,10 @@ Without messages and an export list.
 module Foo {-# DEPRECATED [] #-} where
 ```
 
-With a string and an export list.
+With a string without an export list.
 
 ```haskell
-module Foo {-# DEPRECATED "Use Bar." #-}
-  ( x
-  , y
-  , z
-  ) where
+module Foo {-# DEPRECATED "Use Bar." #-} where
 ```
 
 With a list of reasons and an export list.
