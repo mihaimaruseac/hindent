@@ -2484,7 +2484,8 @@ instance Pretty ModuleDeprecatedPragma where
     spaced [string "{-# WARNING", hList $ fmap pretty msgs, string "#-}"]
   pretty' (ModuleDeprecatedPragma (DeprecatedTxt _ [msg])) =
     spaced [string "{-# DEPRECATED", pretty msg, string "#-}"]
-  pretty' _ = undefined
+  pretty' (ModuleDeprecatedPragma (DeprecatedTxt _ msgs)) =
+    spaced [string "{-# DEPRECATED", hList $ fmap pretty msgs, string "#-}"]
 #endif
 instance Pretty HsSrcBang where
   pretty' (HsSrcBang _ unpack strictness) = do

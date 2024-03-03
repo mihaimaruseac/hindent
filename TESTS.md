@@ -189,6 +189,12 @@ module Foo {-# WARNING ["Debug purpose only.", "Okay?"] #-} where
 
 #### `DEPRECATED`
 
+Without messages and an export list.
+
+```haskell
+module Foo {-# DEPRECATED [] #-} where
+```
+
 With a string and an export list.
 
 ```haskell
