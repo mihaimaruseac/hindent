@@ -25,20 +25,23 @@ data Kind
 instance CommentExtraction ModuleWarning where
   nodeComments _ = NodeComments [] [] []
 
+instance CommentExtraction Kind where
+  nodeComments _ = NodeComments [] [] []
+
+instance Pretty Kind where
+  pretty' Warning    = string "WARNING"
+  pretty' Deprecated = string "DEPRECATED"
+
 instance Pretty ModuleWarning where
   pretty' ModuleWarning {messages = [msg], ..} = do
     string "{-# "
-    case kind of
-      Warning    -> string "WARNING"
-      Deprecated -> string "DEPRECATED"
+    pretty kind
     space
     string msg
     string " #-}"
   pretty' ModuleWarning {..} = do
     string "{-# "
-    case kind of
-      Warning    -> string "WARNING"
-      Deprecated -> string "DEPRECATED"
+    pretty kind
     space
     hList $ fmap string messages
     string " #-}"
