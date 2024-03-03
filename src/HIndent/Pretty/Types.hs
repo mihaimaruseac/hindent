@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP             #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE PatternSynonyms #-}
 
 -- | Types to pretty-print certain parts of Haskell codes.
@@ -53,10 +53,10 @@ module HIndent.Pretty.Types
   , DataFamInstDeclFor(..)
   ) where
 
-import           GHC.Hs
-import           GHC.Types.Name.Reader
+import GHC.Hs
+import GHC.Types.Name.Reader
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
-import           GHC.Unit
+import GHC.Unit
 #endif
 -- | `LHsExpr` used as a infix operator
 newtype InfixExpr =
@@ -83,7 +83,7 @@ newtype PrefixOp =
 -- is not a valid Haskell code.
 data InfixApp = InfixApp
   { lhs :: LHsExpr GhcPs
-  , op  :: LHsExpr GhcPs
+  , op :: LHsExpr GhcPs
   , rhs :: LHsExpr GhcPs
   }
 
@@ -91,13 +91,13 @@ data InfixApp = InfixApp
 -- in.
 data GRHSsExpr = GRHSsExpr
   { grhssExprType :: GRHSExprType
-  , grhssExpr     :: GRHSs GhcPs (LHsExpr GhcPs)
+  , grhssExpr :: GRHSs GhcPs (LHsExpr GhcPs)
   }
 
 -- | 'GRHS' for a normal binding.
 data GRHSExpr = GRHSExpr
   { grhsExprType :: GRHSExprType
-  , grhsExpr     :: GRHS GhcPs (LHsExpr GhcPs)
+  , grhsExpr :: GRHS GhcPs (LHsExpr GhcPs)
   }
 
 -- | 'GRHS' for a @proc@ binding.
@@ -121,7 +121,7 @@ data HsSigType' = HsSigType'
   { hsSigTypeFor :: HsTypeFor -- ^ In which context a `HsSigType` is located in.
   , hsSigTypeDir :: HsTypeDir -- ^ How a `HsSigType` should be printed;
                                 -- either horizontally or vertically.
-  , hsSigType    :: HsSigType GhcPs -- ^ The actual signature.
+  , hsSigType :: HsSigType GhcPs -- ^ The actual signature.
   }
 
 -- | `HsSigType'` for instance declarations.
@@ -141,7 +141,7 @@ data HsType' = HsType'
   { hsTypeFor :: HsTypeFor -- ^ In which context a `HsType` is located in.
   , hsTypeDir :: HsTypeDir -- ^ How a function signature is printed;
                            -- either horizontally or vertically.
-  , hsType    :: HsType GhcPs -- ^ The actual type.
+  , hsType :: HsType GhcPs -- ^ The actual type.
   }
 
 -- | `HsType'` inside a function signature declaration; printed horizontally.
@@ -163,7 +163,7 @@ pattern HsTypeWithVerticalAppTy x = HsType' HsTypeForVerticalAppTy HsTypeVertica
 -- | A wrapper of `DataFamInstDecl`.
 data DataFamInstDecl' = DataFamInstDecl'
   { dataFamInstDeclFor :: DataFamInstDeclFor -- ^ Where a data family instance is declared.
-  , dataFamInstDecl    :: DataFamInstDecl GhcPs -- ^ The actual value.
+  , dataFamInstDecl :: DataFamInstDecl GhcPs -- ^ The actual value.
   }
 
 -- | `DataFamInstDecl'` wrapping a `DataFamInstDecl` representing
@@ -179,7 +179,7 @@ pattern DataFamInstDeclInsideClassInst x = DataFamInstDecl' DataFamInstDeclForIn
 -- | A wrapper for `FamEqn`.
 data FamEqn' = FamEqn'
   { famEqnFor :: DataFamInstDeclFor -- ^ Where a data family instance is declared.
-  , famEqn    :: FamEqn GhcPs (HsDataDefn GhcPs)
+  , famEqn :: FamEqn GhcPs (HsDataDefn GhcPs)
   }
 
 -- | `FamEqn'` wrapping a `FamEqn` representing a top-level data family
@@ -250,7 +250,7 @@ newtype PatInsidePatDecl =
 -- | Lambda case.
 data LambdaCase = LambdaCase
   { lamCaseGroup :: MatchGroup GhcPs (LHsExpr GhcPs)
-  , caseOrCases  :: CaseOrCases
+  , caseOrCases :: CaseOrCases
   }
 
 -- | Use this type to pretty-print a list comprehension.
@@ -261,14 +261,14 @@ data ListComprehension = ListComprehension
 
 -- | Use this type to pretty-print a do expression.
 data DoExpression = DoExpression
-  { doStmts     :: [ExprLStmt GhcPs]
+  { doStmts :: [ExprLStmt GhcPs]
   , qualifiedDo :: QualifiedDo
   }
 
 -- | Use this type to pretty-print a @let ... in ...@ expression.
 data LetIn = LetIn
   { letBinds :: HsLocalBinds GhcPs
-  , inExpr   :: LHsExpr GhcPs
+  , inExpr :: LHsExpr GhcPs
   }
 
 -- | Values indicating whether `do` or `mdo` is used.
