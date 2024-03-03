@@ -77,22 +77,6 @@ module X
 
 ### Module-level pragmas
 
-A `WARNING` for a module without an export list.
-
-```haskell
-module Foo {-# WARNING "Debug purpose only." #-} where
-```
-
-A `DEPRECATED` for a module with an export list.
-
-```haskell
-module Foo {-# DEPRECATED "Use Bar." #-}
-  ( x
-  , y
-  , z
-  ) where
-```
-
 A pragma's name is converted to the SHOUT_CASE.
 
 ```haskell given
@@ -181,6 +165,50 @@ Do not collect pragma-like comments
 -- @static@ is no longer a valid identifier
 -- once `StaticPointers` is enabled.
 static = 3
+```
+
+#### `WARNING`
+
+Without messages and an export list.
+
+```haskell
+module Foo {-# WARNING [] #-} where
+```
+
+With a string without an export list.
+
+```haskell
+module Foo {-# WARNING "Debug purpose only." #-} where
+```
+
+With a list of reasons without an export list.
+
+```haskell
+module Foo {-# WARNING ["Debug purpose only.", "Okay?"] #-} where
+```
+
+#### `DEPRECATED`
+
+Without messages and an export list.
+
+```haskell
+module Foo {-# DEPRECATED [] #-} where
+```
+
+With a string without an export list.
+
+```haskell
+module Foo {-# DEPRECATED "Use Bar." #-} where
+```
+
+With a list of reasons and an export list.
+
+```haskell
+module Foo {-# DEPRECATED ["Use Bar.", "Or use Baz."] #-}
+  ( x
+  , y
+  , z
+  ) where
 ```
 
 ## Imports, foreign imports, and foreign exports
