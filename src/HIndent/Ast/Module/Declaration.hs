@@ -17,7 +17,7 @@ import           HIndent.Pretty.NodeComments
 
 data ModuleDeclaration = ModuleDeclaration
   { name    :: WithComments ModuleName
-  , warning :: Maybe ModuleWarning
+  , warning :: Maybe (WithComments ModuleWarning)
   , exports :: Maybe (GHC.LocatedL [GHC.LIE GHC.GhcPs])
   }
 

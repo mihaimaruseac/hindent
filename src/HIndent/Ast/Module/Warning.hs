@@ -3,8 +3,8 @@ module HIndent.Ast.Module.Warning
   , mkModuleWarning
   ) where
 
-import qualified GHC.Hs                                               as GHC
 import           HIndent.Ast.NodeComments
+import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs                   as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings as GHC
 import           HIndent.Pretty
@@ -12,13 +12,14 @@ import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
 
 newtype ModuleWarning =
-  ModuleWarning (GHC.LocatedP GHC.WarningTxt')
+  ModuleWarning GHC.WarningTxt'
 
 instance CommentExtraction ModuleWarning where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty ModuleWarning where
-  pretty' (ModuleWarning x) = pretty' $ fmap ModuleDeprecatedPragma x
+  pretty' (ModuleWarning x) = pretty' $ ModuleDeprecatedPragma x
 
-mkModuleWarning :: GHC.HsModule' -> Maybe ModuleWarning
-mkModuleWarning = fmap ModuleWarning . GHC.getDeprecMessage
+mkModuleWarning :: GHC.HsModule' -> Maybe (WithComments ModuleWarning)
+mkModuleWarning =
+  fmap (fromGenLocated . fmap ModuleWarning) . GHC.getDeprecMessage
