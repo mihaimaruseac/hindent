@@ -33,18 +33,17 @@ instance Pretty Kind where
   pretty' Deprecated = string "DEPRECATED"
 
 instance Pretty ModuleWarning where
-  pretty' ModuleWarning {messages = [msg], ..} = do
-    string "{-# "
-    pretty kind
-    space
-    string msg
-    string " #-}"
   pretty' ModuleWarning {..} = do
     string "{-# "
     pretty kind
     space
-    hList $ fmap string messages
+    prettyMsgs
     string " #-}"
+    where
+      prettyMsgs =
+        case messages of
+          [x] -> string x
+          xs  -> hList $ fmap string xs
 
 mkModuleWarning :: GHC.HsModule' -> Maybe (WithComments ModuleWarning)
 mkModuleWarning =
