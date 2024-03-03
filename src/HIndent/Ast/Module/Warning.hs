@@ -5,6 +5,7 @@ module HIndent.Ast.Module.Warning
   , mkModuleWarning
   ) where
 
+import           HIndent.Ast.Module.Warning.Kind
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs                   as GHC
@@ -18,19 +19,8 @@ data ModuleWarning = ModuleWarning
   , kind     :: Kind
   }
 
-data Kind
-  = Warning
-  | Deprecated
-
 instance CommentExtraction ModuleWarning where
   nodeComments _ = NodeComments [] [] []
-
-instance CommentExtraction Kind where
-  nodeComments _ = NodeComments [] [] []
-
-instance Pretty Kind where
-  pretty' Warning    = string "WARNING"
-  pretty' Deprecated = string "DEPRECATED"
 
 instance Pretty ModuleWarning where
   pretty' ModuleWarning {..} = do
