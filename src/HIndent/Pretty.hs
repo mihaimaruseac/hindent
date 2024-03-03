@@ -2470,12 +2470,16 @@ instance Pretty CCallConv where
   pretty' StdCallConv        = string "stdcall"
   pretty' PrimCallConv       = string "prim"
   pretty' JavaScriptCallConv = string "javascript"
-#if MIN_VERSION_ghc_lib_parser(9,8,1)
+#if MIN_VERSION_ghc_lib_parser(9, 8, 1)
 instance Pretty ModuleDeprecatedPragma where
-  pretty' (ModuleDeprecatedPragma (WarningTxt _ _ xs)) =
-    spaced [string "{-# WARNING", spaced $ fmap pretty xs, string "#-}"]
-  pretty' (ModuleDeprecatedPragma (DeprecatedTxt _ xs)) =
-    spaced [string "{-# DEPRECATED", spaced $ fmap pretty xs, string "#-}"]
+  pretty' (ModuleDeprecatedPragma (WarningTxt _ _ [msg])) =
+    spaced [string "{-# WARNING", pretty msg, string "#-}"]
+  pretty' (ModuleDeprecatedPragma (WarningTxt _ _ msgs)) =
+    spaced [string "{-# WARNING", hList $ fmap pretty msgs, string "#-}"]
+  pretty' (ModuleDeprecatedPragma (DeprecatedTxt _ [msg])) =
+    spaced [string "{-# DEPRECATED", pretty msg, string "#-}"]
+  pretty' (ModuleDeprecatedPragma (DeprecatedTxt _ msgs)) =
+    spaced [string "{-# DEPRECATED", hList $ fmap pretty msgs, string "#-}"]
 #else
 instance Pretty ModuleDeprecatedPragma where
   pretty' (ModuleDeprecatedPragma (WarningTxt _ [msg])) =
