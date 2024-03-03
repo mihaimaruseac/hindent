@@ -77,18 +77,6 @@ module X
 
 ### Module-level pragmas
 
-A `WARNING` for a module without an export list.
-
-```haskell
-module Foo {-# WARNING "Debug purpose only." #-} where
-```
-
-A `WARNING` for a module with a list of reasons without an export list.
-
-```haskell
-module Foo {-# WARNING ["Debug purpose only.", "Okay?"] #-} where
-```
-
 A `DEPRECATED` for a module with an export list.
 
 ```haskell
@@ -187,6 +175,20 @@ Do not collect pragma-like comments
 -- @static@ is no longer a valid identifier
 -- once `StaticPointers` is enabled.
 static = 3
+```
+
+#### `WARNING`
+
+A `WARNING` for a module without an export list.
+
+```haskell
+module Foo {-# WARNING "Debug purpose only." #-} where
+```
+
+A `WARNING` for a module with a list of reasons without an export list.
+
+```haskell
+module Foo {-# WARNING ["Debug purpose only.", "Okay?"] #-} where
 ```
 
 ## Imports, foreign imports, and foreign exports
