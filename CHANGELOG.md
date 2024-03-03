@@ -13,6 +13,7 @@
 - Wrong default HIndent configuration in [`README.md`] ([#750]).
 - Fix the bug of panicking when the given source code has CPP lines and space-prefixed lines ([#780]).
 - Fix not pretty-printing multiple signatures in a `SPECIALISE` ([#784]).
+- Fix the bug of not pretty-printing multiple module-level warning messages ([#822])
 
 ### Removed
 
@@ -368,6 +369,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#822]: https://github.com/mihaimaruseac/hindent/pull/822
 [#784]: https://github.com/mihaimaruseac/hindent/pull/784
 [#780]: https://github.com/mihaimaruseac/hindent/pull/780
 [#775]: https://github.com/mihaimaruseac/hindent/pull/775
