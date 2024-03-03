@@ -83,6 +83,12 @@ A `WARNING` for a module without an export list.
 module Foo {-# WARNING "Debug purpose only." #-} where
 ```
 
+A `WARNING` for a module with a list of reasons without an export list.
+
+```haskell
+module Foo {-# WARNING ["Debug purpose only.", "Okay?"] #-} where
+```
+
 A `DEPRECATED` for a module with an export list.
 
 ```haskell
