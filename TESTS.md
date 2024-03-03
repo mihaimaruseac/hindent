@@ -205,6 +205,16 @@ module Foo {-# DEPRECATED "Use Bar." #-}
   ) where
 ```
 
+With a list of reasons and an export list.
+
+```haskell
+module Foo {-# DEPRECATED ["Use Bar.", "Or use Baz."] #-}
+  ( x
+  , y
+  , z
+  ) where
+```
+
 ## Imports, foreign imports, and foreign exports
 
 Import lists
