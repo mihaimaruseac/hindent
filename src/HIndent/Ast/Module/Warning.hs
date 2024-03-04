@@ -41,7 +41,7 @@ mkModuleWarning =
   fmap (fromGenLocated . fmap fromWarningTxt) . GHC.getDeprecMessage
 
 fromWarningTxt :: GHC.WarningTxt' -> ModuleWarning
-#if MIN_VERSION_ghc_lib_parser(9, 4, 0)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 fromWarningTxt (GHC.WarningTxt _ _ s) = ModuleWarning {..}
   where
     messages = fmap showOutputable s
