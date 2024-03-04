@@ -7,18 +7,17 @@ module HIndent.Ast.Module.Declaration
 
 import HIndent.Applicative
 import HIndent.Ast.Module.Name
+import HIndent.Ast.Module.Warning
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import qualified HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-import HIndent.Pretty.Types
 
 data ModuleDeclaration = ModuleDeclaration
   { name :: WithComments ModuleName
-  , warning :: Maybe (GHC.LocatedP GHC.WarningTxt')
+  , warning :: Maybe (WithComments ModuleWarning)
   , exports :: Maybe (GHC.LocatedL [GHC.LIE GHC.GhcPs])
   }
 
@@ -30,7 +29,7 @@ instance Pretty ModuleDeclaration where
     pretty name
     whenJust warning $ \x -> do
       space
-      pretty $ fmap ModuleDeprecatedPragma x
+      pretty x
     whenJust exports $ \xs -> do
       newline
       indentedBlock $ do
@@ -43,5 +42,5 @@ mkModuleDeclaration m =
     Nothing -> Nothing
     Just name' -> Just ModuleDeclaration {..}
       where name = mkModuleName <$> fromGenLocated name'
-            warning = GHC.getDeprecMessage m
+            warning = mkModuleWarning m
             exports = GHC.hsmodExports m

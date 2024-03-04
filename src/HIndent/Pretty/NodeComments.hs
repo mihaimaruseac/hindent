@@ -961,9 +961,6 @@ instance CommentExtraction (RuleBndr GhcPs) where
 instance CommentExtraction CCallConv where
   nodeComments = const emptyNodeComments
 
-instance CommentExtraction ModuleDeprecatedPragma where
-  nodeComments ModuleDeprecatedPragma {} = emptyNodeComments
-
 instance CommentExtraction HsSrcBang where
   nodeComments HsSrcBang {} = emptyNodeComments
 

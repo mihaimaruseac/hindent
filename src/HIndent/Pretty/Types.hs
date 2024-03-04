@@ -40,7 +40,6 @@ module HIndent.Pretty.Types
   , ModuleNameWithPrefix(..)
   , PatInsidePatDecl(..)
   , LambdaCase(..)
-  , ModuleDeprecatedPragma(..)
   , ListComprehension(..)
   , DoExpression(..)
   , DoOrMdo(..)
@@ -56,7 +55,6 @@ module HIndent.Pretty.Types
 
 import GHC.Hs
 import GHC.Types.Name.Reader
-import GHC.Unit.Module.Warnings
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
 import GHC.Unit
 #endif
@@ -254,15 +252,7 @@ data LambdaCase = LambdaCase
   { lamCaseGroup :: MatchGroup GhcPs (LHsExpr GhcPs)
   , caseOrCases :: CaseOrCases
   }
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
--- | A deprecation pragma for a module.
-newtype ModuleDeprecatedPragma =
-  ModuleDeprecatedPragma (WarningTxt GhcPs)
-#else
--- | A deprecation pragma for a module.
-newtype ModuleDeprecatedPragma =
-  ModuleDeprecatedPragma WarningTxt
-#endif
+
 -- | Use this type to pretty-print a list comprehension.
 data ListComprehension = ListComprehension
   { listCompLhs :: ExprLStmt GhcPs -- ^ @f x@ of @[f x| x <- xs]@.
