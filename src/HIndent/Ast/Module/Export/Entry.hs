@@ -6,16 +6,37 @@ module HIndent.Ast.Module.Export.Entry
 import           HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import           HIndent.Pretty
+import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
-newtype ExportEntry =
-  ExportEntry (GHC.IE GHC.GhcPs)
+data ExportEntry
+  = SingleIdentifier String
+  | WithSpecificConstructors String [String]
+  | WithAllConstructors String
+  | ByModule String
 
 instance CommentExtraction ExportEntry where
-  nodeComments (ExportEntry _) = NodeComments [] [] []
+  nodeComments SingleIdentifier {}         = NodeComments [] [] []
+  nodeComments WithSpecificConstructors {} = NodeComments [] [] []
+  nodeComments WithAllConstructors {}      = NodeComments [] [] []
+  nodeComments ByModule {}                 = NodeComments [] [] []
 
 instance Pretty ExportEntry where
-  pretty' (ExportEntry x) = pretty x
+  pretty' (SingleIdentifier s)            = string s
+  pretty' (WithSpecificConstructors s xs) = string s >> hTuple (fmap string xs)
+  pretty' (WithAllConstructors s)         = string s >> string "(..)"
+  pretty' (ByModule s)                    = string "module " >> string s
 
 mkExportEntry :: GHC.IE GHC.GhcPs -> ExportEntry
-mkExportEntry = ExportEntry
+mkExportEntry (GHC.IEVar GHC.NoExtField name) =
+  SingleIdentifier $ showOutputable name
+mkExportEntry (GHC.IEThingAbs _ name) = SingleIdentifier $ showOutputable name
+mkExportEntry GHC.IEThingAll {} = undefined
+mkExportEntry (GHC.IEThingWith _ name _ constructors) =
+  WithSpecificConstructors
+    (showOutputable name)
+    (fmap showOutputable constructors)
+mkExportEntry (GHC.IEModuleContents _ name) = ByModule $ showOutputable name
+mkExportEntry GHC.IEGroup {} = undefined
+mkExportEntry GHC.IEDoc {} = undefined
+mkExportEntry GHC.IEDocNamed {} = undefined
