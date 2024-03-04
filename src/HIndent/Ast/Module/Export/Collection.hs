@@ -3,6 +3,7 @@ module HIndent.Ast.Module.Export.Collection
   , mkExportCollection
   ) where
 
+import           HIndent.Ast.Module.Export.Entry
 import           HIndent.Ast.NodeComments           hiding (fromEpAnn)
 import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -11,7 +12,7 @@ import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
 newtype ExportCollection =
-  ExportCollection [GHC.LIE GHC.GhcPs]
+  ExportCollection [ExportEntry]
 
 instance CommentExtraction ExportCollection where
   nodeComments (ExportCollection _) = NodeComments [] [] []
@@ -21,4 +22,5 @@ instance Pretty ExportCollection where
 
 mkExportCollection :: GHC.HsModule' -> Maybe (WithComments ExportCollection)
 mkExportCollection =
-  fmap (fmap ExportCollection . fromGenLocated) . GHC.hsmodExports
+  fmap (fmap (ExportCollection . fmap mkExportEntry) . fromGenLocated) .
+  GHC.hsmodExports
