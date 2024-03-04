@@ -12,7 +12,7 @@ import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
 newtype ExportCollection =
-  ExportCollection [ExportEntry]
+  ExportCollection [WithComments ExportEntry]
 
 instance CommentExtraction ExportCollection where
   nodeComments (ExportCollection _) = NodeComments [] [] []
