@@ -19,7 +19,7 @@ import           HIndent.Pretty.NodeComments
 data ModuleDeclaration = ModuleDeclaration
   { name    :: WithComments ModuleName
   , warning :: Maybe (WithComments ModuleWarning)
-  , exports :: Maybe ExportCollection
+  , exports :: Maybe (WithComments ExportCollection)
   }
 
 instance CommentExtraction ModuleDeclaration where
