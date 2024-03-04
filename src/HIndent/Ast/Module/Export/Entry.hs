@@ -3,6 +3,7 @@ module HIndent.Ast.Module.Export.Entry
   , mkExportEntry
   ) where
 
+import           GHC.Stack
 import           HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import           HIndent.Pretty
@@ -38,6 +39,11 @@ mkExportEntry (GHC.IEThingWith _ name _ constructors) =
     (showOutputable name)
     (fmap showOutputable constructors)
 mkExportEntry (GHC.IEModuleContents _ name) = ByModule $ showOutputable name
-mkExportEntry GHC.IEGroup {} = undefined
-mkExportEntry GHC.IEDoc {} = undefined
-mkExportEntry GHC.IEDocNamed {} = undefined
+mkExportEntry GHC.IEGroup {} = neverAppears
+mkExportEntry GHC.IEDoc {} = neverAppears
+mkExportEntry GHC.IEDocNamed {} = neverAppears
+
+neverAppears :: HasCallStack => a
+neverAppears =
+  error
+    "This AST node should never appear in the GHC AST. If you see this error message, please report a bug to the HIndent maintainers."
