@@ -22,5 +22,7 @@ instance Pretty ExportCollection where
 
 mkExportCollection :: GHC.HsModule' -> Maybe (WithComments ExportCollection)
 mkExportCollection =
-  fmap (fmap (ExportCollection . fmap mkExportEntry) . fromGenLocated) .
+  fmap
+    (fmap (ExportCollection . fmap (fmap mkExportEntry . fromGenLocated)) .
+     fromGenLocated) .
   GHC.hsmodExports

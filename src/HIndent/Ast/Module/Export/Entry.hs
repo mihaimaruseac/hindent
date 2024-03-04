@@ -4,7 +4,6 @@ module HIndent.Ast.Module.Export.Entry
   ) where
 
 import           HIndent.Ast.NodeComments
-import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.NodeComments
@@ -18,5 +17,5 @@ instance CommentExtraction ExportEntry where
 instance Pretty ExportEntry where
   pretty' (ExportEntry x) = pretty x
 
-mkExportEntry :: GHC.LIE GHC.GhcPs -> WithComments ExportEntry
-mkExportEntry = fmap ExportEntry . fromGenLocated
+mkExportEntry :: GHC.IE GHC.GhcPs -> ExportEntry
+mkExportEntry = ExportEntry
