@@ -31,7 +31,8 @@ mkExportEntry :: GHC.IE GHC.GhcPs -> ExportEntry
 mkExportEntry (GHC.IEVar GHC.NoExtField name) =
   SingleIdentifier $ showOutputable name
 mkExportEntry (GHC.IEThingAbs _ name) = SingleIdentifier $ showOutputable name
-mkExportEntry GHC.IEThingAll {} = undefined
+mkExportEntry (GHC.IEThingAll _ name) =
+  WithAllConstructors $ showOutputable name
 mkExportEntry (GHC.IEThingWith _ name _ constructors) =
   WithSpecificConstructors
     (showOutputable name)
