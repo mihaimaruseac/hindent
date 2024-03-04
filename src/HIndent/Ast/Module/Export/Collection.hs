@@ -3,13 +3,13 @@ module HIndent.Ast.Module.Export.Collection
   , mkExportCollection
   ) where
 
-import           HIndent.Ast.Module.Export.Entry
-import           HIndent.Ast.NodeComments           hiding (fromEpAnn)
-import           HIndent.Ast.WithComments
+import HIndent.Ast.Module.Export.Entry
+import HIndent.Ast.NodeComments hiding (fromEpAnn)
+import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import           HIndent.Pretty
-import           HIndent.Pretty.Combinators
-import           HIndent.Pretty.NodeComments
+import HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
 
 newtype ExportCollection =
   ExportCollection [WithComments ExportEntry]
@@ -23,6 +23,6 @@ instance Pretty ExportCollection where
 mkExportCollection :: GHC.HsModule' -> Maybe (WithComments ExportCollection)
 mkExportCollection =
   fmap
-    (fmap (ExportCollection . fmap (fmap mkExportEntry . fromGenLocated)) .
-     fromGenLocated) .
-  GHC.hsmodExports
+    (fmap (ExportCollection . fmap (fmap mkExportEntry . fromGenLocated))
+       . fromGenLocated)
+    . GHC.hsmodExports
