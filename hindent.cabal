@@ -43,6 +43,7 @@ library
       HIndent.Ast.Import.Collection
       HIndent.Ast.Module
       HIndent.Ast.Module.Declaration
+      HIndent.Ast.Module.Export.Collection
       HIndent.Ast.Module.Name
       HIndent.Ast.Module.Warning
       HIndent.Ast.Module.Warning.Kind
