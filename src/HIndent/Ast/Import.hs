@@ -1,4 +1,5 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP             #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Import
   ( Import
@@ -18,18 +19,21 @@ import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
-newtype Import = Import
-  { import' :: GHC.ImportDecl GHC.GhcPs
+data Import = Import
+  { moduleName :: String
+  , import'    :: GHC.ImportDecl GHC.GhcPs
   }
 
 instance CommentExtraction Import where
   nodeComments Import {} = NodeComments [] [] []
 
 instance Pretty Import where
-  pretty' (Import x) = pretty x
+  pretty' Import {..} = pretty import'
 
 mkImport :: GHC.ImportDecl GHC.GhcPs -> Import
-mkImport = Import
+mkImport import'@GHC.ImportDecl {..} = Import {..}
+  where
+    moduleName = showOutputable ideclName
 
 sortByName :: [WithComments Import] -> [WithComments Import]
 sortByName = sortImportsByName
@@ -58,7 +62,7 @@ sortByModuleName =
 -- | This function sorts explicit imports in the given import declaration
 -- by their names.
 sortExplicitImportsInDecl :: WithComments Import -> WithComments Import
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 sortExplicitImportsInDecl (L l d@ImportDecl {ideclImportList = Just (x, imports)}) =
   L l d {ideclImportList = Just (x, sorted)}
   where
@@ -66,8 +70,9 @@ sortExplicitImportsInDecl (L l d@ImportDecl {ideclImportList = Just (x, imports)
 #else
 sortExplicitImportsInDecl = fmap f
   where
-    f (Import d@GHC.ImportDecl {GHC.ideclHiding = Just (x, imports)}) =
-      Import $ d {GHC.ideclHiding = Just (x, sorted)}
+    f (Import { import' = d@GHC.ImportDecl {GHC.ideclHiding = Just (x, imports)}
+              , ..
+              }) = Import {import' = d {GHC.ideclHiding = Just (x, sorted)}, ..}
       where
         sorted = fmap (fmap sortVariants . sortExplicitImports) imports
     f x = x
