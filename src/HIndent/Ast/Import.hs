@@ -15,6 +15,7 @@ import           Data.Maybe
 import qualified GHC.Types.SrcLoc                     as GHC
 import qualified GHC.Unit                             as GHC
 import           HIndent.Applicative
+import           HIndent.Ast.Import.Entry.Collection
 import           HIndent.Ast.Import.ImportingOrHiding
 import           HIndent.Ast.Import.Qualification
 import           HIndent.Ast.NodeComments
@@ -30,12 +31,7 @@ data Import = Import
   , isBoot        :: Bool
   , qualification :: Qualification
   , packageName   :: Maybe String
-  , importEntries :: Maybe ImportEntries
-  }
-
-data ImportEntries = ImportEntries
-  { entries :: GHC.GenLocated GHC.SrcSpanAnnL [GHC.LIE GHC.GhcPs]
-  , kind    :: ImportingOrHiding
+  , importEntries :: Maybe ImportEntryCollection
   }
 
 instance CommentExtraction Import where
@@ -52,7 +48,7 @@ instance Pretty Import where
     case qualification of
       QualifiedAs name -> string " as " >> string name
       _                -> pure ()
-    whenJust importEntries $ \ImportEntries {..} -> do
+    whenJust importEntries $ \ImportEntryCollection {..} -> do
       when (kind == Hiding) $ string " hiding"
       (space >> printCommentsAnd entries (hTuple . fmap pretty)) <-|>
         (newline >>
@@ -74,8 +70,9 @@ mkImport GHC.ImportDecl {..} = Import {..}
       case ideclHiding of
         Nothing -> Nothing
         Just (False, xs) ->
-          Just $ ImportEntries {entries = xs, kind = Importing}
-        Just (True, xs) -> Just $ ImportEntries {entries = xs, kind = Hiding}
+          Just $ ImportEntryCollection {entries = xs, kind = Importing}
+        Just (True, xs) ->
+          Just $ ImportEntryCollection {entries = xs, kind = Hiding}
 
 sortByName :: [WithComments Import] -> [WithComments Import]
 sortByName = fmap sortExplicitImportsInDecl . sortByModuleName
@@ -106,8 +103,9 @@ sortExplicitImportsInDecl (L l d@ImportDecl {ideclImportList = Just (x, imports)
 #else
 sortExplicitImportsInDecl = fmap f
   where
-    f (Import {importEntries = Just ImportEntries {..}, ..}) =
-      Import {importEntries = Just ImportEntries {entries = sorted, ..}, ..}
+    f (Import {importEntries = Just ImportEntryCollection {..}, ..}) =
+      Import
+        {importEntries = Just ImportEntryCollection {entries = sorted, ..}, ..}
       where
         sorted = fmap (fmap sortVariants . sortExplicitImports) entries
     f x = x
