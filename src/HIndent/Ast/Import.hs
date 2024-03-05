@@ -27,7 +27,7 @@ data Import = Import
   , isBoot        :: Bool
   , qualification :: Qualification
   , packageName   :: Maybe String
-  , importEntries :: Maybe ImportEntryCollection
+  , importEntries :: Maybe (WithComments ImportEntryCollection)
   }
 
 instance CommentExtraction Import where
@@ -81,6 +81,6 @@ sortExplicitImportsInDecl = fmap f
     f (Import {importEntries = Just xs, ..}) =
       Import {importEntries = Just sorted, ..}
       where
-        sorted = sortEntriesByName xs
+        sorted = fmap sortEntriesByName xs
     f x = x
 #endif

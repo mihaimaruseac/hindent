@@ -21,7 +21,7 @@ import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
 data ImportEntryCollection = ImportEntryCollection
-  { entries :: WithComments [GHC.LIE GHC.GhcPs]
+  { entries :: [GHC.LIE GHC.GhcPs]
   , kind    :: ImportingOrHiding
   }
 
@@ -31,24 +31,27 @@ instance CommentExtraction ImportEntryCollection where
 instance Pretty ImportEntryCollection where
   pretty' ImportEntryCollection {..} = do
     when (kind == Hiding) $ string " hiding"
-    (space >> prettyWith entries (hTuple . fmap pretty)) <-|>
-      (newline >> indentedBlock (prettyWith entries (vTuple . fmap pretty)))
+    (space >> hTuple (fmap pretty entries)) <-|>
+      (newline >> indentedBlock (vTuple $ fmap pretty entries))
 
 mkImportEntryCollection ::
-     GHC.ImportDecl GHC.GhcPs -> Maybe ImportEntryCollection
+     GHC.ImportDecl GHC.GhcPs -> Maybe (WithComments ImportEntryCollection)
 mkImportEntryCollection GHC.ImportDecl {..} =
   case ideclHiding of
     Nothing -> Nothing
     Just (False, xs) ->
       Just $
-      ImportEntryCollection {entries = fromGenLocated xs, kind = Importing}
+      (\entries -> ImportEntryCollection {kind = Importing, ..}) <$>
+      fromGenLocated xs
     Just (True, xs) ->
-      Just $ ImportEntryCollection {entries = fromGenLocated xs, kind = Hiding}
+      Just $
+      (\entries -> ImportEntryCollection {kind = Hiding, ..}) <$>
+      fromGenLocated xs
 
 sortEntriesByName :: ImportEntryCollection -> ImportEntryCollection
 sortEntriesByName ImportEntryCollection {..} =
   ImportEntryCollection
-    {entries = fmap (fmap sortVariants . sortExplicitImports) entries, ..}
+    {entries = fmap sortVariants $ sortExplicitImports entries, ..}
 
 -- | This function sorts the given explicit imports by their names.
 sortExplicitImports :: [GHC.LIE GHC.GhcPs] -> [GHC.LIE GHC.GhcPs]
