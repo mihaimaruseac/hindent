@@ -117,11 +117,10 @@ sortExplicitImportsInDecl (L l d@ImportDecl {ideclImportList = Just (x, imports)
 #else
 sortExplicitImportsInDecl = fmap f
   where
-    f (Import { import' = d@GHC.ImportDecl {GHC.ideclHiding = Just (x, imports)}
-              , ..
-              }) = Import {import' = d {GHC.ideclHiding = Just (x, sorted)}, ..}
+    f (Import {importEntries = Just ImportEntries {..}, ..}) =
+      Import {importEntries = Just ImportEntries {entries = sorted, ..}, ..}
       where
-        sorted = fmap (fmap sortVariants . sortExplicitImports) imports
+        sorted = fmap (fmap sortVariants . sortExplicitImports) entries
     f x = x
 #endif
 -- | This function sorts the given explicit imports by their names.
