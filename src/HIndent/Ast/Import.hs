@@ -12,15 +12,14 @@ import           Data.Char
 import           Data.Function
 import           Data.List
 import           Data.Maybe
-import qualified GHC.Types.SrcLoc                     as GHC
-import qualified GHC.Unit                             as GHC
+import qualified GHC.Types.SrcLoc                    as GHC
+import qualified GHC.Unit                            as GHC
 import           HIndent.Applicative
 import           HIndent.Ast.Import.Entry.Collection
-import           HIndent.Ast.Import.ImportingOrHiding
 import           HIndent.Ast.Import.Qualification
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs   as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs  as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
@@ -51,7 +50,7 @@ instance Pretty Import where
     whenJust importEntries pretty
 
 mkImport :: GHC.ImportDecl GHC.GhcPs -> Import
-mkImport GHC.ImportDecl {..} = Import {..}
+mkImport decl@GHC.ImportDecl {..} = Import {..}
   where
     moduleName = showOutputable ideclName
     isSafe = ideclSafe
@@ -62,13 +61,7 @@ mkImport GHC.ImportDecl {..} = Import {..}
         (_, Nothing)          -> FullyQualified
         (_, Just name)        -> QualifiedAs $ showOutputable name
     packageName = fmap showOutputable ideclPkgQual
-    importEntries =
-      case ideclHiding of
-        Nothing -> Nothing
-        Just (False, xs) ->
-          Just $ ImportEntryCollection {entries = xs, kind = Importing}
-        Just (True, xs) ->
-          Just $ ImportEntryCollection {entries = xs, kind = Hiding}
+    importEntries = mkImportEntryCollection decl
 
 sortByName :: [WithComments Import] -> [WithComments Import]
 sortByName = fmap sortExplicitImportsInDecl . sortByModuleName

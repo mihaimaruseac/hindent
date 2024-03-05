@@ -2,7 +2,7 @@
 
 module HIndent.Ast.Import.Entry.Collection
   ( ImportEntryCollection(..)
-  , mkImportEntries
+  , mkImportEntryCollection
   ) where
 
 import           Control.Monad
@@ -29,8 +29,9 @@ instance Pretty ImportEntryCollection where
       (newline >>
        indentedBlock (printCommentsAnd entries (vTuple . fmap pretty)))
 
-mkImportEntries :: GHC.ImportDecl GHC.GhcPs -> Maybe ImportEntryCollection
-mkImportEntries GHC.ImportDecl {..} =
+mkImportEntryCollection ::
+     GHC.ImportDecl GHC.GhcPs -> Maybe ImportEntryCollection
+mkImportEntryCollection GHC.ImportDecl {..} =
   case ideclHiding of
     Nothing -> Nothing
     Just (False, xs) ->
