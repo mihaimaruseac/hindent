@@ -29,7 +29,6 @@ data Import = Import
   , qualification :: Qualification
   , packageName   :: Maybe String
   , importEntries :: Maybe ImportEntries
-  , import'       :: GHC.ImportDecl GHC.GhcPs
   }
 
 data Qualification
@@ -69,7 +68,7 @@ instance Pretty Import where
          indentedBlock (printCommentsAnd entries (vTuple . fmap pretty)))
 
 mkImport :: GHC.ImportDecl GHC.GhcPs -> Import
-mkImport import'@GHC.ImportDecl {..} = Import {..}
+mkImport GHC.ImportDecl {..} = Import {..}
   where
     moduleName = showOutputable ideclName
     isSafe = ideclSafe
@@ -103,8 +102,7 @@ data LetterType
 
 -- | This function sorts import declarations by their module names.
 sortByModuleName :: [WithComments Import] -> [WithComments Import]
-sortByModuleName =
-  sortBy (compare `on` GHC.unLoc . GHC.ideclName . import' . getNode)
+sortByModuleName = sortBy (compare `on` moduleName . getNode)
 
 -- | This function sorts explicit imports in the given import declaration
 -- by their names.
