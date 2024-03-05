@@ -12,13 +12,14 @@ import           Data.Char
 import           Data.Function
 import           Data.List
 import           Data.Maybe
-import qualified GHC.Types.SrcLoc                   as GHC
-import qualified GHC.Unit                           as GHC
+import qualified GHC.Types.SrcLoc                     as GHC
+import qualified GHC.Unit                             as GHC
 import           HIndent.Applicative
+import           HIndent.Ast.Import.ImportingOrHiding
 import           HIndent.Ast.Import.Qualification
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs   as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
@@ -34,13 +35,8 @@ data Import = Import
 
 data ImportEntries = ImportEntries
   { entries :: GHC.GenLocated GHC.SrcSpanAnnL [GHC.LIE GHC.GhcPs]
-  , kind    :: EntriesKind
+  , kind    :: ImportingOrHiding
   }
-
-data EntriesKind
-  = Importing
-  | Hiding
-  deriving (Eq)
 
 instance CommentExtraction Import where
   nodeComments Import {} = NodeComments [] [] []
