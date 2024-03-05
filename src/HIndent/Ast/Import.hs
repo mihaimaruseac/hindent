@@ -21,6 +21,7 @@ import           HIndent.Pretty.NodeComments
 
 data Import = Import
   { moduleName :: String
+  , isSafe     :: Bool
   , import'    :: GHC.ImportDecl GHC.GhcPs
   }
 
@@ -34,6 +35,7 @@ mkImport :: GHC.ImportDecl GHC.GhcPs -> Import
 mkImport import'@GHC.ImportDecl {..} = Import {..}
   where
     moduleName = showOutputable ideclName
+    isSafe = ideclSafe
 
 sortByName :: [WithComments Import] -> [WithComments Import]
 sortByName = sortImportsByName
