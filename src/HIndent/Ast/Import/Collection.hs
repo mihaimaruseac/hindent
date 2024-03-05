@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase      #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Import.Collection
@@ -7,18 +7,18 @@ module HIndent.Ast.Import.Collection
   , hasImports
   ) where
 
-import           Control.Monad.RWS
-import qualified GHC.Hs                             as GHC
-import           HIndent.Ast.Import
-import           HIndent.Ast.NodeComments
-import           HIndent.Ast.WithComments
-import           HIndent.Config
+import Control.Monad.RWS
+import qualified GHC.Hs as GHC
+import HIndent.Ast.Import
+import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments
+import HIndent.Config
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import           HIndent.Pretty
-import           HIndent.Pretty.Combinators
-import           HIndent.Pretty.Import
-import           HIndent.Pretty.NodeComments
-import           HIndent.Printer
+import HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.Import
+import HIndent.Pretty.NodeComments
+import HIndent.Printer
 
 newtype ImportCollection =
   ImportCollection [[WithComments Import]]
@@ -33,13 +33,15 @@ instance Pretty ImportCollection where
       outputImportGroup = lined . fmap pretty
       importDecls =
         gets (configSortImports . psConfig) >>= \case
-          True  -> pure $ fmap sortByName xs
+          True -> pure $ fmap sortByName xs
           False -> pure xs
 
 mkImportCollection :: GHC.HsModule' -> ImportCollection
 mkImportCollection GHC.HsModule {..} =
-  ImportCollection $
-  fmap (fmap (fmap mkImport . fromGenLocated)) (extractImports' hsmodImports)
+  ImportCollection
+    $ fmap
+        (fmap (fmap mkImport . fromGenLocated))
+        (extractImports' hsmodImports)
 
 hasImports :: ImportCollection -> Bool
 hasImports (ImportCollection xs) = not $ null xs

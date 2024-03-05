@@ -6,20 +6,20 @@ module HIndent.Ast.Import.Entry
   , sortVariantsAndExplicitImports
   ) where
 
-import           Data.Char
-import           Data.Function
-import           Data.List
-import qualified GHC.Hs                      as GHC
-import           HIndent.Ast.NodeComments
-import           HIndent.Ast.WithComments
-import           HIndent.Pretty
-import           HIndent.Pretty.Combinators
-import           HIndent.Pretty.NodeComments
+import Data.Char
+import Data.Function
+import Data.List
+import qualified GHC.Hs as GHC
+import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments
+import HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
 
 data ImportEntry
   = SingleIdentifier String
   | WithSpecificConstructors
-      { name         :: String
+      { name :: String
       , constructors :: [String]
       }
   | WithAllConstructors String
@@ -67,8 +67,8 @@ compareImportEntities = compareIdentifier `on` getModuleName
 -- | This function returns a 'Just' value with the module name extracted
 -- from the import declaration. Otherwise, it returns a 'Nothing'.
 getModuleName :: ImportEntry -> String
-getModuleName (SingleIdentifier wrapped)           = wrapped
-getModuleName (WithAllConstructors wrapped)        = wrapped
+getModuleName (SingleIdentifier wrapped) = wrapped
+getModuleName (WithAllConstructors wrapped) = wrapped
 getModuleName (WithSpecificConstructors wrapped _) = wrapped
 
 -- | This function compares two identifiers in order of capitals, symbols,
@@ -77,7 +77,7 @@ compareIdentifier :: String -> String -> Ordering
 compareIdentifier as@(a:_) bs@(b:_) =
   case compareChar a b of
     EQ -> compareSameIdentifierType as bs
-    x  -> x
+    x -> x
 compareIdentifier _ _ = error "Either identifier is an empty string."
 
 -- | Almost similar to 'compare' but ignores parentheses for symbol
@@ -93,7 +93,7 @@ compareSameIdentifierType as (')':bs) = compareSameIdentifierType as bs
 compareSameIdentifierType (a:as) (b:bs) =
   case compare a b of
     EQ -> compareSameIdentifierType as bs
-    x  -> x
+    x -> x
 
 -- | This function compares two characters by their types (capital, symbol,
 -- and lower). If both are the same type, then it compares them by the
@@ -102,7 +102,7 @@ compareChar :: Char -> Char -> Ordering
 compareChar a b =
   case compare at bt of
     EQ -> compare a b
-    x  -> x
+    x -> x
   where
     at = charToLetterType a
     bt = charToLetterType b
