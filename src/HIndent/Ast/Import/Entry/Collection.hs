@@ -15,12 +15,13 @@ import qualified GHC.Hs                               as GHC
 import qualified GHC.Types.SrcLoc                     as GHC
 import           HIndent.Ast.Import.ImportingOrHiding
 import           HIndent.Ast.NodeComments
+import           HIndent.Ast.WithComments
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
 data ImportEntryCollection = ImportEntryCollection
-  { entries :: GHC.GenLocated GHC.SrcSpanAnnL [GHC.LIE GHC.GhcPs]
+  { entries :: WithComments [GHC.LIE GHC.GhcPs]
   , kind    :: ImportingOrHiding
   }
 
@@ -30,9 +31,8 @@ instance CommentExtraction ImportEntryCollection where
 instance Pretty ImportEntryCollection where
   pretty' ImportEntryCollection {..} = do
     when (kind == Hiding) $ string " hiding"
-    (space >> printCommentsAnd entries (hTuple . fmap pretty)) <-|>
-      (newline >>
-       indentedBlock (printCommentsAnd entries (vTuple . fmap pretty)))
+    (space >> prettyWith entries (hTuple . fmap pretty)) <-|>
+      (newline >> indentedBlock (prettyWith entries (vTuple . fmap pretty)))
 
 mkImportEntryCollection ::
      GHC.ImportDecl GHC.GhcPs -> Maybe ImportEntryCollection
@@ -40,9 +40,10 @@ mkImportEntryCollection GHC.ImportDecl {..} =
   case ideclHiding of
     Nothing -> Nothing
     Just (False, xs) ->
-      Just $ ImportEntryCollection {entries = xs, kind = Importing}
+      Just $
+      ImportEntryCollection {entries = fromGenLocated xs, kind = Importing}
     Just (True, xs) ->
-      Just $ ImportEntryCollection {entries = xs, kind = Hiding}
+      Just $ ImportEntryCollection {entries = fromGenLocated xs, kind = Hiding}
 
 sortEntriesByName :: ImportEntryCollection -> ImportEntryCollection
 sortEntriesByName ImportEntryCollection {..} =
