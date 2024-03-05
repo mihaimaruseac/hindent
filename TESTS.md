@@ -303,10 +303,12 @@ import {-# SOURCE #-} safe qualified Module as M hiding (a, b, c, d, e, f)
 An import declaration importing lots of data constructors
 
 ```haskell
-import Direction
-  ( Direction(East, North, NorthEast, NorthWest, South, SouthEast,
-          SouthWest, West)
-  , allDirections
+import Language
+  ( Language(Ada, Ada, Assembly, C, CPlusPlus, CSharp, Clojure, Cobol, Dart, Elixir,
+             Elm, Erlang, Fortran, Go, Groovy, Haskell, Java, JavaScript, Julia,
+             Kotlin, Lisp, Lua, ObjectiveC, PHP, Pascal, Perl, Prolog, Python, Ruby,
+             Rust, Scala)
+  , allLanguages
   )
 ```
 

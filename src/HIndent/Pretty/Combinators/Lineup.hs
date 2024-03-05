@@ -4,6 +4,7 @@ module HIndent.Pretty.Combinators.Lineup
     hvTuple
   , hvTuple'
   , hTuple
+  , hFillingTuple
   , vTuple
   , vTuple'
   , hPromotedTuple
@@ -40,13 +41,13 @@ module HIndent.Pretty.Combinators.Lineup
   , inter
   ) where
 
-import Control.Monad
-import Data.List
-import HIndent.Pretty.Combinators.Indent
-import HIndent.Pretty.Combinators.String
-import HIndent.Pretty.Combinators.Switch
-import HIndent.Pretty.Combinators.Wrap
-import HIndent.Printer
+import           Control.Monad
+import           Data.List
+import           HIndent.Pretty.Combinators.Indent
+import           HIndent.Pretty.Combinators.String
+import           HIndent.Pretty.Combinators.Switch
+import           HIndent.Pretty.Combinators.Wrap
+import           HIndent.Printer
 
 -- | Applies 'hTuple' if the result fits in a line or 'vTuple' otherwise.
 hvTuple :: [Printer ()] -> Printer ()
@@ -59,6 +60,15 @@ hvTuple' = (<-|>) <$> hTuple <*> vTuple'
 -- | Runs printers to construct a tuple in a line.
 hTuple :: [Printer ()] -> Printer ()
 hTuple = parens . hCommaSep
+
+-- | Runs printers to construct a tuple in a line, but inserts newlines if
+-- the result doesn't fit in a line.
+--
+-- The difference between this function and 'vTuple' is that the number of elements
+-- in a row in this function is not limited to 1 while the number of elements in
+-- a row in 'vTuple' is limited to 1.
+hFillingTuple :: [Printer ()] -> Printer ()
+hFillingTuple = parens . inter (comma >> (space <-|> newline))
 
 -- | Runs printers to construct a tuple where elements are aligned
 -- vertically.
@@ -223,11 +233,11 @@ prefixedLined pref (x:xs) = do
 -- separator.
 vWrappedLineup :: Char -> (String, String) -> [Printer ()] -> Printer ()
 vWrappedLineup sep (prefix, suffix) ps =
-  string prefix
-    >> space |=> do
-         prefixedLined [sep, ' '] ps
-         newline
-         indentedWithSpace (-(fromIntegral (length prefix) + 1)) $ string suffix
+  string prefix >>
+  space |=> do
+    prefixedLined [sep, ' '] ps
+    newline
+    indentedWithSpace (-(fromIntegral (length prefix) + 1)) $ string suffix
 
 -- | Similar to 'vWrappedLineup' but the suffix is in the same line as the
 -- last element.
@@ -235,10 +245,10 @@ vWrappedLineup' :: Char -> (String, String) -> [Printer ()] -> Printer ()
 vWrappedLineup' _ (prefix, suffix) [x] =
   spaced [string prefix, x, string suffix]
 vWrappedLineup' sep (prefix, suffix) ps =
-  string prefix
-    >> space |=> do
-         prefixedLined [sep, ' '] ps
-         string suffix
+  string prefix >>
+  space |=> do
+    prefixedLined [sep, ' '] ps
+    string suffix
 
 -- Inserts the first printer between each element of the list passed as the
 -- second argument and runs them.

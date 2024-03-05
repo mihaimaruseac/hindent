@@ -31,7 +31,7 @@ instance Pretty ImportEntry where
   pretty' (SingleIdentifier wrapped) = string wrapped
   pretty' (WithAllConstructors wrapped) = string wrapped >> string "(..)"
   pretty' WithSpecificConstructors {..} =
-    string name >> hTuple (fmap string constructors)
+    string name >> hFillingTuple (fmap string constructors)
 
 mkImportEntry :: GHC.IE GHC.GhcPs -> ImportEntry
 mkImportEntry (GHC.IEVar _ name) = SingleIdentifier $ showOutputable name
