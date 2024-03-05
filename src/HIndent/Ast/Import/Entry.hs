@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module HIndent.Ast.Import.Entry
   ( ImportEntry
   , mkImportEntry
@@ -8,7 +10,6 @@ module HIndent.Ast.Import.Entry
 import           Data.Char
 import           Data.Function
 import           Data.List
-import           Data.Maybe
 import qualified GHC.Hs                      as GHC
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.WithComments
@@ -16,47 +17,58 @@ import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
-newtype ImportEntry = ImportEntry
-  { name :: GHC.IE GHC.GhcPs
-  }
+data ImportEntry
+  = SingleIdentifier String
+  | WithSpecificConstructors
+      { name         :: String
+      , constructors :: [String]
+      }
+  | WithAllConstructors String
 
 instance CommentExtraction ImportEntry where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty ImportEntry where
-  pretty' = pretty . name
+  pretty' (SingleIdentifier wrapped) = string wrapped
+  pretty' (WithAllConstructors wrapped) = string wrapped >> string "(..)"
+  pretty' WithSpecificConstructors {..} =
+    string name >> hTuple (fmap string constructors)
 
 mkImportEntry :: GHC.IE GHC.GhcPs -> ImportEntry
-mkImportEntry = ImportEntry
+mkImportEntry (GHC.IEVar _ name) = SingleIdentifier $ showOutputable name
+mkImportEntry (GHC.IEThingAbs _ name) = SingleIdentifier $ showOutputable name
+mkImportEntry (GHC.IEThingAll _ name) =
+  WithAllConstructors $ showOutputable name
+mkImportEntry (GHC.IEThingWith _ name _ xs) =
+  WithSpecificConstructors
+    { name = showOutputable name
+    , constructors = fmap (showOutputable . GHC.ieLWrappedName) xs
+    }
+mkImportEntry _ = undefined
 
 -- | This function sorts variants (e.g., data constructors and class
 -- methods) in the given explicit import by their names.
 sortVariants :: WithComments ImportEntry -> WithComments ImportEntry
 sortVariants = fmap f
   where
-    f (ImportEntry (GHC.IEThingWith x x' x'' xs)) =
-      ImportEntry $ GHC.IEThingWith x x' x'' (sortWrappedNames xs)
-      where
-        sortWrappedNames = sortBy (compare `on` showOutputable)
+    f WithSpecificConstructors {..} =
+      WithSpecificConstructors {constructors = sort constructors, ..}
     f x = x
 
 -- | This function sorts the given explicit imports by their names.
 sortExplicitImports :: [WithComments ImportEntry] -> [WithComments ImportEntry]
-sortExplicitImports = sortBy (compareImportEntities `on` name . getNode)
+sortExplicitImports = sortBy (compareImportEntities `on` getNode)
 
 -- | This function compares two import declarations by their module names.
-compareImportEntities :: GHC.IE GHC.GhcPs -> GHC.IE GHC.GhcPs -> Ordering
-compareImportEntities a b =
-  fromMaybe LT $ compareIdentifier <$> getModuleName a <*> getModuleName b
+compareImportEntities :: ImportEntry -> ImportEntry -> Ordering
+compareImportEntities = compareIdentifier `on` getModuleName
 
 -- | This function returns a 'Just' value with the module name extracted
 -- from the import declaration. Otherwise, it returns a 'Nothing'.
-getModuleName :: GHC.IE GHC.GhcPs -> Maybe String
-getModuleName (GHC.IEVar _ wrapped)           = Just $ showOutputable wrapped
-getModuleName (GHC.IEThingAbs _ wrapped)      = Just $ showOutputable wrapped
-getModuleName (GHC.IEThingAll _ wrapped)      = Just $ showOutputable wrapped
-getModuleName (GHC.IEThingWith _ wrapped _ _) = Just $ showOutputable wrapped
-getModuleName _                               = Nothing
+getModuleName :: ImportEntry -> String
+getModuleName (SingleIdentifier wrapped)           = wrapped
+getModuleName (WithAllConstructors wrapped)        = wrapped
+getModuleName (WithSpecificConstructors wrapped _) = wrapped
 
 -- | This function compares two identifiers in order of capitals, symbols,
 -- and lowers.
