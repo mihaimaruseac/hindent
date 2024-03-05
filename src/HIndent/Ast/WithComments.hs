@@ -4,18 +4,19 @@ module HIndent.Ast.WithComments
   ( WithComments
   , fromGenLocated
   , fromEpAnn
+  , getNode
   ) where
 
-import qualified GHC.Hs as GHC
-import qualified GHC.Types.SrcLoc as GHC
-import HIndent.Ast.NodeComments (NodeComments(..))
-import qualified HIndent.Ast.NodeComments as NodeComments
-import HIndent.Pretty
-import HIndent.Pretty.NodeComments
+import qualified GHC.Hs                      as GHC
+import qualified GHC.Types.SrcLoc            as GHC
+import           HIndent.Ast.NodeComments    (NodeComments (..))
+import qualified HIndent.Ast.NodeComments    as NodeComments
+import           HIndent.Pretty
+import           HIndent.Pretty.NodeComments
 
 data WithComments a = WithComments
   { comments :: NodeComments
-  , node :: a
+  , node     :: a
   }
 
 instance Functor WithComments where
@@ -32,3 +33,6 @@ fromGenLocated (GHC.L l a) = WithComments (nodeComments l) a
 
 fromEpAnn :: GHC.EpAnn a -> b -> WithComments b
 fromEpAnn ann = WithComments (NodeComments.fromEpAnn ann)
+
+getNode :: WithComments a -> a
+getNode = node

@@ -11,6 +11,7 @@ import           Control.Monad.RWS
 import qualified GHC.Hs                             as GHC
 import           HIndent.Ast.Import
 import           HIndent.Ast.NodeComments
+import           HIndent.Ast.WithComments
 import           HIndent.Config
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import           HIndent.Pretty
@@ -20,7 +21,7 @@ import           HIndent.Pretty.NodeComments
 import           HIndent.Printer
 
 newtype ImportCollection =
-  ImportCollection [[Import]]
+  ImportCollection [[WithComments Import]]
 
 instance CommentExtraction ImportCollection where
   nodeComments ImportCollection {} = NodeComments [] [] []
@@ -37,7 +38,8 @@ instance Pretty ImportCollection where
 
 mkImportCollection :: GHC.HsModule' -> ImportCollection
 mkImportCollection GHC.HsModule {..} =
-  ImportCollection $ fmap mkImport <$> extractImports' hsmodImports
+  ImportCollection $
+  fmap (fmap (fmap mkImport . fromGenLocated)) (extractImports' hsmodImports)
 
 hasImports :: ImportCollection -> Bool
 hasImports (ImportCollection xs) = not $ null xs

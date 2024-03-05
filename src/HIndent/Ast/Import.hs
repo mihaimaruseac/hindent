@@ -12,13 +12,14 @@ import           Data.List
 import           Data.Maybe
 import qualified GHC.Types.SrcLoc                   as GHC
 import           HIndent.Ast.NodeComments
+import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
 newtype Import = Import
-  { import' :: GHC.LImportDecl GHC.GhcPs
+  { import' :: GHC.ImportDecl GHC.GhcPs
   }
 
 instance CommentExtraction Import where
@@ -27,11 +28,11 @@ instance CommentExtraction Import where
 instance Pretty Import where
   pretty' (Import x) = pretty x
 
-mkImport :: GHC.LImportDecl GHC.GhcPs -> Import
+mkImport :: GHC.ImportDecl GHC.GhcPs -> Import
 mkImport = Import
 
-sortByName :: [Import] -> [Import]
-sortByName = fmap Import . sortImportsByName . fmap import'
+sortByName :: [WithComments Import] -> [WithComments Import]
+sortByName = sortImportsByName
 
 -- | The letter type of a 'Char'.
 --
@@ -46,30 +47,31 @@ data LetterType
 
 -- | This function sorts import declarations and explicit imports in them
 -- by their names.
-sortImportsByName :: [GHC.LImportDecl GHC.GhcPs] -> [GHC.LImportDecl GHC.GhcPs]
+sortImportsByName :: [WithComments Import] -> [WithComments Import]
 sortImportsByName = fmap sortExplicitImportsInDecl . sortByModuleName
 
 -- | This function sorts import declarations by their module names.
-sortByModuleName :: [GHC.LImportDecl GHC.GhcPs] -> [GHC.LImportDecl GHC.GhcPs]
-sortByModuleName = sortBy (compare `on` GHC.unLoc . GHC.ideclName . GHC.unLoc)
+sortByModuleName :: [WithComments Import] -> [WithComments Import]
+sortByModuleName =
+  sortBy (compare `on` GHC.unLoc . GHC.ideclName . import' . getNode)
 
 -- | This function sorts explicit imports in the given import declaration
 -- by their names.
-sortExplicitImportsInDecl ::
-     GHC.LImportDecl GHC.GhcPs -> GHC.LImportDecl GHC.GhcPs
+sortExplicitImportsInDecl :: WithComments Import -> WithComments Import
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 sortExplicitImportsInDecl (L l d@ImportDecl {ideclImportList = Just (x, imports)}) =
   L l d {ideclImportList = Just (x, sorted)}
   where
     sorted = fmap (fmap sortVariants . sortExplicitImports) imports
 #else
-sortExplicitImportsInDecl (GHC.L l d@GHC.ImportDecl {GHC.ideclHiding = Just (x, imports)}) =
-  GHC.L l d {GHC.ideclHiding = Just (x, sorted)}
+sortExplicitImportsInDecl = fmap f
   where
-    sorted = fmap (fmap sortVariants . sortExplicitImports) imports
+    f (Import d@GHC.ImportDecl {GHC.ideclHiding = Just (x, imports)}) =
+      Import $ d {GHC.ideclHiding = Just (x, sorted)}
+      where
+        sorted = fmap (fmap sortVariants . sortExplicitImports) imports
+    f x = x
 #endif
-sortExplicitImportsInDecl x = x
-
 -- | This function sorts the given explicit imports by their names.
 sortExplicitImports :: [GHC.LIE GHC.GhcPs] -> [GHC.LIE GHC.GhcPs]
 sortExplicitImports = sortBy compareImportEntities
