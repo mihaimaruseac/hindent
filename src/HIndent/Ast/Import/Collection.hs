@@ -9,18 +9,18 @@ module HIndent.Ast.Import.Collection
 
 import           Control.Monad.RWS
 import qualified GHC.Hs                             as GHC
+import           HIndent.Ast.Import
 import           HIndent.Ast.NodeComments
 import           HIndent.Config
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.Import
-import           HIndent.Pretty.Import.Sort
 import           HIndent.Pretty.NodeComments
 import           HIndent.Printer
 
 newtype ImportCollection =
-  ImportCollection [[GHC.LImportDecl GHC.GhcPs]]
+  ImportCollection [[Import]]
 
 instance CommentExtraction ImportCollection where
   nodeComments ImportCollection {} = NodeComments [] [] []
@@ -32,12 +32,12 @@ instance Pretty ImportCollection where
       outputImportGroup = lined . fmap pretty
       importDecls =
         gets (configSortImports . psConfig) >>= \case
-          True  -> pure $ fmap sortImportsByName xs
+          True  -> pure $ fmap sortByName xs
           False -> pure xs
 
 mkImportCollection :: GHC.HsModule' -> ImportCollection
 mkImportCollection GHC.HsModule {..} =
-  ImportCollection $ extractImports' hsmodImports
+  ImportCollection $ fmap mkImport <$> extractImports' hsmodImports
 
 hasImports :: ImportCollection -> Bool
 hasImports (ImportCollection xs) = not $ null xs
