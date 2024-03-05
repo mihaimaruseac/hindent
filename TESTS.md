@@ -60,6 +60,7 @@ module X
   , y
   , Z
   , P(x, z)
+  , Q(..)
   , module Foo
   ) where
 ```
