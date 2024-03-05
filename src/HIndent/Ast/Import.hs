@@ -48,11 +48,7 @@ instance Pretty Import where
     case qualification of
       QualifiedAs name -> string " as " >> string name
       _                -> pure ()
-    whenJust importEntries $ \ImportEntryCollection {..} -> do
-      when (kind == Hiding) $ string " hiding"
-      (space >> printCommentsAnd entries (hTuple . fmap pretty)) <-|>
-        (newline >>
-         indentedBlock (printCommentsAnd entries (vTuple . fmap pretty)))
+    whenJust importEntries pretty
 
 mkImport :: GHC.ImportDecl GHC.GhcPs -> Import
 mkImport GHC.ImportDecl {..} = Import {..}
