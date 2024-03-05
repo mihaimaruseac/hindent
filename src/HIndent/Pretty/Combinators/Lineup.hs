@@ -4,6 +4,7 @@ module HIndent.Pretty.Combinators.Lineup
     hvTuple
   , hvTuple'
   , hTuple
+  , hFillingTuple
   , vTuple
   , vTuple'
   , hPromotedTuple
@@ -59,6 +60,15 @@ hvTuple' = (<-|>) <$> hTuple <*> vTuple'
 -- | Runs printers to construct a tuple in a line.
 hTuple :: [Printer ()] -> Printer ()
 hTuple = parens . hCommaSep
+
+-- | Runs printers to construct a tuple in a line, but inserts newlines if
+-- the result doesn't fit in a line.
+--
+-- The difference between this function and 'vTuple' is that the number of elements
+-- in a row in this function is not limited to 1 while the number of elements in
+-- a row in 'vTuple' is limited to 1.
+hFillingTuple :: [Printer ()] -> Printer ()
+hFillingTuple = parens . inter (comma >> (space <-|> newline))
 
 -- | Runs printers to construct a tuple where elements are aligned
 -- vertically.
