@@ -25,6 +25,7 @@ data Import = Import
   , isSafe        :: Bool
   , isBoot        :: Bool
   , qualification :: Qualification
+  , packageName   :: Maybe String
   , import'       :: GHC.ImportDecl GHC.GhcPs
   }
 
@@ -50,6 +51,7 @@ mkImport import'@GHC.ImportDecl {..} = Import {..}
         (GHC.NotQualified, _) -> NotQualified
         (_, Nothing)          -> FullyQualified
         (_, Just name)        -> QualifiedAs $ showOutputable name
+    packageName = fmap showOutputable ideclPkgQual
 
 sortByName :: [WithComments Import] -> [WithComments Import]
 sortByName = sortImportsByName
