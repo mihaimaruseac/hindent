@@ -47,5 +47,4 @@ mkImportEntryCollection GHC.ImportDecl {..} =
 
 sortEntriesByName :: ImportEntryCollection -> ImportEntryCollection
 sortEntriesByName ImportEntryCollection {..} =
-  ImportEntryCollection
-    {entries = sortVariants <$> sortExplicitImports entries, ..}
+  ImportEntryCollection {entries = sortVariantsAndExplicitImports entries, ..}

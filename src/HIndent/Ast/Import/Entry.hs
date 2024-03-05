@@ -3,8 +3,7 @@
 module HIndent.Ast.Import.Entry
   ( ImportEntry
   , mkImportEntry
-  , sortVariants
-  , sortExplicitImports
+  , sortVariantsAndExplicitImports
   ) where
 
 import           Data.Char
@@ -43,6 +42,10 @@ mkImportEntry (GHC.IEThingWith _ name _ xs) =
   WithSpecificConstructors
     {name = showOutputable name, constructors = fmap showOutputable xs}
 mkImportEntry _ = undefined
+
+sortVariantsAndExplicitImports ::
+     [WithComments ImportEntry] -> [WithComments ImportEntry]
+sortVariantsAndExplicitImports = fmap sortVariants . sortExplicitImports
 
 -- | This function sorts variants (e.g., data constructors and class
 -- methods) in the given explicit import by their names.
