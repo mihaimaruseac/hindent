@@ -88,7 +88,7 @@ mkImport import'@GHC.ImportDecl {..} = Import {..}
         Just (True, xs) -> Just $ ImportEntries {entries = xs, kind = Hiding}
 
 sortByName :: [WithComments Import] -> [WithComments Import]
-sortByName = sortImportsByName
+sortByName = fmap sortExplicitImportsInDecl . sortByModuleName
 
 -- | The letter type of a 'Char'.
 --
@@ -100,11 +100,6 @@ data LetterType
   | Symbol
   | Lower
   deriving (Eq, Ord)
-
--- | This function sorts import declarations and explicit imports in them
--- by their names.
-sortImportsByName :: [WithComments Import] -> [WithComments Import]
-sortImportsByName = fmap sortExplicitImportsInDecl . sortByModuleName
 
 -- | This function sorts import declarations by their module names.
 sortByModuleName :: [WithComments Import] -> [WithComments Import]
