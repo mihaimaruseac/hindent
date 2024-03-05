@@ -1,4 +1,5 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RecordWildCards  #-}
 
 module HIndent.Ast.Import.Entry.Collection
   ( ImportEntryCollection
@@ -12,7 +13,6 @@ import           Data.Function
 import           Data.List
 import           Data.Maybe
 import qualified GHC.Hs                               as GHC
-import qualified GHC.Types.SrcLoc                     as GHC
 import           HIndent.Ast.Import.ImportingOrHiding
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.WithComments
@@ -21,7 +21,7 @@ import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
 data ImportEntryCollection = ImportEntryCollection
-  { entries :: [GHC.LIE GHC.GhcPs]
+  { entries :: [WithComments (GHC.IE GHC.GhcPs)]
   , kind    :: ImportingOrHiding
   }
 
@@ -41,34 +41,38 @@ mkImportEntryCollection GHC.ImportDecl {..} =
     Nothing -> Nothing
     Just (False, xs) ->
       Just $
-      (\entries -> ImportEntryCollection {kind = Importing, ..}) <$>
-      fromGenLocated xs
+      fmap (\entries -> ImportEntryCollection {kind = Importing, ..}) $
+      fromGenLocated $ fmap (fmap fromGenLocated) xs
     Just (True, xs) ->
       Just $
-      (\entries -> ImportEntryCollection {kind = Hiding, ..}) <$>
-      fromGenLocated xs
+      fmap (\entries -> ImportEntryCollection {kind = Hiding, ..}) $
+      fromGenLocated $ fmap (fmap fromGenLocated) xs
 
 sortEntriesByName :: ImportEntryCollection -> ImportEntryCollection
 sortEntriesByName ImportEntryCollection {..} =
   ImportEntryCollection
-    {entries = fmap sortVariants $ sortExplicitImports entries, ..}
+    {entries = sortVariants <$> sortExplicitImports entries, ..}
 
 -- | This function sorts the given explicit imports by their names.
-sortExplicitImports :: [GHC.LIE GHC.GhcPs] -> [GHC.LIE GHC.GhcPs]
-sortExplicitImports = sortBy compareImportEntities
+sortExplicitImports ::
+     [WithComments (GHC.IE GHC.GhcPs)] -> [WithComments (GHC.IE GHC.GhcPs)]
+sortExplicitImports = sortBy (compareImportEntities `on` getNode)
 
 -- | This function sorts variants (e.g., data constructors and class
 -- methods) in the given explicit import by their names.
-sortVariants :: GHC.LIE GHC.GhcPs -> GHC.LIE GHC.GhcPs
-sortVariants (GHC.L l (GHC.IEThingWith x x' x'' xs)) =
-  GHC.L l $ GHC.IEThingWith x x' x'' (sortWrappedNames xs)
+sortVariants ::
+     WithComments (GHC.IE GHC.GhcPs) -> WithComments (GHC.IE GHC.GhcPs)
+sortVariants = fmap f
   where
-    sortWrappedNames = sortBy (compare `on` showOutputable)
-sortVariants x = x
+    f (GHC.IEThingWith x x' x'' xs) =
+      GHC.IEThingWith x x' x'' (sortWrappedNames xs)
+      where
+        sortWrappedNames = sortBy (compare `on` showOutputable)
+    f x = x
 
 -- | This function compares two import declarations by their module names.
-compareImportEntities :: GHC.LIE GHC.GhcPs -> GHC.LIE GHC.GhcPs -> Ordering
-compareImportEntities (GHC.L _ a) (GHC.L _ b) =
+compareImportEntities :: GHC.IE GHC.GhcPs -> GHC.IE GHC.GhcPs -> Ordering
+compareImportEntities a b =
   fromMaybe LT $ compareIdentifier <$> getModuleName a <*> getModuleName b
 
 -- | This function returns a 'Just' value with the module name extracted
