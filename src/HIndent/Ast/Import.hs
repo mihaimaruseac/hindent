@@ -17,12 +17,11 @@ import HIndent.Ast.Import.Qualification
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs.ImpExp as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-import qualified GHC.Types.PkgQual as GHC
-#endif
+
 data Import = Import
   { moduleName :: String
   , isSafe :: Bool
@@ -59,17 +58,9 @@ mkImport decl@GHC.ImportDecl {..} = Import {..}
         (GHC.NotQualified, _) -> NotQualified
         (_, Nothing) -> FullyQualified
         (_, Just name) -> QualifiedAs $ showOutputable name
-    packageName = getPackageName decl
+    packageName = showOutputable <$> GHC.getPackageName decl
     importEntries = mkImportEntryCollection decl
 
-getPackageName :: GHC.ImportDecl GHC.GhcPs -> Maybe String
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-getPackageName GHC.ImportDecl {GHC.ideclPkgQual = GHC.RawPkgQual name} =
-  Just $ showOutputable name
-getPackageName GHC.ImportDecl {GHC.ideclPkgQual = GHC.NoRawPkgQual} = Nothing
-#else
-getPackageName GHC.ImportDecl {..} = fmap showOutputable ideclPkgQual
-#endif
 sortByName :: [WithComments Import] -> [WithComments Import]
 sortByName = fmap sortExplicitImportsInDecl . sortByModuleName
 
