@@ -13,6 +13,7 @@ import           Data.Function
 import           Data.List
 import           Data.Maybe
 import qualified GHC.Hs                               as GHC
+import           HIndent.Ast.Import.Entry
 import           HIndent.Ast.Import.ImportingOrHiding
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.WithComments
@@ -21,7 +22,7 @@ import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
 data ImportEntryCollection = ImportEntryCollection
-  { entries :: [WithComments (GHC.IE GHC.GhcPs)]
+  { entries :: [WithComments ImportEntry]
   , kind    :: ImportingOrHiding
   }
 
@@ -42,11 +43,11 @@ mkImportEntryCollection GHC.ImportDecl {..} =
     Just (False, xs) ->
       Just $
       fmap (\entries -> ImportEntryCollection {kind = Importing, ..}) $
-      fromGenLocated $ fmap (fmap fromGenLocated) xs
+      fromGenLocated $ fmap (fmap (fmap mkImportEntry . fromGenLocated)) xs
     Just (True, xs) ->
       Just $
       fmap (\entries -> ImportEntryCollection {kind = Hiding, ..}) $
-      fromGenLocated $ fmap (fmap fromGenLocated) xs
+      fromGenLocated $ fmap (fmap (fmap mkImportEntry . fromGenLocated)) xs
 
 sortEntriesByName :: ImportEntryCollection -> ImportEntryCollection
 sortEntriesByName ImportEntryCollection {..} =
@@ -54,18 +55,16 @@ sortEntriesByName ImportEntryCollection {..} =
     {entries = sortVariants <$> sortExplicitImports entries, ..}
 
 -- | This function sorts the given explicit imports by their names.
-sortExplicitImports ::
-     [WithComments (GHC.IE GHC.GhcPs)] -> [WithComments (GHC.IE GHC.GhcPs)]
-sortExplicitImports = sortBy (compareImportEntities `on` getNode)
+sortExplicitImports :: [WithComments ImportEntry] -> [WithComments ImportEntry]
+sortExplicitImports = sortBy (compareImportEntities `on` name . getNode)
 
 -- | This function sorts variants (e.g., data constructors and class
 -- methods) in the given explicit import by their names.
-sortVariants ::
-     WithComments (GHC.IE GHC.GhcPs) -> WithComments (GHC.IE GHC.GhcPs)
+sortVariants :: WithComments ImportEntry -> WithComments ImportEntry
 sortVariants = fmap f
   where
-    f (GHC.IEThingWith x x' x'' xs) =
-      GHC.IEThingWith x x' x'' (sortWrappedNames xs)
+    f (ImportEntry (GHC.IEThingWith x x' x'' xs)) =
+      ImportEntry $ GHC.IEThingWith x x' x'' (sortWrappedNames xs)
       where
         sortWrappedNames = sortBy (compare `on` showOutputable)
     f x = x
