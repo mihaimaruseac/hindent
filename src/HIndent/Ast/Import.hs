@@ -10,8 +10,9 @@ import           HIndent.Pretty
 import           HIndent.Pretty.Import.Sort
 import           HIndent.Pretty.NodeComments
 
-newtype Import =
-  Import (GHC.LImportDecl GHC.GhcPs)
+newtype Import = Import
+  { import' :: GHC.LImportDecl GHC.GhcPs
+  }
 
 instance CommentExtraction Import where
   nodeComments Import {} = NodeComments [] [] []
@@ -23,4 +24,4 @@ mkImport :: GHC.LImportDecl GHC.GhcPs -> Import
 mkImport = Import
 
 sortByName :: [Import] -> [Import]
-sortByName = fmap Import . sortImportsByName . fmap (\(Import x) -> x)
+sortByName = fmap Import . sortImportsByName . fmap import'
