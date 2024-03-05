@@ -12,6 +12,7 @@ import           Data.Function
 import           Data.List
 import           Data.Maybe
 import qualified GHC.Types.SrcLoc                   as GHC
+import qualified GHC.Unit                           as GHC
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -22,6 +23,7 @@ import           HIndent.Pretty.NodeComments
 data Import = Import
   { moduleName :: String
   , isSafe     :: Bool
+  , isBoot     :: Bool
   , import'    :: GHC.ImportDecl GHC.GhcPs
   }
 
@@ -36,6 +38,7 @@ mkImport import'@GHC.ImportDecl {..} = Import {..}
   where
     moduleName = showOutputable ideclName
     isSafe = ideclSafe
+    isBoot = ideclSource == GHC.IsBoot
 
 sortByName :: [WithComments Import] -> [WithComments Import]
 sortByName = sortImportsByName
