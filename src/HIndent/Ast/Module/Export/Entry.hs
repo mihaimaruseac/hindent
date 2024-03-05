@@ -29,8 +29,7 @@ instance Pretty ExportEntry where
   pretty' (ByModule s) = string "module " >> string s
 
 mkExportEntry :: GHC.IE GHC.GhcPs -> ExportEntry
-mkExportEntry (GHC.IEVar GHC.NoExtField name) =
-  SingleIdentifier $ showOutputable name
+mkExportEntry (GHC.IEVar _ name) = SingleIdentifier $ showOutputable name
 mkExportEntry (GHC.IEThingAbs _ name) = SingleIdentifier $ showOutputable name
 mkExportEntry (GHC.IEThingAll _ name) =
   WithAllConstructors $ showOutputable name
