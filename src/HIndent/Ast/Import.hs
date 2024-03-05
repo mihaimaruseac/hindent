@@ -26,6 +26,7 @@ data Import = Import
   , isBoot        :: Bool
   , qualification :: Qualification
   , packageName   :: Maybe String
+  , importEntries :: Maybe ImportEntries
   , import'       :: GHC.ImportDecl GHC.GhcPs
   }
 
@@ -33,6 +34,15 @@ data Qualification
   = NotQualified
   | FullyQualified
   | QualifiedAs String
+
+data ImportEntries = ImportEntries
+  { entries :: GHC.GenLocated GHC.SrcSpanAnnL [GHC.LIE GHC.GhcPs]
+  , kind    :: EntriesKind
+  }
+
+data EntriesKind
+  = Importing
+  | Hiding
 
 instance CommentExtraction Import where
   nodeComments Import {} = NodeComments [] [] []
@@ -52,6 +62,12 @@ mkImport import'@GHC.ImportDecl {..} = Import {..}
         (_, Nothing)          -> FullyQualified
         (_, Just name)        -> QualifiedAs $ showOutputable name
     packageName = fmap showOutputable ideclPkgQual
+    importEntries =
+      case ideclHiding of
+        Nothing -> Nothing
+        Just (False, xs) ->
+          Just $ ImportEntries {entries = xs, kind = Importing}
+        Just (True, xs) -> Just $ ImportEntries {entries = xs, kind = Hiding}
 
 sortByName :: [WithComments Import] -> [WithComments Import]
 sortByName = sortImportsByName
