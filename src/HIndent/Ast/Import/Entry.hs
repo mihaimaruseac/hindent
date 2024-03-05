@@ -41,9 +41,7 @@ mkImportEntry (GHC.IEThingAll _ name) =
   WithAllConstructors $ showOutputable name
 mkImportEntry (GHC.IEThingWith _ name _ xs) =
   WithSpecificConstructors
-    { name = showOutputable name
-    , constructors = fmap (showOutputable . GHC.ieLWrappedName) xs
-    }
+    {name = showOutputable name, constructors = fmap showOutputable xs}
 mkImportEntry _ = undefined
 
 -- | This function sorts variants (e.g., data constructors and class
