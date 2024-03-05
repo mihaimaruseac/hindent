@@ -88,16 +88,16 @@ sortVariants x = x
 -- | This function compares two import declarations by their module names.
 compareImportEntities :: GHC.LIE GHC.GhcPs -> GHC.LIE GHC.GhcPs -> Ordering
 compareImportEntities (GHC.L _ a) (GHC.L _ b) =
-  fromMaybe LT $ compareIdentifier <$> moduleName a <*> moduleName b
+  fromMaybe LT $ compareIdentifier <$> getModuleName a <*> getModuleName b
 
 -- | This function returns a 'Just' value with the module name extracted
 -- from the import declaration. Otherwise, it returns a 'Nothing'.
-moduleName :: GHC.IE GHC.GhcPs -> Maybe String
-moduleName (GHC.IEVar _ wrapped)           = Just $ showOutputable wrapped
-moduleName (GHC.IEThingAbs _ wrapped)      = Just $ showOutputable wrapped
-moduleName (GHC.IEThingAll _ wrapped)      = Just $ showOutputable wrapped
-moduleName (GHC.IEThingWith _ wrapped _ _) = Just $ showOutputable wrapped
-moduleName _                               = Nothing
+getModuleName :: GHC.IE GHC.GhcPs -> Maybe String
+getModuleName (GHC.IEVar _ wrapped)           = Just $ showOutputable wrapped
+getModuleName (GHC.IEThingAbs _ wrapped)      = Just $ showOutputable wrapped
+getModuleName (GHC.IEThingAll _ wrapped)      = Just $ showOutputable wrapped
+getModuleName (GHC.IEThingWith _ wrapped _ _) = Just $ showOutputable wrapped
+getModuleName _                               = Nothing
 
 -- | This function compares two identifiers in order of capitals, symbols,
 -- and lowers.
