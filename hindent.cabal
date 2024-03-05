@@ -42,6 +42,7 @@ library
       HIndent.Ast.FileHeaderPragma.Collection
       HIndent.Ast.Import
       HIndent.Ast.Import.Collection
+      HIndent.Ast.Import.Qualification
       HIndent.Ast.Module
       HIndent.Ast.Module.Declaration
       HIndent.Ast.Module.Name

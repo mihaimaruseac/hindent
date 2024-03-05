@@ -15,6 +15,7 @@ import           Data.Maybe
 import qualified GHC.Types.SrcLoc                   as GHC
 import qualified GHC.Unit                           as GHC
 import           HIndent.Applicative
+import           HIndent.Ast.Import.Qualification
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -30,12 +31,6 @@ data Import = Import
   , packageName   :: Maybe String
   , importEntries :: Maybe ImportEntries
   }
-
-data Qualification
-  = NotQualified
-  | FullyQualified
-  | QualifiedAs String
-  deriving (Eq)
 
 data ImportEntries = ImportEntries
   { entries :: GHC.GenLocated GHC.SrcSpanAnnL [GHC.LIE GHC.GhcPs]
