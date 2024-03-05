@@ -21,11 +21,17 @@ import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
 data Import = Import
-  { moduleName :: String
-  , isSafe     :: Bool
-  , isBoot     :: Bool
-  , import'    :: GHC.ImportDecl GHC.GhcPs
+  { moduleName    :: String
+  , isSafe        :: Bool
+  , isBoot        :: Bool
+  , qualification :: Qualification
+  , import'       :: GHC.ImportDecl GHC.GhcPs
   }
+
+data Qualification
+  = NotQualified
+  | FullyQualified
+  | QualifiedAs String
 
 instance CommentExtraction Import where
   nodeComments Import {} = NodeComments [] [] []
@@ -39,6 +45,11 @@ mkImport import'@GHC.ImportDecl {..} = Import {..}
     moduleName = showOutputable ideclName
     isSafe = ideclSafe
     isBoot = ideclSource == GHC.IsBoot
+    qualification =
+      case (ideclQualified, ideclAs) of
+        (GHC.NotQualified, _) -> NotQualified
+        (_, Nothing)          -> FullyQualified
+        (_, Just name)        -> QualifiedAs $ showOutputable name
 
 sortByName :: [WithComments Import] -> [WithComments Import]
 sortByName = sortImportsByName
