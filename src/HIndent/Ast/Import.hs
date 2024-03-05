@@ -7,12 +7,14 @@ module HIndent.Ast.Import
   , sortByName
   ) where
 
+import           Control.Monad
 import           Data.Char
 import           Data.Function
 import           Data.List
 import           Data.Maybe
 import qualified GHC.Types.SrcLoc                   as GHC
 import qualified GHC.Unit                           as GHC
+import           HIndent.Applicative
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -34,6 +36,7 @@ data Qualification
   = NotQualified
   | FullyQualified
   | QualifiedAs String
+  deriving (Eq)
 
 data ImportEntries = ImportEntries
   { entries :: GHC.GenLocated GHC.SrcSpanAnnL [GHC.LIE GHC.GhcPs]
@@ -43,12 +46,27 @@ data ImportEntries = ImportEntries
 data EntriesKind
   = Importing
   | Hiding
+  deriving (Eq)
 
 instance CommentExtraction Import where
   nodeComments Import {} = NodeComments [] [] []
 
 instance Pretty Import where
-  pretty' Import {..} = pretty import'
+  pretty' Import {..} = do
+    string "import "
+    when isBoot $ string "{-# SOURCE #-} "
+    when isSafe $ string "safe "
+    unless (qualification == NotQualified) $ string "qualified "
+    whenJust packageName $ \name -> string name >> space
+    string moduleName
+    case qualification of
+      QualifiedAs name -> string " as " >> string name
+      _                -> pure ()
+    whenJust importEntries $ \ImportEntries {..} -> do
+      when (kind == Hiding) $ string " hiding"
+      (space >> printCommentsAnd entries (hTuple . fmap pretty)) <-|>
+        (newline >>
+         indentedBlock (printCommentsAnd entries (vTuple . fmap pretty)))
 
 mkImport :: GHC.ImportDecl GHC.GhcPs -> Import
 mkImport import'@GHC.ImportDecl {..} = Import {..}
