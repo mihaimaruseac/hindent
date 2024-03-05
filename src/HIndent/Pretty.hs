@@ -58,9 +58,6 @@ import GHC.Core.DataCon
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
 import GHC.Unit
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
-import GHC.Types.PkgQual
-#endif
 -- | This function pretty-prints the given AST node with comments.
 pretty :: Pretty a => a -> Printer ()
 pretty p = do
