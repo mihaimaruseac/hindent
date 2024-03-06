@@ -40,6 +40,8 @@ library
       HIndent.Ast.Declaration
       HIndent.Ast.Declaration.Collection
       HIndent.Ast.Declaration.Family
+      HIndent.Ast.Declaration.Family.Data
+      HIndent.Ast.Declaration.Family.Data.Signature
       HIndent.Ast.Declaration.Family.DataOrType
       HIndent.Ast.Declaration.Family.Injectivity
       HIndent.Ast.Declaration.Family.ResultSignature
