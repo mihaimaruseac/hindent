@@ -5,6 +5,7 @@ module HIndent.Ast.Declaration.Family
   , mkFamilyDeclaration
   ) where
 
+import           Control.Monad
 import qualified GHC.Types.Basic                           as GHC
 import qualified GHC.Types.SrcLoc                          as GHC
 import           HIndent.Applicative
@@ -17,6 +18,7 @@ import           HIndent.Pretty.NodeComments
 
 data FamilyDeclaration = FamilyDeclaration
   { dataOrType :: DataOrType
+  , isTopLevel :: Bool
   , family'    :: GHC.FamilyDecl GHC.GhcPs
   }
 
@@ -26,9 +28,8 @@ instance CommentExtraction FamilyDeclaration where
 instance Pretty FamilyDeclaration where
   pretty' FamilyDeclaration {family' = GHC.FamilyDecl {..}, ..} = do
     pretty dataOrType
-    case fdTopLevel of
-      GHC.TopLevel    -> string " family "
-      GHC.NotTopLevel -> space
+    space
+    when isTopLevel $ string "family "
     pretty fdLName
     spacePrefixed $ pretty <$> GHC.hsq_explicit fdTyVars
     case GHC.unLoc fdResultSig of
@@ -53,3 +54,7 @@ mkFamilyDeclaration :: GHC.FamilyDecl GHC.GhcPs -> FamilyDeclaration
 mkFamilyDeclaration family'@GHC.FamilyDecl {..} = FamilyDeclaration {..}
   where
     dataOrType = mkDataOrType fdInfo
+    isTopLevel =
+      case fdTopLevel of
+        GHC.TopLevel    -> True
+        GHC.NotTopLevel -> False
