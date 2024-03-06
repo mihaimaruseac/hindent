@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Family.Data
@@ -6,33 +5,26 @@ module HIndent.Ast.Declaration.Family.Data
   , mkDataFamily
   ) where
 
-import Control.Monad
-import qualified GHC.Types.Basic as GHC
-import qualified GHC.Types.SrcLoc as GHC
-import HIndent.Applicative
-import HIndent.Ast.NodeComments hiding (fromEpAnn)
-import HIndent.Ast.Type
-import HIndent.Ast.Type.Variable
-import HIndent.Ast.WithComments
+import           Control.Monad
+import qualified GHC.Types.Basic                    as GHC
+import qualified GHC.Types.SrcLoc                   as GHC
+import           HIndent.Applicative
+import           HIndent.Ast.NodeComments           hiding (fromEpAnn)
+import           HIndent.Ast.Type
+import           HIndent.Ast.Type.Variable
+import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import HIndent.Pretty
-import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 8, 1)
+import           HIndent.Pretty
+import           HIndent.Pretty.Combinators
+import           HIndent.Pretty.NodeComments
+
 data DataFamily = DataFamily
-  { isTopLevel :: Bool
-  , name :: String
-  , typeVariables :: [WithComments (TypeVariable (GHC.HsBndrVis GHC.GhcPs))]
-  , signature :: Maybe (WithComments Type)
+  { isTopLevel    :: Bool
+  , name          :: String
+  , typeVariables :: [WithComments TypeVariable]
+  , signature     :: Maybe (WithComments Type)
   }
-#else
-data DataFamily = DataFamily
-  { isTopLevel :: Bool
-  , name :: String
-  , typeVariables :: [WithComments (TypeVariable ())]
-  , signature :: Maybe (WithComments Type)
-  }
-#endif
+
 instance CommentExtraction DataFamily where
   nodeComments DataFamily {} = NodeComments [] [] []
 
@@ -52,7 +44,7 @@ mkDataFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
   where
     isTopLevel =
       case fdTopLevel of
-        GHC.TopLevel -> True
+        GHC.TopLevel    -> True
         GHC.NotTopLevel -> False
     name = showOutputable fdLName
     typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
