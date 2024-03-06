@@ -59,7 +59,7 @@ instance Pretty Declaration where
   pretty' (RoleAnnotDecl x) = pretty x
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
-mkDeclaration (GHC.TyClD _ x@GHC.FamDecl {}) = Family $ mkFamilyDeclaration x
+mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) = Family $ mkFamilyDeclaration x
 mkDeclaration (GHC.TyClD _ x) = TyClDecl x
 mkDeclaration (GHC.InstD _ x) = InstDecl x
 mkDeclaration (GHC.DerivD _ x) = DerivDecl x

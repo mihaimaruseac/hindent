@@ -9,7 +9,7 @@ import           HIndent.Pretty
 import           HIndent.Pretty.NodeComments
 
 newtype FamilyDeclaration =
-  FamilyDeclaration (GHC.TyClDecl GHC.GhcPs)
+  FamilyDeclaration (GHC.FamilyDecl GHC.GhcPs)
 
 instance CommentExtraction FamilyDeclaration where
   nodeComments FamilyDeclaration {} = NodeComments [] [] []
@@ -17,5 +17,5 @@ instance CommentExtraction FamilyDeclaration where
 instance Pretty FamilyDeclaration where
   pretty' (FamilyDeclaration x) = pretty x
 
-mkFamilyDeclaration :: GHC.TyClDecl GHC.GhcPs -> FamilyDeclaration
+mkFamilyDeclaration :: GHC.FamilyDecl GHC.GhcPs -> FamilyDeclaration
 mkFamilyDeclaration = FamilyDeclaration
