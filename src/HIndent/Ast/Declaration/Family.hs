@@ -24,7 +24,7 @@ data FamilyDeclaration = FamilyDeclaration
   , typeVariables :: [WithComments (TypeVariable ())]
   , signature     :: WithComments ResultSignature
   , injectivity   :: Maybe (WithComments Injectivity)
-  , family'       :: GHC.FamilyDecl GHC.GhcPs
+  , openOrClosed  :: OpenOrClosed
   }
 
 newtype ResultSignature =
@@ -36,14 +36,24 @@ instance CommentExtraction FamilyDeclaration where
 newtype Injectivity =
   Injectivity (GHC.InjectivityAnn GHC.GhcPs)
 
+instance CommentExtraction ResultSignature where
+  nodeComments (ResultSignature _) = NodeComments [] [] []
+
+instance Pretty ResultSignature where
+  pretty' (ResultSignature x) = pretty x
+
 instance CommentExtraction Injectivity where
   nodeComments (Injectivity _) = NodeComments [] [] []
 
 instance Pretty Injectivity where
   pretty' (Injectivity x) = pretty x
 
+data OpenOrClosed
+  = Open
+  | Closed [GHC.LTyFamInstEqn GHC.GhcPs]
+
 instance Pretty FamilyDeclaration where
-  pretty' FamilyDeclaration {family' = GHC.FamilyDecl {..}, ..} = do
+  pretty' FamilyDeclaration {..} = do
     pretty dataOrType
     space
     when isTopLevel $ string "family "
@@ -51,16 +61,16 @@ instance Pretty FamilyDeclaration where
     spacePrefixed $ fmap pretty typeVariables
     case getNode signature of
       ResultSignature GHC.NoSig {}    -> pure ()
-      ResultSignature GHC.TyVarSig {} -> string " = " >> pretty fdResultSig
-      _                               -> space >> pretty fdResultSig
+      ResultSignature GHC.TyVarSig {} -> string " = " >> pretty signature
+      _                               -> space >> pretty signature
     whenJust injectivity $ \x -> string " | " >> pretty x
-    case fdInfo of
-      GHC.ClosedTypeFamily (Just xs) ->
+    case openOrClosed of
+      Open -> pure ()
+      Closed xs ->
         string " where" >> newline >> indentedBlock (lined $ fmap pretty xs)
-      _ -> pure ()
 
 mkFamilyDeclaration :: GHC.FamilyDecl GHC.GhcPs -> FamilyDeclaration
-mkFamilyDeclaration family'@GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} =
+mkFamilyDeclaration GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} =
   FamilyDeclaration {..}
   where
     dataOrType = mkDataOrType fdInfo
@@ -72,3 +82,7 @@ mkFamilyDeclaration family'@GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} =
     typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
     signature = ResultSignature <$> fromGenLocated fdResultSig
     injectivity = fmap (fmap Injectivity . fromGenLocated) fdInjectivityAnn
+    openOrClosed =
+      case fdInfo of
+        GHC.ClosedTypeFamily (Just xs) -> Closed xs
+        _                              -> Open
