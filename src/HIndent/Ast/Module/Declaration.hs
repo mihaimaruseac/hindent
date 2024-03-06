@@ -6,6 +6,7 @@ module HIndent.Ast.Module.Declaration
   ) where
 
 import HIndent.Applicative
+import HIndent.Ast.Module.Export.Collection
 import HIndent.Ast.Module.Name
 import HIndent.Ast.Module.Warning
 import HIndent.Ast.NodeComments
@@ -18,7 +19,7 @@ import HIndent.Pretty.NodeComments
 data ModuleDeclaration = ModuleDeclaration
   { name :: WithComments ModuleName
   , warning :: Maybe (WithComments ModuleWarning)
-  , exports :: Maybe (GHC.LocatedL [GHC.LIE GHC.GhcPs])
+  , exports :: Maybe (WithComments ExportCollection)
   }
 
 instance CommentExtraction ModuleDeclaration where
@@ -30,10 +31,9 @@ instance Pretty ModuleDeclaration where
     whenJust warning $ \x -> do
       space
       pretty x
-    whenJust exports $ \xs -> do
+    whenJust exports $ \x -> do
       newline
-      indentedBlock $ do
-        printCommentsAnd xs (vTuple . fmap pretty)
+      indentedBlock $ pretty x
     string " where"
 
 mkModuleDeclaration :: GHC.HsModule' -> Maybe ModuleDeclaration
@@ -43,4 +43,4 @@ mkModuleDeclaration m =
     Just name' -> Just ModuleDeclaration {..}
       where name = mkModuleName <$> fromGenLocated name'
             warning = mkModuleWarning m
-            exports = GHC.hsmodExports m
+            exports = mkExportCollection m

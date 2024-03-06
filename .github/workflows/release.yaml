@@ -27,12 +27,12 @@ jobs:
 
       - name: Setup Haskell Compiler (cabal)
         id: setup-haskell
-        uses: haskell-actions/setup@b1dc5f1786a382e9a2532d039e8c53cf56f21392 # v2.6.1
+        uses: haskell-actions/setup@594e355d8c7f270ef637fd97c0205eaf74df8383 # v2.6.2
         with:
           ghc-version: ${{ env.ghc }}
 
       - name: Cache dist-newstyle
-        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4.0.1
         with:
           path: dist-newstyle
           key: dist-newstyle-${{ env.os }}-${{ env.ghc }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('internal/**','src/**','app/**','tests/**','benchmarks/**') }}
@@ -41,7 +41,7 @@ jobs:
             dist-newstyle-${{ env.os }}-${{ env.ghc }}-
 
       - name: Cache ~/.cabal/store
-        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4.0.1
         with:
           path: ${{ steps.setup-haskell.outputs.cabal-store }}
           key: cabal-store-${{ env.os }}-${{ env.ghc }}-${{ hashFiles('**/*.cabal') }}
@@ -135,12 +135,12 @@ jobs:
       contents: write # to upload to release notes
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@eaceaf801fd36c7dee90939fad912460b18a1ffe # v4.1.2
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: executables.zip
 
       - name: Download artifact
-        uses: actions/download-artifact@eaceaf801fd36c7dee90939fad912460b18a1ffe # v4.1.2
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: sdist.zip
 

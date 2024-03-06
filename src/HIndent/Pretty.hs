@@ -58,9 +58,6 @@ import GHC.Core.DataCon
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
 import GHC.Unit
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
-import GHC.Types.PkgQual
-#endif
 -- | This function pretty-prints the given AST node with comments.
 pretty :: Pretty a => a -> Printer ()
 pretty p = do
@@ -1703,52 +1700,7 @@ instance Pretty (FieldLabelStrings GhcPs) where
 instance Pretty (AmbiguousFieldOcc GhcPs) where
   pretty' (Unambiguous _ name) = pretty name
   pretty' (Ambiguous _ name) = pretty name
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-instance Pretty (ImportDecl GhcPs) where
-  pretty' decl@ImportDecl {..} = do
-    string "import "
-    when (ideclSource == IsBoot) $ string "{-# SOURCE #-} "
-    when ideclSafe $ string "safe "
-    unless (ideclQualified == NotQualified) $ string "qualified "
-    whenJust (packageName decl) $ \x -> do
-      pretty x
-      space
-    pretty ideclName
-    whenJust ideclAs $ \x -> do
-      string " as "
-      pretty x
-    whenJust ideclImportList $ \(x, ps) -> do
-      when (x == EverythingBut) (string " hiding")
-      (string " " >> printCommentsAnd ps (hTuple . fmap pretty))
-        <-|> (newline
-                >> indentedBlock (printCommentsAnd ps (vTuple . fmap pretty)))
-#else
-instance Pretty (ImportDecl GhcPs) where
-  pretty' decl@ImportDecl {..} = do
-    string "import "
-    when (ideclSource == IsBoot) $ string "{-# SOURCE #-} "
-    when ideclSafe $ string "safe "
-    unless (ideclQualified == NotQualified) $ string "qualified "
-    whenJust (packageName decl) $ \x -> do
-      pretty x
-      space
-    pretty ideclName
-    whenJust ideclAs $ \x -> do
-      string " as "
-      pretty x
-    whenJust ideclHiding $ \(x, ps) -> do
-      when x (string " hiding")
-      (string " " >> printCommentsAnd ps (hTuple . fmap pretty))
-        <-|> (newline
-                >> indentedBlock (printCommentsAnd ps (vTuple . fmap pretty)))
-#endif
-packageName :: ImportDecl GhcPs -> Maybe StringLiteral
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
-packageName (ideclPkgQual -> RawPkgQual name) = Just name
-packageName _ = Nothing
-#else
-packageName = ideclPkgQual
-#endif
+
 instance Pretty (HsDerivingClause GhcPs) where
   pretty' HsDerivingClause { deriv_clause_strategy = Just strategy@(L _ ViaStrategy {})
                            , ..

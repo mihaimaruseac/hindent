@@ -40,9 +40,16 @@ library
       HIndent.Ast.Declaration.Collection
       HIndent.Ast.FileHeaderPragma
       HIndent.Ast.FileHeaderPragma.Collection
+      HIndent.Ast.Import
       HIndent.Ast.Import.Collection
+      HIndent.Ast.Import.Entry
+      HIndent.Ast.Import.Entry.Collection
+      HIndent.Ast.Import.ImportingOrHiding
+      HIndent.Ast.Import.Qualification
       HIndent.Ast.Module
       HIndent.Ast.Module.Declaration
+      HIndent.Ast.Module.Export.Collection
+      HIndent.Ast.Module.Export.Entry
       HIndent.Ast.Module.Name
       HIndent.Ast.Module.Warning
       HIndent.Ast.Module.Warning.Kind
@@ -56,6 +63,7 @@ library
       HIndent.Error
       HIndent.Fixity
       HIndent.GhcLibParserWrapper.GHC.Hs
+      HIndent.GhcLibParserWrapper.GHC.Hs.ImpExp
       HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings
       HIndent.Language
       HIndent.LanguageExtension

@@ -8,6 +8,8 @@
 
 ### Changed
 
+- The formatting style of import declarations with constructors ([#829]).
+
 ### Fixed
 
 - Wrong default HIndent configuration in [`README.md`] ([#750]).
@@ -369,6 +371,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#829]: https://github.com/mihaimaruseac/hindent/pull/829
 [#822]: https://github.com/mihaimaruseac/hindent/pull/822
 [#784]: https://github.com/mihaimaruseac/hindent/pull/784
 [#780]: https://github.com/mihaimaruseac/hindent/pull/780
