@@ -37,13 +37,9 @@ instance Pretty FamilyDeclaration where
     string name
     spacePrefixed $ fmap pretty typeVariables
     case GHC.unLoc fdResultSig of
-      GHC.NoSig {} -> pure ()
-      GHC.TyVarSig {} -> do
-        string " = "
-        pretty fdResultSig
-      _ -> do
-        space
-        pretty fdResultSig
+      GHC.NoSig {}    -> pure ()
+      GHC.TyVarSig {} -> string " = " >> pretty fdResultSig
+      _               -> space >> pretty fdResultSig
     whenJust fdInjectivityAnn $ \x -> do
       string " | "
       pretty x
