@@ -23,16 +23,20 @@ data DataOrType
   = Data
   | Type
 
+instance CommentExtraction DataOrType where
+  nodeComments Data = NodeComments [] [] []
+  nodeComments Type = NodeComments [] [] []
+
+instance Pretty DataOrType where
+  pretty' Data = string "data"
+  pretty' Type = string "type"
+
 instance CommentExtraction FamilyDeclaration where
   nodeComments FamilyDeclaration {} = NodeComments [] [] []
 
 instance Pretty FamilyDeclaration where
-  pretty' FamilyDeclaration {family' = GHC.FamilyDecl {..}} = do
-    string $
-      case fdInfo of
-        GHC.DataFamily          -> "data"
-        GHC.OpenTypeFamily      -> "type"
-        GHC.ClosedTypeFamily {} -> "type"
+  pretty' FamilyDeclaration {family' = GHC.FamilyDecl {..}, ..} = do
+    pretty dataOrType
     case fdTopLevel of
       GHC.TopLevel    -> string " family "
       GHC.NotTopLevel -> space
