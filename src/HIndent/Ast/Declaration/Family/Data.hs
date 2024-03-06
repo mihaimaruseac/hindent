@@ -25,15 +25,10 @@ data DataFamily = DataFamily
   , typeVariables :: [WithComments (TypeVariable ())]
   , signature     :: Maybe (WithComments Type)
   , injectivity   :: Maybe (WithComments Injectivity)
-  , openOrClosed  :: OpenOrClosed
   }
 
 instance CommentExtraction DataFamily where
   nodeComments DataFamily {} = NodeComments [] [] []
-
-data OpenOrClosed
-  = Open
-  | Closed [GHC.LTyFamInstEqn GHC.GhcPs]
 
 instance Pretty DataFamily where
   pretty' DataFamily {..} = do
@@ -43,10 +38,6 @@ instance Pretty DataFamily where
     spacePrefixed $ fmap pretty typeVariables
     whenJust signature $ \sig -> space >> pretty sig
     whenJust injectivity $ \x -> string " | " >> pretty x
-    case openOrClosed of
-      Open -> pure ()
-      Closed xs ->
-        string " where" >> newline >> indentedBlock (lined $ fmap pretty xs)
 
 mkDataFamily :: GHC.FamilyDecl GHC.GhcPs -> DataFamily
 mkDataFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
@@ -67,7 +58,3 @@ mkDataFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
           error
             "Data family should never have this AST node. If you see this error, please report it to the HIndent maintainers."
     injectivity = fmap (fmap Injectivity . fromGenLocated) fdInjectivityAnn
-    openOrClosed =
-      case fdInfo of
-        GHC.ClosedTypeFamily (Just xs) -> Closed xs
-        _                              -> Open
