@@ -4,13 +4,14 @@ module HIndent.Ast.Declaration
   , isSignature
   ) where
 
+import           HIndent.Ast.Declaration.Family
 import           HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.NodeComments
 
 data Declaration
-  = Family (GHC.TyClDecl GHC.GhcPs)
+  = Family FamilyDeclaration
   | TyClDecl (GHC.TyClDecl GHC.GhcPs)
   | InstDecl (GHC.InstDecl GHC.GhcPs)
   | DerivDecl (GHC.DerivDecl GHC.GhcPs)
@@ -58,7 +59,7 @@ instance Pretty Declaration where
   pretty' (RoleAnnotDecl x) = pretty x
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
-mkDeclaration (GHC.TyClD _ x@GHC.FamDecl {}) = Family x
+mkDeclaration (GHC.TyClD _ x@GHC.FamDecl {}) = Family $ mkFamilyDeclaration x
 mkDeclaration (GHC.TyClD _ x) = TyClDecl x
 mkDeclaration (GHC.InstD _ x) = InstDecl x
 mkDeclaration (GHC.DerivD _ x) = DerivDecl x
