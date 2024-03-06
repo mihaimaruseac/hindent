@@ -8,7 +8,6 @@ module HIndent.Ast.Declaration.Family.Data
 import           Control.Monad
 import qualified GHC.Types.Basic                                as GHC
 import           HIndent.Applicative
-import           HIndent.Ast.Declaration.Family.DataOrType
 import           HIndent.Ast.Declaration.Family.Injectivity
 import           HIndent.Ast.Declaration.Family.ResultSignature
 import           HIndent.Ast.NodeComments                       hiding
@@ -21,8 +20,7 @@ import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
 data DataFamily = DataFamily
-  { dataOrType    :: DataOrType
-  , isTopLevel    :: Bool
+  { isTopLevel    :: Bool
   , name          :: String
   , typeVariables :: [WithComments (TypeVariable ())]
   , signature     :: WithComments ResultSignature
@@ -39,8 +37,7 @@ data OpenOrClosed
 
 instance Pretty DataFamily where
   pretty' DataFamily {..} = do
-    pretty dataOrType
-    space
+    string "data "
     when isTopLevel $ string "family "
     string name
     spacePrefixed $ fmap pretty typeVariables
@@ -55,9 +52,10 @@ instance Pretty DataFamily where
         string " where" >> newline >> indentedBlock (lined $ fmap pretty xs)
 
 mkDataFamily :: GHC.FamilyDecl GHC.GhcPs -> DataFamily
-mkDataFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} = DataFamily {..}
+mkDataFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
+  | GHC.DataFamily <- fdInfo = DataFamily {..}
+  | otherwise = error "Not a DataFamily"
   where
-    dataOrType = mkDataOrType fdInfo
     isTopLevel =
       case fdTopLevel of
         GHC.TopLevel    -> True
