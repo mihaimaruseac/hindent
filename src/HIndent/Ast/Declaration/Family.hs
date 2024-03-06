@@ -23,6 +23,7 @@ data FamilyDeclaration = FamilyDeclaration
   , name          :: String
   , typeVariables :: [WithComments (TypeVariable ())]
   , signature     :: WithComments ResultSignature
+  , injectivity   :: Maybe Injectivity
   , family'       :: GHC.FamilyDecl GHC.GhcPs
   }
 
@@ -31,6 +32,9 @@ newtype ResultSignature =
 
 instance CommentExtraction FamilyDeclaration where
   nodeComments FamilyDeclaration {} = NodeComments [] [] []
+
+newtype Injectivity =
+  Injectivity (GHC.LInjectivityAnn GHC.GhcPs)
 
 instance Pretty FamilyDeclaration where
   pretty' FamilyDeclaration {family' = GHC.FamilyDecl {..}, ..} = do
@@ -61,3 +65,4 @@ mkFamilyDeclaration family'@GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} =
     name = showOutputable fdLName
     typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
     signature = ResultSignature <$> fromGenLocated fdResultSig
+    injectivity = fmap Injectivity fdInjectivityAnn
