@@ -2,10 +2,10 @@ module HIndent.Ast.Declaration.Family.ResultSignature
   ( ResultSignature(..)
   ) where
 
-import           HIndent.Ast.NodeComments
+import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import           HIndent.Pretty
-import           HIndent.Pretty.NodeComments
+import HIndent.Pretty
+import HIndent.Pretty.NodeComments
 
 newtype ResultSignature =
   ResultSignature (GHC.FamilyResultSig GHC.GhcPs)

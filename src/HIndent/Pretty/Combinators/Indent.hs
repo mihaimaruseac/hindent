@@ -45,7 +45,6 @@ hd |=> p = do
   indentedWithFixedLevel col p
 
 infixl 1 |=>
-
 -- | This function runs the given printer with the passed indent level.
 indentedWithFixedLevel :: Int64 -> Printer a -> Printer a
 indentedWithFixedLevel i p = do
