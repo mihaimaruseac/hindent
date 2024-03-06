@@ -6,13 +6,15 @@ module HIndent.Ast.Declaration.Family
   ) where
 
 import           Control.Monad
-import qualified GHC.Types.Basic                           as GHC
+import qualified GHC.Types.Basic                                as GHC
 import           HIndent.Applicative
 import           HIndent.Ast.Declaration.Family.DataOrType
-import           HIndent.Ast.NodeComments                  hiding (fromEpAnn)
+import           HIndent.Ast.Declaration.Family.ResultSignature
+import           HIndent.Ast.NodeComments                       hiding
+                                                                (fromEpAnn)
 import           HIndent.Ast.Type.Variable
 import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs        as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs             as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
@@ -27,20 +29,11 @@ data FamilyDeclaration = FamilyDeclaration
   , openOrClosed  :: OpenOrClosed
   }
 
-newtype ResultSignature =
-  ResultSignature (GHC.FamilyResultSig GHC.GhcPs)
-
 instance CommentExtraction FamilyDeclaration where
   nodeComments FamilyDeclaration {} = NodeComments [] [] []
 
 newtype Injectivity =
   Injectivity (GHC.InjectivityAnn GHC.GhcPs)
-
-instance CommentExtraction ResultSignature where
-  nodeComments (ResultSignature _) = NodeComments [] [] []
-
-instance Pretty ResultSignature where
-  pretty' (ResultSignature x) = pretty x
 
 instance CommentExtraction Injectivity where
   nodeComments (Injectivity _) = NodeComments [] [] []
