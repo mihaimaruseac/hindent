@@ -8,7 +8,6 @@ module HIndent.Ast.Declaration.Family.Type
 import           Control.Monad
 import qualified GHC.Types.Basic                                as GHC
 import           HIndent.Applicative
-import           HIndent.Ast.Declaration.Family.DataOrType
 import           HIndent.Ast.Declaration.Family.Injectivity
 import           HIndent.Ast.Declaration.Family.ResultSignature
 import           HIndent.Ast.NodeComments                       hiding
@@ -21,8 +20,7 @@ import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
 data TypeFamily = TypeFamily
-  { dataOrType    :: DataOrType
-  , isTopLevel    :: Bool
+  { isTopLevel    :: Bool
   , name          :: String
   , typeVariables :: [WithComments (TypeVariable ())]
   , signature     :: WithComments ResultSignature
@@ -39,8 +37,7 @@ data OpenOrClosed
 
 instance Pretty TypeFamily where
   pretty' TypeFamily {..} = do
-    pretty dataOrType
-    space
+    string "type "
     when isTopLevel $ string "family "
     string name
     spacePrefixed $ fmap pretty typeVariables
@@ -57,7 +54,6 @@ instance Pretty TypeFamily where
 mkTypeFamily :: GHC.FamilyDecl GHC.GhcPs -> TypeFamily
 mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} = TypeFamily {..}
   where
-    dataOrType = mkDataOrType fdInfo
     isTopLevel =
       case fdTopLevel of
         GHC.TopLevel    -> True
