@@ -14,14 +14,20 @@ import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
-newtype FamilyDeclaration =
-  FamilyDeclaration (GHC.FamilyDecl GHC.GhcPs)
+data FamilyDeclaration = FamilyDeclaration
+  { dataOrType :: DataOrType
+  , family'    :: GHC.FamilyDecl GHC.GhcPs
+  }
+
+data DataOrType
+  = Data
+  | Type
 
 instance CommentExtraction FamilyDeclaration where
   nodeComments FamilyDeclaration {} = NodeComments [] [] []
 
 instance Pretty FamilyDeclaration where
-  pretty' (FamilyDeclaration GHC.FamilyDecl {..}) = do
+  pretty' FamilyDeclaration {family' = GHC.FamilyDecl {..}} = do
     string $
       case fdInfo of
         GHC.DataFamily          -> "data"
@@ -51,4 +57,10 @@ instance Pretty FamilyDeclaration where
       _ -> pure ()
 
 mkFamilyDeclaration :: GHC.FamilyDecl GHC.GhcPs -> FamilyDeclaration
-mkFamilyDeclaration = FamilyDeclaration
+mkFamilyDeclaration family' = FamilyDeclaration {..}
+  where
+    dataOrType =
+      case GHC.fdInfo family' of
+        GHC.DataFamily          -> Data
+        GHC.OpenTypeFamily      -> Type
+        GHC.ClosedTypeFamily {} -> Type
