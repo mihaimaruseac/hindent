@@ -25,15 +25,11 @@ data TypeFamily = TypeFamily
   , typeVariables :: [WithComments (TypeVariable ())]
   , signature     :: WithComments ResultSignature
   , injectivity   :: Maybe (WithComments Injectivity)
-  , openOrClosed  :: OpenOrClosed
+  , equations     :: Maybe [GHC.LTyFamInstEqn GHC.GhcPs]
   }
 
 instance CommentExtraction TypeFamily where
   nodeComments TypeFamily {} = NodeComments [] [] []
-
-data OpenOrClosed
-  = Open
-  | Closed [GHC.LTyFamInstEqn GHC.GhcPs]
 
 instance Pretty TypeFamily where
   pretty' TypeFamily {..} = do
@@ -46,10 +42,8 @@ instance Pretty TypeFamily where
       ResultSignature GHC.TyVarSig {} -> string " = " >> pretty signature
       _                               -> space >> pretty signature
     whenJust injectivity $ \x -> string " | " >> pretty x
-    case openOrClosed of
-      Open -> pure ()
-      Closed xs ->
-        string " where" >> newline >> indentedBlock (lined $ fmap pretty xs)
+    whenJust equations $ \xs ->
+      string " where" >> newline >> indentedBlock (lined $ fmap pretty xs)
 
 mkTypeFamily :: GHC.FamilyDecl GHC.GhcPs -> TypeFamily
 mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} = TypeFamily {..}
@@ -62,9 +56,9 @@ mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} = TypeFamily {..}
     typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
     signature = ResultSignature <$> fromGenLocated fdResultSig
     injectivity = fmap (fmap Injectivity . fromGenLocated) fdInjectivityAnn
-    openOrClosed =
+    equations =
       case fdInfo of
         GHC.DataFamily                 -> error "Not a TypeFamily"
-        GHC.OpenTypeFamily             -> Open
-        GHC.ClosedTypeFamily Nothing   -> Closed []
-        GHC.ClosedTypeFamily (Just xs) -> Closed xs
+        GHC.OpenTypeFamily             -> Nothing
+        GHC.ClosedTypeFamily Nothing   -> Just []
+        GHC.ClosedTypeFamily (Just xs) -> Just xs
