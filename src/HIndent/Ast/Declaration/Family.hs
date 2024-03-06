@@ -23,8 +23,12 @@ data FamilyDeclaration = FamilyDeclaration
   , isTopLevel    :: Bool
   , name          :: String
   , typeVariables :: [WithComments (TypeVariable ())]
+  , signature     :: WithComments ResultSignature
   , family'       :: GHC.FamilyDecl GHC.GhcPs
   }
+
+newtype ResultSignature =
+  ResultSignature (GHC.FamilyResultSig GHC.GhcPs)
 
 instance CommentExtraction FamilyDeclaration where
   nodeComments FamilyDeclaration {} = NodeComments [] [] []
@@ -57,3 +61,4 @@ mkFamilyDeclaration family'@GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} =
         GHC.NotTopLevel -> False
     name = showOutputable fdLName
     typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
+    signature = ResultSignature <$> fromGenLocated fdResultSig
