@@ -40,14 +40,10 @@ instance Pretty FamilyDeclaration where
       GHC.NoSig {}    -> pure ()
       GHC.TyVarSig {} -> string " = " >> pretty fdResultSig
       _               -> space >> pretty fdResultSig
-    whenJust fdInjectivityAnn $ \x -> do
-      string " | "
-      pretty x
+    whenJust fdInjectivityAnn $ \x -> string " | " >> pretty x
     case fdInfo of
-      GHC.ClosedTypeFamily (Just xs) -> do
-        string " where"
-        newline
-        indentedBlock $ lined $ fmap pretty xs
+      GHC.ClosedTypeFamily (Just xs) ->
+        string " where" >> newline >> indentedBlock (lined $ fmap pretty xs)
       _ -> pure ()
 
 mkFamilyDeclaration :: GHC.FamilyDecl GHC.GhcPs -> FamilyDeclaration
