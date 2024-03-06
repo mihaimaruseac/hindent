@@ -10,17 +10,20 @@ import qualified GHC.Types.Basic                           as GHC
 import qualified GHC.Types.SrcLoc                          as GHC
 import           HIndent.Applicative
 import           HIndent.Ast.Declaration.Family.DataOrType
-import           HIndent.Ast.NodeComments
+import           HIndent.Ast.NodeComments                  hiding (fromEpAnn)
+import           HIndent.Ast.Type.Variable
+import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs        as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
 data FamilyDeclaration = FamilyDeclaration
-  { dataOrType :: DataOrType
-  , isTopLevel :: Bool
-  , name       :: String
-  , family'    :: GHC.FamilyDecl GHC.GhcPs
+  { dataOrType    :: DataOrType
+  , isTopLevel    :: Bool
+  , name          :: String
+  , typeVariables :: [WithComments (TypeVariable ())]
+  , family'       :: GHC.FamilyDecl GHC.GhcPs
   }
 
 instance CommentExtraction FamilyDeclaration where
@@ -32,7 +35,7 @@ instance Pretty FamilyDeclaration where
     space
     when isTopLevel $ string "family "
     string name
-    spacePrefixed $ pretty <$> GHC.hsq_explicit fdTyVars
+    spacePrefixed $ fmap pretty typeVariables
     case GHC.unLoc fdResultSig of
       GHC.NoSig {} -> pure ()
       GHC.TyVarSig {} -> do
@@ -52,7 +55,8 @@ instance Pretty FamilyDeclaration where
       _ -> pure ()
 
 mkFamilyDeclaration :: GHC.FamilyDecl GHC.GhcPs -> FamilyDeclaration
-mkFamilyDeclaration family'@GHC.FamilyDecl {..} = FamilyDeclaration {..}
+mkFamilyDeclaration family'@GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} =
+  FamilyDeclaration {..}
   where
     dataOrType = mkDataOrType fdInfo
     isTopLevel =
@@ -60,3 +64,4 @@ mkFamilyDeclaration family'@GHC.FamilyDecl {..} = FamilyDeclaration {..}
         GHC.TopLevel    -> True
         GHC.NotTopLevel -> False
     name = showOutputable fdLName
+    typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
