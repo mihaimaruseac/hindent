@@ -6,15 +6,14 @@ module HIndent.Ast.Declaration.Family.Data
   ) where
 
 import           Control.Monad
-import qualified GHC.Types.Basic                            as GHC
-import qualified GHC.Types.SrcLoc                           as GHC
+import qualified GHC.Types.Basic                    as GHC
+import qualified GHC.Types.SrcLoc                   as GHC
 import           HIndent.Applicative
-import           HIndent.Ast.Declaration.Family.Injectivity
-import           HIndent.Ast.NodeComments                   hiding (fromEpAnn)
+import           HIndent.Ast.NodeComments           hiding (fromEpAnn)
 import           HIndent.Ast.Type
 import           HIndent.Ast.Type.Variable
 import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs         as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
@@ -24,7 +23,6 @@ data DataFamily = DataFamily
   , name          :: String
   , typeVariables :: [WithComments (TypeVariable ())]
   , signature     :: Maybe (WithComments Type)
-  , injectivity   :: Maybe (WithComments Injectivity)
   }
 
 instance CommentExtraction DataFamily where
@@ -37,11 +35,11 @@ instance Pretty DataFamily where
     string name
     spacePrefixed $ fmap pretty typeVariables
     whenJust signature $ \sig -> space >> pretty sig
-    whenJust injectivity $ \x -> string " | " >> pretty x
 
 mkDataFamily :: GHC.FamilyDecl GHC.GhcPs -> DataFamily
 mkDataFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
-  | GHC.DataFamily <- fdInfo = DataFamily {..}
+  | GHC.DataFamily <- fdInfo
+  , Nothing <- fdInjectivityAnn = DataFamily {..}
   | otherwise = error "Not a DataFamily"
   where
     isTopLevel =
@@ -57,4 +55,3 @@ mkDataFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
         GHC.TyVarSig {} ->
           error
             "Data family should never have this AST node. If you see this error, please report it to the HIndent maintainers."
-    injectivity = fmap (fmap Injectivity . fromGenLocated) fdInjectivityAnn
