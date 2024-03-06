@@ -39,12 +39,11 @@ library
       HIndent.Ast
       HIndent.Ast.Declaration
       HIndent.Ast.Declaration.Collection
-      HIndent.Ast.Declaration.Family
       HIndent.Ast.Declaration.Family.Data
-      HIndent.Ast.Declaration.Family.Data.Signature
       HIndent.Ast.Declaration.Family.DataOrType
       HIndent.Ast.Declaration.Family.Injectivity
       HIndent.Ast.Declaration.Family.ResultSignature
+      HIndent.Ast.Declaration.Family.Type
       HIndent.Ast.FileHeaderPragma
       HIndent.Ast.FileHeaderPragma.Collection
       HIndent.Ast.Import

@@ -1,8 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module HIndent.Ast.Declaration.Family
-  ( FamilyDeclaration
-  , mkFamilyDeclaration
+module HIndent.Ast.Declaration.Family.Type
+  ( TypeFamily
+  , mkTypeFamily
   ) where
 
 import           Control.Monad
@@ -20,7 +20,7 @@ import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
-data FamilyDeclaration = FamilyDeclaration
+data TypeFamily = TypeFamily
   { dataOrType    :: DataOrType
   , isTopLevel    :: Bool
   , name          :: String
@@ -30,15 +30,15 @@ data FamilyDeclaration = FamilyDeclaration
   , openOrClosed  :: OpenOrClosed
   }
 
-instance CommentExtraction FamilyDeclaration where
-  nodeComments FamilyDeclaration {} = NodeComments [] [] []
+instance CommentExtraction TypeFamily where
+  nodeComments TypeFamily {} = NodeComments [] [] []
 
 data OpenOrClosed
   = Open
   | Closed [GHC.LTyFamInstEqn GHC.GhcPs]
 
-instance Pretty FamilyDeclaration where
-  pretty' FamilyDeclaration {..} = do
+instance Pretty TypeFamily where
+  pretty' TypeFamily {..} = do
     pretty dataOrType
     space
     when isTopLevel $ string "family "
@@ -54,9 +54,8 @@ instance Pretty FamilyDeclaration where
       Closed xs ->
         string " where" >> newline >> indentedBlock (lined $ fmap pretty xs)
 
-mkFamilyDeclaration :: GHC.FamilyDecl GHC.GhcPs -> FamilyDeclaration
-mkFamilyDeclaration GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} =
-  FamilyDeclaration {..}
+mkTypeFamily :: GHC.FamilyDecl GHC.GhcPs -> TypeFamily
+mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} = TypeFamily {..}
   where
     dataOrType = mkDataOrType fdInfo
     isTopLevel =
