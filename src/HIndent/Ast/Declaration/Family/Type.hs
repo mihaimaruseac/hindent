@@ -64,5 +64,7 @@ mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} = TypeFamily {..}
     injectivity = fmap (fmap Injectivity . fromGenLocated) fdInjectivityAnn
     openOrClosed =
       case fdInfo of
+        GHC.DataFamily                 -> error "Not a TypeFamily"
+        GHC.OpenTypeFamily             -> Open
+        GHC.ClosedTypeFamily Nothing   -> Closed []
         GHC.ClosedTypeFamily (Just xs) -> Closed xs
-        _                              -> Open
