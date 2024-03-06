@@ -19,6 +19,7 @@ import           HIndent.Pretty.NodeComments
 data FamilyDeclaration = FamilyDeclaration
   { dataOrType :: DataOrType
   , isTopLevel :: Bool
+  , name       :: String
   , family'    :: GHC.FamilyDecl GHC.GhcPs
   }
 
@@ -30,7 +31,7 @@ instance Pretty FamilyDeclaration where
     pretty dataOrType
     space
     when isTopLevel $ string "family "
-    pretty fdLName
+    string name
     spacePrefixed $ pretty <$> GHC.hsq_explicit fdTyVars
     case GHC.unLoc fdResultSig of
       GHC.NoSig {} -> pure ()
@@ -58,3 +59,4 @@ mkFamilyDeclaration family'@GHC.FamilyDecl {..} = FamilyDeclaration {..}
       case fdTopLevel of
         GHC.TopLevel    -> True
         GHC.NotTopLevel -> False
+    name = showOutputable fdLName
