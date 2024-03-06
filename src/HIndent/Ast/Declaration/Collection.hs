@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ViewPatterns    #-}
 
 module HIndent.Ast.Declaration.Collection
   ( DeclarationCollection
@@ -31,10 +32,8 @@ instance Pretty DeclarationCollection where
       addDeclSeparator [x] = [(x, Nothing)]
       addDeclSeparator (x:xs) =
         (x, Just $ declSeparator $ getNode x) : addDeclSeparator xs
-      declSeparator (Declaration (GHC.SigD _ GHC.TypeSig {}))   = newline
-      declSeparator (Declaration (GHC.SigD _ GHC.InlineSig {})) = newline
-      declSeparator (Declaration (GHC.SigD _ GHC.PatSynSig {})) = newline
-      declSeparator _                                           = blankline
+      declSeparator (isSignature -> True) = newline
+      declSeparator _                     = blankline
 
 mkDeclarationCollection :: GHC.HsModule' -> DeclarationCollection
 mkDeclarationCollection GHC.HsModule {..} =

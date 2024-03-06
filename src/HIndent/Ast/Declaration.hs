@@ -1,6 +1,7 @@
 module HIndent.Ast.Declaration
   ( Declaration(..)
   , mkDeclaration
+  , isSignature
   ) where
 
 import           HIndent.Ast.NodeComments
@@ -19,3 +20,7 @@ instance Pretty Declaration where
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
 mkDeclaration = Declaration
+
+isSignature :: Declaration -> Bool
+isSignature (Declaration (GHC.SigD _ _)) = True
+isSignature _                            = False
