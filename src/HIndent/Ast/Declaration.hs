@@ -19,7 +19,20 @@ instance Pretty Declaration where
   pretty' (Declaration decl) = pretty decl
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
-mkDeclaration = Declaration
+mkDeclaration x@GHC.TyClD {}      = Declaration x
+mkDeclaration x@GHC.InstD {}      = Declaration x
+mkDeclaration x@GHC.DerivD {}     = Declaration x
+mkDeclaration x@GHC.ValD {}       = Declaration x
+mkDeclaration x@GHC.SigD {}       = Declaration x
+mkDeclaration x@GHC.KindSigD {}   = Declaration x
+mkDeclaration x@GHC.DefD {}       = Declaration x
+mkDeclaration x@GHC.ForD {}       = Declaration x
+mkDeclaration x@GHC.WarningD {}   = Declaration x
+mkDeclaration x@GHC.AnnD {}       = Declaration x
+mkDeclaration x@GHC.RuleD {}      = Declaration x
+mkDeclaration x@GHC.SpliceD {}    = Declaration x
+mkDeclaration x@GHC.DocD {}       = Declaration x
+mkDeclaration x@GHC.RoleAnnotD {} = Declaration x
 
 isSignature :: Declaration -> Bool
 isSignature (Declaration (GHC.SigD _ _)) = True
