@@ -5,13 +5,15 @@ module HIndent.Ast.Declaration
   ) where
 
 import           HIndent.Ast.Declaration.Family
+import           HIndent.Ast.Declaration.Family.Data
 import           HIndent.Ast.NodeComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs  as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.NodeComments
 
 data Declaration
-  = Family FamilyDeclaration
+  = DataFamily DataFamily
+  | Family FamilyDeclaration
   | TyClDecl (GHC.TyClDecl GHC.GhcPs)
   | InstDecl (GHC.InstDecl GHC.GhcPs)
   | DerivDecl (GHC.DerivDecl GHC.GhcPs)
@@ -27,6 +29,7 @@ data Declaration
   | RoleAnnotDecl (GHC.RoleAnnotDecl GHC.GhcPs)
 
 instance CommentExtraction Declaration where
+  nodeComments DataFamily {}    = NodeComments [] [] []
   nodeComments Family {}        = NodeComments [] [] []
   nodeComments TyClDecl {}      = NodeComments [] [] []
   nodeComments InstDecl {}      = NodeComments [] [] []
@@ -43,6 +46,7 @@ instance CommentExtraction Declaration where
   nodeComments RoleAnnotDecl {} = NodeComments [] [] []
 
 instance Pretty Declaration where
+  pretty' (DataFamily x)    = pretty x
   pretty' (Family x)        = pretty x
   pretty' (TyClDecl x)      = pretty x
   pretty' (InstDecl x)      = pretty x
@@ -59,7 +63,9 @@ instance Pretty Declaration where
   pretty' (RoleAnnotDecl x) = pretty x
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
-mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) = Family $ mkFamilyDeclaration x
+mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x))
+  | GHC.DataFamily <- GHC.fdInfo x = DataFamily $ mkDataFamily x
+  | otherwise = Family $ mkFamilyDeclaration x
 mkDeclaration (GHC.TyClD _ x) = TyClDecl x
 mkDeclaration (GHC.InstD _ x) = InstDecl x
 mkDeclaration (GHC.DerivD _ x) = DerivDecl x
