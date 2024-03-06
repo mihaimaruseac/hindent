@@ -40,6 +40,7 @@ library
       HIndent.Ast.Declaration
       HIndent.Ast.Declaration.Collection
       HIndent.Ast.Declaration.Family
+      HIndent.Ast.Declaration.Family.DataOrType
       HIndent.Ast.FileHeaderPragma
       HIndent.Ast.FileHeaderPragma.Collection
       HIndent.Ast.Import

@@ -5,11 +5,12 @@ module HIndent.Ast.Declaration.Family
   , mkFamilyDeclaration
   ) where
 
-import qualified GHC.Types.Basic                    as GHC
-import qualified GHC.Types.SrcLoc                   as GHC
+import qualified GHC.Types.Basic                           as GHC
+import qualified GHC.Types.SrcLoc                          as GHC
 import           HIndent.Applicative
+import           HIndent.Ast.Declaration.Family.DataOrType
 import           HIndent.Ast.NodeComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs        as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
@@ -18,18 +19,6 @@ data FamilyDeclaration = FamilyDeclaration
   { dataOrType :: DataOrType
   , family'    :: GHC.FamilyDecl GHC.GhcPs
   }
-
-data DataOrType
-  = Data
-  | Type
-
-instance CommentExtraction DataOrType where
-  nodeComments Data = NodeComments [] [] []
-  nodeComments Type = NodeComments [] [] []
-
-instance Pretty DataOrType where
-  pretty' Data = string "data"
-  pretty' Type = string "type"
 
 instance CommentExtraction FamilyDeclaration where
   nodeComments FamilyDeclaration {} = NodeComments [] [] []
@@ -61,10 +50,6 @@ instance Pretty FamilyDeclaration where
       _ -> pure ()
 
 mkFamilyDeclaration :: GHC.FamilyDecl GHC.GhcPs -> FamilyDeclaration
-mkFamilyDeclaration family' = FamilyDeclaration {..}
+mkFamilyDeclaration family'@GHC.FamilyDecl {..} = FamilyDeclaration {..}
   where
-    dataOrType =
-      case GHC.fdInfo family' of
-        GHC.DataFamily          -> Data
-        GHC.OpenTypeFamily      -> Type
-        GHC.ClosedTypeFamily {} -> Type
+    dataOrType = mkDataOrType fdInfo
