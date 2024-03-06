@@ -6,15 +6,15 @@ module HIndent.Ast.Declaration.Family.Type
   ) where
 
 import           Control.Monad
-import qualified GHC.Types.Basic                                as GHC
+import qualified GHC.Types.Basic                                 as GHC
 import           HIndent.Applicative
-import           HIndent.Ast.Declaration.Family.Injectivity
+import           HIndent.Ast.Declaration.Family.Data.Injectivity
 import           HIndent.Ast.Declaration.Family.ResultSignature
-import           HIndent.Ast.NodeComments                       hiding
-                                                                (fromEpAnn)
+import           HIndent.Ast.NodeComments                        hiding
+                                                                 (fromEpAnn)
 import           HIndent.Ast.Type.Variable
 import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs             as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs              as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
