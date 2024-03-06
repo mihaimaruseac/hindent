@@ -1,4 +1,4 @@
-module HIndent.Ast.Declaration.Family.Data.Injectivity
+module HIndent.Ast.Declaration.Family.Type.Injectivity
   ( Injectivity(..)
   ) where
 

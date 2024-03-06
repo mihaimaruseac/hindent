@@ -8,8 +8,8 @@ module HIndent.Ast.Declaration.Family.Type
 import Control.Monad
 import qualified GHC.Types.Basic as GHC
 import HIndent.Applicative
-import HIndent.Ast.Declaration.Family.Data.Injectivity
-import HIndent.Ast.Declaration.Family.ResultSignature
+import HIndent.Ast.Declaration.Family.Type.Injectivity
+import HIndent.Ast.Declaration.Family.Type.ResultSignature
 import HIndent.Ast.NodeComments hiding (fromEpAnn)
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments

@@ -1,4 +1,4 @@
-module HIndent.Ast.Declaration.Family.ResultSignature
+module HIndent.Ast.Declaration.Family.Type.ResultSignature
   ( ResultSignature(..)
   ) where
 
