@@ -22,7 +22,6 @@ data Declaration
   | AnnDecl (GHC.AnnDecl GHC.GhcPs)
   | RuleDecl (GHC.RuleDecls GHC.GhcPs)
   | SpliceDecl (GHC.SpliceDecl GHC.GhcPs)
-  | DocDecl GHC.DocDecl
   | RoleAnnotDecl (GHC.RoleAnnotDecl GHC.GhcPs)
 
 instance CommentExtraction Declaration where
@@ -38,7 +37,6 @@ instance CommentExtraction Declaration where
   nodeComments AnnDecl {}       = NodeComments [] [] []
   nodeComments RuleDecl {}      = NodeComments [] [] []
   nodeComments SpliceDecl {}    = NodeComments [] [] []
-  nodeComments DocDecl {}       = NodeComments [] [] []
   nodeComments RoleAnnotDecl {} = NodeComments [] [] []
 
 instance Pretty Declaration where
@@ -54,24 +52,25 @@ instance Pretty Declaration where
   pretty' (AnnDecl x)       = pretty x
   pretty' (RuleDecl x)      = pretty x
   pretty' (SpliceDecl x)    = pretty x
-  pretty' (DocDecl _)       = undefined
   pretty' (RoleAnnotDecl x) = pretty x
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
-mkDeclaration (GHC.TyClD _ x)      = TyClDecl x
-mkDeclaration (GHC.InstD _ x)      = InstDecl x
-mkDeclaration (GHC.DerivD _ x)     = DerivDecl x
-mkDeclaration (GHC.ValD _ x)       = ValDecl x
-mkDeclaration (GHC.SigD _ x)       = SigDecl x
-mkDeclaration (GHC.KindSigD _ x)   = KindSigDecl x
-mkDeclaration (GHC.DefD _ x)       = DefDecl x
-mkDeclaration (GHC.ForD _ x)       = ForDecl x
-mkDeclaration (GHC.WarningD _ x)   = WarningDecl x
-mkDeclaration (GHC.AnnD _ x)       = AnnDecl x
-mkDeclaration (GHC.RuleD _ x)      = RuleDecl x
-mkDeclaration (GHC.SpliceD _ x)    = SpliceDecl x
-mkDeclaration (GHC.DocD _ x)       = DocDecl x
+mkDeclaration (GHC.TyClD _ x) = TyClDecl x
+mkDeclaration (GHC.InstD _ x) = InstDecl x
+mkDeclaration (GHC.DerivD _ x) = DerivDecl x
+mkDeclaration (GHC.ValD _ x) = ValDecl x
+mkDeclaration (GHC.SigD _ x) = SigDecl x
+mkDeclaration (GHC.KindSigD _ x) = KindSigDecl x
+mkDeclaration (GHC.DefD _ x) = DefDecl x
+mkDeclaration (GHC.ForD _ x) = ForDecl x
+mkDeclaration (GHC.WarningD _ x) = WarningDecl x
+mkDeclaration (GHC.AnnD _ x) = AnnDecl x
+mkDeclaration (GHC.RuleD _ x) = RuleDecl x
+mkDeclaration (GHC.SpliceD _ x) = SpliceDecl x
 mkDeclaration (GHC.RoleAnnotD _ x) = RoleAnnotDecl x
+mkDeclaration GHC.DocD {} =
+  error
+    "This node should never appear in the AST. If you see this error, please report it to the HIndent maintainers."
 
 isSignature :: Declaration -> Bool
 isSignature SigDecl {} = True
