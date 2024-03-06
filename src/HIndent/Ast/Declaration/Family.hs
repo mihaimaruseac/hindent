@@ -36,6 +36,12 @@ instance CommentExtraction FamilyDeclaration where
 newtype Injectivity =
   Injectivity (GHC.InjectivityAnn GHC.GhcPs)
 
+instance CommentExtraction Injectivity where
+  nodeComments (Injectivity _) = NodeComments [] [] []
+
+instance Pretty Injectivity where
+  pretty' (Injectivity x) = pretty x
+
 instance Pretty FamilyDeclaration where
   pretty' FamilyDeclaration {family' = GHC.FamilyDecl {..}, ..} = do
     pretty dataOrType
@@ -47,7 +53,7 @@ instance Pretty FamilyDeclaration where
       ResultSignature GHC.NoSig {}    -> pure ()
       ResultSignature GHC.TyVarSig {} -> string " = " >> pretty fdResultSig
       _                               -> space >> pretty fdResultSig
-    whenJust fdInjectivityAnn $ \x -> string " | " >> pretty x
+    whenJust injectivity $ \x -> string " | " >> pretty x
     case fdInfo of
       GHC.ClosedTypeFamily (Just xs) ->
         string " where" >> newline >> indentedBlock (lined $ fmap pretty xs)
