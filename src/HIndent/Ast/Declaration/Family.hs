@@ -9,6 +9,7 @@ import           Control.Monad
 import qualified GHC.Types.Basic                                as GHC
 import           HIndent.Applicative
 import           HIndent.Ast.Declaration.Family.DataOrType
+import           HIndent.Ast.Declaration.Family.Injectivity
 import           HIndent.Ast.Declaration.Family.ResultSignature
 import           HIndent.Ast.NodeComments                       hiding
                                                                 (fromEpAnn)
@@ -31,15 +32,6 @@ data FamilyDeclaration = FamilyDeclaration
 
 instance CommentExtraction FamilyDeclaration where
   nodeComments FamilyDeclaration {} = NodeComments [] [] []
-
-newtype Injectivity =
-  Injectivity (GHC.InjectivityAnn GHC.GhcPs)
-
-instance CommentExtraction Injectivity where
-  nodeComments (Injectivity _) = NodeComments [] [] []
-
-instance Pretty Injectivity where
-  pretty' (Injectivity x) = pretty x
 
 data OpenOrClosed
   = Open
