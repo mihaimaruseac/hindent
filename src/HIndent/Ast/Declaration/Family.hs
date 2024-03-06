@@ -7,7 +7,6 @@ module HIndent.Ast.Declaration.Family
 
 import           Control.Monad
 import qualified GHC.Types.Basic                           as GHC
-import qualified GHC.Types.SrcLoc                          as GHC
 import           HIndent.Applicative
 import           HIndent.Ast.Declaration.Family.DataOrType
 import           HIndent.Ast.NodeComments                  hiding (fromEpAnn)
@@ -40,10 +39,10 @@ instance Pretty FamilyDeclaration where
     when isTopLevel $ string "family "
     string name
     spacePrefixed $ fmap pretty typeVariables
-    case GHC.unLoc fdResultSig of
-      GHC.NoSig {}    -> pure ()
-      GHC.TyVarSig {} -> string " = " >> pretty fdResultSig
-      _               -> space >> pretty fdResultSig
+    case getNode signature of
+      ResultSignature GHC.NoSig {}    -> pure ()
+      ResultSignature GHC.TyVarSig {} -> string " = " >> pretty fdResultSig
+      _                               -> space >> pretty fdResultSig
     whenJust fdInjectivityAnn $ \x -> string " | " >> pretty x
     case fdInfo of
       GHC.ClosedTypeFamily (Just xs) ->
