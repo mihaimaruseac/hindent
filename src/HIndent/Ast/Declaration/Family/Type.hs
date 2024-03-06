@@ -5,27 +5,26 @@ module HIndent.Ast.Declaration.Family.Type
   , mkTypeFamily
   ) where
 
-import           Control.Monad
-import qualified GHC.Types.Basic                                     as GHC
-import           HIndent.Applicative
-import           HIndent.Ast.Declaration.Family.Type.Injectivity
-import           HIndent.Ast.Declaration.Family.Type.ResultSignature
-import           HIndent.Ast.NodeComments                            hiding
-                                                                     (fromEpAnn)
-import           HIndent.Ast.Type.Variable
-import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs                  as GHC
-import           HIndent.Pretty
-import           HIndent.Pretty.Combinators
-import           HIndent.Pretty.NodeComments
+import Control.Monad
+import qualified GHC.Types.Basic as GHC
+import HIndent.Applicative
+import HIndent.Ast.Declaration.Family.Type.Injectivity
+import HIndent.Ast.Declaration.Family.Type.ResultSignature
+import HIndent.Ast.NodeComments hiding (fromEpAnn)
+import HIndent.Ast.Type.Variable
+import HIndent.Ast.WithComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
 
 data TypeFamily = TypeFamily
-  { isTopLevel    :: Bool
-  , name          :: String
+  { isTopLevel :: Bool
+  , name :: String
   , typeVariables :: [WithComments TypeVariable]
-  , signature     :: WithComments ResultSignature
-  , injectivity   :: Maybe (WithComments Injectivity)
-  , equations     :: Maybe [GHC.LTyFamInstEqn GHC.GhcPs]
+  , signature :: WithComments ResultSignature
+  , injectivity :: Maybe (WithComments Injectivity)
+  , equations :: Maybe [GHC.LTyFamInstEqn GHC.GhcPs]
   }
 
 instance CommentExtraction TypeFamily where
@@ -38,9 +37,9 @@ instance Pretty TypeFamily where
     string name
     spacePrefixed $ fmap pretty typeVariables
     case getNode signature of
-      ResultSignature GHC.NoSig {}    -> pure ()
+      ResultSignature GHC.NoSig {} -> pure ()
       ResultSignature GHC.TyVarSig {} -> string " = " >> pretty signature
-      _                               -> space >> pretty signature
+      _ -> space >> pretty signature
     whenJust injectivity $ \x -> string " | " >> pretty x
     whenJust equations $ \xs ->
       string " where" >> newline >> indentedBlock (lined $ fmap pretty xs)
@@ -50,7 +49,7 @@ mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} = TypeFamily {..}
   where
     isTopLevel =
       case fdTopLevel of
-        GHC.TopLevel    -> True
+        GHC.TopLevel -> True
         GHC.NotTopLevel -> False
     name = showOutputable fdLName
     typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
@@ -58,7 +57,7 @@ mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} = TypeFamily {..}
     injectivity = fmap (fmap Injectivity . fromGenLocated) fdInjectivityAnn
     equations =
       case fdInfo of
-        GHC.DataFamily                 -> error "Not a TypeFamily"
-        GHC.OpenTypeFamily             -> Nothing
-        GHC.ClosedTypeFamily Nothing   -> Just []
+        GHC.DataFamily -> error "Not a TypeFamily"
+        GHC.OpenTypeFamily -> Nothing
+        GHC.ClosedTypeFamily Nothing -> Just []
         GHC.ClosedTypeFamily (Just xs) -> Just xs

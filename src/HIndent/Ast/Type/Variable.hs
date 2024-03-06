@@ -5,13 +5,13 @@ module HIndent.Ast.Type.Variable
   , mkTypeVariable
   ) where
 
-import qualified GHC.Hs                      as GHC
-import           HIndent.Ast.NodeComments
-import           HIndent.Ast.Type
-import           HIndent.Ast.WithComments
-import           HIndent.Pretty
-import           HIndent.Pretty.Combinators
-import           HIndent.Pretty.NodeComments
+import qualified GHC.Hs as GHC
+import HIndent.Ast.NodeComments
+import HIndent.Ast.Type
+import HIndent.Ast.WithComments
+import HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
 
 data TypeVariable = TypeVariable
   { name :: WithComments String
