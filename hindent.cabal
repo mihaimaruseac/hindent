@@ -61,6 +61,7 @@ library
       HIndent.Ast.Module.Warning
       HIndent.Ast.Module.Warning.Kind
       HIndent.Ast.NodeComments
+      HIndent.Ast.Type
       HIndent.Ast.Type.Variable
       HIndent.Ast.WithComments
       HIndent.ByteString

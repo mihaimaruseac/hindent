@@ -6,15 +6,15 @@ module HIndent.Ast.Declaration.Family.Data
   ) where
 
 import           Control.Monad
-import qualified GHC.Types.Basic                               as GHC
+import qualified GHC.Types.Basic                            as GHC
+import qualified GHC.Types.SrcLoc                           as GHC
 import           HIndent.Applicative
-import           HIndent.Ast.Declaration.Family.Data.Signature
 import           HIndent.Ast.Declaration.Family.Injectivity
-import           HIndent.Ast.NodeComments                      hiding
-                                                               (fromEpAnn)
+import           HIndent.Ast.NodeComments                   hiding (fromEpAnn)
+import           HIndent.Ast.Type
 import           HIndent.Ast.Type.Variable
 import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs            as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs         as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
@@ -23,7 +23,7 @@ data DataFamily = DataFamily
   { isTopLevel    :: Bool
   , name          :: String
   , typeVariables :: [WithComments (TypeVariable ())]
-  , signature     :: WithComments Signature
+  , signature     :: Maybe (WithComments Type)
   , injectivity   :: Maybe (WithComments Injectivity)
   , openOrClosed  :: OpenOrClosed
   }
@@ -41,10 +41,7 @@ instance Pretty DataFamily where
     when isTopLevel $ string "family "
     string name
     spacePrefixed $ fmap pretty typeVariables
-    case getNode signature of
-      Signature GHC.NoSig {}    -> pure ()
-      Signature GHC.TyVarSig {} -> undefined
-      _                         -> space >> pretty signature
+    whenJust signature $ \sig -> space >> pretty sig
     whenJust injectivity $ \x -> string " | " >> pretty x
     case openOrClosed of
       Open -> pure ()
@@ -62,7 +59,13 @@ mkDataFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
         GHC.NotTopLevel -> False
     name = showOutputable fdLName
     typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
-    signature = Signature <$> fromGenLocated fdResultSig
+    signature =
+      case GHC.unLoc fdResultSig of
+        GHC.NoSig {} -> Nothing
+        GHC.KindSig _ kind -> Just $ mkType <$> fromGenLocated kind
+        GHC.TyVarSig {} ->
+          error
+            "Data family should never have this AST node. If you see this error, please report it to the HIndent maintainers."
     injectivity = fmap (fmap Injectivity . fromGenLocated) fdInjectivityAnn
     openOrClosed =
       case fdInfo of
