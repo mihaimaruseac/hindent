@@ -7,6 +7,8 @@ module HIndent.Ast.Declaration.TypeSynonym
 
 import           HIndent.Ast.Declaration.TypeSynonym.Lhs
 import           HIndent.Ast.NodeComments
+import           HIndent.Ast.Type
+import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs      as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
@@ -14,7 +16,7 @@ import           HIndent.Pretty.NodeComments
 
 data TypeSynonym = TypeSynonym
   { lhs :: TypeSynonymLhs
-  , rhs :: GHC.LHsType GHC.GhcPs
+  , rhs :: WithComments Type
   }
 
 instance CommentExtraction TypeSynonym where
@@ -33,5 +35,5 @@ mkTypeSynonym :: GHC.TyClDecl GHC.GhcPs -> TypeSynonym
 mkTypeSynonym synonym@GHC.SynDecl {..} = TypeSynonym {..}
   where
     lhs = mkTypeSynonymLhs synonym
-    rhs = tcdRhs
+    rhs = mkType <$> fromGenLocated tcdRhs
 mkTypeSynonym _ = error "Not a type synonym."
