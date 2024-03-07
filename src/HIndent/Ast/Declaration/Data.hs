@@ -18,17 +18,27 @@ import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
 
-data DataDeclaration = DataDeclaration
-  { newOrData     :: NewOrData
-  , isGADT        :: Bool
-  , name          :: WithComments (GHC.IdP GHC.GhcPs)
-  , context       :: Context
-  , typeVariables :: [GHC.LHsTyVarBndr () GHC.GhcPs]
-  , decl          :: GHC.TyClDecl GHC.GhcPs
-  }
+data DataDeclaration
+  = GADT
+      { newOrData     :: NewOrData
+      , isGADT        :: Bool
+      , name          :: WithComments (GHC.IdP GHC.GhcPs)
+      , context       :: Context
+      , typeVariables :: [GHC.LHsTyVarBndr () GHC.GhcPs]
+      , decl          :: GHC.TyClDecl GHC.GhcPs
+      }
+  | Record
+      { newOrData     :: NewOrData
+      , isGADT        :: Bool
+      , name          :: WithComments (GHC.IdP GHC.GhcPs)
+      , context       :: Context
+      , typeVariables :: [GHC.LHsTyVarBndr () GHC.GhcPs]
+      , decl          :: GHC.TyClDecl GHC.GhcPs
+      }
 
 instance CommentExtraction DataDeclaration where
-  nodeComments (DataDeclaration {}) = NodeComments [] [] []
+  nodeComments GADT {}   = NodeComments [] [] []
+  nodeComments Record {} = NodeComments [] [] []
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty Data where
   pretty' Data {decl = DataDecl {..}} = do
@@ -63,9 +73,43 @@ instance Pretty Data where
           NewType  -> string "newtype "
 #else
 instance Pretty DataDeclaration where
-  pretty' DataDeclaration { decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}
-                          , ..
-                          } = do
+  pretty' GADT {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
+    (pretty newOrData >> space) |=> do
+      case context of
+        Context (Just _) -> pretty context >> string " =>" >> newline
+        Context Nothing  -> pure ()
+      pretty name
+    spacePrefixed $ fmap pretty typeVariables
+    if isGADT
+      then do
+        whenJust dd_kindSig $ \x -> do
+          string " :: "
+          pretty x
+        string " where"
+        indentedBlock $ newlinePrefixed $ fmap pretty dd_cons
+      else do
+        case dd_cons of
+          [] -> indentedBlock derivingsAfterNewline
+          [x@(GHC.L _ GHC.ConDeclH98 {con_args = GHC.RecCon {}})] -> do
+            string " = "
+            pretty x
+            unless (null dd_derivs) $ space |=> printDerivings
+          [x] -> do
+            string " ="
+            newline
+            indentedBlock $ do
+              pretty x
+              derivingsAfterNewline
+          _ ->
+            indentedBlock $ do
+              newline
+              string "= " |=> vBarSep (fmap pretty dd_cons)
+              derivingsAfterNewline
+    where
+      derivingsAfterNewline =
+        unless (null dd_derivs) $ newline >> printDerivings
+      printDerivings = lined $ fmap pretty dd_derivs
+  pretty' Record {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
     (pretty newOrData >> space) |=> do
       case context of
         Context (Just _) -> pretty context >> string " =>" >> newline
@@ -105,7 +149,7 @@ instance Pretty DataDeclaration where
 #endif
 mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> DataDeclaration
 mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}, ..} =
-  DataDeclaration {..}
+  GADT {..}
   where
     newOrData = mkNewOrData dd_ND
     isGADT =
