@@ -11,6 +11,7 @@ import qualified GHC.Types.SrcLoc                       as GHC
 import           HIndent.Applicative
 import           HIndent.Ast.Declaration.Data.NewOrData
 import           HIndent.Ast.NodeComments
+import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs     as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
@@ -19,6 +20,7 @@ import           HIndent.Pretty.Types
 
 data DataDeclaration = DataDeclaration
   { newOrData :: NewOrData
+  , name      :: WithComments (GHC.IdP GHC.GhcPs)
   , context   :: Context
   , decl      :: GHC.TyClDecl GHC.GhcPs
   }
@@ -68,7 +70,7 @@ instance Pretty DataDeclaration where
       case context of
         Context (Just _) -> pretty context >> string " =>" >> newline
         Context Nothing  -> pure ()
-      pretty tcdLName
+      pretty name
     spacePrefixed $ pretty <$> GHC.hsq_explicit tcdTyVars
     if isGADT
       then do
@@ -106,9 +108,10 @@ instance Pretty DataDeclaration where
   pretty' _ = error "Not a data declaration."
 #endif
 mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> DataDeclaration
-mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}} =
+mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}, ..} =
   DataDeclaration {..}
   where
     newOrData = mkNewOrData dd_ND
     context = Context dd_ctxt
+    name = fromGenLocated tcdLName
 mkDataDeclaration _ = error "Not a data declaration."
