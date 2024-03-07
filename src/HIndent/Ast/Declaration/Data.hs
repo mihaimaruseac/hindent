@@ -15,11 +15,16 @@ import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
 
 data DataDeclaration = DataDeclaration
-  { decl :: GHC.TyClDecl GHC.GhcPs
+  { newOrData :: NewOrData
+  , decl      :: GHC.TyClDecl GHC.GhcPs
   }
 
+data NewOrData
+  = Newtype
+  | Data
+
 instance CommentExtraction DataDeclaration where
-  nodeComments (DataDeclaration _) = NodeComments [] [] []
+  nodeComments (DataDeclaration {}) = NodeComments [] [] []
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty Data where
   pretty' Data {decl = DataDecl {..}} = do
@@ -71,4 +76,11 @@ instance Pretty DataDeclaration where
   pretty' _ = error "Not a data declaration."
 #endif
 mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> DataDeclaration
-mkDataDeclaration decl = DataDeclaration {..}
+mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}} =
+  DataDeclaration {..}
+  where
+    newOrData =
+      case dd_ND of
+        GHC.DataType -> Data
+        GHC.NewType  -> Newtype
+mkDataDeclaration _ = error "Not a data declaration."
