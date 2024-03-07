@@ -5,30 +5,30 @@ module HIndent.Ast.Declaration.TypeSynonym.Lhs
   , mkTypeSynonymLhs
   ) where
 
-import qualified GHC.Types.Fixity                   as GHC
-import           HIndent.Ast.NodeComments
-import           HIndent.Ast.Type.Variable
-import           HIndent.Ast.WithComments
+import qualified GHC.Types.Fixity as GHC
+import HIndent.Ast.NodeComments
+import HIndent.Ast.Type.Variable
+import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import           HIndent.Pretty
-import           HIndent.Pretty.Combinators
-import           HIndent.Pretty.NodeComments
-import           HIndent.Pretty.Types
+import HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
+import HIndent.Pretty.Types
 
 data TypeSynonymLhs
   = Prefix
-      { name          :: GHC.LIdP GHC.GhcPs
+      { name :: GHC.LIdP GHC.GhcPs
       , typeVariables :: [WithComments (TypeVariable ())]
       }
   | Infix
-      { left  :: WithComments (TypeVariable ())
-      , name  :: GHC.LIdP GHC.GhcPs
+      { left :: WithComments (TypeVariable ())
+      , name :: GHC.LIdP GHC.GhcPs
       , right :: WithComments (TypeVariable ())
       }
 
 instance CommentExtraction TypeSynonymLhs where
   nodeComments Prefix {} = NodeComments [] [] []
-  nodeComments Infix {}  = NodeComments [] [] []
+  nodeComments Infix {} = NodeComments [] [] []
 
 instance Pretty TypeSynonymLhs where
   pretty' Prefix {..} = spaced $ pretty name : fmap pretty typeVariables

@@ -5,14 +5,14 @@ module HIndent.Ast.Declaration.TypeSynonym
   , mkTypeSynonym
   ) where
 
-import           HIndent.Ast.Declaration.TypeSynonym.Lhs
-import           HIndent.Ast.NodeComments
-import           HIndent.Ast.Type
-import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs      as GHC
-import           HIndent.Pretty
-import           HIndent.Pretty.Combinators
-import           HIndent.Pretty.NodeComments
+import HIndent.Ast.Declaration.TypeSynonym.Lhs
+import HIndent.Ast.NodeComments
+import HIndent.Ast.Type
+import HIndent.Ast.WithComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
 
 data TypeSynonym = TypeSynonym
   { lhs :: TypeSynonymLhs
