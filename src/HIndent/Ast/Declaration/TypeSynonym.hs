@@ -14,8 +14,9 @@ import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
 
-newtype TypeSynonym =
-  TypeSynonym (GHC.TyClDecl GHC.GhcPs)
+data TypeSynonym = TypeSynonym
+  { synonym :: GHC.TyClDecl GHC.GhcPs
+  }
 
 instance CommentExtraction TypeSynonym where
   nodeComments (TypeSynonym _) = NodeComments [] [] []
@@ -41,4 +42,4 @@ instance Pretty TypeSynonym where
   pretty' _ = undefined
 
 mkTypeSynonym :: GHC.TyClDecl GHC.GhcPs -> TypeSynonym
-mkTypeSynonym = TypeSynonym
+mkTypeSynonym synonym = TypeSynonym {..}
