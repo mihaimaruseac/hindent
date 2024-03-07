@@ -149,7 +149,9 @@ instance Pretty DataDeclaration where
 #endif
 mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> DataDeclaration
 mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}, ..} =
-  GADT {..}
+  if isGADT
+    then GADT {..}
+    else Record {..}
   where
     newOrData = mkNewOrData dd_ND
     isGADT =
