@@ -19,10 +19,11 @@ import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
 
 data DataDeclaration = DataDeclaration
-  { newOrData :: NewOrData
-  , name      :: WithComments (GHC.IdP GHC.GhcPs)
-  , context   :: Context
-  , decl      :: GHC.TyClDecl GHC.GhcPs
+  { newOrData     :: NewOrData
+  , name          :: WithComments (GHC.IdP GHC.GhcPs)
+  , context       :: Context
+  , typeVariables :: [GHC.LHsTyVarBndr () GHC.GhcPs]
+  , decl          :: GHC.TyClDecl GHC.GhcPs
   }
 
 instance CommentExtraction DataDeclaration where
@@ -114,4 +115,5 @@ mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}, ..} =
     newOrData = mkNewOrData dd_ND
     context = Context dd_ctxt
     name = fromGenLocated tcdLName
+    typeVariables = GHC.hsq_explicit tcdTyVars
 mkDataDeclaration _ = error "Not a data declaration."
