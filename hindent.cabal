@@ -39,6 +39,7 @@ library
       HIndent.Ast
       HIndent.Ast.Declaration
       HIndent.Ast.Declaration.Collection
+      HIndent.Ast.Declaration.Data
       HIndent.Ast.Declaration.Family.Data
       HIndent.Ast.Declaration.Family.Type
       HIndent.Ast.Declaration.Family.Type.Injectivity

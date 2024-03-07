@@ -4,16 +4,18 @@ module HIndent.Ast.Declaration
   , isSignature
   ) where
 
-import HIndent.Ast.Declaration.Family.Data
-import HIndent.Ast.Declaration.Family.Type
-import HIndent.Ast.NodeComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import HIndent.Pretty
-import HIndent.Pretty.NodeComments
+import           HIndent.Ast.Declaration.Data
+import           HIndent.Ast.Declaration.Family.Data
+import           HIndent.Ast.Declaration.Family.Type
+import           HIndent.Ast.NodeComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs  as GHC
+import           HIndent.Pretty
+import           HIndent.Pretty.NodeComments
 
 data Declaration
   = DataFamily DataFamily
   | TypeFamily TypeFamily
+  | Data Data
   | TyClDecl (GHC.TyClDecl GHC.GhcPs)
   | InstDecl (GHC.InstDecl GHC.GhcPs)
   | DerivDecl (GHC.DerivDecl GHC.GhcPs)
@@ -29,43 +31,46 @@ data Declaration
   | RoleAnnotDecl (GHC.RoleAnnotDecl GHC.GhcPs)
 
 instance CommentExtraction Declaration where
-  nodeComments DataFamily {} = NodeComments [] [] []
-  nodeComments TypeFamily {} = NodeComments [] [] []
-  nodeComments TyClDecl {} = NodeComments [] [] []
-  nodeComments InstDecl {} = NodeComments [] [] []
-  nodeComments DerivDecl {} = NodeComments [] [] []
-  nodeComments ValDecl {} = NodeComments [] [] []
-  nodeComments SigDecl {} = NodeComments [] [] []
-  nodeComments KindSigDecl {} = NodeComments [] [] []
-  nodeComments DefDecl {} = NodeComments [] [] []
-  nodeComments ForDecl {} = NodeComments [] [] []
-  nodeComments WarningDecl {} = NodeComments [] [] []
-  nodeComments AnnDecl {} = NodeComments [] [] []
-  nodeComments RuleDecl {} = NodeComments [] [] []
-  nodeComments SpliceDecl {} = NodeComments [] [] []
+  nodeComments DataFamily {}    = NodeComments [] [] []
+  nodeComments TypeFamily {}    = NodeComments [] [] []
+  nodeComments Data {}          = NodeComments [] [] []
+  nodeComments TyClDecl {}      = NodeComments [] [] []
+  nodeComments InstDecl {}      = NodeComments [] [] []
+  nodeComments DerivDecl {}     = NodeComments [] [] []
+  nodeComments ValDecl {}       = NodeComments [] [] []
+  nodeComments SigDecl {}       = NodeComments [] [] []
+  nodeComments KindSigDecl {}   = NodeComments [] [] []
+  nodeComments DefDecl {}       = NodeComments [] [] []
+  nodeComments ForDecl {}       = NodeComments [] [] []
+  nodeComments WarningDecl {}   = NodeComments [] [] []
+  nodeComments AnnDecl {}       = NodeComments [] [] []
+  nodeComments RuleDecl {}      = NodeComments [] [] []
+  nodeComments SpliceDecl {}    = NodeComments [] [] []
   nodeComments RoleAnnotDecl {} = NodeComments [] [] []
 
 instance Pretty Declaration where
-  pretty' (DataFamily x) = pretty x
-  pretty' (TypeFamily x) = pretty x
-  pretty' (TyClDecl x) = pretty x
-  pretty' (InstDecl x) = pretty x
-  pretty' (DerivDecl x) = pretty x
-  pretty' (ValDecl x) = pretty x
-  pretty' (SigDecl x) = pretty x
-  pretty' (KindSigDecl x) = pretty x
-  pretty' (DefDecl x) = pretty x
-  pretty' (ForDecl x) = pretty x
-  pretty' (WarningDecl x) = pretty x
-  pretty' (AnnDecl x) = pretty x
-  pretty' (RuleDecl x) = pretty x
-  pretty' (SpliceDecl x) = pretty x
+  pretty' (DataFamily x)    = pretty x
+  pretty' (TypeFamily x)    = pretty x
+  pretty' (Data x)          = pretty x
+  pretty' (TyClDecl x)      = pretty x
+  pretty' (InstDecl x)      = pretty x
+  pretty' (DerivDecl x)     = pretty x
+  pretty' (ValDecl x)       = pretty x
+  pretty' (SigDecl x)       = pretty x
+  pretty' (KindSigDecl x)   = pretty x
+  pretty' (DefDecl x)       = pretty x
+  pretty' (ForDecl x)       = pretty x
+  pretty' (WarningDecl x)   = pretty x
+  pretty' (AnnDecl x)       = pretty x
+  pretty' (RuleDecl x)      = pretty x
+  pretty' (SpliceDecl x)    = pretty x
   pretty' (RoleAnnotDecl x) = pretty x
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
 mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x))
   | GHC.DataFamily <- GHC.fdInfo x = DataFamily $ mkDataFamily x
   | otherwise = TypeFamily $ mkTypeFamily x
+mkDeclaration (GHC.TyClD _ x@(GHC.DataDecl {})) = Data $ mkData x
 mkDeclaration (GHC.TyClD _ x) = TyClDecl x
 mkDeclaration (GHC.InstD _ x) = InstDecl x
 mkDeclaration (GHC.DerivD _ x) = DerivDecl x
@@ -85,4 +90,4 @@ mkDeclaration GHC.DocD {} =
 
 isSignature :: Declaration -> Bool
 isSignature SigDecl {} = True
-isSignature _ = False
+isSignature _          = False
