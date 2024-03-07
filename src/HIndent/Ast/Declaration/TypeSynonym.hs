@@ -16,6 +16,7 @@ import           HIndent.Pretty.Types
 data TypeSynonym = TypeSynonym
   { lhs     :: Lhs
   , synonym :: GHC.TyClDecl GHC.GhcPs
+  , rhs     :: GHC.LHsType GHC.GhcPs
   }
 
 data Lhs
@@ -41,8 +42,8 @@ instance Pretty TypeSynonym where
         spaced [pretty left, pretty $ fmap InfixOp tcdLName, pretty right]
     hor <-|> ver
     where
-      hor = string " = " >> pretty tcdRhs
-      ver = newline >> indentedBlock (string "= " |=> pretty tcdRhs)
+      hor = string " = " >> pretty rhs
+      ver = newline >> indentedBlock (string "= " |=> pretty rhs)
   pretty' _ = undefined
 
 mkTypeSynonym :: GHC.TyClDecl GHC.GhcPs -> TypeSynonym
@@ -58,4 +59,5 @@ mkTypeSynonym synonym@GHC.SynDecl {..} = TypeSynonym {..}
             _ ->
               error
                 "Unexpected number of type variables for infix type synonym."
+    rhs = tcdRhs
 mkTypeSynonym _ = error "Not a type synonym."
