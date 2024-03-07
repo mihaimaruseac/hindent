@@ -21,7 +21,6 @@ import           HIndent.Pretty.Types
 data DataDeclaration
   = GADT
       { newOrData     :: NewOrData
-      , isGADT        :: Bool
       , name          :: WithComments (GHC.IdP GHC.GhcPs)
       , context       :: Context
       , typeVariables :: [GHC.LHsTyVarBndr () GHC.GhcPs]
@@ -29,7 +28,6 @@ data DataDeclaration
       }
   | Record
       { newOrData     :: NewOrData
-      , isGADT        :: Bool
       , name          :: WithComments (GHC.IdP GHC.GhcPs)
       , context       :: Context
       , typeVariables :: [GHC.LHsTyVarBndr () GHC.GhcPs]
@@ -80,35 +78,11 @@ instance Pretty DataDeclaration where
         Context Nothing  -> pure ()
       pretty name
     spacePrefixed $ fmap pretty typeVariables
-    if isGADT
-      then do
-        whenJust dd_kindSig $ \x -> do
-          string " :: "
-          pretty x
-        string " where"
-        indentedBlock $ newlinePrefixed $ fmap pretty dd_cons
-      else do
-        case dd_cons of
-          [] -> indentedBlock derivingsAfterNewline
-          [x@(GHC.L _ GHC.ConDeclH98 {con_args = GHC.RecCon {}})] -> do
-            string " = "
-            pretty x
-            unless (null dd_derivs) $ space |=> printDerivings
-          [x] -> do
-            string " ="
-            newline
-            indentedBlock $ do
-              pretty x
-              derivingsAfterNewline
-          _ ->
-            indentedBlock $ do
-              newline
-              string "= " |=> vBarSep (fmap pretty dd_cons)
-              derivingsAfterNewline
-    where
-      derivingsAfterNewline =
-        unless (null dd_derivs) $ newline >> printDerivings
-      printDerivings = lined $ fmap pretty dd_derivs
+    whenJust dd_kindSig $ \x -> do
+      string " :: "
+      pretty x
+    string " where"
+    indentedBlock $ newlinePrefixed $ fmap pretty dd_cons
   pretty' Record {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
     (pretty newOrData >> space) |=> do
       case context of
@@ -116,31 +90,23 @@ instance Pretty DataDeclaration where
         Context Nothing  -> pure ()
       pretty name
     spacePrefixed $ fmap pretty typeVariables
-    if isGADT
-      then do
-        whenJust dd_kindSig $ \x -> do
-          string " :: "
+    case dd_cons of
+      [] -> indentedBlock derivingsAfterNewline
+      [x@(GHC.L _ GHC.ConDeclH98 {con_args = GHC.RecCon {}})] -> do
+        string " = "
+        pretty x
+        unless (null dd_derivs) $ space |=> printDerivings
+      [x] -> do
+        string " ="
+        newline
+        indentedBlock $ do
           pretty x
-        string " where"
-        indentedBlock $ newlinePrefixed $ fmap pretty dd_cons
-      else do
-        case dd_cons of
-          [] -> indentedBlock derivingsAfterNewline
-          [x@(GHC.L _ GHC.ConDeclH98 {con_args = GHC.RecCon {}})] -> do
-            string " = "
-            pretty x
-            unless (null dd_derivs) $ space |=> printDerivings
-          [x] -> do
-            string " ="
-            newline
-            indentedBlock $ do
-              pretty x
-              derivingsAfterNewline
-          _ ->
-            indentedBlock $ do
-              newline
-              string "= " |=> vBarSep (fmap pretty dd_cons)
-              derivingsAfterNewline
+          derivingsAfterNewline
+      _ ->
+        indentedBlock $ do
+          newline
+          string "= " |=> vBarSep (fmap pretty dd_cons)
+          derivingsAfterNewline
     where
       derivingsAfterNewline =
         unless (null dd_derivs) $ newline >> printDerivings
