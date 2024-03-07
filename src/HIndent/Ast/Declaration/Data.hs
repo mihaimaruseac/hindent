@@ -78,9 +78,7 @@ instance Pretty DataDeclaration where
         Context Nothing  -> pure ()
       pretty name
     spacePrefixed $ fmap pretty typeVariables
-    whenJust dd_kindSig $ \x -> do
-      string " :: "
-      pretty x
+    whenJust dd_kindSig $ \x -> string " :: " >> pretty x
     string " where"
     indentedBlock $ newlinePrefixed $ fmap pretty dd_cons
   pretty' Record {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
