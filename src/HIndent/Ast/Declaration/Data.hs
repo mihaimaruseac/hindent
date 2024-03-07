@@ -56,8 +56,8 @@ instance Pretty Data where
           NewType  -> string "newtype "
 #else
 instance Pretty DataDeclaration where
-  pretty' DataDeclaration {decl = GHC.DataDecl {..}} = do
-    printDataNewtype |=> do
+  pretty' DataDeclaration {decl = GHC.DataDecl {..}, ..} = do
+    (pretty newOrData >> space) |=> do
       whenJust (GHC.dd_ctxt tcdDataDefn) $ \_ -> do
         pretty $ Context $ GHC.dd_ctxt tcdDataDefn
         string " =>"
@@ -65,11 +65,6 @@ instance Pretty DataDeclaration where
       pretty tcdLName
     spacePrefixed $ pretty <$> GHC.hsq_explicit tcdTyVars
     pretty tcdDataDefn
-    where
-      printDataNewtype =
-        case GHC.dd_ND tcdDataDefn of
-          GHC.DataType -> string "data "
-          GHC.NewType  -> string "newtype "
   pretty' _ = error "Not a data declaration."
 #endif
 mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> DataDeclaration
