@@ -7,8 +7,9 @@ module HIndent.Ast.Declaration.Data
   ) where
 
 import           HIndent.Applicative
+import           HIndent.Ast.Declaration.Data.NewOrData
 import           HIndent.Ast.NodeComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs     as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
@@ -18,10 +19,6 @@ data DataDeclaration = DataDeclaration
   { newOrData :: NewOrData
   , decl      :: GHC.TyClDecl GHC.GhcPs
   }
-
-data NewOrData
-  = Newtype
-  | Data
 
 instance CommentExtraction DataDeclaration where
   nodeComments (DataDeclaration {}) = NodeComments [] [] []
@@ -79,8 +76,5 @@ mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> DataDeclaration
 mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}} =
   DataDeclaration {..}
   where
-    newOrData =
-      case dd_ND of
-        GHC.DataType -> Data
-        GHC.NewType  -> Newtype
+    newOrData = mkNewOrData dd_ND
 mkDataDeclaration _ = error "Not a data declaration."
