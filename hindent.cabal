@@ -43,6 +43,7 @@ library
       HIndent.Ast.Declaration.Family.Type
       HIndent.Ast.Declaration.Family.Type.Injectivity
       HIndent.Ast.Declaration.Family.Type.ResultSignature
+      HIndent.Ast.Declaration.TypeSynonym
       HIndent.Ast.FileHeaderPragma
       HIndent.Ast.FileHeaderPragma.Collection
       HIndent.Ast.Import
