@@ -20,6 +20,7 @@ import           HIndent.Pretty.Types
 
 data DataDeclaration = DataDeclaration
   { newOrData     :: NewOrData
+  , isGADT        :: Bool
   , name          :: WithComments (GHC.IdP GHC.GhcPs)
   , context       :: Context
   , typeVariables :: [GHC.LHsTyVarBndr () GHC.GhcPs]
@@ -97,10 +98,6 @@ instance Pretty DataDeclaration where
               string "= " |=> vBarSep (fmap pretty dd_cons)
               derivingsAfterNewline
     where
-      isGADT =
-        case dd_cons of
-          (GHC.L _ GHC.ConDeclGADT {}:_) -> True
-          _                              -> False
       derivingsAfterNewline =
         unless (null dd_derivs) $ newline >> printDerivings
       printDerivings = lined $ fmap pretty dd_derivs
@@ -111,6 +108,10 @@ mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}, ..} =
   DataDeclaration {..}
   where
     newOrData = mkNewOrData dd_ND
+    isGADT =
+      case dd_cons of
+        (GHC.L _ GHC.ConDeclGADT {}:_) -> True
+        _                              -> False
     context = Context dd_ctxt
     name = fromGenLocated tcdLName
     typeVariables = GHC.hsq_explicit tcdTyVars
