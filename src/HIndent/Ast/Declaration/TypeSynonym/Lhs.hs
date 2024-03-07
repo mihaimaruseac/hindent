@@ -18,7 +18,7 @@ import           HIndent.Pretty.Types
 data TypeSynonymLhs
   = Prefix
       { name          :: GHC.LIdP GHC.GhcPs
-      , typeVariables :: [GHC.LHsTyVarBndr () GHC.GhcPs]
+      , typeVariables :: [WithComments (TypeVariable ())]
       }
   | Infix
       { left  :: WithComments (TypeVariable ())
@@ -37,7 +37,11 @@ instance Pretty TypeSynonymLhs where
 
 mkTypeSynonymLhs :: GHC.TyClDecl GHC.GhcPs -> TypeSynonymLhs
 mkTypeSynonymLhs GHC.SynDecl {tcdFixity = GHC.Prefix, ..} =
-  Prefix {name = tcdLName, typeVariables = GHC.hsq_explicit tcdTyVars}
+  Prefix
+    { name = tcdLName
+    , typeVariables =
+        fmap mkTypeVariable . fromGenLocated <$> GHC.hsq_explicit tcdTyVars
+    }
 mkTypeSynonymLhs GHC.SynDecl {tcdFixity = GHC.Infix, ..} =
   case GHC.hsq_explicit tcdTyVars of
     [l, r] ->
