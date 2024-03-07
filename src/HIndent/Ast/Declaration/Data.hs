@@ -2,8 +2,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Data
-  ( Data
-  , mkData
+  ( DataDeclaration
+  , mkDataDeclaration
   ) where
 
 import           HIndent.Applicative
@@ -14,12 +14,12 @@ import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
 
-data Data = Data
+data DataDeclaration = DataDeclaration
   { decl :: GHC.TyClDecl GHC.GhcPs
   }
 
-instance CommentExtraction Data where
-  nodeComments (Data _) = NodeComments [] [] []
+instance CommentExtraction DataDeclaration where
+  nodeComments (DataDeclaration _) = NodeComments [] [] []
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty Data where
   pretty' Data {decl = DataDecl {..}} = do
@@ -53,8 +53,8 @@ instance Pretty Data where
           DataType -> string "data "
           NewType  -> string "newtype "
 #else
-instance Pretty Data where
-  pretty' Data {decl = GHC.DataDecl {..}} = do
+instance Pretty DataDeclaration where
+  pretty' DataDeclaration {decl = GHC.DataDecl {..}} = do
     printDataNewtype |=> do
       whenJust (GHC.dd_ctxt tcdDataDefn) $ \_ -> do
         pretty $ Context $ GHC.dd_ctxt tcdDataDefn
@@ -70,5 +70,5 @@ instance Pretty Data where
           GHC.NewType  -> string "newtype "
   pretty' _ = error "Not a data declaration."
 #endif
-mkData :: GHC.TyClDecl GHC.GhcPs -> Data
-mkData decl = Data {..}
+mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> DataDeclaration
+mkDataDeclaration decl = DataDeclaration {..}
