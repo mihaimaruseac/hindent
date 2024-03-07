@@ -5,7 +5,6 @@ module HIndent.Ast.Declaration.TypeSynonym
   , mkTypeSynonym
   ) where
 
-import           Control.Monad
 import qualified GHC.Types.Fixity                   as GHC
 import           HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -34,19 +33,12 @@ instance CommentExtraction TypeSynonym where
   nodeComments TypeSynonym {} = NodeComments [] [] []
 
 instance Pretty TypeSynonym where
-  pretty' TypeSynonym {synonym = GHC.SynDecl {..}} = do
+  pretty' TypeSynonym {synonym = GHC.SynDecl {..}, ..} = do
     string "type "
-    case tcdFixity of
-      GHC.Prefix ->
-        spaced $ pretty tcdLName : fmap pretty (GHC.hsq_explicit tcdTyVars)
-      GHC.Infix ->
-        case GHC.hsq_explicit tcdTyVars of
-          (l:r:xs) -> do
-            spaced [pretty l, pretty $ fmap InfixOp tcdLName, pretty r]
-            forM_ xs $ \x -> do
-              space
-              pretty x
-          _ -> error "Not enough parameters are given."
+    case lhs of
+      Prefix {..} -> spaced $ pretty name : fmap pretty typeVariables
+      Infix {..} ->
+        spaced [pretty left, pretty $ fmap InfixOp tcdLName, pretty right]
     hor <-|> ver
     where
       hor = string " = " >> pretty tcdRhs
