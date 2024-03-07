@@ -15,14 +15,26 @@ import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
 
 data TypeSynonym = TypeSynonym
-  { synonym :: GHC.TyClDecl GHC.GhcPs
+  { lhs     :: Lhs
+  , synonym :: GHC.TyClDecl GHC.GhcPs
   }
 
+data Lhs
+  = Prefix
+      { name          :: GHC.LIdP GHC.GhcPs
+      , typeVariables :: [GHC.LHsTyVarBndr () GHC.GhcPs]
+      }
+  | Infix
+      { left  :: GHC.LHsTyVarBndr () GHC.GhcPs
+      , name  :: GHC.LIdP GHC.GhcPs
+      , right :: GHC.LHsTyVarBndr () GHC.GhcPs
+      }
+
 instance CommentExtraction TypeSynonym where
-  nodeComments (TypeSynonym _) = NodeComments [] [] []
+  nodeComments TypeSynonym {} = NodeComments [] [] []
 
 instance Pretty TypeSynonym where
-  pretty' (TypeSynonym GHC.SynDecl {..}) = do
+  pretty' TypeSynonym {synonym = GHC.SynDecl {..}} = do
     string "type "
     case tcdFixity of
       GHC.Prefix ->
@@ -42,4 +54,16 @@ instance Pretty TypeSynonym where
   pretty' _ = undefined
 
 mkTypeSynonym :: GHC.TyClDecl GHC.GhcPs -> TypeSynonym
-mkTypeSynonym synonym = TypeSynonym {..}
+mkTypeSynonym synonym@GHC.SynDecl {..} = TypeSynonym {..}
+  where
+    lhs =
+      case tcdFixity of
+        GHC.Prefix ->
+          Prefix {name = tcdLName, typeVariables = GHC.hsq_explicit tcdTyVars}
+        GHC.Infix ->
+          case GHC.hsq_explicit tcdTyVars of
+            [l, r] -> Infix {left = l, name = tcdLName, right = r}
+            _ ->
+              error
+                "Unexpected number of type variables for infix type synonym."
+mkTypeSynonym _ = error "Not a type synonym."
