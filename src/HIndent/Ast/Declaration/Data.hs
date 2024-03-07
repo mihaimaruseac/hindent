@@ -62,9 +62,7 @@ instance Pretty Data where
           NewType  -> string "newtype "
 #else
 instance Pretty DataDeclaration where
-  pretty' DataDeclaration { decl = GHC.DataDecl { tcdDataDefn = GHC.HsDataDefn {..}
-                                                , ..
-                                                }
+  pretty' DataDeclaration { decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}
                           , ..
                           } = do
     (pretty newOrData >> space) |=> do
@@ -72,7 +70,7 @@ instance Pretty DataDeclaration where
         Context (Just _) -> pretty context >> string " =>" >> newline
         Context Nothing  -> pure ()
       pretty name
-    spacePrefixed $ pretty <$> GHC.hsq_explicit tcdTyVars
+    spacePrefixed $ fmap pretty typeVariables
     if isGADT
       then do
         whenJust dd_kindSig $ \x -> do
