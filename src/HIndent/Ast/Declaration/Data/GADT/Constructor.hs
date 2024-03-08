@@ -49,18 +49,12 @@ instance Pretty GADTConstructor where
         (pretty (Context con_mb_cxt) >> string " => " >> horArgs) <-|>
         (pretty (Context con_mb_cxt) >> prefixed "=> " verArgs)
       noForallCtx = horArgs <-|> verArgs
-      horArgs =
+      horArgs = printArgsBy $ inter (string " -> ")
+      verArgs = printArgsBy $ prefixedLined "-> "
+      printArgsBy f =
         case con_g_args of
-          GHC.PrefixConGADT xs ->
-            inter (string " -> ") $ fmap pretty xs ++ [pretty con_res_ty]
-          GHC.RecConGADT xs ->
-            inter (string " -> ") [recArg xs, pretty con_res_ty]
-      verArgs =
-        case con_g_args of
-          GHC.PrefixConGADT xs ->
-            prefixedLined "-> " $ fmap pretty xs ++ [pretty con_res_ty]
-          GHC.RecConGADT xs ->
-            prefixedLined "-> " [recArg xs, pretty con_res_ty]
+          GHC.PrefixConGADT xs -> f $ fmap pretty xs ++ [pretty con_res_ty]
+          GHC.RecConGADT xs    -> f [recArg xs, pretty con_res_ty]
       recArg xs = printCommentsAnd xs $ \xs' -> vFields' $ fmap pretty xs'
   pretty' _ = error "Not a GADT constructor."
 
