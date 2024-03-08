@@ -245,13 +245,9 @@ prettyConDecl ConDeclH98 {con_forall = True, ..} =
       pretty con_args)
 #else
 prettyConDecl GHC.ConDeclH98 {con_forall = True, ..} =
-  (do string "forall "
-      spaced $ fmap pretty con_ex_tvs
-      string ". ") |=>
-  (do whenJust con_mb_cxt $ \_ -> do
-        pretty $ Context con_mb_cxt
-        string " =>"
-        newline
+  (string "forall " >> spaced (fmap pretty con_ex_tvs) >> string ". ") |=>
+  (do whenJust con_mb_cxt $ \_ ->
+        pretty (Context con_mb_cxt) >> string " =>" >> newline
       pretty con_name
       pretty con_args)
 #endif
@@ -259,6 +255,4 @@ prettyConDecl GHC.ConDeclH98 {con_forall = False, ..} =
   case con_args of
     (GHC.InfixCon l r) ->
       spaced [pretty l, pretty $ fmap InfixOp con_name, pretty r]
-    _ -> do
-      pretty con_name
-      pretty con_args
+    _ -> pretty con_name >> pretty con_args
