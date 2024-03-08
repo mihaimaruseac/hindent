@@ -15,8 +15,9 @@ import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
 
 data GADTConstructor = GADTConstructor
-  { names       :: [WithComments String]
-  , constructor :: GHC.ConDecl GHC.GhcPs
+  { names        :: [WithComments String]
+  , forallNeeded :: Bool
+  , constructor  :: GHC.ConDecl GHC.GhcPs
   }
 
 instance CommentExtraction GADTConstructor where
@@ -63,15 +64,14 @@ instance Pretty GADTConstructor where
           GHC.RecConGADT xs ->
             prefixedLined "-> " [recArg xs, pretty con_res_ty]
       recArg xs = printCommentsAnd xs $ \xs' -> vFields' $ fmap pretty xs'
-      forallNeeded =
-        case GHC.unLoc con_bndrs of
-          GHC.HsOuterImplicit {} -> False
-          GHC.HsOuterExplicit {} -> True
   pretty' _ = error "Not a GADT constructor."
 
 mkGADTConstructor :: GHC.ConDecl GHC.GhcPs -> Maybe GADTConstructor
-mkGADTConstructor constructor@GHC.ConDeclGADT {..} =
-  Just $
-  GADTConstructor
-    {names = fmap (fmap showOutputable . fromGenLocated) con_names, ..}
+mkGADTConstructor constructor@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}
+  where
+    names = fmap (fmap showOutputable . fromGenLocated) con_names
+    forallNeeded =
+      case GHC.unLoc con_bndrs of
+        GHC.HsOuterImplicit {} -> False
+        GHC.HsOuterExplicit {} -> True
 mkGADTConstructor _ = Nothing
