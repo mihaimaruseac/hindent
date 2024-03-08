@@ -66,7 +66,7 @@ instance Pretty Data where
 instance Pretty DataDeclaration where
   pretty' GADT {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
     pretty header
-    whenJust dd_kindSig $ \x -> string " :: " >> pretty x
+    whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
     indentedBlock $ newlinePrefixed $ fmap pretty dd_cons
   pretty' Record {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
