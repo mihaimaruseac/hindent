@@ -18,7 +18,7 @@ data Header = Header
   { newOrData     :: NewOrData
   , name          :: WithComments (GHC.IdP GHC.GhcPs)
   , context       :: Context
-  , typeVariables :: [GHC.LHsTyVarBndr () GHC.GhcPs]
+  , typeVariables :: [WithComments (GHC.HsTyVarBndr () GHC.GhcPs)]
   }
 
 instance CommentExtraction Header where
@@ -39,5 +39,5 @@ mkHeader GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}, ..} = Just Header {..}
     newOrData = mkNewOrData dd_ND
     context = Context dd_ctxt
     name = fromGenLocated tcdLName
-    typeVariables = GHC.hsq_explicit tcdTyVars
+    typeVariables = fromGenLocated <$> GHC.hsq_explicit tcdTyVars
 mkHeader _ = Nothing
