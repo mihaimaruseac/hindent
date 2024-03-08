@@ -18,7 +18,6 @@ import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
-import           HIndent.Printer
 
 newtype GADTConstructor =
   GADTConstructor (GHC.ConDecl GHC.GhcPs)
@@ -27,7 +26,53 @@ instance CommentExtraction GADTConstructor where
   nodeComments (GADTConstructor x) = nodeComments x
 
 instance Pretty GADTConstructor where
-  pretty' (GADTConstructor x) = pretty x
+  pretty' (GADTConstructor GHC.ConDeclGADT {..}) = do
+    hCommaSep $ fmap pretty con_names
+    hor <-|> ver
+    where
+      hor = string " :: " |=> body
+      ver = do
+        newline
+        indentedBlock (string ":: " |=> body)
+      body =
+        case (forallNeeded, con_mb_cxt) of
+          (True, Just ctx)  -> withForallCtx ctx
+          (True, Nothing)   -> withForallOnly
+          (False, Just ctx) -> withCtxOnly ctx
+          (False, Nothing)  -> noForallCtx
+      withForallOnly = do
+        pretty con_bndrs
+        (space >> horArgs) <-|> (newline >> verArgs)
+      noForallCtx = horArgs <-|> verArgs
+      withForallCtx _ = do
+        pretty con_bndrs
+        (space >> pretty (Context con_mb_cxt)) <-|>
+          (newline >> pretty (Context con_mb_cxt))
+        newline
+        prefixed "=> " verArgs
+      withCtxOnly _ =
+        (pretty (Context con_mb_cxt) >> string " => " >> horArgs) <-|>
+        (pretty (Context con_mb_cxt) >> prefixed "=> " verArgs)
+      horArgs =
+        case con_g_args of
+          GHC.PrefixConGADT xs ->
+            inter (string " -> ") $
+            fmap (\(GHC.HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
+          GHC.RecConGADT xs ->
+            inter (string " -> ") [recArg xs, pretty con_res_ty]
+      verArgs =
+        case con_g_args of
+          GHC.PrefixConGADT xs ->
+            prefixedLined "-> " $
+            fmap (\(GHC.HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
+          GHC.RecConGADT xs ->
+            prefixedLined "-> " [recArg xs, pretty con_res_ty]
+      recArg xs = printCommentsAnd xs $ \xs' -> vFields' $ fmap pretty xs'
+      forallNeeded =
+        case GHC.unLoc con_bndrs of
+          GHC.HsOuterImplicit {} -> False
+          GHC.HsOuterExplicit {} -> True
+  pretty' _ = error "Not a GADT constructor."
 
 data DataDeclaration
   = GADT
@@ -50,8 +95,7 @@ instance Pretty DataDeclaration where
     pretty header
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
-    indentedBlock $
-      newlinePrefixed $ fmap (`prettyWith` prettyGADT) constructors
+    indentedBlock $ newlinePrefixed $ fmap pretty constructors
   pretty' Record {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
     pretty header
     case dd_cons of
@@ -92,51 +136,3 @@ mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}
         _                              -> False
     constructors = fmap (fmap GADTConstructor . fromGenLocated) dd_cons
 mkDataDeclaration _ = Nothing
-
-prettyGADT :: GADTConstructor -> Printer ()
-prettyGADT (GADTConstructor GHC.ConDeclGADT {..}) = do
-  hCommaSep $ fmap pretty con_names
-  hor <-|> ver
-  where
-    hor = string " :: " |=> body
-    ver = do
-      newline
-      indentedBlock (string ":: " |=> body)
-    body =
-      case (forallNeeded, con_mb_cxt) of
-        (True, Just ctx)  -> withForallCtx ctx
-        (True, Nothing)   -> withForallOnly
-        (False, Just ctx) -> withCtxOnly ctx
-        (False, Nothing)  -> noForallCtx
-    withForallOnly = do
-      pretty con_bndrs
-      (space >> horArgs) <-|> (newline >> verArgs)
-    noForallCtx = horArgs <-|> verArgs
-    withForallCtx _ = do
-      pretty con_bndrs
-      (space >> pretty (Context con_mb_cxt)) <-|>
-        (newline >> pretty (Context con_mb_cxt))
-      newline
-      prefixed "=> " verArgs
-    withCtxOnly _ =
-      (pretty (Context con_mb_cxt) >> string " => " >> horArgs) <-|>
-      (pretty (Context con_mb_cxt) >> prefixed "=> " verArgs)
-    horArgs =
-      case con_g_args of
-        GHC.PrefixConGADT xs ->
-          inter (string " -> ") $
-          fmap (\(GHC.HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
-        GHC.RecConGADT xs ->
-          inter (string " -> ") [recArg xs, pretty con_res_ty]
-    verArgs =
-      case con_g_args of
-        GHC.PrefixConGADT xs ->
-          prefixedLined "-> " $
-          fmap (\(GHC.HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
-        GHC.RecConGADT xs -> prefixedLined "-> " [recArg xs, pretty con_res_ty]
-    recArg xs = printCommentsAnd xs $ \xs' -> vFields' $ fmap pretty xs'
-    forallNeeded =
-      case GHC.unLoc con_bndrs of
-        GHC.HsOuterImplicit {} -> False
-        GHC.HsOuterExplicit {} -> True
-prettyGADT _ = error "Not a GADT constructor."
