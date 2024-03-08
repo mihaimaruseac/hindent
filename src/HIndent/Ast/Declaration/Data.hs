@@ -8,14 +8,14 @@ module HIndent.Ast.Declaration.Data
 
 import           Control.Monad
 import           Data.Maybe
-import qualified GHC.Types.SrcLoc                    as GHC
+import qualified GHC.Types.SrcLoc                              as GHC
 import           HIndent.Applicative
-import           HIndent.Ast.Declaration.Data.GADT
+import           HIndent.Ast.Declaration.Data.GADT.Constructor
 import           HIndent.Ast.Declaration.Data.Header
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.Type
 import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs  as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs            as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments

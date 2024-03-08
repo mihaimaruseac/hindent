@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module HIndent.Ast.Declaration.Data.GADT
+module HIndent.Ast.Declaration.Data.GADT.Constructor
   ( GADTConstructor
   , mkGADTConstructor
   ) where
