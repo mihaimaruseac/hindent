@@ -21,7 +21,7 @@ import           HIndent.Pretty.Types
 import           HIndent.Printer
 
 newtype GADTConstructor = GADTConstructor
-  { constructor :: (GHC.ConDecl GHC.GhcPs)
+  { constructor :: GHC.ConDecl GHC.GhcPs
   }
 
 instance CommentExtraction GADTConstructor where
