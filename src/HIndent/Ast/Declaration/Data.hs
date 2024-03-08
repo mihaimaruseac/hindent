@@ -31,9 +31,7 @@ instance Pretty GADTConstructor where
     hor <-|> ver
     where
       hor = string " :: " |=> body
-      ver = do
-        newline
-        indentedBlock (string ":: " |=> body)
+      ver = newline >> indentedBlock (string ":: " |=> body)
       body =
         case (forallNeeded, con_mb_cxt) of
           (True, Just ctx)  -> withForallCtx ctx
