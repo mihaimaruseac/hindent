@@ -19,14 +19,15 @@ import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
 
-newtype GADTConstructor =
-  GADTConstructor (GHC.ConDecl GHC.GhcPs)
+newtype GADTConstructor = GADTConstructor
+  { constructor :: GHC.ConDecl GHC.GhcPs
+  }
 
 instance CommentExtraction GADTConstructor where
   nodeComments (GADTConstructor x) = nodeComments x
 
 instance Pretty GADTConstructor where
-  pretty' (GADTConstructor GHC.ConDeclGADT {..}) = do
+  pretty' (GADTConstructor {constructor = GHC.ConDeclGADT {..}}) = do
     hCommaSep $ fmap pretty con_names
     hor <-|> ver
     where
