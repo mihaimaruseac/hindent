@@ -11,6 +11,7 @@ import qualified GHC.Types.SrcLoc                    as GHC
 import           HIndent.Applicative
 import           HIndent.Ast.Declaration.Data.Header
 import           HIndent.Ast.NodeComments
+import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs  as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
@@ -21,7 +22,7 @@ import           HIndent.Printer
 data DataDeclaration
   = GADT
       { header :: Header
-      , kind   :: Maybe (GHC.LHsKind GHC.GhcPs)
+      , kind   :: Maybe (WithComments (GHC.HsKind GHC.GhcPs))
       , decl   :: GHC.TyClDecl GHC.GhcPs
       }
   | Record
@@ -100,7 +101,7 @@ instance Pretty DataDeclaration where
 mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> Maybe DataDeclaration
 mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}} =
   if isGADT
-    then GADT <$> header <*> pure kind <*> pure decl
+    then GADT <$> header <*> pure (fmap fromGenLocated kind) <*> pure decl
     else Record <$> header <*> pure decl
   where
     header = mkHeader decl
