@@ -24,7 +24,6 @@ data DataDeclaration
   = GADT
       { header       :: Header
       , kind         :: Maybe (WithComments Type)
-      , decl         :: GHC.TyClDecl GHC.GhcPs
       , constructors :: [WithComments GADTConstructor]
       }
   | Record
