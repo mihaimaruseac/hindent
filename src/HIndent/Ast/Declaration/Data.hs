@@ -19,6 +19,7 @@ import           HIndent.Pretty.NodeComments
 data DataDeclaration
   = GADT
       { header :: Header
+      , kind   :: Maybe (GHC.LHsKind GHC.GhcPs)
       , decl   :: GHC.TyClDecl GHC.GhcPs
       }
   | Record
@@ -96,10 +97,11 @@ instance Pretty DataDeclaration where
 mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> Maybe DataDeclaration
 mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}} =
   if isGADT
-    then GADT <$> header <*> pure decl
+    then GADT <$> header <*> pure kind <*> pure decl
     else Record <$> header <*> pure decl
   where
     header = mkHeader decl
+    kind = dd_kindSig
     isGADT =
       case dd_cons of
         (GHC.L _ GHC.ConDeclGADT {}:_) -> True
