@@ -70,8 +70,8 @@ mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
 mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x))
   | GHC.DataFamily <- GHC.fdInfo x = DataFamily $ mkDataFamily x
   | otherwise = TypeFamily $ mkTypeFamily x
-mkDeclaration (GHC.TyClD _ x@(GHC.DataDecl {})) =
-  DataDeclaration $ mkDataDeclaration x
+mkDeclaration (GHC.TyClD _ x@(GHC.DataDecl {}))
+  | Just decl <- mkDataDeclaration x = DataDeclaration decl
 mkDeclaration (GHC.TyClD _ x) = TyClDecl x
 mkDeclaration (GHC.InstD _ x) = InstDecl x
 mkDeclaration (GHC.DerivD _ x) = DerivDecl x

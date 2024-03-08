@@ -7,35 +7,14 @@ module HIndent.Ast.Declaration.Data
   ) where
 
 import           Control.Monad
-import qualified GHC.Types.SrcLoc                       as GHC
+import qualified GHC.Types.SrcLoc                    as GHC
 import           HIndent.Applicative
-import           HIndent.Ast.Declaration.Data.NewOrData
+import           HIndent.Ast.Declaration.Data.Header
 import           HIndent.Ast.NodeComments
-import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs     as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs  as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
-import           HIndent.Pretty.Types
-
-data Header = Header
-  { newOrData     :: NewOrData
-  , name          :: WithComments (GHC.IdP GHC.GhcPs)
-  , context       :: Context
-  , typeVariables :: [GHC.LHsTyVarBndr () GHC.GhcPs]
-  }
-
-instance CommentExtraction Header where
-  nodeComments Header {} = NodeComments [] [] []
-
-instance Pretty Header where
-  pretty' Header {..} = do
-    (pretty newOrData >> space) |=> do
-      case context of
-        Context (Just _) -> pretty context >> string " =>" >> newline
-        Context Nothing  -> pure ()
-      pretty name
-    spacePrefixed $ fmap pretty typeVariables
 
 data DataDeclaration
   = GADT
@@ -114,19 +93,15 @@ instance Pretty DataDeclaration where
       printDerivings = lined $ fmap pretty dd_derivs
   pretty' _ = error "Not a data declaration."
 #endif
-mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> DataDeclaration
-mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}, ..} =
+mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> Maybe DataDeclaration
+mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}} =
   if isGADT
-    then GADT {..}
-    else Record {..}
+    then GADT <$> header <*> pure decl
+    else Record <$> header <*> pure decl
   where
-    header = Header {..}
-    newOrData = mkNewOrData dd_ND
+    header = mkHeader decl
     isGADT =
       case dd_cons of
         (GHC.L _ GHC.ConDeclGADT {}:_) -> True
         _                              -> False
-    context = Context dd_ctxt
-    name = fromGenLocated tcdLName
-    typeVariables = GHC.hsq_explicit tcdTyVars
-mkDataDeclaration _ = error "Not a data declaration."
+mkDataDeclaration _ = Nothing
