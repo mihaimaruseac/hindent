@@ -101,15 +101,14 @@ instance Pretty DataDeclaration where
   pretty' _ = error "Not a data declaration."
 #endif
 mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> Maybe DataDeclaration
-mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}} =
-  if isGADT
-    then GADT <$> header <*> pure (fmap (fmap mkType . fromGenLocated) kind) <*>
-         pure decl <*>
-         pure dd_cons
-    else Record <$> header <*> pure decl
+mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}
+  | Just header <- mkHeader decl =
+    Just $
+    if isGADT
+      then GADT {..}
+      else Record {..}
   where
-    header = mkHeader decl
-    kind = dd_kindSig
+    kind = fmap mkType . fromGenLocated <$> dd_kindSig
     isGADT =
       case dd_cons of
         (GHC.L _ GHC.ConDeclGADT {}:_) -> True
