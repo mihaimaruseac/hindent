@@ -22,10 +22,10 @@ import           HIndent.Printer
 
 data DataDeclaration
   = GADT
-      { header  :: Header
-      , kind    :: Maybe (WithComments Type)
-      , decl    :: GHC.TyClDecl GHC.GhcPs
-      , dd_cons :: [GHC.LConDecl GHC.GhcPs]
+      { header       :: Header
+      , kind         :: Maybe (WithComments Type)
+      , decl         :: GHC.TyClDecl GHC.GhcPs
+      , constructors :: [GHC.LConDecl GHC.GhcPs]
       }
   | Record
       { header :: Header
@@ -74,7 +74,7 @@ instance Pretty DataDeclaration where
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
     indentedBlock $
-      newlinePrefixed $ fmap (`printCommentsAnd` prettyConDecl) dd_cons
+      newlinePrefixed $ fmap (`printCommentsAnd` prettyConDecl) constructors
   pretty' Record {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
     pretty header
     case dd_cons of
@@ -113,6 +113,7 @@ mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}
       case dd_cons of
         (GHC.L _ GHC.ConDeclGADT {}:_) -> True
         _                              -> False
+    constructors = dd_cons
 mkDataDeclaration _ = Nothing
 
 prettyConDecl :: GHC.ConDecl GHC.GhcPs -> Printer ()
