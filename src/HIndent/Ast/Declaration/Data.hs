@@ -25,7 +25,7 @@ data DataDeclaration
       { header       :: Header
       , kind         :: Maybe (WithComments Type)
       , decl         :: GHC.TyClDecl GHC.GhcPs
-      , constructors :: [GHC.LConDecl GHC.GhcPs]
+      , constructors :: [WithComments (GHC.ConDecl GHC.GhcPs)]
       }
   | Record
       { header :: Header
@@ -74,7 +74,7 @@ instance Pretty DataDeclaration where
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
     indentedBlock $
-      newlinePrefixed $ fmap (`printCommentsAnd` prettyConDecl) constructors
+      newlinePrefixed $ fmap (`prettyWith` prettyConDecl) constructors
   pretty' Record {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
     pretty header
     case dd_cons of
@@ -113,7 +113,7 @@ mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}
       case dd_cons of
         (GHC.L _ GHC.ConDeclGADT {}:_) -> True
         _                              -> False
-    constructors = dd_cons
+    constructors = fmap fromGenLocated dd_cons
 mkDataDeclaration _ = Nothing
 
 prettyConDecl :: GHC.ConDecl GHC.GhcPs -> Printer ()
