@@ -18,12 +18,12 @@ import HIndent.Pretty.Types
 data TypeSynonymLhs
   = Prefix
       { name :: GHC.LIdP GHC.GhcPs
-      , typeVariables :: [WithComments (TypeVariable ())]
+      , typeVariables :: [WithComments TypeVariable]
       }
   | Infix
-      { left :: WithComments (TypeVariable ())
+      { left :: WithComments TypeVariable
       , name :: GHC.LIdP GHC.GhcPs
-      , right :: WithComments (TypeVariable ())
+      , right :: WithComments TypeVariable
       }
 
 instance CommentExtraction TypeSynonymLhs where
