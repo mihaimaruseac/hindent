@@ -4,6 +4,8 @@ module HIndent.Ast.Declaration
   , isSignature
   ) where
 
+import           Control.Applicative
+import           Data.Maybe
 import           HIndent.Ast.Declaration.Data
 import           HIndent.Ast.Declaration.Family.Data
 import           HIndent.Ast.Declaration.Family.Type
@@ -67,9 +69,9 @@ instance Pretty Declaration where
   pretty' (RoleAnnotDecl x)   = pretty x
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
-mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x))
-  | GHC.DataFamily <- GHC.fdInfo x = DataFamily $ mkDataFamily x
-  | otherwise = TypeFamily $ mkTypeFamily x
+mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) =
+  fromMaybe (error "Unreachable.") $
+  DataFamily <$> mkDataFamily x <|> TypeFamily <$> mkTypeFamily x
 mkDeclaration (GHC.TyClD _ x@(GHC.DataDecl {}))
   | Just decl <- mkDataDeclaration x = DataDeclaration decl
 mkDeclaration (GHC.TyClD _ x) = TyClDecl x
