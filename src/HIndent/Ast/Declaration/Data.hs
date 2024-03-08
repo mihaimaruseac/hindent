@@ -15,6 +15,8 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs  as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
+import           HIndent.Pretty.Types
+import           HIndent.Printer
 
 data DataDeclaration
   = GADT
@@ -68,7 +70,8 @@ instance Pretty DataDeclaration where
     pretty header
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
-    indentedBlock $ newlinePrefixed $ fmap pretty dd_cons
+    indentedBlock $
+      newlinePrefixed $ fmap (`printCommentsAnd` prettyConDecl) dd_cons
   pretty' Record {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
     pretty header
     case dd_cons of
@@ -107,3 +110,155 @@ mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}} =
         (GHC.L _ GHC.ConDeclGADT {}:_) -> True
         _                              -> False
 mkDataDeclaration _ = Nothing
+
+prettyConDecl :: GHC.ConDecl GHC.GhcPs -> Printer ()
+#if MIN_VERSION_ghc_lib_parser(9,6,1)
+prettyConDecl ConDeclGADT {..} = do
+  hCommaSep $ fmap pretty $ NonEmpty.toList con_names
+  hor <-|> ver
+  where
+    hor = string " :: " |=> body
+    ver = do
+      newline
+      indentedBlock (string ":: " |=> body)
+    body =
+      case (forallNeeded, con_mb_cxt) of
+        (True, Just ctx)  -> withForallCtx ctx
+        (True, Nothing)   -> withForallOnly
+        (False, Just ctx) -> withCtxOnly ctx
+        (False, Nothing)  -> noForallCtx
+    withForallOnly = do
+      pretty con_bndrs
+      (space >> horArgs) <-|> (newline >> verArgs)
+    noForallCtx = horArgs <-|> verArgs
+    withForallCtx ctx = do
+      pretty con_bndrs
+      (space >> pretty (Context ctx)) <-|> (newline >> pretty (Context ctx))
+      newline
+      prefixed "=> " verArgs
+    withCtxOnly ctx =
+      (pretty (Context ctx) >> string " => " >> horArgs) <-|>
+      (pretty (Context ctx) >> prefixed "=> " verArgs)
+    horArgs =
+      case con_g_args of
+        PrefixConGADT xs ->
+          inter (string " -> ") $
+          fmap (\(HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
+        RecConGADT xs _ -> inter (string " -> ") [recArg xs, pretty con_res_ty]
+    verArgs =
+      case con_g_args of
+        PrefixConGADT xs ->
+          prefixedLined "-> " $
+          fmap (\(HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
+        RecConGADT xs _ -> prefixedLined "-> " [recArg xs, pretty con_res_ty]
+    recArg xs = printCommentsAnd xs $ \xs' -> vFields' $ fmap pretty xs'
+    forallNeeded =
+      case unLoc con_bndrs of
+        HsOuterImplicit {} -> False
+        HsOuterExplicit {} -> True
+#else
+prettyConDecl GHC.ConDeclGADT {..} = do
+  hCommaSep $ fmap pretty con_names
+  hor <-|> ver
+  where
+    hor = string " :: " |=> body
+    ver = do
+      newline
+      indentedBlock (string ":: " |=> body)
+    body =
+      case (forallNeeded, con_mb_cxt) of
+        (True, Just ctx)  -> withForallCtx ctx
+        (True, Nothing)   -> withForallOnly
+        (False, Just ctx) -> withCtxOnly ctx
+        (False, Nothing)  -> noForallCtx
+    withForallOnly = do
+      pretty con_bndrs
+      (space >> horArgs) <-|> (newline >> verArgs)
+    noForallCtx = horArgs <-|> verArgs
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
+    withForallCtx ctx = do
+      pretty con_bndrs
+      (space >> pretty (Context ctx)) <-|> (newline >> pretty (Context ctx))
+      newline
+      prefixed "=> " verArgs
+
+    withCtxOnly ctx =
+      (pretty (Context ctx) >> string " => " >> horArgs) <-|>
+      (pretty (Context ctx) >> prefixed "=> " verArgs)
+
+    horArgs =
+      case con_g_args of
+        PrefixConGADT xs ->
+          inter (string " -> ") $
+          fmap (\(HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
+        RecConGADT xs _ -> inter (string " -> ") [recArg xs, pretty con_res_ty]
+
+    verArgs =
+      case con_g_args of
+        PrefixConGADT xs ->
+          prefixedLined "-> " $
+          fmap (\(HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
+        RecConGADT xs _ -> prefixedLined "-> " [recArg xs, pretty con_res_ty]
+#else
+    withForallCtx _ = do
+      pretty con_bndrs
+      (space >> pretty (Context con_mb_cxt)) <-|>
+        (newline >> pretty (Context con_mb_cxt))
+      newline
+      prefixed "=> " verArgs
+
+    withCtxOnly _ =
+      (pretty (Context con_mb_cxt) >> string " => " >> horArgs) <-|>
+      (pretty (Context con_mb_cxt) >> prefixed "=> " verArgs)
+
+    horArgs =
+      case con_g_args of
+        GHC.PrefixConGADT xs ->
+          inter (string " -> ") $
+          fmap (\(GHC.HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
+        GHC.RecConGADT xs -> inter (string " -> ") [recArg xs, pretty con_res_ty]
+
+    verArgs =
+      case con_g_args of
+        GHC.PrefixConGADT xs ->
+          prefixedLined "-> " $
+          fmap (\(GHC.HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
+        GHC.RecConGADT xs -> prefixedLined "-> " [recArg xs, pretty con_res_ty]
+#endif
+    recArg xs = printCommentsAnd xs $ \xs' -> vFields' $ fmap pretty xs'
+
+    forallNeeded =
+      case GHC.unLoc con_bndrs of
+        GHC.HsOuterImplicit {} -> False
+        GHC.HsOuterExplicit {} -> True
+#endif
+#if MIN_VERSION_ghc_lib_parser(9,4,1)
+prettyConDecl ConDeclH98 {con_forall = True, ..} =
+  (do string "forall "
+      spaced $ fmap pretty con_ex_tvs
+      string ". ") |=>
+  (do whenJust con_mb_cxt $ \c -> do
+        pretty $ Context c
+        string " =>"
+        newline
+      pretty con_name
+      pretty con_args)
+#else
+prettyConDecl GHC.ConDeclH98 {con_forall = True, ..} =
+  (do string "forall "
+      spaced $ fmap pretty con_ex_tvs
+      string ". ") |=>
+  (do whenJust con_mb_cxt $ \_ -> do
+        pretty $ Context con_mb_cxt
+        string " =>"
+        newline
+      pretty con_name
+      pretty con_args)
+#endif
+prettyConDecl GHC.ConDeclH98 {con_forall = False, ..} =
+  case con_args of
+    (GHC.InfixCon l r) ->
+      spaced [pretty l, pretty $ fmap InfixOp con_name, pretty r]
+    _ -> do
+      pretty con_name
+      pretty con_args
