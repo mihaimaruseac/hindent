@@ -20,9 +20,8 @@ import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
 import           HIndent.Printer
 
-newtype GADTConstructor = GADTConstructor
-  { constructor :: GHC.ConDecl GHC.GhcPs
-  }
+newtype GADTConstructor =
+  GADTConstructor (GHC.ConDecl GHC.GhcPs)
 
 instance CommentExtraction GADTConstructor where
   nodeComments (GADTConstructor x) = nodeComments x
@@ -84,8 +83,7 @@ instance Pretty DataDeclaration where
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
     indentedBlock $
-      newlinePrefixed $
-      fmap (`prettyWith` prettyConDecl . constructor) constructors
+      newlinePrefixed $ fmap (`prettyWith` prettyGADT) constructors
   pretty' Record {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
     pretty header
     case dd_cons of
@@ -127,9 +125,9 @@ mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}
     constructors = fmap (fmap GADTConstructor . fromGenLocated) dd_cons
 mkDataDeclaration _ = Nothing
 
-prettyConDecl :: GHC.ConDecl GHC.GhcPs -> Printer ()
+prettyGADT :: GADTConstructor -> Printer ()
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-prettyConDecl ConDeclGADT {..} = do
+prettyGADT ConDeclGADT {..} = do
   hCommaSep $ fmap pretty $ NonEmpty.toList con_names
   hor <-|> ver
   where
@@ -173,7 +171,7 @@ prettyConDecl ConDeclGADT {..} = do
         HsOuterImplicit {} -> False
         HsOuterExplicit {} -> True
 #else
-prettyConDecl GHC.ConDeclGADT {..} = do
+prettyGADT (GADTConstructor GHC.ConDeclGADT {..}) = do
   hCommaSep $ fmap pretty con_names
   hor <-|> ver
   where
@@ -248,27 +246,4 @@ prettyConDecl GHC.ConDeclGADT {..} = do
         GHC.HsOuterImplicit {} -> False
         GHC.HsOuterExplicit {} -> True
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
-prettyConDecl ConDeclH98 {con_forall = True, ..} =
-  (do string "forall "
-      spaced $ fmap pretty con_ex_tvs
-      string ". ") |=>
-  (do whenJust con_mb_cxt $ \c -> do
-        pretty $ Context c
-        string " =>"
-        newline
-      pretty con_name
-      pretty con_args)
-#else
-prettyConDecl GHC.ConDeclH98 {con_forall = True, ..} =
-  (string "forall " >> spaced (fmap pretty con_ex_tvs) >> string ". ") |=>
-  (do whenJust con_mb_cxt $ \_ ->
-        pretty (Context con_mb_cxt) >> string " =>" >> newline
-      pretty con_name
-      pretty con_args)
-#endif
-prettyConDecl GHC.ConDeclH98 {con_forall = False, ..} =
-  case con_args of
-    (GHC.InfixCon l r) ->
-      spaced [pretty l, pretty $ fmap InfixOp con_name, pretty r]
-    _ -> pretty con_name >> pretty con_args
+prettyGADT _ = error "Not a GADT constructor."
