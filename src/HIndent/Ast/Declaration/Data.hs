@@ -27,8 +27,9 @@ data DataDeclaration
       , constructors :: [WithComments GADTConstructor]
       }
   | Record
-      { header :: Header
-      , decl   :: GHC.TyClDecl GHC.GhcPs
+      { header    :: Header
+      , dd_cons   :: [GHC.LConDecl GHC.GhcPs]
+      , dd_derivs :: GHC.HsDeriving GHC.GhcPs
       }
 
 instance CommentExtraction DataDeclaration where
@@ -41,7 +42,7 @@ instance Pretty DataDeclaration where
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
     indentedBlock $ newlinePrefixed $ fmap pretty constructors
-  pretty' Record {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
+  pretty' Record {..} = do
     pretty header
     case dd_cons of
       [] -> indentedBlock derivingsAfterNewline
@@ -64,7 +65,6 @@ instance Pretty DataDeclaration where
       derivingsAfterNewline =
         unless (null dd_derivs) $ newline >> printDerivings
       printDerivings = lined $ fmap pretty dd_derivs
-  pretty' _ = error "Not a data declaration."
 
 mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> Maybe DataDeclaration
 mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}
