@@ -20,12 +20,22 @@ import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
 import           HIndent.Printer
 
+newtype GADTConstructor = GADTConstructor
+  { constructor :: (GHC.ConDecl GHC.GhcPs)
+  }
+
+instance CommentExtraction GADTConstructor where
+  nodeComments (GADTConstructor x) = nodeComments x
+
+instance Pretty GADTConstructor where
+  pretty' (GADTConstructor x) = pretty x
+
 data DataDeclaration
   = GADT
       { header       :: Header
       , kind         :: Maybe (WithComments Type)
       , decl         :: GHC.TyClDecl GHC.GhcPs
-      , constructors :: [WithComments (GHC.ConDecl GHC.GhcPs)]
+      , constructors :: [WithComments GADTConstructor]
       }
   | Record
       { header :: Header
@@ -74,7 +84,8 @@ instance Pretty DataDeclaration where
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
     indentedBlock $
-      newlinePrefixed $ fmap (`prettyWith` prettyConDecl) constructors
+      newlinePrefixed $
+      fmap (`prettyWith` prettyConDecl . constructor) constructors
   pretty' Record {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
     pretty header
     case dd_cons of
@@ -113,7 +124,7 @@ mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}
       case dd_cons of
         (GHC.L _ GHC.ConDeclGADT {}:_) -> True
         _                              -> False
-    constructors = fmap fromGenLocated dd_cons
+    constructors = fmap (fmap GADTConstructor . fromGenLocated) dd_cons
 mkDataDeclaration _ = Nothing
 
 prettyConDecl :: GHC.ConDecl GHC.GhcPs -> Printer ()
