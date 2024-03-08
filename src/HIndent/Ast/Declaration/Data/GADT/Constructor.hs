@@ -21,7 +21,7 @@ import qualified Data.List.NonEmpty                 as NE
 data GADTConstructor = GADTConstructor
   { names        :: [WithComments String]
   , forallNeeded :: Bool
-  , con_bndrs    :: WithComments (GHC.HsOuterSigTyVarBndrs GHC.GhcPs)
+  , bindings     :: WithComments (GHC.HsOuterSigTyVarBndrs GHC.GhcPs)
   , con_mb_cxt   :: Maybe (GHC.LHsContext GHC.GhcPs)
   , con_res_ty   :: GHC.LHsType GHC.GhcPs
   , con_g_args   :: GHC.HsConDeclGADTDetails GHC.GhcPs
@@ -44,13 +44,13 @@ instance Pretty GADTConstructor where
           (False, Just _)  -> withCtxOnly
           (False, Nothing) -> noForallCtx
       withForallCtx = do
-        pretty con_bndrs
+        pretty bindings
         (space >> pretty (Context con_mb_cxt)) <-|>
           (newline >> pretty (Context con_mb_cxt))
         newline
         prefixed "=> " verArgs
       withForallOnly = do
-        pretty con_bndrs
+        pretty bindings
         (space >> horArgs) <-|> (newline >> verArgs)
       withCtxOnly =
         (pretty (Context con_mb_cxt) >> string " => " >> horArgs) <-|>
@@ -65,10 +65,10 @@ instance Pretty GADTConstructor where
       recArg xs = printCommentsAnd xs $ \xs' -> vFields' $ fmap pretty xs'
 
 mkGADTConstructor :: GHC.ConDecl GHC.GhcPs -> Maybe GADTConstructor
-mkGADTConstructor decl@GHC.ConDeclGADT {..} =
-  Just $ GADTConstructor {con_bndrs = fromGenLocated con_bndrs, ..}
+mkGADTConstructor decl@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}
   where
     names = fromMaybe (error "Couldn't get names.") $ getNames decl
+    bindings = fromGenLocated con_bndrs
     forallNeeded =
       case GHC.unLoc con_bndrs of
         GHC.HsOuterImplicit {} -> False
