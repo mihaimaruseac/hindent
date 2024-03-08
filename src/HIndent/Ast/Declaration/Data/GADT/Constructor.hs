@@ -6,18 +6,21 @@ module HIndent.Ast.Declaration.Data.GADT.Constructor
   ) where
 
 import qualified GHC.Types.SrcLoc                   as GHC
+import           HIndent.Ast.NodeComments
+import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
 
-newtype GADTConstructor = GADTConstructor
-  { constructor :: GHC.ConDecl GHC.GhcPs
+data GADTConstructor = GADTConstructor
+  { names       :: [WithComments String]
+  , constructor :: GHC.ConDecl GHC.GhcPs
   }
 
 instance CommentExtraction GADTConstructor where
-  nodeComments (GADTConstructor x) = nodeComments x
+  nodeComments GADTConstructor {} = NodeComments [] [] []
 
 instance Pretty GADTConstructor where
   pretty' (GADTConstructor {constructor = GHC.ConDeclGADT {..}}) = do
@@ -67,5 +70,8 @@ instance Pretty GADTConstructor where
   pretty' _ = error "Not a GADT constructor."
 
 mkGADTConstructor :: GHC.ConDecl GHC.GhcPs -> Maybe GADTConstructor
-mkGADTConstructor x@GHC.ConDeclGADT {} = Just $ GADTConstructor x
-mkGADTConstructor _                    = Nothing
+mkGADTConstructor constructor@GHC.ConDeclGADT {..} =
+  Just $
+  GADTConstructor
+    {names = fmap (fmap showOutputable . fromGenLocated) con_names, ..}
+mkGADTConstructor _ = Nothing
