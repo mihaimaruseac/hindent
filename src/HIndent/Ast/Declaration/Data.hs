@@ -18,20 +18,33 @@ import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
 
+data Header = Header
+  { newOrData     :: NewOrData
+  , name          :: WithComments (GHC.IdP GHC.GhcPs)
+  , context       :: Context
+  , typeVariables :: [GHC.LHsTyVarBndr () GHC.GhcPs]
+  }
+
+instance CommentExtraction Header where
+  nodeComments Header {} = NodeComments [] [] []
+
+instance Pretty Header where
+  pretty' Header {..} = do
+    (pretty newOrData >> space) |=> do
+      case context of
+        Context (Just _) -> pretty context >> string " =>" >> newline
+        Context Nothing  -> pure ()
+      pretty name
+    spacePrefixed $ fmap pretty typeVariables
+
 data DataDeclaration
   = GADT
-      { newOrData     :: NewOrData
-      , name          :: WithComments (GHC.IdP GHC.GhcPs)
-      , context       :: Context
-      , typeVariables :: [GHC.LHsTyVarBndr () GHC.GhcPs]
-      , decl          :: GHC.TyClDecl GHC.GhcPs
+      { header :: Header
+      , decl   :: GHC.TyClDecl GHC.GhcPs
       }
   | Record
-      { newOrData     :: NewOrData
-      , name          :: WithComments (GHC.IdP GHC.GhcPs)
-      , context       :: Context
-      , typeVariables :: [GHC.LHsTyVarBndr () GHC.GhcPs]
-      , decl          :: GHC.TyClDecl GHC.GhcPs
+      { header :: Header
+      , decl   :: GHC.TyClDecl GHC.GhcPs
       }
 
 instance CommentExtraction DataDeclaration where
@@ -72,22 +85,12 @@ instance Pretty Data where
 #else
 instance Pretty DataDeclaration where
   pretty' GADT {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
-    (pretty newOrData >> space) |=> do
-      case context of
-        Context (Just _) -> pretty context >> string " =>" >> newline
-        Context Nothing  -> pure ()
-      pretty name
-    spacePrefixed $ fmap pretty typeVariables
+    pretty header
     whenJust dd_kindSig $ \x -> string " :: " >> pretty x
     string " where"
     indentedBlock $ newlinePrefixed $ fmap pretty dd_cons
   pretty' Record {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
-    (pretty newOrData >> space) |=> do
-      case context of
-        Context (Just _) -> pretty context >> string " =>" >> newline
-        Context Nothing  -> pure ()
-      pretty name
-    spacePrefixed $ fmap pretty typeVariables
+    pretty header
     case dd_cons of
       [] -> indentedBlock derivingsAfterNewline
       [x@(GHC.L _ GHC.ConDeclH98 {con_args = GHC.RecCon {}})] -> do
@@ -117,6 +120,7 @@ mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}, ..} =
     then GADT {..}
     else Record {..}
   where
+    header = Header {..}
     newOrData = mkNewOrData dd_ND
     isGADT =
       case dd_cons of
