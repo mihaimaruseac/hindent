@@ -93,8 +93,6 @@ library
       HIndent.Pretty.Combinators.String
       HIndent.Pretty.Combinators.Switch
       HIndent.Pretty.Combinators.Wrap
-      HIndent.Pretty.Import
-      HIndent.Pretty.Import.Sort
       HIndent.Pretty.NodeComments
       HIndent.Pretty.SigBindFamily
       HIndent.Pretty.Types
