@@ -22,9 +22,10 @@ import           HIndent.Printer
 
 data DataDeclaration
   = GADT
-      { header :: Header
-      , kind   :: Maybe (WithComments Type)
-      , decl   :: GHC.TyClDecl GHC.GhcPs
+      { header  :: Header
+      , kind    :: Maybe (WithComments Type)
+      , decl    :: GHC.TyClDecl GHC.GhcPs
+      , dd_cons :: [GHC.LConDecl GHC.GhcPs]
       }
   | Record
       { header :: Header
@@ -68,7 +69,7 @@ instance Pretty Data where
           NewType  -> string "newtype "
 #else
 instance Pretty DataDeclaration where
-  pretty' GADT {decl = GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}, ..} = do
+  pretty' GADT {..} = do
     pretty header
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
@@ -103,7 +104,8 @@ mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> Maybe DataDeclaration
 mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}} =
   if isGADT
     then GADT <$> header <*> pure (fmap (fmap mkType . fromGenLocated) kind) <*>
-         pure decl
+         pure decl <*>
+         pure dd_cons
     else Record <$> header <*> pure decl
   where
     header = mkHeader decl
