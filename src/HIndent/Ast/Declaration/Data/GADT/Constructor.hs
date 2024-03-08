@@ -52,15 +52,13 @@ instance Pretty GADTConstructor where
       horArgs =
         case con_g_args of
           GHC.PrefixConGADT xs ->
-            inter (string " -> ") $
-            fmap (\(GHC.HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
+            inter (string " -> ") $ fmap pretty xs ++ [pretty con_res_ty]
           GHC.RecConGADT xs ->
             inter (string " -> ") [recArg xs, pretty con_res_ty]
       verArgs =
         case con_g_args of
           GHC.PrefixConGADT xs ->
-            prefixedLined "-> " $
-            fmap (\(GHC.HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
+            prefixedLined "-> " $ fmap pretty xs ++ [pretty con_res_ty]
           GHC.RecConGADT xs ->
             prefixedLined "-> " [recArg xs, pretty con_res_ty]
       recArg xs = printCommentsAnd xs $ \xs' -> vFields' $ fmap pretty xs'
