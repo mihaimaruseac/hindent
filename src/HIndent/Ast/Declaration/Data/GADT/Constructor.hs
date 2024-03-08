@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP             #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Data.GADT.Constructor
@@ -13,7 +14,9 @@ import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
-
+#if MIN_VERSION_ghc_lib_parser(9, 4, 0)
+import qualified Data.List.NonEmpty                 as NE
+#endif
 data GADTConstructor = GADTConstructor
   { names        :: [WithComments String]
   , forallNeeded :: Bool
@@ -61,6 +64,16 @@ instance Pretty GADTConstructor where
       recArg xs = printCommentsAnd xs $ \xs' -> vFields' $ fmap pretty xs'
 
 mkGADTConstructor :: GHC.ConDecl GHC.GhcPs -> Maybe GADTConstructor
+#if MIN_VERSION_ghc_lib_parser(9, 4, 0)
+mkGADTConstructor GHC.ConDeclGADT {..} =
+  Just $ GADTConstructor {con_bndrs = fromGenLocated con_bndrs, ..}
+  where
+    names = NE.toList $ fmap (fmap showOutputable . fromGenLocated) con_names
+    forallNeeded =
+      case GHC.unLoc con_bndrs of
+        GHC.HsOuterImplicit {} -> False
+        GHC.HsOuterExplicit {} -> True
+#else
 mkGADTConstructor GHC.ConDeclGADT {..} =
   Just $ GADTConstructor {con_bndrs = fromGenLocated con_bndrs, ..}
   where
@@ -69,4 +82,5 @@ mkGADTConstructor GHC.ConDeclGADT {..} =
       case GHC.unLoc con_bndrs of
         GHC.HsOuterImplicit {} -> False
         GHC.HsOuterExplicit {} -> True
+#endif
 mkGADTConstructor _ = Nothing
