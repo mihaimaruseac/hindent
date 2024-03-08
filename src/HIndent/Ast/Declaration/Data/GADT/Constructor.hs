@@ -31,23 +31,23 @@ instance Pretty GADTConstructor where
       ver = newline >> indentedBlock (string ":: " |=> body)
       body =
         case (forallNeeded, con_mb_cxt) of
-          (True, Just ctx)  -> withForallCtx ctx
-          (True, Nothing)   -> withForallOnly
-          (False, Just ctx) -> withCtxOnly ctx
-          (False, Nothing)  -> noForallCtx
-      withForallOnly = do
-        pretty con_bndrs
-        (space >> horArgs) <-|> (newline >> verArgs)
-      noForallCtx = horArgs <-|> verArgs
-      withForallCtx _ = do
+          (True, Just _)   -> withForallCtx
+          (True, Nothing)  -> withForallOnly
+          (False, Just _)  -> withCtxOnly
+          (False, Nothing) -> noForallCtx
+      withForallCtx = do
         pretty con_bndrs
         (space >> pretty (Context con_mb_cxt)) <-|>
           (newline >> pretty (Context con_mb_cxt))
         newline
         prefixed "=> " verArgs
-      withCtxOnly _ =
+      withForallOnly = do
+        pretty con_bndrs
+        (space >> horArgs) <-|> (newline >> verArgs)
+      withCtxOnly =
         (pretty (Context con_mb_cxt) >> string " => " >> horArgs) <-|>
         (pretty (Context con_mb_cxt) >> prefixed "=> " verArgs)
+      noForallCtx = horArgs <-|> verArgs
       horArgs =
         case con_g_args of
           GHC.PrefixConGADT xs ->
