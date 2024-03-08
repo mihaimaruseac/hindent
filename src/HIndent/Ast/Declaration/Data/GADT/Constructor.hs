@@ -23,8 +23,8 @@ instance CommentExtraction GADTConstructor where
   nodeComments GADTConstructor {} = NodeComments [] [] []
 
 instance Pretty GADTConstructor where
-  pretty' (GADTConstructor {constructor = GHC.ConDeclGADT {..}}) = do
-    hCommaSep $ fmap pretty con_names
+  pretty' (GADTConstructor {constructor = GHC.ConDeclGADT {..}, ..}) = do
+    hCommaSep $ fmap (`prettyWith` string) names
     hor <-|> ver
     where
       hor = string " :: " |=> body
