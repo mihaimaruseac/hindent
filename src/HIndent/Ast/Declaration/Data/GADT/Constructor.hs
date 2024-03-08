@@ -6,6 +6,7 @@ module HIndent.Ast.Declaration.Data.GADT.Constructor
   , mkGADTConstructor
   ) where
 
+import           Data.Maybe
 import qualified GHC.Types.SrcLoc                   as GHC
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.WithComments
@@ -64,23 +65,22 @@ instance Pretty GADTConstructor where
       recArg xs = printCommentsAnd xs $ \xs' -> vFields' $ fmap pretty xs'
 
 mkGADTConstructor :: GHC.ConDecl GHC.GhcPs -> Maybe GADTConstructor
-#if MIN_VERSION_ghc_lib_parser(9, 4, 0)
-mkGADTConstructor GHC.ConDeclGADT {..} =
+mkGADTConstructor decl@GHC.ConDeclGADT {..} =
   Just $ GADTConstructor {con_bndrs = fromGenLocated con_bndrs, ..}
   where
-    names = NE.toList $ fmap (fmap showOutputable . fromGenLocated) con_names
+    names = fromMaybe (error "Couldn't get names.") $ getNames decl
     forallNeeded =
       case GHC.unLoc con_bndrs of
         GHC.HsOuterImplicit {} -> False
         GHC.HsOuterExplicit {} -> True
-#else
-mkGADTConstructor GHC.ConDeclGADT {..} =
-  Just $ GADTConstructor {con_bndrs = fromGenLocated con_bndrs, ..}
-  where
-    names = fmap (fmap showOutputable . fromGenLocated) con_names
-    forallNeeded =
-      case GHC.unLoc con_bndrs of
-        GHC.HsOuterImplicit {} -> False
-        GHC.HsOuterExplicit {} -> True
-#endif
 mkGADTConstructor _ = Nothing
+
+getNames :: GHC.ConDecl GHC.GhcPs -> Maybe [WithComments String]
+#if MIN_VERSION_ghc_lib_parser(9, 4, 0)
+getNames GHC.ConDeclGADT {..} =
+  Just $ NE.toList $ fmap (fmap showOutputable . fromGenLocated) con_names
+#else
+getNames GHC.ConDeclGADT {..} =
+  Just $ fmap (fmap showOutputable . fromGenLocated) con_names
+#endif
+getNames _ = Nothing
