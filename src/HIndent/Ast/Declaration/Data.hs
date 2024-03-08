@@ -72,7 +72,12 @@ mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}
   | Just header <- mkHeader decl =
     Just $
     if isGADT
-      then GADT {..}
+      then GADT
+             { constructors =
+                 fromMaybe (error "Some constructors are not GADT ones.") $
+                 mapM (traverse mkGADTConstructor . fromGenLocated) dd_cons
+             , ..
+             }
       else Record {..}
   where
     kind = fmap mkType . fromGenLocated <$> dd_kindSig
@@ -80,7 +85,4 @@ mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}
       case dd_cons of
         (GHC.L _ GHC.ConDeclGADT {}:_) -> True
         _                              -> False
-    constructors =
-      fromMaybe (error "Some constructors are not GADT ones.") $
-      mapM (traverse mkGADTConstructor . fromGenLocated) dd_cons
 mkDataDeclaration _ = Nothing
