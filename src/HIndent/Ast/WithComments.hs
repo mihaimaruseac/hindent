@@ -1,5 +1,6 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE ViewPatterns      #-}
 
 module HIndent.Ast.WithComments
   ( WithComments
@@ -9,21 +10,21 @@ module HIndent.Ast.WithComments
   , getNode
   ) where
 
-import Control.Monad
-import Control.Monad.RWS
-import qualified GHC.Hs as GHC
-import qualified GHC.Types.SrcLoc as GHC
-import HIndent.Ast.NodeComments (NodeComments(..))
-import qualified HIndent.Ast.NodeComments as NodeComments
-import HIndent.Pretty
-import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
-import HIndent.Printer
+import           Control.Monad
+import           Control.Monad.RWS
+import qualified GHC.Hs                      as GHC
+import qualified GHC.Types.SrcLoc            as GHC
+import           HIndent.Ast.NodeComments    (NodeComments (..))
+import qualified HIndent.Ast.NodeComments    as NodeComments
+import           HIndent.Pretty
+import           HIndent.Pretty.Combinators
+import           HIndent.Pretty.NodeComments
+import           HIndent.Printer
 
 data WithComments a = WithComments
   { comments :: NodeComments
-  , node :: a
-  }
+  , node     :: a
+  } deriving (Foldable, Traversable)
 
 instance Functor WithComments where
   fmap f WithComments {..} = WithComments comments (f node)
@@ -66,10 +67,8 @@ printCommentOnSameLine (commentsOnSameLine -> (c:cs)) = do
   col <- gets psColumn
   if col == 0
     then indentedWithFixedLevel
-           (fromIntegral $ GHC.srcSpanStartCol $ GHC.anchor $ GHC.getLoc c)
-           $ spaced
-           $ fmap pretty
-           $ c : cs
+           (fromIntegral $ GHC.srcSpanStartCol $ GHC.anchor $ GHC.getLoc c) $
+         spaced $ fmap pretty $ c : cs
     else spacePrefixed $ fmap pretty $ c : cs
   eolCommentsArePrinted
 printCommentOnSameLine _ = return ()
