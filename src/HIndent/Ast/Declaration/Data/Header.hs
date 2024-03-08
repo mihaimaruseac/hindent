@@ -7,6 +7,7 @@ module HIndent.Ast.Declaration.Data.Header
 
 import           HIndent.Ast.Declaration.Data.NewOrData
 import           HIndent.Ast.NodeComments
+import           HIndent.Ast.Type.Variable
 import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs     as GHC
 import           HIndent.Pretty
@@ -18,7 +19,7 @@ data Header = Header
   { newOrData     :: NewOrData
   , name          :: WithComments (GHC.IdP GHC.GhcPs)
   , context       :: Context
-  , typeVariables :: [WithComments (GHC.HsTyVarBndr () GHC.GhcPs)]
+  , typeVariables :: [WithComments TypeVariable]
   }
 
 instance CommentExtraction Header where
@@ -39,5 +40,6 @@ mkHeader GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}, ..} = Just Header {..}
     newOrData = mkNewOrData dd_ND
     context = Context dd_ctxt
     name = fromGenLocated tcdLName
-    typeVariables = fromGenLocated <$> GHC.hsq_explicit tcdTyVars
+    typeVariables =
+      fmap mkTypeVariable . fromGenLocated <$> GHC.hsq_explicit tcdTyVars
 mkHeader _ = Nothing
