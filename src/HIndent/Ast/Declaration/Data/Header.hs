@@ -5,20 +5,20 @@ module HIndent.Ast.Declaration.Data.Header
   , mkHeader
   ) where
 
-import           HIndent.Ast.Declaration.Data.NewOrData
-import           HIndent.Ast.NodeComments
-import           HIndent.Ast.Type.Variable
-import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs     as GHC
-import           HIndent.Pretty
-import           HIndent.Pretty.Combinators
-import           HIndent.Pretty.NodeComments
-import           HIndent.Pretty.Types
+import HIndent.Ast.Declaration.Data.NewOrData
+import HIndent.Ast.NodeComments
+import HIndent.Ast.Type.Variable
+import HIndent.Ast.WithComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
+import HIndent.Pretty.Types
 
 data Header = Header
-  { newOrData     :: NewOrData
-  , name          :: WithComments (GHC.IdP GHC.GhcPs)
-  , context       :: Context
+  { newOrData :: NewOrData
+  , name :: WithComments (GHC.IdP GHC.GhcPs)
+  , context :: Context
   , typeVariables :: [WithComments TypeVariable]
   }
 
@@ -30,7 +30,7 @@ instance Pretty Header where
     (pretty newOrData >> space) |=> do
       case context of
         Context (Just _) -> pretty context >> string " =>" >> newline
-        Context Nothing  -> pure ()
+        Context Nothing -> pure ()
       pretty name
     spacePrefixed $ fmap pretty typeVariables
 

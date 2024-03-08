@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP             #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Data
@@ -6,34 +6,34 @@ module HIndent.Ast.Declaration.Data
   , mkDataDeclaration
   ) where
 
-import           Control.Monad
-import           Data.Maybe
-import qualified GHC.Types.SrcLoc                              as GHC
-import           HIndent.Applicative
-import           HIndent.Ast.Declaration.Data.GADT.Constructor
-import           HIndent.Ast.Declaration.Data.Header
-import           HIndent.Ast.NodeComments
-import           HIndent.Ast.Type
-import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs            as GHC
-import           HIndent.Pretty
-import           HIndent.Pretty.Combinators
-import           HIndent.Pretty.NodeComments
+import Control.Monad
+import Data.Maybe
+import qualified GHC.Types.SrcLoc as GHC
+import HIndent.Applicative
+import HIndent.Ast.Declaration.Data.GADT.Constructor
+import HIndent.Ast.Declaration.Data.Header
+import HIndent.Ast.NodeComments
+import HIndent.Ast.Type
+import HIndent.Ast.WithComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
 
 data DataDeclaration
   = GADT
-      { header       :: Header
-      , kind         :: Maybe (WithComments Type)
+      { header :: Header
+      , kind :: Maybe (WithComments Type)
       , constructors :: [WithComments GADTConstructor]
       }
   | Record
-      { header    :: Header
-      , dd_cons   :: [GHC.LConDecl GHC.GhcPs]
+      { header :: Header
+      , dd_cons :: [GHC.LConDecl GHC.GhcPs]
       , dd_derivs :: GHC.HsDeriving GHC.GhcPs
       }
 
 instance CommentExtraction DataDeclaration where
-  nodeComments GADT {}   = NodeComments [] [] []
+  nodeComments GADT {} = NodeComments [] [] []
   nodeComments Record {} = NodeComments [] [] []
 
 instance Pretty DataDeclaration where
@@ -69,19 +69,21 @@ instance Pretty DataDeclaration where
 mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> Maybe DataDeclaration
 mkDataDeclaration decl@GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}}
   | Just header <- mkHeader decl =
-    Just $
-    if isGADT
-      then GADT
-             { constructors =
-                 fromMaybe (error "Some constructors are not GADT ones.") $
-                 mapM (traverse mkGADTConstructor . fromGenLocated) dd_cons
-             , ..
-             }
-      else Record {..}
+    Just
+      $ if isGADT
+          then GADT
+                 { constructors =
+                     fromMaybe (error "Some constructors are not GADT ones.")
+                       $ mapM
+                           (traverse mkGADTConstructor . fromGenLocated)
+                           dd_cons
+                 , ..
+                 }
+          else Record {..}
   where
     kind = fmap mkType . fromGenLocated <$> dd_kindSig
     isGADT =
       case dd_cons of
         (GHC.L _ GHC.ConDeclGADT {}:_) -> True
-        _                              -> False
+        _ -> False
 mkDataDeclaration _ = Nothing
