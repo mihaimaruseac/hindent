@@ -5,20 +5,21 @@ module HIndent.Ast.Declaration.Data.Header
   , mkHeader
   ) where
 
-import HIndent.Ast.Declaration.Data.NewOrData
-import HIndent.Ast.NodeComments
-import HIndent.Ast.Type.Variable
-import HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import HIndent.Pretty
-import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
-import HIndent.Pretty.Types
+import           HIndent.Applicative
+import           HIndent.Ast.Context
+import           HIndent.Ast.Declaration.Data.NewOrData
+import           HIndent.Ast.NodeComments
+import           HIndent.Ast.Type.Variable
+import           HIndent.Ast.WithComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs     as GHC
+import           HIndent.Pretty
+import           HIndent.Pretty.Combinators
+import           HIndent.Pretty.NodeComments
 
 data Header = Header
-  { newOrData :: NewOrData
-  , name :: WithComments (GHC.IdP GHC.GhcPs)
-  , context :: Context
+  { newOrData     :: NewOrData
+  , name          :: WithComments (GHC.IdP GHC.GhcPs)
+  , context       :: Maybe (WithComments Context)
   , typeVariables :: [WithComments TypeVariable]
   }
 
@@ -28,9 +29,7 @@ instance CommentExtraction Header where
 instance Pretty Header where
   pretty' Header {..} = do
     (pretty newOrData >> space) |=> do
-      case context of
-        Context (Just _) -> pretty context >> string " =>" >> newline
-        Context Nothing -> pure ()
+      whenJust context $ \c -> pretty c >> string " =>" >> newline
       pretty name
     spacePrefixed $ fmap pretty typeVariables
 
@@ -38,7 +37,7 @@ mkHeader :: GHC.TyClDecl GHC.GhcPs -> Maybe Header
 mkHeader GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}, ..} = Just Header {..}
   where
     newOrData = mkNewOrData dd_ND
-    context = Context dd_ctxt
+    context = fmap (fmap mkContext . fromGenLocated) dd_ctxt
     name = fromGenLocated tcdLName
     typeVariables =
       fmap mkTypeVariable . fromGenLocated <$> GHC.hsq_explicit tcdTyVars
