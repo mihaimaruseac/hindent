@@ -8,6 +8,7 @@ module HIndent.Ast.Declaration.Data.GADT.Constructor
 
 import           Data.Maybe
 import qualified GHC.Types.SrcLoc                                        as GHC
+import           HIndent.Ast.Context
 import           HIndent.Ast.Declaration.Data.GADT.Constructor.Signature
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.WithComments
@@ -15,7 +16,6 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs                      as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
-import           HIndent.Pretty.Types
 #if MIN_VERSION_ghc_lib_parser(9, 4, 0)
 import qualified Data.List.NonEmpty                                      as NE
 #endif
@@ -39,24 +39,24 @@ instance Pretty GADTConstructor where
       ver = newline >> indentedBlock (string ":: " |=> body)
       body =
         case (forallNeeded, con_mb_cxt) of
-          (True, Just _)   -> withForallCtx
-          (True, Nothing)  -> withForallOnly
-          (False, Just _)  -> withCtxOnly
-          (False, Nothing) -> noForallCtx
-      withForallCtx = do
+          (True, Just ctx)  -> withForallCtx ctx
+          (True, Nothing)   -> withForallOnly
+          (False, Just ctx) -> withCtxOnly ctx
+          (False, Nothing)  -> noForallCtx
+      withForallCtx ctx = do
         pretty bindings
-        (space >> pretty (Context con_mb_cxt)) <-|>
-          (newline >> pretty (Context con_mb_cxt))
+        (space >> pretty (mkContext <$> fromGenLocated ctx)) <-|>
+          (newline >> pretty (mkContext <$> fromGenLocated ctx))
         newline
         prefixed "=> " $ prettyVertically signature
       withForallOnly = do
         pretty bindings
         (space >> prettyHorizontally signature) <-|>
           (newline >> prettyVertically signature)
-      withCtxOnly =
-        (pretty (Context con_mb_cxt) >> string " => " >>
+      withCtxOnly ctx =
+        (pretty (mkContext <$> fromGenLocated ctx) >> string " => " >>
          prettyHorizontally signature) <-|>
-        (pretty (Context con_mb_cxt) >>
+        (pretty (mkContext <$> fromGenLocated ctx) >>
          prefixed "=> " (prettyVertically signature))
       noForallCtx = prettyHorizontally signature <-|> prettyVertically signature
 
