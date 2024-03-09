@@ -51,11 +51,11 @@ instance Pretty GADTConstructor where
         prefixed "=> " $ prettyVertically signature
       withForallOnly = do
         pretty bindings
-        (space >> (prettyHorizontally signature)) <-|>
-          (newline >> (prettyVertically signature))
+        (space >> prettyHorizontally signature) <-|>
+          (newline >> prettyVertically signature)
       withCtxOnly =
         (pretty (Context con_mb_cxt) >> string " => " >>
-         (prettyHorizontally signature)) <-|>
+         prettyHorizontally signature) <-|>
         (pretty (Context con_mb_cxt) >>
          prefixed "=> " (prettyVertically signature))
       noForallCtx = prettyHorizontally signature <-|> prettyVertically signature
