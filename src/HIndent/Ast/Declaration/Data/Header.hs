@@ -34,9 +34,10 @@ instance Pretty Header where
     spacePrefixed $ fmap pretty typeVariables
 
 mkHeader :: GHC.TyClDecl GHC.GhcPs -> Maybe Header
-mkHeader GHC.DataDecl {tcdDataDefn = GHC.HsDataDefn {..}, ..} = Just Header {..}
+mkHeader GHC.DataDecl {tcdDataDefn = defn@GHC.HsDataDefn {..}, ..} =
+  Just Header {..}
   where
-    newOrData = mkNewOrData dd_ND
+    newOrData = mkNewOrData defn
     context = fmap (fmap mkContext . fromGenLocated) dd_ctxt
     name = fromGenLocated tcdLName
     typeVariables =
