@@ -5,21 +5,21 @@ module HIndent.Ast.Declaration.Data.Header
   , mkHeader
   ) where
 
-import           HIndent.Applicative
-import           HIndent.Ast.Context
-import           HIndent.Ast.Declaration.Data.NewOrData
-import           HIndent.Ast.NodeComments
-import           HIndent.Ast.Type.Variable
-import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs     as GHC
-import           HIndent.Pretty
-import           HIndent.Pretty.Combinators
-import           HIndent.Pretty.NodeComments
+import HIndent.Applicative
+import HIndent.Ast.Context
+import HIndent.Ast.Declaration.Data.NewOrData
+import HIndent.Ast.NodeComments
+import HIndent.Ast.Type.Variable
+import HIndent.Ast.WithComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
 
 data Header = Header
-  { newOrData     :: NewOrData
-  , name          :: WithComments (GHC.IdP GHC.GhcPs)
-  , context       :: Maybe (WithComments Context)
+  { newOrData :: NewOrData
+  , name :: WithComments (GHC.IdP GHC.GhcPs)
+  , context :: Maybe (WithComments Context)
   , typeVariables :: [WithComments TypeVariable]
   }
 
