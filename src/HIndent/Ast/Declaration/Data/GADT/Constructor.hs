@@ -9,22 +9,66 @@ module HIndent.Ast.Declaration.Data.GADT.Constructor
 import           Data.Maybe
 import qualified GHC.Types.SrcLoc                   as GHC
 import           HIndent.Ast.NodeComments
+import           HIndent.Ast.Type
 import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.Types
+import           HIndent.Printer
 #if MIN_VERSION_ghc_lib_parser(9, 4, 0)
 import qualified Data.List.NonEmpty                 as NE
 #endif
+data ConstructorSignature
+  = ByArrows
+      { parameters :: [WithComments Type]
+      , result     :: WithComments Type
+      }
+  | Record
+      { fields :: WithComments [GHC.LConDeclField GHC.GhcPs]
+      , result :: WithComments Type
+      }
+
+instance CommentExtraction ConstructorSignature where
+  nodeComments (ByArrows {}) = NodeComments [] [] []
+  nodeComments (Record {})   = NodeComments [] [] []
+
+prettyHorizontally :: ConstructorSignature -> Printer ()
+prettyHorizontally (ByArrows {..}) =
+  inter (string " -> ") $ fmap pretty parameters ++ [pretty result]
+prettyHorizontally (Record {..}) =
+  inter
+    (string " -> ")
+    [prettyWith fields (vFields' . fmap pretty), pretty result]
+
+prettyVertically :: ConstructorSignature -> Printer ()
+prettyVertically (ByArrows {..}) =
+  prefixedLined "-> " $ fmap pretty parameters ++ [pretty result]
+prettyVertically (Record {..}) =
+  prefixedLined
+    "-> "
+    [prettyWith fields (vFields' . fmap pretty), pretty result]
+
+mkConstructorSignature :: GHC.ConDecl GHC.GhcPs -> Maybe ConstructorSignature
+mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.PrefixConGADT xs, ..} =
+  Just $
+  ByArrows
+    { parameters = fmap (fmap mkType . fromGenLocated . GHC.hsScaledThing) xs
+    , result = mkType <$> fromGenLocated con_res_ty
+    }
+mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.RecConGADT xs, ..} =
+  Just $
+  Record
+    {fields = fromGenLocated xs, result = mkType <$> fromGenLocated con_res_ty}
+mkConstructorSignature GHC.ConDeclH98 {} = Nothing
+
 data GADTConstructor = GADTConstructor
   { names        :: [WithComments String]
   , forallNeeded :: Bool
   , bindings     :: WithComments (GHC.HsOuterSigTyVarBndrs GHC.GhcPs)
   , con_mb_cxt   :: Maybe (GHC.LHsContext GHC.GhcPs)
-  , con_res_ty   :: GHC.LHsType GHC.GhcPs
-  , con_g_args   :: GHC.HsConDeclGADTDetails GHC.GhcPs
+  , signature    :: ConstructorSignature
   }
 
 instance CommentExtraction GADTConstructor where
@@ -48,21 +92,17 @@ instance Pretty GADTConstructor where
         (space >> pretty (Context con_mb_cxt)) <-|>
           (newline >> pretty (Context con_mb_cxt))
         newline
-        prefixed "=> " verArgs
+        prefixed "=> " $ prettyVertically signature
       withForallOnly = do
         pretty bindings
-        (space >> horArgs) <-|> (newline >> verArgs)
+        (space >> (prettyHorizontally signature)) <-|>
+          (newline >> (prettyVertically signature))
       withCtxOnly =
-        (pretty (Context con_mb_cxt) >> string " => " >> horArgs) <-|>
-        (pretty (Context con_mb_cxt) >> prefixed "=> " verArgs)
-      noForallCtx = horArgs <-|> verArgs
-      horArgs = printArgsBy $ inter (string " -> ")
-      verArgs = printArgsBy $ prefixedLined "-> "
-      printArgsBy f =
-        case con_g_args of
-          GHC.PrefixConGADT xs -> f $ fmap pretty xs ++ [pretty con_res_ty]
-          GHC.RecConGADT xs    -> f [recArg xs, pretty con_res_ty]
-      recArg xs = printCommentsAnd xs $ \xs' -> vFields' $ fmap pretty xs'
+        (pretty (Context con_mb_cxt) >> string " => " >>
+         (prettyHorizontally signature)) <-|>
+        (pretty (Context con_mb_cxt) >>
+         prefixed "=> " (prettyVertically signature))
+      noForallCtx = prettyHorizontally signature <-|> prettyVertically signature
 
 mkGADTConstructor :: GHC.ConDecl GHC.GhcPs -> Maybe GADTConstructor
 mkGADTConstructor decl@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}
@@ -73,6 +113,8 @@ mkGADTConstructor decl@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}
       case GHC.unLoc con_bndrs of
         GHC.HsOuterImplicit {} -> False
         GHC.HsOuterExplicit {} -> True
+    signature =
+      fromMaybe (error "Couldn't get signature.") $ mkConstructorSignature decl
 mkGADTConstructor _ = Nothing
 
 getNames :: GHC.ConDecl GHC.GhcPs -> Maybe [WithComments String]
