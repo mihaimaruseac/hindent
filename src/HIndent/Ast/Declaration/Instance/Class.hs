@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module HIndent.Ast.Declaration.Instance.Class
   ( ClassInstance
   , mkClassInstance
@@ -9,7 +11,7 @@ import           HIndent.Pretty
 import           HIndent.Pretty.NodeComments
 
 newtype ClassInstance =
-  ClassInstance (GHC.InstDecl GHC.GhcPs)
+  ClassInstance (GHC.ClsInstDecl GHC.GhcPs)
 
 instance CommentExtraction ClassInstance where
   nodeComments ClassInstance {} = NodeComments [] [] []
@@ -18,5 +20,5 @@ instance Pretty ClassInstance where
   pretty' (ClassInstance x) = pretty x
 
 mkClassInstance :: GHC.InstDecl GHC.GhcPs -> Maybe ClassInstance
-mkClassInstance x@GHC.ClsInstD {} = Just $ ClassInstance x
+mkClassInstance GHC.ClsInstD {..} = Just $ ClassInstance cid_inst
 mkClassInstance _                 = Nothing
