@@ -5,16 +5,16 @@ module HIndent.Ast.Declaration.Instance.Class
   , mkClassInstance
   ) where
 
-import           Control.Monad
-import           GHC.Data.Bag
-import           HIndent.Applicative
-import           HIndent.Ast.NodeComments
+import Control.Monad
+import GHC.Data.Bag
+import HIndent.Applicative
+import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import           HIndent.Pretty
-import           HIndent.Pretty.Combinators
-import           HIndent.Pretty.NodeComments
-import           HIndent.Pretty.SigBindFamily
-import           HIndent.Pretty.Types
+import HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
+import HIndent.Pretty.SigBindFamily
+import HIndent.Pretty.Types
 
 newtype ClassInstance =
   ClassInstance (GHC.ClsInstDecl GHC.GhcPs)
@@ -28,8 +28,8 @@ instance Pretty ClassInstance where
       whenJust cid_overlap_mode $ \x -> do
         pretty x
         space
-      pretty (fmap HsSigTypeInsideInstDecl cid_poly_ty) |=>
-        unless (null sigsAndMethods) (string " where")
+      pretty (fmap HsSigTypeInsideInstDecl cid_poly_ty)
+        |=> unless (null sigsAndMethods) (string " where")
     unless (null sigsAndMethods) $ do
       newline
       indentedBlock $ lined $ fmap pretty sigsAndMethods
@@ -44,4 +44,4 @@ instance Pretty ClassInstance where
 
 mkClassInstance :: GHC.InstDecl GHC.GhcPs -> Maybe ClassInstance
 mkClassInstance GHC.ClsInstD {..} = Just $ ClassInstance cid_inst
-mkClassInstance _                 = Nothing
+mkClassInstance _ = Nothing
