@@ -76,7 +76,9 @@ mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x))
   | otherwise = TypeFamily $ mkTypeFamily x
 mkDeclaration (GHC.TyClD _ x@GHC.SynDecl {}) = TypeSynonym $ mkTypeSynonym x
 mkDeclaration (GHC.TyClD _ x) = TyClDecl x
-mkDeclaration (GHC.InstD _ x) = InstDecl x
+mkDeclaration (GHC.InstD _ x)
+  | Just inst <- mkClassInstance x = ClassInstance inst
+  | otherwise = InstDecl x
 mkDeclaration (GHC.DerivD _ x) = DerivDecl x
 mkDeclaration (GHC.ValD _ x) = ValDecl x
 mkDeclaration (GHC.SigD _ x) = SigDecl x
