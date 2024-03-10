@@ -9,7 +9,7 @@ import           HIndent.Pretty
 import           HIndent.Pretty.NodeComments
 
 newtype ClassInstance =
-  ClassInstance (GHC.TyClDecl GHC.GhcPs)
+  ClassInstance (GHC.InstDecl GHC.GhcPs)
 
 instance CommentExtraction ClassInstance where
   nodeComments ClassInstance {} = NodeComments [] [] []
@@ -17,5 +17,6 @@ instance CommentExtraction ClassInstance where
 instance Pretty ClassInstance where
   pretty' (ClassInstance x) = pretty x
 
-mkClassInstance :: GHC.TyClDecl GHC.GhcPs -> ClassInstance
-mkClassInstance = ClassInstance
+mkClassInstance :: GHC.InstDecl GHC.GhcPs -> Maybe ClassInstance
+mkClassInstance x@GHC.ClsInstD {} = Just $ ClassInstance x
+mkClassInstance _                 = Nothing
