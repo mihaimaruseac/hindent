@@ -6,9 +6,10 @@ module HIndent.Ast.Declaration
 
 import           HIndent.Ast.Declaration.Family.Data
 import           HIndent.Ast.Declaration.Family.Type
+import           HIndent.Ast.Declaration.Instance.Class
 import           HIndent.Ast.Declaration.TypeSynonym
 import           HIndent.Ast.NodeComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs  as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs     as GHC
 import           HIndent.Pretty
 import           HIndent.Pretty.NodeComments
 
@@ -17,7 +18,7 @@ data Declaration
   | TypeFamily TypeFamily
   | TypeSynonym TypeSynonym
   | TyClDecl (GHC.TyClDecl GHC.GhcPs)
-  | ClassInstance (GHC.InstDecl GHC.GhcPs)
+  | ClassInstance ClassInstance
   | InstDecl (GHC.InstDecl GHC.GhcPs)
   | DerivDecl (GHC.DerivDecl GHC.GhcPs)
   | ValDecl (GHC.HsBind GHC.GhcPs)
