@@ -6,6 +6,7 @@ module HIndent.Ast.Declaration
 
 import HIndent.Ast.Declaration.Family.Data
 import HIndent.Ast.Declaration.Family.Type
+import HIndent.Ast.Declaration.Instance.Class
 import HIndent.Ast.Declaration.TypeSynonym
 import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -17,6 +18,7 @@ data Declaration
   | TypeFamily TypeFamily
   | TypeSynonym TypeSynonym
   | TyClDecl (GHC.TyClDecl GHC.GhcPs)
+  | ClassInstance ClassInstance
   | InstDecl (GHC.InstDecl GHC.GhcPs)
   | DerivDecl (GHC.DerivDecl GHC.GhcPs)
   | ValDecl (GHC.HsBind GHC.GhcPs)
@@ -35,6 +37,7 @@ instance CommentExtraction Declaration where
   nodeComments TypeFamily {} = NodeComments [] [] []
   nodeComments TypeSynonym {} = NodeComments [] [] []
   nodeComments TyClDecl {} = NodeComments [] [] []
+  nodeComments ClassInstance {} = NodeComments [] [] []
   nodeComments InstDecl {} = NodeComments [] [] []
   nodeComments DerivDecl {} = NodeComments [] [] []
   nodeComments ValDecl {} = NodeComments [] [] []
@@ -53,6 +56,7 @@ instance Pretty Declaration where
   pretty' (TypeFamily x) = pretty x
   pretty' (TypeSynonym x) = pretty x
   pretty' (TyClDecl x) = pretty x
+  pretty' (ClassInstance x) = pretty x
   pretty' (InstDecl x) = pretty x
   pretty' (DerivDecl x) = pretty x
   pretty' (ValDecl x) = pretty x
@@ -72,7 +76,9 @@ mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x))
   | otherwise = TypeFamily $ mkTypeFamily x
 mkDeclaration (GHC.TyClD _ x@GHC.SynDecl {}) = TypeSynonym $ mkTypeSynonym x
 mkDeclaration (GHC.TyClD _ x) = TyClDecl x
-mkDeclaration (GHC.InstD _ x) = InstDecl x
+mkDeclaration (GHC.InstD _ x)
+  | Just inst <- mkClassInstance x = ClassInstance inst
+  | otherwise = InstDecl x
 mkDeclaration (GHC.DerivD _ x) = DerivDecl x
 mkDeclaration (GHC.ValD _ x) = ValDecl x
 mkDeclaration (GHC.SigD _ x) = SigDecl x
