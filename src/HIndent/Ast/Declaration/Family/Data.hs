@@ -36,11 +36,11 @@ instance Pretty DataFamily where
     spacePrefixed $ fmap pretty typeVariables
     whenJust signature $ \sig -> space >> pretty sig
 
-mkDataFamily :: GHC.FamilyDecl GHC.GhcPs -> DataFamily
+mkDataFamily :: GHC.FamilyDecl GHC.GhcPs -> Maybe DataFamily
 mkDataFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
   | GHC.DataFamily <- fdInfo
-  , Nothing <- fdInjectivityAnn = DataFamily {..}
-  | otherwise = error "Not a DataFamily"
+  , Nothing <- fdInjectivityAnn = Just DataFamily {..}
+  | otherwise = Nothing
   where
     isTopLevel =
       case fdTopLevel of

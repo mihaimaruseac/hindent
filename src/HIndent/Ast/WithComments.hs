@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ViewPatterns #-}
 
@@ -23,7 +24,7 @@ import HIndent.Printer
 data WithComments a = WithComments
   { comments :: NodeComments
   , node :: a
-  }
+  } deriving (Foldable, Traversable)
 
 instance Functor WithComments where
   fmap f WithComments {..} = WithComments comments (f node)

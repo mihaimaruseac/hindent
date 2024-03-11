@@ -4,6 +4,9 @@ module HIndent.Ast.Declaration
   , isSignature
   ) where
 
+import Control.Applicative
+import Data.Maybe
+import HIndent.Ast.Declaration.Data
 import HIndent.Ast.Declaration.Family.Data
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Instance.Class
@@ -16,6 +19,7 @@ import HIndent.Pretty.NodeComments
 data Declaration
   = DataFamily DataFamily
   | TypeFamily TypeFamily
+  | DataDeclaration DataDeclaration
   | TypeSynonym TypeSynonym
   | TyClDecl (GHC.TyClDecl GHC.GhcPs)
   | ClassInstance ClassInstance
@@ -35,6 +39,7 @@ data Declaration
 instance CommentExtraction Declaration where
   nodeComments DataFamily {} = NodeComments [] [] []
   nodeComments TypeFamily {} = NodeComments [] [] []
+  nodeComments DataDeclaration {} = NodeComments [] [] []
   nodeComments TypeSynonym {} = NodeComments [] [] []
   nodeComments TyClDecl {} = NodeComments [] [] []
   nodeComments ClassInstance {} = NodeComments [] [] []
@@ -54,6 +59,7 @@ instance CommentExtraction Declaration where
 instance Pretty Declaration where
   pretty' (DataFamily x) = pretty x
   pretty' (TypeFamily x) = pretty x
+  pretty' (DataDeclaration x) = pretty x
   pretty' (TypeSynonym x) = pretty x
   pretty' (TyClDecl x) = pretty x
   pretty' (ClassInstance x) = pretty x
@@ -71,10 +77,12 @@ instance Pretty Declaration where
   pretty' (RoleAnnotDecl x) = pretty x
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
-mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x))
-  | GHC.DataFamily <- GHC.fdInfo x = DataFamily $ mkDataFamily x
-  | otherwise = TypeFamily $ mkTypeFamily x
+mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) =
+  fromMaybe (error "Unreachable.")
+    $ DataFamily <$> mkDataFamily x <|> TypeFamily <$> mkTypeFamily x
 mkDeclaration (GHC.TyClD _ x@GHC.SynDecl {}) = TypeSynonym $ mkTypeSynonym x
+mkDeclaration (GHC.TyClD _ x@(GHC.DataDecl {}))
+  | Just decl <- mkDataDeclaration x = DataDeclaration decl
 mkDeclaration (GHC.TyClD _ x) = TyClDecl x
 mkDeclaration (GHC.InstD _ x)
   | Just inst <- mkClassInstance x = ClassInstance inst

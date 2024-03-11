@@ -44,8 +44,10 @@ instance Pretty TypeFamily where
     whenJust equations $ \xs ->
       string " where" >> newline >> indentedBlock (lined $ fmap pretty xs)
 
-mkTypeFamily :: GHC.FamilyDecl GHC.GhcPs -> TypeFamily
-mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..} = TypeFamily {..}
+mkTypeFamily :: GHC.FamilyDecl GHC.GhcPs -> Maybe TypeFamily
+mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
+  | GHC.DataFamily <- fdInfo = Nothing
+  | otherwise = Just TypeFamily {..}
   where
     isTopLevel =
       case fdTopLevel of
