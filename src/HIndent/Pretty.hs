@@ -1836,7 +1836,7 @@ instance Pretty InfixOp where
   pretty' (InfixOp Orig {}) = notUsedInParsedStage
   pretty' (InfixOp (Exact name)) = backticksIfNotSymbol occ $ pretty occ
     where
-      occ = occName name
+      occ = GHC.Types.Name.occName name
 
 instance Pretty PrefixOp where
   pretty' (PrefixOp (Unqual name)) = parensIfSymbol name $ pretty name
@@ -1848,7 +1848,7 @@ instance Pretty PrefixOp where
   pretty' (PrefixOp Orig {}) = notUsedInParsedStage
   pretty' (PrefixOp (Exact name)) = parensIfSymbol occ $ output name
     where
-      occ = occName name
+      occ = GHC.Types.Name.occName name
 
 instance Pretty Context where
   pretty' (Context xs) =
@@ -2080,7 +2080,7 @@ instance Pretty (GHC.RuleDecl GHC.GhcPs) where
             space
             pretty rd_lhs
 #endif
-instance Pretty OccName where
+instance Pretty GHC.Types.Name.OccName where
   pretty' = output
 
 instance Pretty (GHC.DerivDecl GHC.GhcPs) where
