@@ -1728,11 +1728,11 @@ instance Pretty InfixApp where
       isSameAssoc (findFixity -> GHC.Fixity _ lv d) = lv == level && d == dir
       GHC.Fixity _ level dir = findFixity op
 
-instance Pretty a => Pretty (BooleanFormula a) where
-  pretty' (Var x)    = pretty x
-  pretty' (And xs)   = hvCommaSep $ fmap pretty xs
-  pretty' (Or xs)    = hvBarSep $ fmap pretty xs
-  pretty' (Parens x) = parens $ pretty x
+instance Pretty a => Pretty (GHC.Data.BooleanFormula.BooleanFormula a) where
+  pretty' (GHC.Data.BooleanFormula.Var x)    = pretty x
+  pretty' (GHC.Data.BooleanFormula.And xs)   = hvCommaSep $ fmap pretty xs
+  pretty' (GHC.Data.BooleanFormula.Or xs)    = hvBarSep $ fmap pretty xs
+  pretty' (GHC.Data.BooleanFormula.Parens x) = parens $ pretty x
 
 instance Pretty (GHC.FieldLabelStrings GHC.GhcPs) where
   pretty' (GHC.FieldLabelStrings xs) = hDotSep $ fmap pretty xs
