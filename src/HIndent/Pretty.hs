@@ -26,7 +26,7 @@ import           Control.Monad.RWS
 import           Data.Maybe
 import           Data.Void
 import           GHC.Core.Coercion
-import           GHC.Data.Bag
+import qualified GHC.Data.Bag                                as GHC
 import qualified GHC.Data.BooleanFormula                     as GHC
 import qualified GHC.Data.FastString                         as GHC
 import qualified GHC.Hs                                      as GHC
@@ -260,12 +260,7 @@ prettyTyClDecl GHC.ClassDecl {..} = do
               spacePrefixed $ fmap pretty xs
             _ -> error "Not enough parameters are given."
     sigsMethodsFamilies =
-      mkSortedLSigBindFamilyList
-        tcdSigs
-        (GHC.Data.Bag.bagToList tcdMeths)
-        tcdATs
-        []
-        []
+      mkSortedLSigBindFamilyList tcdSigs (GHC.bagToList tcdMeths) tcdATs [] []
 
 instance Pretty (GHC.InstDecl GHC.GhcPs) where
   pretty' GHC.ClsInstD {..}     = pretty cid_inst
@@ -513,7 +508,7 @@ instance Pretty (GHC.ClsInstDecl GHC.GhcPs) where
       sigsAndMethods =
         mkSortedLSigBindFamilyList
           cid_sigs
-          (GHC.Data.Bag.bagToList cid_binds)
+          (GHC.bagToList cid_binds)
           []
           cid_tyfam_insts
           cid_datafam_insts
@@ -1564,12 +1559,7 @@ instance Pretty (GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs) where
   pretty' (GHC.ValBinds _ methods sigs) = lined $ fmap pretty sigsAndMethods
     where
       sigsAndMethods =
-        mkSortedLSigBindFamilyList
-          sigs
-          (GHC.Data.Bag.bagToList methods)
-          []
-          []
-          []
+        mkSortedLSigBindFamilyList sigs (GHC.bagToList methods) [] [] []
   pretty' GHC.XValBindsLR {} = notUsedInParsedStage
 
 instance Pretty (GHC.HsTupArg GHC.GhcPs) where
