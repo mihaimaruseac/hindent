@@ -2171,13 +2171,13 @@ instance Pretty GHC.ForeignExport where
     spaced [pretty conv, string s]
   pretty' (GHC.CExport conv _) = pretty conv
 #endif
-instance Pretty CExportSpec where
-  pretty' (CExportStatic _ _ x) = pretty x
+instance Pretty GHC.Types.ForeignCall.CExportSpec where
+  pretty' (GHC.Types.ForeignCall.CExportStatic _ _ x) = pretty x
 
-instance Pretty Safety where
-  pretty' PlaySafe          = string "safe"
-  pretty' PlayInterruptible = string "interruptible"
-  pretty' PlayRisky         = string "unsafe"
+instance Pretty GHC.Types.ForeignCall.Safety where
+  pretty' GHC.Types.ForeignCall.PlaySafe          = string "safe"
+  pretty' GHC.Types.ForeignCall.PlayInterruptible = string "interruptible"
+  pretty' GHC.Types.ForeignCall.PlayRisky         = string "unsafe"
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (AnnDecl GhcPs) where
   pretty' (HsAnnotation _ (ValueAnnProvenance name) expr) =
@@ -2481,12 +2481,12 @@ instance Pretty (GHC.RuleBndr GHC.GhcPs) where
   pretty' (GHC.RuleBndrSig _ name sig) =
     parens $ spaced [pretty name, string "::", pretty sig]
 
-instance Pretty CCallConv where
-  pretty' CCallConv          = string "ccall"
-  pretty' CApiConv           = string "capi"
-  pretty' StdCallConv        = string "stdcall"
-  pretty' PrimCallConv       = string "prim"
-  pretty' JavaScriptCallConv = string "javascript"
+instance Pretty GHC.Types.ForeignCall.CCallConv where
+  pretty' GHC.Types.ForeignCall.CCallConv          = string "ccall"
+  pretty' GHC.Types.ForeignCall.CApiConv           = string "capi"
+  pretty' GHC.Types.ForeignCall.StdCallConv        = string "stdcall"
+  pretty' GHC.Types.ForeignCall.PrimCallConv       = string "prim"
+  pretty' GHC.Types.ForeignCall.JavaScriptCallConv = string "javascript"
 
 instance Pretty GHC.HsSrcBang where
   pretty' (GHC.HsSrcBang _ unpack strictness) = do
