@@ -2208,10 +2208,10 @@ instance Pretty (GHC.RoleAnnotDecl GHC.GhcPs) where
     [string "type role", pretty name] ++
     fmap (maybe (string "_") pretty . GHC.unLoc) roles
 
-instance Pretty Role where
-  pretty' Nominal          = string "nominal"
-  pretty' Representational = string "representational"
-  pretty' Phantom          = string "phantom"
+instance Pretty GHC.Core.Coercion.Role where
+  pretty' GHC.Core.Coercion.Nominal          = string "nominal"
+  pretty' GHC.Core.Coercion.Representational = string "representational"
+  pretty' GHC.Core.Coercion.Phantom          = string "phantom"
 
 instance Pretty (GHC.TyFamInstDecl GHC.GhcPs) where
   pretty' GHC.TyFamInstDecl {..} = string "type " >> pretty tfid_eqn
