@@ -1711,7 +1711,9 @@ instance Pretty InfixApp where
             error
               "The number of the sum of operants and operators should be odd."
       prettyOps _ = error "Too short list."
-      findFixity o = fromMaybe GHC.defaultFixity $ lookup (varToStr o) fixities
+      findFixity o =
+        fromMaybe GHC.defaultFixity $
+        lookup (Language.Haskell.GhclibParserEx.GHC.Hs.Expr.varToStr o) fixities
       allOperantsAndOperatorsLeftAssoc = reverse $ rhs : op : collect lhs
         where
           collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
