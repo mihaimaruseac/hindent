@@ -26,7 +26,6 @@ import           Control.Monad.RWS
 import           Data.Maybe
 import           Data.Void
 import           GHC.Core.Coercion
-import           GHC.Core.InstEnv
 import           GHC.Data.Bag
 import           GHC.Data.BooleanFormula
 import           GHC.Data.FastString
@@ -1214,8 +1213,9 @@ prettyHsType GHC.HsQualTy {..} = hor <-|> ver
     ver = do
       pretty $ Context hst_ctxt
       lined [string " =>", indentedBlock $ pretty hst_body]
-prettyHsType (GHC.HsTyVar _ NotPromoted x) = pretty x
-prettyHsType (GHC.HsTyVar _ IsPromoted x) = string "'" >> pretty x
+prettyHsType (GHC.HsTyVar _ GHC.Types.Basic.NotPromoted x) = pretty x
+prettyHsType (GHC.HsTyVar _ GHC.Types.Basic.IsPromoted x) =
+  string "'" >> pretty x
 prettyHsType x@(GHC.HsAppTy _ l r) = hor <-|> ver
   where
     hor = spaced $ fmap pretty [l, r]
@@ -1481,8 +1481,10 @@ prettyPat (GHC.ParPat _ inner) = parens $ pretty inner
 #endif
 prettyPat (GHC.BangPat _ x) = string "!" >> pretty x
 prettyPat (GHC.ListPat _ xs) = hList $ fmap pretty xs
-prettyPat (GHC.TuplePat _ pats Boxed) = hTuple $ fmap pretty pats
-prettyPat (GHC.TuplePat _ pats Unboxed) = hUnboxedTuple $ fmap pretty pats
+prettyPat (GHC.TuplePat _ pats GHC.Types.Basic.Boxed) =
+  hTuple $ fmap pretty pats
+prettyPat (GHC.TuplePat _ pats GHC.Types.Basic.Unboxed) =
+  hUnboxedTuple $ fmap pretty pats
 prettyPat (GHC.SumPat _ x position numElem) = do
   string "(#"
   forM_ [1 .. numElem] $ \idx -> do
@@ -1752,12 +1754,12 @@ instance Pretty (GHC.DerivClauseTys GHC.GhcPs) where
   pretty' (GHC.DctSingle _ ty) = parens $ pretty ty
   pretty' (GHC.DctMulti _ ts)  = hvTuple $ fmap pretty ts
 
-instance Pretty OverlapMode where
-  pretty' NoOverlap {}    = notUsedInParsedStage
-  pretty' Overlappable {} = string "{-# OVERLAPPABLE #-}"
-  pretty' Overlapping {}  = string "{-# OVERLAPPING #-}"
-  pretty' Overlaps {}     = string "{-# OVERLAPS #-}"
-  pretty' Incoherent {}   = string "{-# INCOHERENT #-}"
+instance Pretty GHC.Types.Basic.OverlapMode where
+  pretty' GHC.Types.Basic.NoOverlap {}    = notUsedInParsedStage
+  pretty' GHC.Types.Basic.Overlappable {} = string "{-# OVERLAPPABLE #-}"
+  pretty' GHC.Types.Basic.Overlapping {}  = string "{-# OVERLAPPING #-}"
+  pretty' GHC.Types.Basic.Overlaps {}     = string "{-# OVERLAPS #-}"
+  pretty' GHC.Types.Basic.Incoherent {}   = string "{-# INCOHERENT #-}"
 
 instance Pretty StringLiteral where
   pretty' = output
@@ -1771,8 +1773,8 @@ instance Pretty (GHC.FamilyDecl GHC.GhcPs) where
         GHC.OpenTypeFamily      -> "type"
         GHC.ClosedTypeFamily {} -> "type"
     case fdTopLevel of
-      TopLevel    -> string " family "
-      NotTopLevel -> space
+      GHC.Types.Basic.TopLevel    -> string " family "
+      GHC.Types.Basic.NotTopLevel -> space
     pretty fdLName
     spacePrefixed $ pretty <$> GHC.hsq_explicit fdTyVars
     case unLoc fdResultSig of
@@ -2260,22 +2262,23 @@ instance Pretty FixityDirection where
   pretty' InfixR = string "infixr"
   pretty' InfixN = string "infix"
 
-instance Pretty InlinePragma where
-  pretty' InlinePragma {..} = do
+instance Pretty GHC.Types.Basic.InlinePragma where
+  pretty' GHC.Types.Basic.InlinePragma {..} = do
     pretty inl_inline
     case inl_act of
-      ActiveBefore _ x -> space >> brackets (string $ "~" ++ show x)
-      ActiveAfter _ x  -> space >> brackets (string $ show x)
-      _                -> pure ()
+      GHC.Types.Basic.ActiveBefore _ x ->
+        space >> brackets (string $ "~" ++ show x)
+      GHC.Types.Basic.ActiveAfter _ x -> space >> brackets (string $ show x)
+      _ -> pure ()
 
-instance Pretty InlineSpec where
+instance Pretty GHC.Types.Basic.InlineSpec where
   pretty' = prettyInlineSpec
 
-prettyInlineSpec :: InlineSpec -> Printer ()
-prettyInlineSpec Inline {} = string "INLINE"
-prettyInlineSpec Inlinable {} = string "INLINABLE"
-prettyInlineSpec NoInline {} = string "NOINLINE"
-prettyInlineSpec NoUserInlinePrag =
+prettyInlineSpec :: GHC.Types.Basic.InlineSpec -> Printer ()
+prettyInlineSpec GHC.Types.Basic.Inline {} = string "INLINE"
+prettyInlineSpec GHC.Types.Basic.Inlinable {} = string "INLINABLE"
+prettyInlineSpec GHC.Types.Basic.NoInline {} = string "NOINLINE"
+prettyInlineSpec GHC.Types.Basic.NoUserInlinePrag =
   error
     "This branch is executed if the inline pragma is not written, but executing this branch means that the pragma is already about to be output, which indicates something goes wrong."
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
