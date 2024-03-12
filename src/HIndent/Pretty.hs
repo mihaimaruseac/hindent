@@ -1896,7 +1896,19 @@ instance Pretty (FamEqn GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs))) where
 -- | Pretty-print a data instance.
 instance Pretty (FamEqn GhcPs (HsDataDefn GhcPs)) where
   pretty' = pretty' . FamEqnTopLevel
-
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
+instance Pretty FamEqn' where
+  pretty' FamEqn' {famEqn = FamEqn {..}, ..} = do
+    spaced $ string prefix : pretty feqn_tycon : fmap pretty feqn_pats
+    pretty feqn_rhs
+    where
+      prefix =
+        case (famEqnFor, dd_cons feqn_rhs) of
+          (DataFamInstDeclForTopLevel, NewTypeCon {}) -> "newtype instance"
+          (DataFamInstDeclForTopLevel, DataTypeCons {}) -> "data instance"
+          (DataFamInstDeclForInsideClassInst, NewTypeCon {}) -> "newtype"
+          (DataFamInstDeclForInsideClassInst, DataTypeCons {}) -> "data"
+#else
 instance Pretty FamEqn' where
   pretty' FamEqn' {famEqn = FamEqn {..}, ..} = do
     spaced $ string prefix : pretty feqn_tycon : fmap pretty feqn_pats
@@ -1908,6 +1920,7 @@ instance Pretty FamEqn' where
           (DataFamInstDeclForTopLevel, DataType) -> "data instance"
           (DataFamInstDeclForInsideClassInst, NewType) -> "newtype"
           (DataFamInstDeclForInsideClassInst, DataType) -> "data"
+#endif
 -- | HsArg (LHsType GhcPs) (LHsType GhcPs)
 #if MIN_VERSION_ghc_lib_parser(9,8,1)
 instance Pretty
