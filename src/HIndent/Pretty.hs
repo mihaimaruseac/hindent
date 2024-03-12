@@ -1898,7 +1898,7 @@ instance Pretty VerticalContext where
 #endif
 -- Wrap a value of this type with 'ModulenameWithPrefix' to print it with
 -- the "module " prefix.
-instance Pretty ModuleName where
+instance Pretty GHC.Unit.ModuleName where
   pretty' = output
 
 instance Pretty ModuleNameWithPrefix where
