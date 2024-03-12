@@ -55,7 +55,7 @@ import qualified Data.Foldable                               as NonEmpty
 import           GHC.Core.DataCon
 #endif
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
-import           GHC.Unit
+import qualified GHC.Unit                                    as GHC
 #endif
 -- | This function pretty-prints the given AST node with comments.
 pretty :: Pretty a => a -> Printer ()
@@ -1898,7 +1898,7 @@ instance Pretty VerticalContext where
 #endif
 -- Wrap a value of this type with 'ModulenameWithPrefix' to print it with
 -- the "module " prefix.
-instance Pretty GHC.Unit.ModuleName where
+instance Pretty GHC.ModuleName where
   pretty' = output
 
 instance Pretty ModuleNameWithPrefix where
