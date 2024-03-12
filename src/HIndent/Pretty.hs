@@ -38,7 +38,7 @@ import           GHC.Types.Name
 import qualified GHC.Types.Name.Reader                       as GHC
 import qualified GHC.Types.SourceText                        as GHC
 import qualified GHC.Types.SrcLoc                            as GHC
-import           GHC.Unit.Module.Warnings
+import qualified GHC.Unit.Module.Warnings                    as GHC
 import           HIndent.Applicative
 import           HIndent.Ast.NodeComments
 import           HIndent.Config
@@ -2004,10 +2004,8 @@ instance Pretty (WarnDecl GhcPs) where
 instance Pretty (GHC.WarnDecl GHC.GhcPs) where
   pretty' (GHC.Warning _ names deprecatedOrWarning) =
     case deprecatedOrWarning of
-      GHC.Unit.Module.Warnings.DeprecatedTxt _ reasons ->
-        prettyWithTitleReasons "DEPRECATED" reasons
-      GHC.Unit.Module.Warnings.WarningTxt _ reasons ->
-        prettyWithTitleReasons "WARNING" reasons
+      GHC.DeprecatedTxt _ reasons -> prettyWithTitleReasons "DEPRECATED" reasons
+      GHC.WarningTxt _ reasons    -> prettyWithTitleReasons "WARNING" reasons
     where
       prettyWithTitleReasons title reasons =
         lined
