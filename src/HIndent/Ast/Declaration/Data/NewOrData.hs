@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP             #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Data.NewOrData
@@ -6,9 +6,9 @@ module HIndent.Ast.Declaration.Data.NewOrData
   , mkNewOrData
   ) where
 
-import           HIndent.Ast.NodeComments
+import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import           HIndent.Pretty.NodeComments
+import HIndent.Pretty.NodeComments
 
 data NewOrData
   = Newtype
@@ -16,7 +16,7 @@ data NewOrData
 
 instance CommentExtraction NewOrData where
   nodeComments Newtype = NodeComments [] [] []
-  nodeComments Data    = NodeComments [] [] []
+  nodeComments Data = NodeComments [] [] []
 
 mkNewOrData :: GHC.HsDataDefn GHC.GhcPs -> NewOrData
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)

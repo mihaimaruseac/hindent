@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP             #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Data.GADT.Constructor
@@ -6,23 +6,23 @@ module HIndent.Ast.Declaration.Data.GADT.Constructor
   , mkGADTConstructor
   ) where
 
-import           Data.Maybe
-import qualified GHC.Types.SrcLoc                                        as GHC
-import           HIndent.Ast.Declaration.Data.GADT.Constructor.Signature
-import           HIndent.Ast.NodeComments
-import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs                      as GHC
-import           HIndent.Pretty.Combinators
-import           HIndent.Pretty.NodeComments
+import Data.Maybe
+import qualified GHC.Types.SrcLoc as GHC
+import HIndent.Ast.Declaration.Data.GADT.Constructor.Signature
+import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
-import qualified Data.List.NonEmpty                                      as NE
+import qualified Data.List.NonEmpty as NE
 #endif
 data GADTConstructor = GADTConstructor
-  { names        :: [WithComments String]
+  { names :: [WithComments String]
   , forallNeeded :: Bool
-  , bindings     :: WithComments (GHC.HsOuterSigTyVarBndrs GHC.GhcPs)
-  , con_mb_cxt   :: Maybe (GHC.LHsContext GHC.GhcPs)
-  , signature    :: ConstructorSignature
+  , bindings :: WithComments (GHC.HsOuterSigTyVarBndrs GHC.GhcPs)
+  , con_mb_cxt :: Maybe (GHC.LHsContext GHC.GhcPs)
+  , signature :: ConstructorSignature
   }
 
 instance CommentExtraction GADTConstructor where

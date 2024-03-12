@@ -3,9 +3,9 @@ module HIndent.Ast.Type
   , mkType
   ) where
 
-import           HIndent.Ast.NodeComments
+import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import           HIndent.Pretty.NodeComments
+import HIndent.Pretty.NodeComments
 
 newtype Type =
   Type (GHC.HsType GHC.GhcPs)

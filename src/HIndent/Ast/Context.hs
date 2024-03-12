@@ -5,11 +5,11 @@ module HIndent.Ast.Context
   , mkContext
   ) where
 
-import           HIndent.Ast.NodeComments
-import           HIndent.Ast.Type
-import           HIndent.Ast.WithComments
+import HIndent.Ast.NodeComments
+import HIndent.Ast.Type
+import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import           HIndent.Pretty.NodeComments
+import HIndent.Pretty.NodeComments
 
 newtype Context =
   Context [WithComments Type]

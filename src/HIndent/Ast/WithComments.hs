@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.WithComments
   ( WithComments(..)
@@ -8,15 +8,15 @@ module HIndent.Ast.WithComments
   , getNode
   ) where
 
-import qualified GHC.Hs                      as GHC
-import qualified GHC.Types.SrcLoc            as GHC
-import           HIndent.Ast.NodeComments    (NodeComments (..))
-import qualified HIndent.Ast.NodeComments    as NodeComments
-import           HIndent.Pretty.NodeComments
+import qualified GHC.Hs as GHC
+import qualified GHC.Types.SrcLoc as GHC
+import HIndent.Ast.NodeComments (NodeComments(..))
+import qualified HIndent.Ast.NodeComments as NodeComments
+import HIndent.Pretty.NodeComments
 
 data WithComments a = WithComments
   { comments :: NodeComments
-  , node     :: a
+  , node :: a
   } deriving (Foldable, Traversable)
 
 instance Functor WithComments where

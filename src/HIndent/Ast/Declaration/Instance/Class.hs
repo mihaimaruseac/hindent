@@ -5,9 +5,9 @@ module HIndent.Ast.Declaration.Instance.Class
   , mkClassInstance
   ) where
 
-import           HIndent.Ast.NodeComments
+import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import           HIndent.Pretty.NodeComments
+import HIndent.Pretty.NodeComments
 
 newtype ClassInstance =
   ClassInstance (GHC.ClsInstDecl GHC.GhcPs)
@@ -17,4 +17,4 @@ instance CommentExtraction ClassInstance where
 
 mkClassInstance :: GHC.InstDecl GHC.GhcPs -> Maybe ClassInstance
 mkClassInstance GHC.ClsInstD {..} = Just $ ClassInstance cid_inst
-mkClassInstance _                 = Nothing
+mkClassInstance _ = Nothing

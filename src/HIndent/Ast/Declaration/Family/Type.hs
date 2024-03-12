@@ -5,24 +5,23 @@ module HIndent.Ast.Declaration.Family.Type
   , mkTypeFamily
   ) where
 
-import qualified GHC.Types.Basic                                     as GHC
-import           HIndent.Ast.Declaration.Family.Type.Injectivity
-import           HIndent.Ast.Declaration.Family.Type.ResultSignature
-import           HIndent.Ast.NodeComments                            hiding
-                                                                     (fromEpAnn)
-import           HIndent.Ast.Type.Variable
-import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs                  as GHC
-import           HIndent.Pretty.Combinators
-import           HIndent.Pretty.NodeComments
+import qualified GHC.Types.Basic as GHC
+import HIndent.Ast.Declaration.Family.Type.Injectivity
+import HIndent.Ast.Declaration.Family.Type.ResultSignature
+import HIndent.Ast.NodeComments hiding (fromEpAnn)
+import HIndent.Ast.Type.Variable
+import HIndent.Ast.WithComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
 
 data TypeFamily = TypeFamily
-  { isTopLevel    :: Bool
-  , name          :: String
+  { isTopLevel :: Bool
+  , name :: String
   , typeVariables :: [WithComments TypeVariable]
-  , signature     :: WithComments ResultSignature
-  , injectivity   :: Maybe (WithComments Injectivity)
-  , equations     :: Maybe [GHC.LTyFamInstEqn GHC.GhcPs]
+  , signature :: WithComments ResultSignature
+  , injectivity :: Maybe (WithComments Injectivity)
+  , equations :: Maybe [GHC.LTyFamInstEqn GHC.GhcPs]
   }
 
 instance CommentExtraction TypeFamily where
@@ -35,7 +34,7 @@ mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
   where
     isTopLevel =
       case fdTopLevel of
-        GHC.TopLevel    -> True
+        GHC.TopLevel -> True
         GHC.NotTopLevel -> False
     name = showOutputable fdLName
     typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
@@ -43,7 +42,7 @@ mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
     injectivity = fmap (fmap Injectivity . fromGenLocated) fdInjectivityAnn
     equations =
       case fdInfo of
-        GHC.DataFamily                 -> error "Not a TypeFamily"
-        GHC.OpenTypeFamily             -> Nothing
-        GHC.ClosedTypeFamily Nothing   -> Just []
+        GHC.DataFamily -> error "Not a TypeFamily"
+        GHC.OpenTypeFamily -> Nothing
+        GHC.ClosedTypeFamily Nothing -> Just []
         GHC.ClosedTypeFamily (Just xs) -> Just xs
