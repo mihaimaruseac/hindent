@@ -1,18 +1,16 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Data.Header
-  ( Header
+  ( Header(..)
   , mkHeader
   ) where
 
-import           HIndent.Applicative
 import           HIndent.Ast.Context
 import           HIndent.Ast.Declaration.Data.NewOrData
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.Type.Variable
 import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs     as GHC
-import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
 data Header = Header

@@ -25,38 +25,54 @@ import           Control.Monad
 import           Control.Monad.RWS
 import           Data.Maybe
 import           Data.Void
-import qualified GHC.Core.Coercion                           as GHC
-import qualified GHC.Data.Bag                                as GHC
-import qualified GHC.Data.BooleanFormula                     as GHC
-import qualified GHC.Data.FastString                         as GHC
-import qualified GHC.Hs                                      as GHC
+import qualified GHC.Core.Coercion                                   as GHC
+import qualified GHC.Data.Bag                                        as GHC
+import HIndent.Ast.Declaration.TypeSynonym.Lhs
+import qualified HIndent.Ast.Context
+import HIndent.Ast.Declaration.Family.Type.Injectivity
+import HIndent.Ast.Type.Variable
+import HIndent.Ast.Declaration.Data.GADT.Constructor.Signature
+import HIndent.Ast.Type
+import HIndent.Ast.WithComments
+import HIndent.Ast.Declaration.Data.Header
+import HIndent.Ast.Declaration.Data.GADT.Constructor
+import qualified GHC.Data.BooleanFormula                             as GHC
+import qualified GHC.Data.FastString                                 as GHC
+import qualified GHC.Hs                                              as GHC
 import           GHC.Stack
-import qualified GHC.Types.Basic                             as GHC
-import qualified GHC.Types.Fixity                            as GHC
-import qualified GHC.Types.ForeignCall                       as GHC
-import qualified GHC.Types.Name                              as GHC
-import qualified GHC.Types.Name.Reader                       as GHC
-import qualified GHC.Types.SourceText                        as GHC
-import qualified GHC.Types.SrcLoc                            as GHC
-import qualified GHC.Unit.Module.Warnings                    as GHC
+import qualified GHC.Types.Basic                                     as GHC
+import qualified GHC.Types.Fixity                                    as GHC
+import qualified GHC.Types.ForeignCall                               as GHC
+import qualified GHC.Types.Name                                      as GHC
+import qualified GHC.Types.Name.Reader                               as GHC
+import qualified GHC.Types.SourceText                                as GHC
+import qualified GHC.Types.SrcLoc                                    as GHC
+import qualified GHC.Unit.Module.Warnings                            as GHC
 import           HIndent.Applicative
 import           HIndent.Ast.Declaration
+import           HIndent.Ast.Declaration.Data
+import           HIndent.Ast.Declaration.Family.Data
+import           HIndent.Ast.Declaration.Family.Type
+import           HIndent.Ast.Declaration.Family.Type.ResultSignature
+import           HIndent.Ast.Declaration.Instance.Class
+import           HIndent.Ast.Declaration.TypeSynonym
 import           HIndent.Ast.NodeComments
+import HIndent.Ast.Declaration.Data.NewOrData
 import           HIndent.Config
 import           HIndent.Fixity
 import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
-import           HIndent.Pretty.SigBindFamily
+import qualified HIndent.Pretty.SigBindFamily                        as SBF
 import           HIndent.Pretty.Types
 import           HIndent.Printer
-import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
+import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr         as GHC
 import           Text.Show.Unicode
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-import qualified Data.Foldable                               as NonEmpty
-import qualified GHC.Core.DataCon                            as GHC
+import qualified Data.Foldable                                       as NonEmpty
+import qualified GHC.Core.DataCon                                    as GHC
 #endif
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
-import qualified GHC.Unit                                    as GHC
+import qualified GHC.Unit                                            as GHC
 #endif
 -- | This function pretty-prints the given AST node with comments.
 pretty :: Pretty a => a -> Printer ()
@@ -123,24 +139,24 @@ class CommentExtraction a =>
   pretty' :: a -> Printer ()
 
 instance Pretty Declaration where
-  pretty' (DataFamily x)      = pretty x
-  pretty' (TypeFamily x)      = pretty x
-  pretty' (DataDeclaration x) = pretty x
-  pretty' (TypeSynonym x)     = pretty x
-  pretty' (TyClDecl x)        = pretty x
-  pretty' (ClassInstance x)   = pretty x
-  pretty' (InstDecl x)        = pretty x
-  pretty' (DerivDecl x)       = pretty x
-  pretty' (ValDecl x)         = pretty x
-  pretty' (SigDecl x)         = pretty x
-  pretty' (KindSigDecl x)     = pretty x
-  pretty' (DefDecl x)         = pretty x
-  pretty' (ForDecl x)         = pretty x
-  pretty' (WarningDecl x)     = pretty x
-  pretty' (AnnDecl x)         = pretty x
-  pretty' (RuleDecl x)        = pretty x
-  pretty' (SpliceDecl x)      = pretty x
-  pretty' (RoleAnnotDecl x)   = pretty x
+  pretty' (HIndent.Ast.Declaration.DataFamily x)  = pretty x
+  pretty' (HIndent.Ast.Declaration.TypeFamily x)  = pretty x
+  pretty' (DataDeclaration x)                     = pretty x
+  pretty' (HIndent.Ast.Declaration.TypeSynonym x) = pretty x
+  pretty' (TyClDecl x)                            = pretty x
+  pretty' (HIndent.Ast.Declaration.ClassInstance x)                       = pretty x
+  pretty' (InstDecl x)                            = pretty x
+  pretty' (DerivDecl x)                           = pretty x
+  pretty' (ValDecl x)                             = pretty x
+  pretty' (SigDecl x)                             = pretty x
+  pretty' (KindSigDecl x)                         = pretty x
+  pretty' (DefDecl x)                             = pretty x
+  pretty' (ForDecl x)                             = pretty x
+  pretty' (WarningDecl x)                         = pretty x
+  pretty' (AnnDecl x)                             = pretty x
+  pretty' (RuleDecl x)                            = pretty x
+  pretty' (SpliceDecl x)                          = pretty x
+  pretty' (RoleAnnotDecl x)                       = pretty x
 
 instance Pretty DataDeclaration where
   pretty' GADT {..} = do
@@ -148,7 +164,7 @@ instance Pretty DataDeclaration where
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
     indentedBlock $ newlinePrefixed $ fmap pretty constructors
-  pretty' Record {..} = do
+  pretty' HIndent.Ast.Declaration.Data.Record {..} = do
     pretty header
     case dd_cons of
       [] -> indentedBlock derivingsAfterNewline
@@ -173,7 +189,7 @@ instance Pretty DataDeclaration where
       printDerivings = lined $ fmap pretty dd_derivs
 
 instance Pretty DataFamily where
-  pretty' DataFamily {..} = do
+  pretty' HIndent.Ast.Declaration.Family.Data.DataFamily {..} = do
     string "data "
     when isTopLevel $ string "family "
     string name
@@ -181,41 +197,41 @@ instance Pretty DataFamily where
     whenJust signature $ \sig -> space >> pretty sig
 
 instance Pretty TypeFamily where
-  pretty' TypeFamily {..} = do
+  pretty' HIndent.Ast.Declaration.Family.Type.TypeFamily {..} = do
     string "type "
     when isTopLevel $ string "family "
     string name
     spacePrefixed $ fmap pretty typeVariables
     case getNode signature of
-      ResultSignature GHC.NoSig {} -> pure ()
+      ResultSignature GHC.NoSig {}    -> pure ()
       ResultSignature GHC.TyVarSig {} -> string " = " >> pretty signature
-      _ -> space >> pretty signature
+      _                               -> space >> pretty signature
     whenJust injectivity $ \x -> string " | " >> pretty x
     whenJust equations $ \xs ->
       string " where" >> newline >> indentedBlock (lined $ fmap pretty xs)
 
 instance Pretty ClassInstance where
-  pretty' (ClassInstance GHC.ClsInstDecl {..}) = do
+  pretty' (HIndent.Ast.Declaration.Instance.Class.ClassInstance GHC.ClsInstDecl {..}) = do
     string "instance " |=> do
       whenJust cid_overlap_mode $ \x -> do
         pretty x
         space
-      pretty (fmap HsSigTypeInsideInstDecl cid_poly_ty)
-        |=> unless (null sigsAndMethods) (string " where")
+      pretty (fmap HsSigTypeInsideInstDecl cid_poly_ty) |=>
+        unless (null sigsAndMethods) (string " where")
     unless (null sigsAndMethods) $ do
       newline
       indentedBlock $ lined $ fmap pretty sigsAndMethods
     where
       sigsAndMethods =
-        mkSortedLSigBindFamilyList
+        SBF.mkSortedLSigBindFamilyList
           cid_sigs
-          (bagToList cid_binds)
+          (GHC.bagToList cid_binds)
           []
           cid_tyfam_insts
           cid_datafam_insts
 
 instance Pretty TypeSynonym where
-  pretty' TypeSynonym {..} = do
+  pretty' HIndent.Ast.Declaration.TypeSynonym.TypeSynonym {..} = do
     string "type "
     pretty lhs
     hor <-|> ver
@@ -248,26 +264,25 @@ instance Pretty GADTConstructor where
       ver = newline >> indentedBlock (string ":: " |=> body)
       body =
         case (forallNeeded, con_mb_cxt) of
-          (True, Just ctx) -> withForallCtx ctx
-          (True, Nothing) -> withForallOnly
+          (True, Just ctx)  -> withForallCtx ctx
+          (True, Nothing)   -> withForallOnly
           (False, Just ctx) -> withCtxOnly ctx
-          (False, Nothing) -> noForallCtx
+          (False, Nothing)  -> noForallCtx
       withForallCtx ctx = do
         pretty bindings
-        (space >> pretty (mkContext <$> fromGenLocated ctx))
-          <-|> (newline >> pretty (mkContext <$> fromGenLocated ctx))
+        (space >> pretty (HIndent.Ast.Context.mkContext <$> fromGenLocated ctx)) <-|>
+          (newline >> pretty (HIndent.Ast.Context.mkContext <$> fromGenLocated ctx))
         newline
         prefixed "=> " $ prettyVertically signature
       withForallOnly = do
         pretty bindings
-        (space >> prettyHorizontally signature)
-          <-|> (newline >> prettyVertically signature)
+        (space >> prettyHorizontally signature) <-|>
+          (newline >> prettyVertically signature)
       withCtxOnly ctx =
-        (pretty (mkContext <$> fromGenLocated ctx)
-           >> string " => "
-           >> prettyHorizontally signature)
-          <-|> (pretty (mkContext <$> fromGenLocated ctx)
-                  >> prefixed "=> " (prettyVertically signature))
+        (pretty (HIndent.Ast.Context.mkContext <$> fromGenLocated ctx) >> string " => " >>
+         prettyHorizontally signature) <-|>
+        (pretty (HIndent.Ast.Context.mkContext <$> fromGenLocated ctx) >>
+         prefixed "=> " (prettyVertically signature))
       noForallCtx = prettyHorizontally signature <-|> prettyVertically signature
 
 instance Pretty Header where
@@ -287,22 +302,22 @@ instance (Pretty a) => Pretty (WithComments a) where
 -- AST node body.
 prettyWith :: WithComments a -> (a -> Printer ()) -> Printer ()
 prettyWith WithComments {..} f = do
-  printCommentsBefore comments
+  printCommentsBefore' comments
   f node
-  printCommentOnSameLine comments
-  printCommentsAfter comments
+  printCommentOnSameLine' comments
+  printCommentsAfter' comments
 
 -- | Prints comments that are before the given AST node.
-printCommentsBefore :: NodeComments -> Printer ()
-printCommentsBefore p =
+printCommentsBefore' :: NodeComments -> Printer ()
+printCommentsBefore' p =
   forM_ (commentsBefore p) $ \(GHC.L loc c) -> do
     let col = fromIntegral $ GHC.srcSpanStartCol (GHC.anchor loc) - 1
     indentedWithFixedLevel col $ pretty c
     newline
 
 -- | Prints comments that are on the same line as the given AST node.
-printCommentOnSameLine :: NodeComments -> Printer ()
-printCommentOnSameLine (commentsOnSameLine -> (c:cs)) = do
+printCommentOnSameLine' :: NodeComments -> Printer ()
+printCommentOnSameLine' (commentsOnSameLine -> (c:cs)) = do
   col <- gets psColumn
   if col == 0
     then indentedWithFixedLevel
@@ -310,11 +325,11 @@ printCommentOnSameLine (commentsOnSameLine -> (c:cs)) = do
          spaced $ fmap pretty $ c : cs
     else spacePrefixed $ fmap pretty $ c : cs
   eolCommentsArePrinted
-printCommentOnSameLine _ = return ()
+printCommentOnSameLine' _ = return ()
 
 -- | Prints comments that are after the given AST node.
-printCommentsAfter :: NodeComments -> Printer ()
-printCommentsAfter p =
+printCommentsAfter' :: NodeComments -> Printer ()
+printCommentsAfter' p =
   case commentsAfter p of
     [] -> return ()
     xs -> do
@@ -328,7 +343,7 @@ printCommentsAfter p =
 prettyHorizontally :: ConstructorSignature -> Printer ()
 prettyHorizontally (ByArrows {..}) =
   inter (string " -> ") $ fmap pretty parameters ++ [pretty result]
-prettyHorizontally (Record {..}) =
+prettyHorizontally (HIndent.Ast.Declaration.Data.GADT.Constructor.Signature.Record {..}) =
   inter
     (string " -> ")
     [prettyWith fields (vFields' . fmap pretty), pretty result]
@@ -336,29 +351,29 @@ prettyHorizontally (Record {..}) =
 prettyVertically :: ConstructorSignature -> Printer ()
 prettyVertically (ByArrows {..}) =
   prefixedLined "-> " $ fmap pretty parameters ++ [pretty result]
-prettyVertically (Record {..}) =
+prettyVertically (HIndent.Ast.Declaration.Data.GADT.Constructor.Signature.Record {..}) =
   prefixedLined
     "-> "
     [prettyWith fields (vFields' . fmap pretty), pretty result]
 
-instance Pretty Context where
-  pretty' (Context xs) = hor <-|> ver
+instance Pretty HIndent.Ast.Context.Context where
+  pretty' (HIndent.Ast.Context.Context xs) = hor <-|> ver
     where
       hor = parensConditional $ hCommaSep $ fmap pretty xs
         where
           parensConditional =
             case xs of
               [_] -> id
-              _ -> parens
+              _   -> parens
       ver =
         case xs of
-          [] -> string "()"
+          []  -> string "()"
           [x] -> pretty x
-          _ -> vTuple $ fmap pretty xs
+          _   -> vTuple $ fmap pretty xs
 
 instance Pretty NewOrData where
   pretty' Newtype = string "newtype"
-  pretty' Data = string "data"
+  pretty' Data    = string "data"
 
 -- Do nothing if there are no pragmas, module headers, imports, or
 -- declarations. Otherwise, extra blank lines will be inserted if only
@@ -499,7 +514,7 @@ prettyTyClDecl GHC.ClassDecl {..} = do
               spacePrefixed $ fmap pretty xs
             _ -> error "Not enough parameters are given."
     sigsMethodsFamilies =
-      mkSortedLSigBindFamilyList tcdSigs (GHC.bagToList tcdMeths) tcdATs [] []
+      SBF.mkSortedLSigBindFamilyList tcdSigs (GHC.bagToList tcdMeths) tcdATs [] []
 
 instance Pretty (GHC.InstDecl GHC.GhcPs) where
   pretty' GHC.ClsInstD {..}     = pretty cid_inst
@@ -745,7 +760,7 @@ instance Pretty (GHC.ClsInstDecl GHC.GhcPs) where
       indentedBlock $ lined $ fmap pretty sigsAndMethods
     where
       sigsAndMethods =
-        mkSortedLSigBindFamilyList
+        SBF.mkSortedLSigBindFamilyList
           cid_sigs
           (GHC.bagToList cid_binds)
           []
@@ -1781,12 +1796,12 @@ instance Pretty (GHC.HsBracket GHC.GhcPs) where
   pretty' (GHC.VarBr _ False var) = string "''" >> pretty var
   pretty' (GHC.TExpBr _ x) = typedBrackets $ pretty x
 #endif
-instance Pretty SigBindFamily where
-  pretty' (Sig x)         = pretty x
-  pretty' (Bind x)        = pretty x
-  pretty' (TypeFamily x)  = pretty x
-  pretty' (TyFamInst x)   = pretty x
-  pretty' (DataFamInst x) = pretty $ DataFamInstDeclInsideClassInst x
+instance Pretty SBF.SigBindFamily where
+  pretty' (SBF.Sig x)         = pretty x
+  pretty' (SBF.Bind x)        = pretty x
+  pretty' (SBF.TypeFamily x)  = pretty x
+  pretty' (SBF.TyFamInst x)   = pretty x
+  pretty' (SBF.DataFamInst x) = pretty $ DataFamInstDeclInsideClassInst x
 
 instance Pretty GHC.EpaComment where
   pretty' GHC.EpaComment {..} = pretty ac_tok
@@ -1802,7 +1817,7 @@ instance Pretty (GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs) where
   pretty' (GHC.ValBinds _ methods sigs) = lined $ fmap pretty sigsAndMethods
     where
       sigsAndMethods =
-        mkSortedLSigBindFamilyList sigs (GHC.bagToList methods) [] [] []
+        SBF.mkSortedLSigBindFamilyList sigs (GHC.bagToList methods) [] [] []
   pretty' GHC.XValBindsLR {} = notUsedInParsedStage
 
 instance Pretty (GHC.HsTupArg GHC.GhcPs) where

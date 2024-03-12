@@ -2,13 +2,12 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Data.GADT.Constructor
-  ( GADTConstructor
+  ( GADTConstructor(..)
   , mkGADTConstructor
   ) where
 
 import           Data.Maybe
 import qualified GHC.Types.SrcLoc                                        as GHC
-import           HIndent.Ast.Context
 import           HIndent.Ast.Declaration.Data.GADT.Constructor.Signature
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.WithComments

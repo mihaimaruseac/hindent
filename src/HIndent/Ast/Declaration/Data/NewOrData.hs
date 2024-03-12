@@ -2,13 +2,12 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Data.NewOrData
-  ( NewOrData
+  ( NewOrData(..)
   , mkNewOrData
   ) where
 
 import           HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
 data NewOrData

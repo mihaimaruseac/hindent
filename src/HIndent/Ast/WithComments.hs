@@ -2,21 +2,17 @@
 {-# LANGUAGE RecordWildCards   #-}
 
 module HIndent.Ast.WithComments
-  ( WithComments
+  ( WithComments(..)
   , fromGenLocated
   , fromEpAnn
   , getNode
   ) where
 
-import           Control.Monad
-import           Control.Monad.RWS
 import qualified GHC.Hs                      as GHC
 import qualified GHC.Types.SrcLoc            as GHC
 import           HIndent.Ast.NodeComments    (NodeComments (..))
 import qualified HIndent.Ast.NodeComments    as NodeComments
-import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
-import           HIndent.Printer
 
 data WithComments a = WithComments
   { comments :: NodeComments

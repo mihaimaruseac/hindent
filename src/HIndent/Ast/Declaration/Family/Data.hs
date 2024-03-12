@@ -1,14 +1,12 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Family.Data
-  ( DataFamily
+  ( DataFamily(..)
   , mkDataFamily
   ) where
 
-import           Control.Monad
 import qualified GHC.Types.Basic                    as GHC
 import qualified GHC.Types.SrcLoc                   as GHC
-import           HIndent.Applicative
 import           HIndent.Ast.NodeComments           hiding (fromEpAnn)
 import           HIndent.Ast.Type
 import           HIndent.Ast.Type.Variable

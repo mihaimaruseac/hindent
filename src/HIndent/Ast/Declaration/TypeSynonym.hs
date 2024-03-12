@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.TypeSynonym
-  ( TypeSynonym
+  ( TypeSynonym(..)
   , mkTypeSynonym
   ) where
 
@@ -10,7 +10,6 @@ import           HIndent.Ast.NodeComments
 import           HIndent.Ast.Type
 import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs      as GHC
-import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
 
 data TypeSynonym = TypeSynonym

@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Type.Variable
-  ( TypeVariable
+  ( TypeVariable(..)
   , mkTypeVariable
   ) where
 

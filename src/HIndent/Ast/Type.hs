@@ -1,5 +1,5 @@
 module HIndent.Ast.Type
-  ( Type
+  ( Type(..)
   , mkType
   ) where
 

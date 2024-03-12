@@ -1,13 +1,11 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Family.Type
-  ( TypeFamily
+  ( TypeFamily(..)
   , mkTypeFamily
   ) where
 
-import           Control.Monad
 import qualified GHC.Types.Basic                                     as GHC
-import           HIndent.Applicative
 import           HIndent.Ast.Declaration.Family.Type.Injectivity
 import           HIndent.Ast.Declaration.Family.Type.ResultSignature
 import           HIndent.Ast.NodeComments                            hiding

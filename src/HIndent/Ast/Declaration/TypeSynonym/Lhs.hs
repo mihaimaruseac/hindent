@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.TypeSynonym.Lhs
-  ( TypeSynonymLhs
+  ( TypeSynonymLhs(..)
   , mkTypeSynonymLhs
   ) where
 
@@ -10,9 +10,7 @@ import           HIndent.Ast.NodeComments
 import           HIndent.Ast.Type.Variable
 import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import           HIndent.Pretty.Combinators
 import           HIndent.Pretty.NodeComments
-import           HIndent.Pretty.Types
 
 data TypeSynonymLhs
   = Prefix

@@ -7,21 +7,21 @@ module HIndent.Ast.Declaration
 import           Control.Applicative
 import           Data.Maybe
 import           HIndent.Ast.Declaration.Data
-import           HIndent.Ast.Declaration.Family.Data
-import           HIndent.Ast.Declaration.Family.Type
-import           HIndent.Ast.Declaration.Instance.Class
-import           HIndent.Ast.Declaration.TypeSynonym
+import qualified HIndent.Ast.Declaration.Family.Data
+import qualified HIndent.Ast.Declaration.Family.Type
+import qualified HIndent.Ast.Declaration.Instance.Class
+import qualified HIndent.Ast.Declaration.TypeSynonym
 import           HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs     as GHC
 import           HIndent.Pretty.NodeComments
 
 data Declaration
-  = DataFamily DataFamily
-  | TypeFamily TypeFamily
+  = DataFamily HIndent.Ast.Declaration.Family.Data.DataFamily
+  | TypeFamily HIndent.Ast.Declaration.Family.Type.TypeFamily
   | DataDeclaration DataDeclaration
-  | TypeSynonym TypeSynonym
+  | TypeSynonym HIndent.Ast.Declaration.TypeSynonym.TypeSynonym
   | TyClDecl (GHC.TyClDecl GHC.GhcPs)
-  | ClassInstance ClassInstance
+  | ClassInstance HIndent.Ast.Declaration.Instance.Class.ClassInstance
   | InstDecl (GHC.InstDecl GHC.GhcPs)
   | DerivDecl (GHC.DerivDecl GHC.GhcPs)
   | ValDecl (GHC.HsBind GHC.GhcPs)
@@ -58,13 +58,16 @@ instance CommentExtraction Declaration where
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
 mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) =
   fromMaybe (error "Unreachable.") $
-  DataFamily <$> mkDataFamily x <|> TypeFamily <$> mkTypeFamily x
-mkDeclaration (GHC.TyClD _ x@GHC.SynDecl {}) = TypeSynonym $ mkTypeSynonym x
+  DataFamily <$> HIndent.Ast.Declaration.Family.Data.mkDataFamily x <|>
+  TypeFamily <$> HIndent.Ast.Declaration.Family.Type.mkTypeFamily x
+mkDeclaration (GHC.TyClD _ x@GHC.SynDecl {}) =
+  TypeSynonym $ HIndent.Ast.Declaration.TypeSynonym.mkTypeSynonym x
 mkDeclaration (GHC.TyClD _ x@(GHC.DataDecl {}))
   | Just decl <- mkDataDeclaration x = DataDeclaration decl
 mkDeclaration (GHC.TyClD _ x) = TyClDecl x
 mkDeclaration (GHC.InstD _ x)
-  | Just inst <- mkClassInstance x = ClassInstance inst
+  | Just inst <- HIndent.Ast.Declaration.Instance.Class.mkClassInstance x =
+    ClassInstance inst
   | otherwise = InstDecl x
 mkDeclaration (GHC.DerivD _ x) = DerivDecl x
 mkDeclaration (GHC.ValD _ x) = ValDecl x
