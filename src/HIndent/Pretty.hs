@@ -27,7 +27,7 @@ import           Data.Maybe
 import           Data.Void
 import           GHC.Core.Coercion
 import           GHC.Data.Bag
-import           GHC.Data.BooleanFormula
+import qualified GHC.Data.BooleanFormula                     as GHC
 import qualified GHC.Data.FastString                         as GHC
 import qualified GHC.Hs                                      as GHC
 import           GHC.Stack
@@ -1728,11 +1728,11 @@ instance Pretty InfixApp where
       isSameAssoc (findFixity -> GHC.Fixity _ lv d) = lv == level && d == dir
       GHC.Fixity _ level dir = findFixity op
 
-instance Pretty a => Pretty (GHC.Data.BooleanFormula.BooleanFormula a) where
-  pretty' (GHC.Data.BooleanFormula.Var x)    = pretty x
-  pretty' (GHC.Data.BooleanFormula.And xs)   = hvCommaSep $ fmap pretty xs
-  pretty' (GHC.Data.BooleanFormula.Or xs)    = hvBarSep $ fmap pretty xs
-  pretty' (GHC.Data.BooleanFormula.Parens x) = parens $ pretty x
+instance Pretty a => Pretty (GHC.BooleanFormula a) where
+  pretty' (GHC.Var x)    = pretty x
+  pretty' (GHC.And xs)   = hvCommaSep $ fmap pretty xs
+  pretty' (GHC.Or xs)    = hvBarSep $ fmap pretty xs
+  pretty' (GHC.Parens x) = parens $ pretty x
 
 instance Pretty (GHC.FieldLabelStrings GHC.GhcPs) where
   pretty' (GHC.FieldLabelStrings xs) = hDotSep $ fmap pretty xs
