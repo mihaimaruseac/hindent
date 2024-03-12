@@ -36,7 +36,7 @@ import qualified GHC.Types.Fixity                            as GHC
 import qualified GHC.Types.ForeignCall                       as GHC
 import           GHC.Types.Name
 import qualified GHC.Types.Name.Reader                       as GHC
-import           GHC.Types.SourceText
+import qualified GHC.Types.SourceText                        as GHC
 import           GHC.Types.SrcLoc
 import           GHC.Unit.Module.Warnings
 import           HIndent.Applicative
@@ -1758,7 +1758,7 @@ instance Pretty GHC.OverlapMode where
   pretty' GHC.Overlaps {}     = string "{-# OVERLAPS #-}"
   pretty' GHC.Incoherent {}   = string "{-# INCOHERENT #-}"
 
-instance Pretty GHC.Types.SourceText.StringLiteral where
+instance Pretty GHC.StringLiteral where
   pretty' = output
 
 -- | This instance is for type family declarations inside a class declaration.
@@ -2152,7 +2152,7 @@ instance Pretty (ForeignImport GhcPs) where
   pretty' (CImport _ conv safety _ _) = spaced [pretty conv, pretty safety]
 #else
 instance Pretty GHC.ForeignImport where
-  pretty' (GHC.CImport conv safety _ _ (L _ (GHC.Types.SourceText.SourceText s))) =
+  pretty' (GHC.CImport conv safety _ _ (L _ (GHC.SourceText s))) =
     spaced [pretty conv, pretty safety, string s]
   pretty' (GHC.CImport conv safety _ _ _) = spaced [pretty conv, pretty safety]
 #endif
@@ -2167,7 +2167,7 @@ instance Pretty (ForeignExport GhcPs) where
   pretty' (CExport _ conv)                    = pretty conv
 #else
 instance Pretty GHC.ForeignExport where
-  pretty' (GHC.CExport conv (L _ (GHC.Types.SourceText.SourceText s))) =
+  pretty' (GHC.CExport conv (L _ (GHC.SourceText s))) =
     spaced [pretty conv, string s]
   pretty' (GHC.CExport conv _) = pretty conv
 #endif
@@ -2297,12 +2297,11 @@ instance Pretty IntegralLit where
   pretty' IL {il_text = SourceText s} = output s
   pretty' IL {..}                     = string $ show il_value
 #else
-instance Pretty GHC.Types.SourceText.IntegralLit where
-  pretty' GHC.Types.SourceText.IL {il_text = GHC.Types.SourceText.SourceText s} =
-    string s
-  pretty' GHC.Types.SourceText.IL {..} = string $ show il_value
+instance Pretty GHC.IntegralLit where
+  pretty' GHC.IL {il_text = GHC.SourceText s} = string s
+  pretty' GHC.IL {..}                         = string $ show il_value
 #endif
-instance Pretty GHC.Types.SourceText.FractionalLit where
+instance Pretty GHC.FractionalLit where
   pretty' = output
 
 instance Pretty (GHC.HsLit GHC.GhcPs) where
