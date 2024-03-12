@@ -260,7 +260,12 @@ prettyTyClDecl GHC.ClassDecl {..} = do
               spacePrefixed $ fmap pretty xs
             _ -> error "Not enough parameters are given."
     sigsMethodsFamilies =
-      mkSortedLSigBindFamilyList tcdSigs (bagToList tcdMeths) tcdATs [] []
+      mkSortedLSigBindFamilyList
+        tcdSigs
+        (GHC.Data.Bag.bagToList tcdMeths)
+        tcdATs
+        []
+        []
 
 instance Pretty (GHC.InstDecl GHC.GhcPs) where
   pretty' GHC.ClsInstD {..}     = pretty cid_inst
@@ -508,7 +513,7 @@ instance Pretty (GHC.ClsInstDecl GHC.GhcPs) where
       sigsAndMethods =
         mkSortedLSigBindFamilyList
           cid_sigs
-          (bagToList cid_binds)
+          (GHC.Data.Bag.bagToList cid_binds)
           []
           cid_tyfam_insts
           cid_datafam_insts
@@ -1559,7 +1564,12 @@ instance Pretty (GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs) where
   pretty' (GHC.ValBinds _ methods sigs) = lined $ fmap pretty sigsAndMethods
     where
       sigsAndMethods =
-        mkSortedLSigBindFamilyList sigs (bagToList methods) [] [] []
+        mkSortedLSigBindFamilyList
+          sigs
+          (GHC.Data.Bag.bagToList methods)
+          []
+          []
+          []
   pretty' GHC.XValBindsLR {} = notUsedInParsedStage
 
 instance Pretty (GHC.HsTupArg GHC.GhcPs) where
