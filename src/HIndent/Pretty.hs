@@ -33,7 +33,7 @@ import qualified GHC.Hs                                      as GHC
 import           GHC.Stack
 import qualified GHC.Types.Basic                             as GHC
 import qualified GHC.Types.Fixity                            as GHC
-import           GHC.Types.ForeignCall
+import qualified GHC.Types.ForeignCall                       as GHC
 import           GHC.Types.Name
 import           GHC.Types.Name.Reader
 import           GHC.Types.SourceText
@@ -2171,13 +2171,13 @@ instance Pretty GHC.ForeignExport where
     spaced [pretty conv, string s]
   pretty' (GHC.CExport conv _) = pretty conv
 #endif
-instance Pretty GHC.Types.ForeignCall.CExportSpec where
-  pretty' (GHC.Types.ForeignCall.CExportStatic _ _ x) = pretty x
+instance Pretty GHC.CExportSpec where
+  pretty' (GHC.CExportStatic _ _ x) = pretty x
 
-instance Pretty GHC.Types.ForeignCall.Safety where
-  pretty' GHC.Types.ForeignCall.PlaySafe          = string "safe"
-  pretty' GHC.Types.ForeignCall.PlayInterruptible = string "interruptible"
-  pretty' GHC.Types.ForeignCall.PlayRisky         = string "unsafe"
+instance Pretty GHC.Safety where
+  pretty' GHC.PlaySafe          = string "safe"
+  pretty' GHC.PlayInterruptible = string "interruptible"
+  pretty' GHC.PlayRisky         = string "unsafe"
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (AnnDecl GhcPs) where
   pretty' (HsAnnotation _ (ValueAnnProvenance name) expr) =
@@ -2481,12 +2481,12 @@ instance Pretty (GHC.RuleBndr GHC.GhcPs) where
   pretty' (GHC.RuleBndrSig _ name sig) =
     parens $ spaced [pretty name, string "::", pretty sig]
 
-instance Pretty GHC.Types.ForeignCall.CCallConv where
-  pretty' GHC.Types.ForeignCall.CCallConv          = string "ccall"
-  pretty' GHC.Types.ForeignCall.CApiConv           = string "capi"
-  pretty' GHC.Types.ForeignCall.StdCallConv        = string "stdcall"
-  pretty' GHC.Types.ForeignCall.PrimCallConv       = string "prim"
-  pretty' GHC.Types.ForeignCall.JavaScriptCallConv = string "javascript"
+instance Pretty GHC.CCallConv where
+  pretty' GHC.CCallConv          = string "ccall"
+  pretty' GHC.CApiConv           = string "capi"
+  pretty' GHC.StdCallConv        = string "stdcall"
+  pretty' GHC.PrimCallConv       = string "prim"
+  pretty' GHC.JavaScriptCallConv = string "javascript"
 
 instance Pretty GHC.HsSrcBang where
   pretty' (GHC.HsSrcBang _ unpack strictness) = do
