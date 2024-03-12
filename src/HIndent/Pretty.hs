@@ -534,7 +534,8 @@ prettyHsExpr (GHC.HsUnboundVar _ x) = pretty x
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 prettyHsExpr (HsOverLabel _ _ l) = string "#" >> string (unpackFS l)
 #else
-prettyHsExpr (GHC.HsOverLabel _ l) = string "#" >> string (unpackFS l)
+prettyHsExpr (GHC.HsOverLabel _ l) =
+  string "#" >> string (GHC.Data.FastString.unpackFS l)
 #endif
 prettyHsExpr (GHC.HsIPVar _ var) = string "?" >> pretty var
 prettyHsExpr (GHC.HsOverLit _ x) = pretty x
@@ -1453,7 +1454,8 @@ instance Pretty (GHC.HsSplice GHC.GhcPs) where
     brackets $ do
       pretty l
       wrapWithBars $
-        indentedWithFixedLevel 0 $ sequence_ $ printers [] "" $ unpackFS r
+        indentedWithFixedLevel 0 $
+        sequence_ $ printers [] "" $ GHC.Data.FastString.unpackFS r
     where
       printers ps s [] = reverse (string (reverse s) : ps)
       printers ps s ('\n':xs) =
@@ -2042,7 +2044,8 @@ instance Pretty (DotFieldOcc GhcPs) where
   pretty' DotFieldOcc {..} = printCommentsAnd dfoLabel (string . unpackFS)
 #else
 instance Pretty (GHC.HsFieldLabel GHC.GhcPs) where
-  pretty' GHC.HsFieldLabel {..} = printCommentsAnd hflLabel (string . unpackFS)
+  pretty' GHC.HsFieldLabel {..} =
+    printCommentsAnd hflLabel (string . GHC.Data.FastString.unpackFS)
 #endif
 instance Pretty (GHC.RuleDecls GHC.GhcPs) where
   pretty' GHC.HsRules {..} =
@@ -2070,7 +2073,9 @@ instance Pretty (RuleDecl GhcPs) where
 instance Pretty (GHC.RuleDecl GHC.GhcPs) where
   pretty' GHC.HsRule {..} =
     spaced
-      [ printCommentsAnd rd_name (doubleQuotes . string . unpackFS . snd)
+      [ printCommentsAnd
+          rd_name
+          (doubleQuotes . string . GHC.Data.FastString.unpackFS . snd)
       , lhs
       , string "="
       , pretty rd_rhs
@@ -2297,7 +2302,7 @@ instance Pretty (GHC.HsOverLit GHC.GhcPs) where
 instance Pretty GHC.OverLitVal where
   pretty' (GHC.HsIntegral x)   = pretty x
   pretty' (GHC.HsFractional x) = pretty x
-  pretty' (GHC.HsIsString _ x) = string $ unpackFS x
+  pretty' (GHC.HsIsString _ x) = string $ GHC.Data.FastString.unpackFS x
 #if MIN_VERSION_ghc_lib_parser(9,8,1)
 instance Pretty IntegralLit where
   pretty' IL {il_text = SourceText s} = output s
@@ -2346,7 +2351,7 @@ instance Pretty (GHC.HsPragE GHC.GhcPs) where
     spaced [string "{-# SCC", pretty x, string "#-}"]
 #endif
 instance Pretty GHC.HsIPName where
-  pretty' (GHC.HsIPName x) = string $ unpackFS x
+  pretty' (GHC.HsIPName x) = string $ GHC.Data.FastString.unpackFS x
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (HsTyLit GhcPs) where
   pretty' (HsNumTy _ x)  = string $ show x
