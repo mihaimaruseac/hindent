@@ -34,7 +34,7 @@ import           GHC.Stack
 import qualified GHC.Types.Basic                             as GHC
 import qualified GHC.Types.Fixity                            as GHC
 import qualified GHC.Types.ForeignCall                       as GHC
-import           GHC.Types.Name
+import qualified GHC.Types.Name                              as GHC
 import qualified GHC.Types.Name.Reader                       as GHC
 import qualified GHC.Types.SourceText                        as GHC
 import qualified GHC.Types.SrcLoc                            as GHC
@@ -1842,7 +1842,7 @@ instance Pretty InfixOp where
   pretty' (InfixOp GHC.Orig {}) = notUsedInParsedStage
   pretty' (InfixOp (GHC.Exact name)) = backticksIfNotSymbol occ $ pretty occ
     where
-      occ = GHC.Types.Name.occName name
+      occ = GHC.occName name
 
 instance Pretty PrefixOp where
   pretty' (PrefixOp (GHC.Unqual name)) = parensIfSymbol name $ pretty name
@@ -1854,7 +1854,7 @@ instance Pretty PrefixOp where
   pretty' (PrefixOp GHC.Orig {}) = notUsedInParsedStage
   pretty' (PrefixOp (GHC.Exact name)) = parensIfSymbol occ $ output name
     where
-      occ = GHC.Types.Name.occName name
+      occ = GHC.occName name
 
 instance Pretty Context where
   pretty' (Context xs) =
@@ -2087,7 +2087,7 @@ instance Pretty (GHC.RuleDecl GHC.GhcPs) where
             space
             pretty rd_lhs
 #endif
-instance Pretty GHC.Types.Name.OccName where
+instance Pretty GHC.OccName where
   pretty' = output
 
 instance Pretty (GHC.DerivDecl GHC.GhcPs) where
