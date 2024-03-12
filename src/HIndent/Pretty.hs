@@ -25,7 +25,7 @@ import           Control.Monad
 import           Control.Monad.RWS
 import           Data.Maybe
 import           Data.Void
-import           GHC.Core.Coercion
+import qualified GHC.Core.Coercion                           as GHC
 import qualified GHC.Data.Bag                                as GHC
 import qualified GHC.Data.BooleanFormula                     as GHC
 import qualified GHC.Data.FastString                         as GHC
@@ -2208,10 +2208,10 @@ instance Pretty (GHC.RoleAnnotDecl GHC.GhcPs) where
     [string "type role", pretty name] ++
     fmap (maybe (string "_") pretty . GHC.unLoc) roles
 
-instance Pretty GHC.Core.Coercion.Role where
-  pretty' GHC.Core.Coercion.Nominal          = string "nominal"
-  pretty' GHC.Core.Coercion.Representational = string "representational"
-  pretty' GHC.Core.Coercion.Phantom          = string "phantom"
+instance Pretty GHC.Role where
+  pretty' GHC.Nominal          = string "nominal"
+  pretty' GHC.Representational = string "representational"
+  pretty' GHC.Phantom          = string "phantom"
 
 instance Pretty (GHC.TyFamInstDecl GHC.GhcPs) where
   pretty' GHC.TyFamInstDecl {..} = string "type " >> pretty tfid_eqn
