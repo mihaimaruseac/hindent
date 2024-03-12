@@ -1342,7 +1342,7 @@ instance Pretty ParStmtBlockInsideVerticalList where
   pretty' (ParStmtBlockInsideVerticalList (GHC.ParStmtBlock _ xs _ _)) =
     vCommaSep $ fmap pretty xs
 
-instance Pretty RdrName where
+instance Pretty GHC.Types.Name.Reader.RdrName where
   pretty' = pretty . PrefixOp
 
 instance Pretty
@@ -1827,26 +1827,30 @@ instance Pretty (GHC.HsForAllTelescope GHC.GhcPs) where
     dot
 
 instance Pretty InfixOp where
-  pretty' (InfixOp (Unqual name)) = backticksIfNotSymbol name $ pretty name
-  pretty' (InfixOp (Qual modName name)) =
+  pretty' (InfixOp (GHC.Types.Name.Reader.Unqual name)) =
+    backticksIfNotSymbol name $ pretty name
+  pretty' (InfixOp (GHC.Types.Name.Reader.Qual modName name)) =
     backticksIfNotSymbol name $ do
       pretty modName
       string "."
       pretty name
-  pretty' (InfixOp Orig {}) = notUsedInParsedStage
-  pretty' (InfixOp (Exact name)) = backticksIfNotSymbol occ $ pretty occ
+  pretty' (InfixOp GHC.Types.Name.Reader.Orig {}) = notUsedInParsedStage
+  pretty' (InfixOp (GHC.Types.Name.Reader.Exact name)) =
+    backticksIfNotSymbol occ $ pretty occ
     where
       occ = GHC.Types.Name.occName name
 
 instance Pretty PrefixOp where
-  pretty' (PrefixOp (Unqual name)) = parensIfSymbol name $ pretty name
-  pretty' (PrefixOp (Qual modName name)) =
+  pretty' (PrefixOp (GHC.Types.Name.Reader.Unqual name)) =
+    parensIfSymbol name $ pretty name
+  pretty' (PrefixOp (GHC.Types.Name.Reader.Qual modName name)) =
     parensIfSymbol name $ do
       pretty modName
       string "."
       pretty name
-  pretty' (PrefixOp Orig {}) = notUsedInParsedStage
-  pretty' (PrefixOp (Exact name)) = parensIfSymbol occ $ output name
+  pretty' (PrefixOp GHC.Types.Name.Reader.Orig {}) = notUsedInParsedStage
+  pretty' (PrefixOp (GHC.Types.Name.Reader.Exact name)) =
+    parensIfSymbol occ $ output name
     where
       occ = GHC.Types.Name.occName name
 
@@ -2023,7 +2027,7 @@ instance Pretty (IEWrappedName GhcPs) where
   pretty' (IEType _ name)    = string "type " >> pretty name
 #else
 -- | 'Pretty' for 'LIEWrappedName (IdP GhcPs)'
-instance Pretty (GHC.IEWrappedName RdrName) where
+instance Pretty (GHC.IEWrappedName GHC.Types.Name.Reader.RdrName) where
   pretty' (GHC.IEName name)      = pretty name
   pretty' (GHC.IEPattern _ name) = spaced [string "pattern", pretty name]
   pretty' (GHC.IEType _ name)    = string "type " >> pretty name
@@ -2239,7 +2243,7 @@ instance Pretty (GHC.PatSynBind GHC.GhcPs GHC.GhcPs) where
 instance Pretty
            (GHC.HsConDetails
               Void
-              (GenLocated GHC.SrcSpanAnnN RdrName)
+              (GenLocated GHC.SrcSpanAnnN GHC.Types.Name.Reader.RdrName)
               [GHC.RecordPatSynField GHC.GhcPs]) where
   pretty' (GHC.PrefixCon _ xs) = spaced $ fmap pretty xs
   pretty' (GHC.RecCon rec) = hFields $ fmap pretty rec
