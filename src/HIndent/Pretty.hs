@@ -149,9 +149,9 @@ prettyTyClDecl (GHC.FamDecl _ x) = pretty x
 prettyTyClDecl GHC.SynDecl {..} = do
   string "type "
   case tcdFixity of
-    Prefix ->
+    GHC.Types.Fixity.Prefix ->
       spaced $ pretty tcdLName : fmap pretty (GHC.hsq_explicit tcdTyVars)
-    Infix ->
+    GHC.Types.Fixity.Infix ->
       case GHC.hsq_explicit tcdTyVars of
         (l:r:xs) -> do
           spaced [pretty l, pretty $ fmap InfixOp tcdLName, pretty r]
@@ -247,9 +247,9 @@ prettyTyClDecl GHC.ClassDecl {..} = do
         indentedBlock $ string "where"
     printNameAndTypeVariables =
       case tcdFixity of
-        Prefix ->
+        GHC.Types.Fixity.Prefix ->
           spaced $ pretty tcdLName : fmap pretty (GHC.hsq_explicit tcdTyVars)
-        Infix ->
+        GHC.Types.Fixity.Infix ->
           case GHC.hsq_explicit tcdTyVars of
             (l:r:xs) -> do
               parens $
@@ -1057,11 +1057,11 @@ prettyMatchExpr Match {m_ctxt = LamCaseAlt {}, ..} = do
 #endif
 prettyMatchExpr GHC.Match {..} =
   case GHC.mc_fixity m_ctxt of
-    Prefix -> do
+    GHC.Types.Fixity.Prefix -> do
       pretty m_ctxt
       spacePrefixed $ fmap pretty m_pats
       pretty m_grhss
-    Infix -> do
+    GHC.Types.Fixity.Infix -> do
       case (m_pats, m_ctxt) of
         (l:r:xs, GHC.FunRhs {..}) -> do
           spaced $
@@ -1671,9 +1671,9 @@ instance Pretty InfixApp where
       horizontal = spaced [pretty lhs, pretty (InfixExpr op), pretty rhs]
       vertical =
         case findFixity op of
-          Fixity _ _ InfixL -> leftAssoc
-          Fixity _ _ InfixR -> rightAssoc
-          Fixity _ _ InfixN -> noAssoc
+          GHC.Types.Fixity.Fixity _ _ GHC.Types.Fixity.InfixL -> leftAssoc
+          GHC.Types.Fixity.Fixity _ _ GHC.Types.Fixity.InfixR -> rightAssoc
+          GHC.Types.Fixity.Fixity _ _ GHC.Types.Fixity.InfixN -> noAssoc
       leftAssoc = prettyOps allOperantsAndOperatorsLeftAssoc
       rightAssoc = prettyOps allOperantsAndOperatorsRightAssoc
       noAssoc
@@ -1706,7 +1706,8 @@ instance Pretty InfixApp where
             error
               "The number of the sum of operants and operators should be odd."
       prettyOps _ = error "Too short list."
-      findFixity o = fromMaybe defaultFixity $ lookup (varToStr o) fixities
+      findFixity o =
+        fromMaybe GHC.Types.Fixity.defaultFixity $ lookup (varToStr o) fixities
       allOperantsAndOperatorsLeftAssoc = reverse $ rhs : op : collect lhs
         where
           collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
@@ -1719,8 +1720,9 @@ instance Pretty InfixApp where
           collect (L _ (GHC.OpApp _ l o r))
             | isSameAssoc o = l : o : collect r
           collect x = [x]
-      isSameAssoc (findFixity -> Fixity _ lv d) = lv == level && d == dir
-      Fixity _ level dir = findFixity op
+      isSameAssoc (findFixity -> GHC.Types.Fixity.Fixity _ lv d) =
+        lv == level && d == dir
+      GHC.Types.Fixity.Fixity _ level dir = findFixity op
 
 instance Pretty a => Pretty (BooleanFormula a) where
   pretty' (Var x)    = pretty x
@@ -2251,13 +2253,14 @@ instance Pretty (GHC.FixitySig GHC.GhcPs) where
   pretty' (GHC.FixitySig _ names fixity) =
     spaced [pretty fixity, hCommaSep $ fmap (pretty . fmap InfixOp) names]
 
-instance Pretty GHC.Fixity where
-  pretty' (Fixity _ level dir) = spaced [pretty dir, string $ show level]
+instance Pretty GHC.Types.Fixity.Fixity where
+  pretty' (GHC.Types.Fixity.Fixity _ level dir) =
+    spaced [pretty dir, string $ show level]
 
-instance Pretty FixityDirection where
-  pretty' InfixL = string "infixl"
-  pretty' InfixR = string "infixr"
-  pretty' InfixN = string "infix"
+instance Pretty GHC.Types.Fixity.FixityDirection where
+  pretty' GHC.Types.Fixity.InfixL = string "infixl"
+  pretty' GHC.Types.Fixity.InfixR = string "infixr"
+  pretty' GHC.Types.Fixity.InfixN = string "infix"
 
 instance Pretty GHC.InlinePragma where
   pretty' GHC.InlinePragma {..} = do
