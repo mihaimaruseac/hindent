@@ -2176,10 +2176,10 @@ instance Pretty (GHC.ForeignImport GHC.GhcPs) where
     spaced [pretty conv, pretty safety, output s]
   pretty' (GHC.CImport _ conv safety _ _) = spaced [pretty conv, pretty safety]
 #elif MIN_VERSION_ghc_lib_parser(9,6,0)
-instance Pretty (ForeignImport GhcPs) where
-  pretty' (CImport (L _ (SourceText s)) conv safety _ _) =
+instance Pretty (GHC.ForeignImport GHC.GhcPs) where
+  pretty' (GHC.CImport (GHC.L _ (GHC.SourceText s)) conv safety _ _) =
     spaced [pretty conv, pretty safety, string s]
-  pretty' (CImport _ conv safety _ _) = spaced [pretty conv, pretty safety]
+  pretty' (GHC.CImport _ conv safety _ _) = spaced [pretty conv, pretty safety]
 #else
 instance Pretty GHC.ForeignImport where
   pretty' (GHC.CImport conv safety _ _ (GHC.L _ (GHC.SourceText s))) =
@@ -2193,9 +2193,10 @@ instance Pretty (GHC.ForeignExport GHC.GhcPs) where
     spaced [pretty conv, output s]
   pretty' (GHC.CExport _ conv) = pretty conv
 #elif MIN_VERSION_ghc_lib_parser(9,6,0)
-instance Pretty (ForeignExport GhcPs) where
-  pretty' (CExport (L _ (SourceText s)) conv) = spaced [pretty conv, string s]
-  pretty' (CExport _ conv) = pretty conv
+instance Pretty (GHC.ForeignExport GHC.GhcPs) where
+  pretty' (GHC.CExport (GHC.L _ (GHC.SourceText s)) conv) =
+    spaced [pretty conv, string s]
+  pretty' (GHC.CExport _ conv) = pretty conv
 #else
 instance Pretty GHC.ForeignExport where
   pretty' (GHC.CExport conv (GHC.L _ (GHC.SourceText s))) =
