@@ -1969,23 +1969,23 @@ instance Pretty FamEqn' where
     pretty feqn_rhs
     where
       prefix =
-        case (famEqnFor, dd_cons feqn_rhs) of
-          (DataFamInstDeclForTopLevel, NewTypeCon {}) -> "newtype instance"
-          (DataFamInstDeclForTopLevel, DataTypeCons {}) -> "data instance"
-          (DataFamInstDeclForInsideClassInst, NewTypeCon {}) -> "newtype"
-          (DataFamInstDeclForInsideClassInst, DataTypeCons {}) -> "data"
+        case (famEqnFor, GHC.dd_cons feqn_rhs) of
+          (DataFamInstDeclForTopLevel, GHC.NewTypeCon {}) -> "newtype instance"
+          (DataFamInstDeclForTopLevel, GHC.DataTypeCons {}) -> "data instance"
+          (DataFamInstDeclForInsideClassInst, GHC.NewTypeCon {}) -> "newtype"
+          (DataFamInstDeclForInsideClassInst, GHC.DataTypeCons {}) -> "data"
 #else
 instance Pretty FamEqn' where
-  pretty' FamEqn' {famEqn = FamEqn {..}, ..} = do
+  pretty' FamEqn' {famEqn = GHC.FamEqn {..}, ..} = do
     spaced $ string prefix : pretty feqn_tycon : fmap pretty feqn_pats
     pretty feqn_rhs
     where
       prefix =
-        case (famEqnFor, dd_ND feqn_rhs) of
-          (DataFamInstDeclForTopLevel, NewType) -> "newtype instance"
-          (DataFamInstDeclForTopLevel, DataType) -> "data instance"
-          (DataFamInstDeclForInsideClassInst, NewType) -> "newtype"
-          (DataFamInstDeclForInsideClassInst, DataType) -> "data"
+        case (famEqnFor, GHC.dd_ND feqn_rhs) of
+          (DataFamInstDeclForTopLevel, GHC.NewType) -> "newtype instance"
+          (DataFamInstDeclForTopLevel, GHC.DataType) -> "data instance"
+          (DataFamInstDeclForInsideClassInst, GHC.NewType) -> "newtype"
+          (DataFamInstDeclForInsideClassInst, GHC.DataType) -> "data"
 #endif
 -- | HsArg (LHsType GhcPs) (LHsType GhcPs)
 #if MIN_VERSION_ghc_lib_parser(9,8,1)
