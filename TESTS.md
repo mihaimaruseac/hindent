@@ -583,6 +583,15 @@ instance GM 'Practice where
     }
 ```
 
+With associated newtypes
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/837
+instance Foo a where
+  newtype Bar a =
+    FooBar a
+```
+
 #### With overlapping pragmas
 
 `OVERLAPPING`
