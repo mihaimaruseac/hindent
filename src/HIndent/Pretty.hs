@@ -2004,8 +2004,10 @@ instance Pretty (WarnDecl GhcPs) where
 instance Pretty (GHC.WarnDecl GHC.GhcPs) where
   pretty' (GHC.Warning _ names deprecatedOrWarning) =
     case deprecatedOrWarning of
-      DeprecatedTxt _ reasons -> prettyWithTitleReasons "DEPRECATED" reasons
-      WarningTxt _ reasons    -> prettyWithTitleReasons "WARNING" reasons
+      GHC.Unit.Module.Warnings.DeprecatedTxt _ reasons ->
+        prettyWithTitleReasons "DEPRECATED" reasons
+      GHC.Unit.Module.Warnings.WarningTxt _ reasons ->
+        prettyWithTitleReasons "WARNING" reasons
     where
       prettyWithTitleReasons title reasons =
         lined
