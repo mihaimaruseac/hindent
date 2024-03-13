@@ -18,7 +18,6 @@
 module HIndent.Pretty
   ( Pretty(..)
   , pretty
-  , printCommentsAnd
   ) where
 
 import Control.Monad
