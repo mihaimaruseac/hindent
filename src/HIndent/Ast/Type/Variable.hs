@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module HIndent.Ast.Type.Variable
   ( TypeVariable(..)
   , mkTypeVariable
@@ -21,10 +19,10 @@ instance CommentExtraction TypeVariable where
   nodeComments TypeVariable {} = NodeComments [] [] []
 
 mkTypeVariable :: GHC.HsTyVarBndr a GHC.GhcPs -> TypeVariable
-mkTypeVariable (GHC.UserTyVar _ _ name) =
-  TypeVariable {name = showOutputable <$> fromGenLocated name, kind = Nothing}
-mkTypeVariable (GHC.KindedTyVar _ _ name kind) =
+mkTypeVariable (GHC.UserTyVar _ _ n) =
+  TypeVariable {name = showOutputable <$> fromGenLocated n, kind = Nothing}
+mkTypeVariable (GHC.KindedTyVar _ _ n k) =
   TypeVariable
-    { name = showOutputable <$> fromGenLocated name
-    , kind = Just $ mkType <$> fromGenLocated kind
+    { name = showOutputable <$> fromGenLocated n
+    , kind = Just $ mkType <$> fromGenLocated k
     }
