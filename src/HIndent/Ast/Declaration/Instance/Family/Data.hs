@@ -9,8 +9,9 @@ import           HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import           HIndent.Pretty.NodeComments
 
-newtype DataFamilyInstance =
-  DataFamilyInstance (GHC.DataFamInstDecl GHC.GhcPs)
+newtype DataFamilyInstance = DataFamilyInstance
+  { inst :: GHC.DataFamInstDecl GHC.GhcPs
+  }
 
 instance CommentExtraction DataFamilyInstance where
   nodeComments DataFamilyInstance {} = NodeComments [] [] []
