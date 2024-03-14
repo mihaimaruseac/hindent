@@ -378,7 +378,7 @@ instance Pretty NewOrData where
   pretty' Data    = string "data"
 
 instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
-  pretty' (HIndent.Ast.Declaration.Class.ClassDeclaration GHC.ClassDecl {..}) = do
+  pretty' (HIndent.Ast.Declaration.Class.ClassDeclaration {decl = GHC.ClassDecl {..}}) = do
     if isJust tcdCtxt
       then verHead
       else horHead <-|> verHead
