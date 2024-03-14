@@ -42,6 +42,7 @@ import           HIndent.Applicative
 import qualified HIndent.Ast.Context
 import           HIndent.Ast.Declaration
 import           HIndent.Ast.Declaration.Class
+import           HIndent.Ast.Declaration.Class.NameAndTypeVariables
 import           HIndent.Ast.Declaration.Data
 import           HIndent.Ast.Declaration.Data.GADT.Constructor
 import           HIndent.Ast.Declaration.Data.GADT.Constructor.Signature
@@ -420,9 +421,9 @@ instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
   pretty' _ = undefined
 
 instance Pretty NameAndTypeVariables where
-  pretty' HIndent.Ast.Declaration.Class.Prefix {..} =
+  pretty' HIndent.Ast.Declaration.Class.NameAndTypeVariables.Prefix {..} =
     spaced $ pretty name : fmap pretty typeVariables
-  pretty' HIndent.Ast.Declaration.Class.Infix {..} = do
+  pretty' HIndent.Ast.Declaration.Class.NameAndTypeVariables.Infix {..} = do
     parens $ spaced [pretty left, pretty $ fmap InfixOp name, pretty right]
     spacePrefixed $ fmap pretty remains
 
