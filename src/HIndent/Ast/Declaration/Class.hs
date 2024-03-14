@@ -5,21 +5,21 @@ module HIndent.Ast.Declaration.Class
   , mkClassDeclaration
   ) where
 
-import qualified GHC.Data.Bag                                       as GHC
-import           HIndent.Ast.Context
-import           HIndent.Ast.Declaration.Class.FunctionalDependency
-import           HIndent.Ast.Declaration.Class.NameAndTypeVariables
-import           HIndent.Ast.NodeComments
-import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs                 as GHC
-import           HIndent.Pretty.NodeComments
-import           HIndent.Pretty.SigBindFamily
+import qualified GHC.Data.Bag as GHC
+import HIndent.Ast.Context
+import HIndent.Ast.Declaration.Class.FunctionalDependency
+import HIndent.Ast.Declaration.Class.NameAndTypeVariables
+import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty.NodeComments
+import HIndent.Pretty.SigBindFamily
 
 data ClassDeclaration = ClassDeclaration
-  { context                :: Maybe (WithComments Context)
-  , nameAndTypeVariables   :: NameAndTypeVariables
+  { context :: Maybe (WithComments Context)
+  , nameAndTypeVariables :: NameAndTypeVariables
   , functionalDependencies :: [WithComments FunctionalDependency]
-  , associatedThings       :: [LSigBindFamily]
+  , associatedThings :: [LSigBindFamily]
   }
 
 instance CommentExtraction ClassDeclaration where

@@ -5,13 +5,13 @@ module HIndent.Ast.Declaration.Class.FunctionalDependency
   , mkFunctionalDependency
   ) where
 
-import           HIndent.Ast.NodeComments
+import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import           HIndent.Pretty.NodeComments
+import HIndent.Pretty.NodeComments
 
 data FunctionalDependency = FunctionalDependency
   { from :: [GHC.LIdP GHC.GhcPs]
-  , to   :: [GHC.LIdP GHC.GhcPs]
+  , to :: [GHC.LIdP GHC.GhcPs]
   }
 
 instance CommentExtraction FunctionalDependency where
