@@ -240,8 +240,9 @@ instance Pretty TypeSynonym where
       ver = newline >> indentedBlock (string "= " |=> pretty rhs)
 
 instance Pretty TypeSynonymLhs where
-  pretty' Prefix {..} = spaced $ pretty name : fmap pretty typeVariables
-  pretty' Infix {..} =
+  pretty' HIndent.Ast.Declaration.TypeSynonym.Lhs.Prefix {..} =
+    spaced $ pretty name : fmap pretty typeVariables
+  pretty' HIndent.Ast.Declaration.TypeSynonym.Lhs.Infix {..} =
     spaced [pretty left, pretty $ fmap InfixOp name, pretty right]
 
 instance Pretty Injectivity where
@@ -388,7 +389,7 @@ instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
     where
       horHead = do
         string "class "
-        printNameAndTypeVariables
+        pretty nameAndTypeVariables
         unless (null tcdFDs) $ do
           string " | "
           forM_ tcdFDs $ \x@(GHC.L _ GHC.FunDep {}) ->
@@ -398,7 +399,7 @@ instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
       verHead = do
         string "class " |=> do
           whenJust context $ \ctx -> pretty ctx >> string " =>" >> newline
-          printNameAndTypeVariables
+          pretty nameAndTypeVariables
         unless (null tcdFDs) $ do
           newline
           indentedBlock $
@@ -409,16 +410,6 @@ instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
                    spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to)
         unless (null sigsMethodsFamilies) $
           newline >> indentedBlock (string "where")
-      printNameAndTypeVariables =
-        case tcdFixity of
-          GHC.Prefix ->
-            spaced $ pretty name : fmap pretty (GHC.hsq_explicit tcdTyVars)
-          GHC.Infix ->
-            case GHC.hsq_explicit tcdTyVars of
-              (l:r:xs) -> do
-                parens $ spaced [pretty l, pretty $ fmap InfixOp name, pretty r]
-                spacePrefixed $ fmap pretty xs
-              _ -> error "Not enough parameters are given."
       sigsMethodsFamilies =
         SBF.mkSortedLSigBindFamilyList
           tcdSigs
@@ -427,6 +418,13 @@ instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
           []
           []
   pretty' _ = undefined
+
+instance Pretty NameAndTypeVariables where
+  pretty' HIndent.Ast.Declaration.Class.Prefix {..} =
+    spaced $ pretty name : fmap pretty typeVariables
+  pretty' HIndent.Ast.Declaration.Class.Infix {..} = do
+    parens $ spaced [pretty left, pretty $ fmap InfixOp name, pretty right]
+    spacePrefixed $ fmap pretty remains
 
 -- Do nothing if there are no pragmas, module headers, imports, or
 -- declarations. Otherwise, extra blank lines will be inserted if only
