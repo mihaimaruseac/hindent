@@ -66,7 +66,10 @@ mkDeclaration (GHC.TyClD _ x@GHC.SynDecl {}) =
 mkDeclaration (GHC.TyClD _ x@(GHC.DataDecl {})) =
   maybe (error "Unreachable.") DataDeclaration (mkDataDeclaration x)
 mkDeclaration (GHC.TyClD _ x@(GHC.ClassDecl {})) =
-  ClassDeclaration $ HIndent.Ast.Declaration.Class.mkClassDeclaration x
+  maybe
+    (error "Unreachable.")
+    ClassDeclaration
+    (HIndent.Ast.Declaration.Class.mkClassDeclaration x)
 mkDeclaration (GHC.InstD _ x)
   | Just inst <- HIndent.Ast.Declaration.Instance.Class.mkClassInstance x =
     ClassInstance inst
