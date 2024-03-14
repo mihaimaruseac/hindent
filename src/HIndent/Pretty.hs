@@ -418,8 +418,8 @@ instance Pretty FunctionalDependency where
     spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to
 
 instance Pretty DataFamilyInstance where
-  pretty' (HIndent.Ast.Declaration.Instance.Family.Data.DataFamilyInstance x) =
-    pretty x
+  pretty' (HIndent.Ast.Declaration.Instance.Family.Data.DataFamilyInstance {..}) =
+    pretty inst
 
 -- Do nothing if there are no pragmas, module headers, imports, or
 -- declarations. Otherwise, extra blank lines will be inserted if only
