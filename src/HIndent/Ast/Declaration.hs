@@ -65,9 +65,10 @@ mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) =
   TypeFamily <$> HIndent.Ast.Declaration.Family.Type.mkTypeFamily x
 mkDeclaration (GHC.TyClD _ x@GHC.SynDecl {}) =
   TypeSynonym $ HIndent.Ast.Declaration.TypeSynonym.mkTypeSynonym x
-mkDeclaration (GHC.TyClD _ x@(GHC.DataDecl {}))
-  | Just decl <- mkDataDeclaration x = DataDeclaration decl
-mkDeclaration (GHC.TyClD _ x) = TyClDecl x
+mkDeclaration (GHC.TyClD _ x@(GHC.DataDecl {})) =
+  maybe (error "Unreachable.") DataDeclaration (mkDataDeclaration x)
+mkDeclaration (GHC.TyClD _ x@(GHC.ClassDecl {})) =
+  ClassDeclaration $ HIndent.Ast.Declaration.Class.mkClassDeclaration x
 mkDeclaration (GHC.InstD _ x)
   | Just inst <- HIndent.Ast.Declaration.Instance.Class.mkClassInstance x =
     ClassInstance inst
