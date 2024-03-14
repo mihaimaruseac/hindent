@@ -407,9 +407,8 @@ instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
               (flip fmap tcdFDs $ \x@(GHC.L _ GHC.FunDep {}) ->
                  printCommentsAnd x $ \(GHC.FunDep _ from to) ->
                    spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to)
-        unless (null sigsMethodsFamilies) $ do
-          newline
-          indentedBlock $ string "where"
+        unless (null sigsMethodsFamilies) $
+          newline >> indentedBlock (string "where")
       printNameAndTypeVariables =
         case tcdFixity of
           GHC.Prefix ->
