@@ -63,9 +63,9 @@ mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) =
         <|> TypeFamily <$> HIndent.Ast.Declaration.Family.Type.mkTypeFamily x
 mkDeclaration (GHC.TyClD _ x@GHC.SynDecl {}) =
   TypeSynonym $ HIndent.Ast.Declaration.TypeSynonym.mkTypeSynonym x
-mkDeclaration (GHC.TyClD _ x@(GHC.DataDecl {})) =
+mkDeclaration (GHC.TyClD _ x@GHC.DataDecl {}) =
   maybe (error "Unreachable.") DataDeclaration (mkDataDeclaration x)
-mkDeclaration (GHC.TyClD _ x@(GHC.ClassDecl {})) =
+mkDeclaration (GHC.TyClD _ x@GHC.ClassDecl {}) =
   maybe
     (error "Unreachable.")
     ClassDeclaration
