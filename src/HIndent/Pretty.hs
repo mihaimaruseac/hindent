@@ -378,7 +378,61 @@ instance Pretty NewOrData where
   pretty' Data    = string "data"
 
 instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
-  pretty' (HIndent.Ast.Declaration.Class.ClassDeclaration x) = pretty x
+  pretty' (HIndent.Ast.Declaration.Class.ClassDeclaration GHC.ClassDecl {..}) = do
+    if isJust tcdCtxt
+      then verHead
+      else horHead <-|> verHead
+    indentedBlock $ newlinePrefixed $ fmap pretty sigsMethodsFamilies
+    where
+      horHead = do
+        string "class "
+        printNameAndTypeVariables
+        unless (null tcdFDs) $ do
+          string " | "
+          forM_ tcdFDs $ \x@(GHC.L _ GHC.FunDep {}) ->
+            printCommentsAnd x $ \(GHC.FunDep _ from to) ->
+              spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to
+        unless (null sigsMethodsFamilies) $ string " where"
+      verHead = do
+        string "class " |=> do
+          whenJust tcdCtxt $ \ctx -> do
+            printCommentsAnd ctx $ \case
+              []  -> string "()"
+              [x] -> pretty x
+              xs  -> hvTuple $ fmap pretty xs
+            string " =>"
+            newline
+          printNameAndTypeVariables
+        unless (null tcdFDs) $ do
+          newline
+          indentedBlock $
+            string "| " |=>
+            vCommaSep
+              (flip fmap tcdFDs $ \x@(GHC.L _ GHC.FunDep {}) ->
+                 printCommentsAnd x $ \(GHC.FunDep _ from to) ->
+                   spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to)
+        unless (null sigsMethodsFamilies) $ do
+          newline
+          indentedBlock $ string "where"
+      printNameAndTypeVariables =
+        case tcdFixity of
+          GHC.Prefix ->
+            spaced $ pretty tcdLName : fmap pretty (GHC.hsq_explicit tcdTyVars)
+          GHC.Infix ->
+            case GHC.hsq_explicit tcdTyVars of
+              (l:r:xs) -> do
+                parens $
+                  spaced [pretty l, pretty $ fmap InfixOp tcdLName, pretty r]
+                spacePrefixed $ fmap pretty xs
+              _ -> error "Not enough parameters are given."
+      sigsMethodsFamilies =
+        SBF.mkSortedLSigBindFamilyList
+          tcdSigs
+          (GHC.bagToList tcdMeths)
+          tcdATs
+          []
+          []
+  pretty' _ = undefined
 
 -- Do nothing if there are no pragmas, module headers, imports, or
 -- declarations. Otherwise, extra blank lines will be inserted if only
