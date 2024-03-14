@@ -1951,12 +1951,18 @@ type m ~> n = ()
 
 #### Functional dependencies
 
-Short
+Single
 
 ```haskell
 -- https://github.com/commercialhaskell/hindent/issues/323
 class Foo a b | a -> b where
   f :: a -> b
+```
+
+Multiple dependencies in a line
+
+```haskell
+class Foo a b | a -> b, b -> a
 ```
 
 Long
