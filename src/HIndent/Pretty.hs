@@ -380,20 +380,18 @@ instance Pretty NewOrData where
   pretty' Data    = string "data"
 
 instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
-  pretty' (HIndent.Ast.Declaration.Class.ClassDeclaration { decl = GHC.ClassDecl {..}
-                                                          , ..
-                                                          }) = do
+  pretty' (HIndent.Ast.Declaration.Class.ClassDeclaration {..}) = do
     if isJust context
       then verHead
       else horHead <-|> verHead
-    indentedBlock $ newlinePrefixed $ fmap pretty sigsMethodsFamilies
+    indentedBlock $ newlinePrefixed $ fmap pretty associatedThings
     where
       horHead = do
         string "class "
         pretty nameAndTypeVariables
         unless (null functionalDependencies) $
           string " | " >> hCommaSep (fmap pretty functionalDependencies)
-        unless (null sigsMethodsFamilies) $ string " where"
+        unless (null associatedThings) $ string " where"
       verHead = do
         string "class " |=> do
           whenJust context $ \ctx -> pretty ctx >> string " =>" >> newline
@@ -402,16 +400,8 @@ instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
           newline
           indentedBlock $
             string "| " |=> vCommaSep (fmap pretty functionalDependencies)
-        unless (null sigsMethodsFamilies) $
+        unless (null associatedThings) $
           newline >> indentedBlock (string "where")
-      sigsMethodsFamilies =
-        SBF.mkSortedLSigBindFamilyList
-          tcdSigs
-          (GHC.bagToList tcdMeths)
-          tcdATs
-          []
-          []
-  pretty' _ = undefined
 
 instance Pretty NameAndTypeVariables where
   pretty' HIndent.Ast.Declaration.Class.NameAndTypeVariables.Prefix {..} =
