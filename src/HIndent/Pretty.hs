@@ -467,9 +467,12 @@ prettyTyClDecl GHC.ClassDecl {..} = do
       printNameAndTypeVariables
       unless (null tcdFDs) $ do
         string " | "
-        forM_ tcdFDs $ \x@(GHC.L _ GHC.FunDep {}) ->
-          printCommentsAnd x $ \(GHC.FunDep _ from to) ->
-            spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to
+        hCommaSep
+          (fmap
+             (\x ->
+                printCommentsAnd x $ \(GHC.FunDep _ from to) ->
+                  spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to)
+             tcdFDs)
       unless (null sigsMethodsFamilies) $ string " where"
     verHead = do
       string "class " |=> do
@@ -486,7 +489,7 @@ prettyTyClDecl GHC.ClassDecl {..} = do
         indentedBlock
           $ string "| "
               |=> vCommaSep
-                    (flip fmap tcdFDs $ \x@(GHC.L _ GHC.FunDep {}) ->
+                    (flip fmap tcdFDs $ \x ->
                        printCommentsAnd x $ \(GHC.FunDep _ from to) ->
                          spaced
                            $ fmap pretty from ++ [string "->"] ++ fmap pretty to)
