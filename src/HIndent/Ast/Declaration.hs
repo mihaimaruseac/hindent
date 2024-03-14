@@ -22,7 +22,6 @@ data Declaration
   | DataDeclaration DataDeclaration
   | ClassDeclaration HIndent.Ast.Declaration.Class.ClassDeclaration
   | TypeSynonym HIndent.Ast.Declaration.TypeSynonym.TypeSynonym
-  | TyClDecl (GHC.TyClDecl GHC.GhcPs)
   | ClassInstance HIndent.Ast.Declaration.Instance.Class.ClassInstance
   | InstDecl (GHC.InstDecl GHC.GhcPs)
   | DerivDecl (GHC.DerivDecl GHC.GhcPs)
@@ -43,7 +42,6 @@ instance CommentExtraction Declaration where
   nodeComments DataDeclaration {}  = NodeComments [] [] []
   nodeComments ClassDeclaration {} = NodeComments [] [] []
   nodeComments TypeSynonym {}      = NodeComments [] [] []
-  nodeComments TyClDecl {}         = NodeComments [] [] []
   nodeComments ClassInstance {}    = NodeComments [] [] []
   nodeComments InstDecl {}         = NodeComments [] [] []
   nodeComments DerivDecl {}        = NodeComments [] [] []
