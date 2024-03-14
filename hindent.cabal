@@ -39,6 +39,7 @@ library
       HIndent.Ast
       HIndent.Ast.Context
       HIndent.Ast.Declaration
+      HIndent.Ast.Declaration.Class
       HIndent.Ast.Declaration.Collection
       HIndent.Ast.Declaration.Data
       HIndent.Ast.Declaration.Data.GADT.Constructor
