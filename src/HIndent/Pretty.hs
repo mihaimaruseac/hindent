@@ -397,10 +397,7 @@ instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
         unless (null sigsMethodsFamilies) $ string " where"
       verHead = do
         string "class " |=> do
-          whenJust context $ \ctx -> do
-            pretty ctx
-            string " =>"
-            newline
+          whenJust context $ \ctx -> pretty ctx >> string " =>" >> newline
           printNameAndTypeVariables
         unless (null tcdFDs) $ do
           newline
