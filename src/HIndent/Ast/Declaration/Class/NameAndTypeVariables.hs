@@ -5,28 +5,28 @@ module HIndent.Ast.Declaration.Class.NameAndTypeVariables
   , mkNameAndTypeVariables
   ) where
 
-import qualified GHC.Types.Fixity                   as GHC
-import           HIndent.Ast.NodeComments
-import           HIndent.Ast.Type.Variable
-import           HIndent.Ast.WithComments
+import qualified GHC.Types.Fixity as GHC
+import HIndent.Ast.NodeComments
+import HIndent.Ast.Type.Variable
+import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import           HIndent.Pretty.NodeComments
+import HIndent.Pretty.NodeComments
 
 data NameAndTypeVariables
   = Prefix
-      { name          :: GHC.LIdP GHC.GhcPs
+      { name :: GHC.LIdP GHC.GhcPs
       , typeVariables :: [WithComments TypeVariable]
       }
   | Infix
-      { left    :: WithComments TypeVariable
-      , name    :: GHC.LIdP GHC.GhcPs
-      , right   :: WithComments TypeVariable
+      { left :: WithComments TypeVariable
+      , name :: GHC.LIdP GHC.GhcPs
+      , right :: WithComments TypeVariable
       , remains :: [WithComments TypeVariable]
       }
 
 instance CommentExtraction NameAndTypeVariables where
   nodeComments Prefix {} = NodeComments [] [] []
-  nodeComments Infix {}  = NodeComments [] [] []
+  nodeComments Infix {} = NodeComments [] [] []
 
 mkNameAndTypeVariables :: GHC.TyClDecl GHC.GhcPs -> Maybe NameAndTypeVariables
 mkNameAndTypeVariables GHC.ClassDecl {tcdFixity = GHC.Prefix, ..} =

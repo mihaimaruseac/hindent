@@ -5,17 +5,17 @@ module HIndent.Ast.Declaration.Class
   , mkClassDeclaration
   ) where
 
-import           HIndent.Ast.Context
-import           HIndent.Ast.Declaration.Class.NameAndTypeVariables
-import           HIndent.Ast.NodeComments
-import           HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs                 as GHC
-import           HIndent.Pretty.NodeComments
+import HIndent.Ast.Context
+import HIndent.Ast.Declaration.Class.NameAndTypeVariables
+import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty.NodeComments
 
 data ClassDeclaration = ClassDeclaration
-  { context              :: Maybe (WithComments Context)
+  { context :: Maybe (WithComments Context)
   , nameAndTypeVariables :: NameAndTypeVariables
-  , decl                 :: GHC.TyClDecl GHC.GhcPs
+  , decl :: GHC.TyClDecl GHC.GhcPs
   }
 
 instance CommentExtraction ClassDeclaration where
