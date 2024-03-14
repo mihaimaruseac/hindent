@@ -4,17 +4,17 @@ module HIndent.Ast.Declaration
   , isSignature
   ) where
 
-import           Control.Applicative
-import           Data.Maybe
+import Control.Applicative
+import Data.Maybe
 import qualified HIndent.Ast.Declaration.Class
-import           HIndent.Ast.Declaration.Data
+import HIndent.Ast.Declaration.Data
 import qualified HIndent.Ast.Declaration.Family.Data
 import qualified HIndent.Ast.Declaration.Family.Type
 import qualified HIndent.Ast.Declaration.Instance.Class
 import qualified HIndent.Ast.Declaration.TypeSynonym
-import           HIndent.Ast.NodeComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs     as GHC
-import           HIndent.Pretty.NodeComments
+import HIndent.Ast.NodeComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty.NodeComments
 
 data Declaration
   = DataFamily HIndent.Ast.Declaration.Family.Data.DataFamily
@@ -38,31 +38,31 @@ data Declaration
   | RoleAnnotDecl (GHC.RoleAnnotDecl GHC.GhcPs)
 
 instance CommentExtraction Declaration where
-  nodeComments DataFamily {}       = NodeComments [] [] []
-  nodeComments TypeFamily {}       = NodeComments [] [] []
-  nodeComments DataDeclaration {}  = NodeComments [] [] []
+  nodeComments DataFamily {} = NodeComments [] [] []
+  nodeComments TypeFamily {} = NodeComments [] [] []
+  nodeComments DataDeclaration {} = NodeComments [] [] []
   nodeComments ClassDeclaration {} = NodeComments [] [] []
-  nodeComments TypeSynonym {}      = NodeComments [] [] []
-  nodeComments TyClDecl {}         = NodeComments [] [] []
-  nodeComments ClassInstance {}    = NodeComments [] [] []
-  nodeComments InstDecl {}         = NodeComments [] [] []
-  nodeComments DerivDecl {}        = NodeComments [] [] []
-  nodeComments ValDecl {}          = NodeComments [] [] []
-  nodeComments SigDecl {}          = NodeComments [] [] []
-  nodeComments KindSigDecl {}      = NodeComments [] [] []
-  nodeComments DefDecl {}          = NodeComments [] [] []
-  nodeComments ForDecl {}          = NodeComments [] [] []
-  nodeComments WarningDecl {}      = NodeComments [] [] []
-  nodeComments AnnDecl {}          = NodeComments [] [] []
-  nodeComments RuleDecl {}         = NodeComments [] [] []
-  nodeComments SpliceDecl {}       = NodeComments [] [] []
-  nodeComments RoleAnnotDecl {}    = NodeComments [] [] []
+  nodeComments TypeSynonym {} = NodeComments [] [] []
+  nodeComments TyClDecl {} = NodeComments [] [] []
+  nodeComments ClassInstance {} = NodeComments [] [] []
+  nodeComments InstDecl {} = NodeComments [] [] []
+  nodeComments DerivDecl {} = NodeComments [] [] []
+  nodeComments ValDecl {} = NodeComments [] [] []
+  nodeComments SigDecl {} = NodeComments [] [] []
+  nodeComments KindSigDecl {} = NodeComments [] [] []
+  nodeComments DefDecl {} = NodeComments [] [] []
+  nodeComments ForDecl {} = NodeComments [] [] []
+  nodeComments WarningDecl {} = NodeComments [] [] []
+  nodeComments AnnDecl {} = NodeComments [] [] []
+  nodeComments RuleDecl {} = NodeComments [] [] []
+  nodeComments SpliceDecl {} = NodeComments [] [] []
+  nodeComments RoleAnnotDecl {} = NodeComments [] [] []
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
 mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) =
-  fromMaybe (error "Unreachable.") $
-  DataFamily <$> HIndent.Ast.Declaration.Family.Data.mkDataFamily x <|>
-  TypeFamily <$> HIndent.Ast.Declaration.Family.Type.mkTypeFamily x
+  fromMaybe (error "Unreachable.")
+    $ DataFamily <$> HIndent.Ast.Declaration.Family.Data.mkDataFamily x
+        <|> TypeFamily <$> HIndent.Ast.Declaration.Family.Type.mkTypeFamily x
 mkDeclaration (GHC.TyClD _ x@GHC.SynDecl {}) =
   TypeSynonym $ HIndent.Ast.Declaration.TypeSynonym.mkTypeSynonym x
 mkDeclaration (GHC.TyClD _ x@(GHC.DataDecl {}))
@@ -89,4 +89,4 @@ mkDeclaration GHC.DocD {} =
 
 isSignature :: Declaration -> Bool
 isSignature SigDecl {} = True
-isSignature _          = False
+isSignature _ = False
