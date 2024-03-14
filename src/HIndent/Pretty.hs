@@ -393,9 +393,12 @@ instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
         pretty nameAndTypeVariables
         unless (null tcdFDs) $ do
           string " | "
-          forM_ tcdFDs $ \x@(GHC.L _ GHC.FunDep {}) ->
-            printCommentsAnd x $ \(GHC.FunDep _ from to) ->
-              spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to
+          hCommaSep
+            (fmap
+               (\x@(GHC.L _ GHC.FunDep {}) ->
+                  printCommentsAnd x $ \(GHC.FunDep _ from to) ->
+                    spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to)
+               tcdFDs)
         unless (null sigsMethodsFamilies) $ string " where"
       verHead = do
         string "class " |=> do
