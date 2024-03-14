@@ -11,9 +11,10 @@ import           HIndent.Ast.Declaration.Data
 import qualified HIndent.Ast.Declaration.Family.Data
 import qualified HIndent.Ast.Declaration.Family.Type
 import qualified HIndent.Ast.Declaration.Instance.Class
+import qualified HIndent.Ast.Declaration.Instance.Family.Data
 import qualified HIndent.Ast.Declaration.TypeSynonym
 import           HIndent.Ast.NodeComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs     as GHC
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs           as GHC
 import           HIndent.Pretty.NodeComments
 
 data Declaration
@@ -23,7 +24,8 @@ data Declaration
   | ClassDeclaration HIndent.Ast.Declaration.Class.ClassDeclaration
   | TypeSynonym HIndent.Ast.Declaration.TypeSynonym.TypeSynonym
   | ClassInstance HIndent.Ast.Declaration.Instance.Class.ClassInstance
-  | DataFamilyInstance (GHC.InstDecl GHC.GhcPs)
+  | DataFamilyInstance
+      HIndent.Ast.Declaration.Instance.Family.Data.DataFamilyInstance
   | InstDecl (GHC.InstDecl GHC.GhcPs)
   | DerivDecl (GHC.DerivDecl GHC.GhcPs)
   | ValDecl (GHC.HsBind GHC.GhcPs)
@@ -72,10 +74,14 @@ mkDeclaration (GHC.TyClD _ x@GHC.ClassDecl {}) =
     (error "Unreachable.")
     ClassDeclaration
     (HIndent.Ast.Declaration.Class.mkClassDeclaration x)
-mkDeclaration (GHC.InstD _ x)
+mkDeclaration (GHC.InstD _ x@GHC.ClsInstD {})
   | Just inst <- HIndent.Ast.Declaration.Instance.Class.mkClassInstance x =
     ClassInstance inst
-  | otherwise = InstDecl x
+mkDeclaration (GHC.InstD _ x@GHC.DataFamInstD {})
+  | Just inst <-
+      HIndent.Ast.Declaration.Instance.Family.Data.mkDataFamilyInstance x =
+    DataFamilyInstance inst
+mkDeclaration (GHC.InstD _ x) = InstDecl x
 mkDeclaration (GHC.DerivD _ x) = DerivDecl x
 mkDeclaration (GHC.ValD _ x) = ValDecl x
 mkDeclaration (GHC.SigD _ x) = SigDecl x

@@ -53,6 +53,7 @@ library
       HIndent.Ast.Declaration.Family.Type.Injectivity
       HIndent.Ast.Declaration.Family.Type.ResultSignature
       HIndent.Ast.Declaration.Instance.Class
+      HIndent.Ast.Declaration.Instance.Family.Data
       HIndent.Ast.Declaration.TypeSynonym
       HIndent.Ast.Declaration.TypeSynonym.Lhs
       HIndent.Ast.FileHeaderPragma
