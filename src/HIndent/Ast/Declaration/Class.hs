@@ -2,29 +2,18 @@
 
 module HIndent.Ast.Declaration.Class
   ( ClassDeclaration(..)
-  , FunctionalDependency(..)
   , mkClassDeclaration
   ) where
 
 import qualified GHC.Data.Bag                                       as GHC
 import           HIndent.Ast.Context
+import           HIndent.Ast.Declaration.Class.FunctionalDependency
 import           HIndent.Ast.Declaration.Class.NameAndTypeVariables
 import           HIndent.Ast.NodeComments
 import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs                 as GHC
 import           HIndent.Pretty.NodeComments
 import           HIndent.Pretty.SigBindFamily
-
-data FunctionalDependency = FunctionalDependency
-  { from :: [GHC.LIdP GHC.GhcPs]
-  , to   :: [GHC.LIdP GHC.GhcPs]
-  }
-
-instance CommentExtraction FunctionalDependency where
-  nodeComments FunctionalDependency {} = NodeComments [] [] []
-
-mkFunctionalDependency :: GHC.FunDep GHC.GhcPs -> FunctionalDependency
-mkFunctionalDependency (GHC.FunDep _ from to) = FunctionalDependency {..}
 
 data ClassDeclaration = ClassDeclaration
   { context                :: Maybe (WithComments Context)

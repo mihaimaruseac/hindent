@@ -42,6 +42,7 @@ import           HIndent.Applicative
 import qualified HIndent.Ast.Context
 import           HIndent.Ast.Declaration
 import           HIndent.Ast.Declaration.Class
+import           HIndent.Ast.Declaration.Class.FunctionalDependency
 import           HIndent.Ast.Declaration.Class.NameAndTypeVariables
 import           HIndent.Ast.Declaration.Data
 import           HIndent.Ast.Declaration.Data.GADT.Constructor
