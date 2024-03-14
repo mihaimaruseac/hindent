@@ -378,8 +378,10 @@ instance Pretty NewOrData where
   pretty' Data    = string "data"
 
 instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
-  pretty' (HIndent.Ast.Declaration.Class.ClassDeclaration {decl = GHC.ClassDecl {..}}) = do
-    if isJust tcdCtxt
+  pretty' (HIndent.Ast.Declaration.Class.ClassDeclaration { decl = GHC.ClassDecl {..}
+                                                          , ..
+                                                          }) = do
+    if isJust context
       then verHead
       else horHead <-|> verHead
     indentedBlock $ newlinePrefixed $ fmap pretty sigsMethodsFamilies
@@ -395,11 +397,8 @@ instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
         unless (null sigsMethodsFamilies) $ string " where"
       verHead = do
         string "class " |=> do
-          whenJust tcdCtxt $ \ctx -> do
-            printCommentsAnd ctx $ \case
-              []  -> string "()"
-              [x] -> pretty x
-              xs  -> hvTuple $ fmap pretty xs
+          whenJust context $ \ctx -> do
+            pretty ctx
             string " =>"
             newline
           printNameAndTypeVariables
