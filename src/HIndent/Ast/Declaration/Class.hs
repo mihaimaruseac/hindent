@@ -13,6 +13,7 @@ import           HIndent.Pretty.NodeComments
 
 data ClassDeclaration = ClassDeclaration
   { context :: Maybe (WithComments Context)
+  , name    :: GHC.LIdP GHC.GhcPs
   , decl    :: GHC.TyClDecl GHC.GhcPs
   }
 
@@ -23,5 +24,6 @@ mkClassDeclaration :: GHC.TyClDecl GHC.GhcPs -> Maybe ClassDeclaration
 mkClassDeclaration x@GHC.ClassDecl {..} = Just ClassDeclaration {..}
   where
     context = fmap (fmap mkContext . fromGenLocated) tcdCtxt
+    name = tcdLName
     decl = x
 mkClassDeclaration _ = Nothing

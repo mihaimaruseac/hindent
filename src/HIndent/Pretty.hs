@@ -412,12 +412,11 @@ instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
       printNameAndTypeVariables =
         case tcdFixity of
           GHC.Prefix ->
-            spaced $ pretty tcdLName : fmap pretty (GHC.hsq_explicit tcdTyVars)
+            spaced $ pretty name : fmap pretty (GHC.hsq_explicit tcdTyVars)
           GHC.Infix ->
             case GHC.hsq_explicit tcdTyVars of
               (l:r:xs) -> do
-                parens $
-                  spaced [pretty l, pretty $ fmap InfixOp tcdLName, pretty r]
+                parens $ spaced [pretty l, pretty $ fmap InfixOp name, pretty r]
                 spacePrefixed $ fmap pretty xs
               _ -> error "Not enough parameters are given."
       sigsMethodsFamilies =
