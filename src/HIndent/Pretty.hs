@@ -391,27 +391,17 @@ instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
       horHead = do
         string "class "
         pretty nameAndTypeVariables
-        unless (null tcdFDs) $ do
-          string " | "
-          hCommaSep
-            (fmap
-               (\x@(GHC.L _ GHC.FunDep {}) ->
-                  printCommentsAnd x $ \(GHC.FunDep _ from to) ->
-                    spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to)
-               tcdFDs)
+        unless (null functionalDependencies) $
+          string " | " >> hCommaSep (fmap pretty functionalDependencies)
         unless (null sigsMethodsFamilies) $ string " where"
       verHead = do
         string "class " |=> do
           whenJust context $ \ctx -> pretty ctx >> string " =>" >> newline
           pretty nameAndTypeVariables
-        unless (null tcdFDs) $ do
+        unless (null functionalDependencies) $ do
           newline
           indentedBlock $
-            string "| " |=>
-            vCommaSep
-              (flip fmap tcdFDs $ \x@(GHC.L _ GHC.FunDep {}) ->
-                 printCommentsAnd x $ \(GHC.FunDep _ from to) ->
-                   spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to)
+            string "| " |=> vCommaSep (fmap pretty functionalDependencies)
         unless (null sigsMethodsFamilies) $
           newline >> indentedBlock (string "where")
       sigsMethodsFamilies =
@@ -429,6 +419,10 @@ instance Pretty NameAndTypeVariables where
   pretty' HIndent.Ast.Declaration.Class.NameAndTypeVariables.Infix {..} = do
     parens $ spaced [pretty left, pretty $ fmap InfixOp name, pretty right]
     spacePrefixed $ fmap pretty remains
+
+instance Pretty FunctionalDependency where
+  pretty' (FunctionalDependency {..}) =
+    spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to
 
 -- Do nothing if there are no pragmas, module headers, imports, or
 -- declarations. Otherwise, extra blank lines will be inserted if only
