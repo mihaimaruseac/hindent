@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP             #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Data
@@ -6,15 +6,15 @@ module HIndent.Ast.Declaration.Data
   , mkDataDeclaration
   ) where
 
-import           HIndent.Ast.Declaration.Data.Body
-import           HIndent.Ast.Declaration.Data.Header
-import           HIndent.Ast.NodeComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs  as GHC
-import           HIndent.Pretty.NodeComments
+import HIndent.Ast.Declaration.Data.Body
+import HIndent.Ast.Declaration.Data.Header
+import HIndent.Ast.NodeComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty.NodeComments
 
 data DataDeclaration = DataDeclaration
   { header :: Header
-  , body   :: DataBody
+  , body :: DataBody
   }
 
 instance CommentExtraction DataDeclaration where
