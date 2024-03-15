@@ -1,5 +1,3 @@
-{-# LANGUAGE NoFieldSelectors #-}
-
 module HIndent.Ast.Type.Variable
   ( TypeVariable(..)
   , mkTypeVariable
