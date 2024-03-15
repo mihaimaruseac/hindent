@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module HIndent.Ast.Declaration
   ( Declaration(..)
   , mkDeclaration
@@ -81,10 +83,9 @@ mkDeclaration (GHC.TyClD _ x@GHC.ClassDecl {}) =
 mkDeclaration (GHC.InstD _ x@GHC.ClsInstD {})
   | Just inst <- HIndent.Ast.Declaration.Instance.Class.mkClassInstance x =
     ClassInstance inst
-mkDeclaration (GHC.InstD _ x@GHC.DataFamInstD {})
-  | Just inst <-
-      HIndent.Ast.Declaration.Instance.Family.Data.mkDataFamilyInstance x =
-    DataFamilyInstance inst
+mkDeclaration (GHC.InstD _ GHC.DataFamInstD {GHC.dfid_inst = GHC.DataFamInstDecl {..}}) =
+  DataFamilyInstance $
+  HIndent.Ast.Declaration.Instance.Family.Data.mkDataFamilyInstance dfid_eqn
 mkDeclaration (GHC.InstD _ x) = InstDecl x
 mkDeclaration (GHC.DerivD _ x) = DerivDecl x
 mkDeclaration (GHC.ValD _ x) = ValDecl x

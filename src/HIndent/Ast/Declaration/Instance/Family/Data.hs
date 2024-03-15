@@ -23,11 +23,11 @@ data DataFamilyInstance = DataFamilyInstance
 instance CommentExtraction DataFamilyInstance where
   nodeComments DataFamilyInstance {} = NodeComments [] [] []
 
-mkDataFamilyInstance :: GHC.InstDecl GHC.GhcPs -> Maybe DataFamilyInstance
-mkDataFamilyInstance GHC.DataFamInstD {..} = Just $ DataFamilyInstance {..}
+mkDataFamilyInstance ::
+     GHC.FamEqn GHC.GhcPs (GHC.HsDataDefn GHC.GhcPs) -> DataFamilyInstance
+mkDataFamilyInstance GHC.FamEqn {..} = DataFamilyInstance {..}
   where
-    newOrData = mkNewOrData $ GHC.feqn_rhs $ GHC.dfid_eqn dfid_inst
-    name = GHC.feqn_tycon $ GHC.dfid_eqn dfid_inst
-    types = GHC.feqn_pats $ GHC.dfid_eqn dfid_inst
-    body = mkDataBody $ GHC.feqn_rhs $ GHC.dfid_eqn dfid_inst
-mkDataFamilyInstance _ = Nothing
+    newOrData = mkNewOrData feqn_rhs
+    name = feqn_tycon
+    types = feqn_pats
+    body = mkDataBody feqn_rhs
