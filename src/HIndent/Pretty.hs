@@ -41,7 +41,11 @@ import qualified GHC.Unit.Module.Warnings as GHC
 import HIndent.Applicative
 import qualified HIndent.Ast.Context
 import HIndent.Ast.Declaration
+import HIndent.Ast.Declaration.Class
+import HIndent.Ast.Declaration.Class.FunctionalDependency
+import HIndent.Ast.Declaration.Class.NameAndTypeVariables
 import HIndent.Ast.Declaration.Data
+import qualified HIndent.Ast.Declaration.Data.Body
 import HIndent.Ast.Declaration.Data.GADT.Constructor
 import HIndent.Ast.Declaration.Data.GADT.Constructor.Signature
 import HIndent.Ast.Declaration.Data.Header
@@ -51,6 +55,8 @@ import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Family.Type.Injectivity
 import HIndent.Ast.Declaration.Family.Type.ResultSignature
 import HIndent.Ast.Declaration.Instance.Class
+import HIndent.Ast.Declaration.Instance.Family.Data
+import HIndent.Ast.Declaration.Instance.Family.Type
 import HIndent.Ast.Declaration.TypeSynonym
 import HIndent.Ast.Declaration.TypeSynonym.Lhs
 import HIndent.Ast.NodeComments
@@ -142,11 +148,12 @@ class CommentExtraction a =>
 instance Pretty Declaration where
   pretty' (HIndent.Ast.Declaration.DataFamily x) = pretty x
   pretty' (HIndent.Ast.Declaration.TypeFamily x) = pretty x
-  pretty' (DataDeclaration x) = pretty x
+  pretty' (HIndent.Ast.Declaration.DataDeclaration x) = pretty x
+  pretty' (HIndent.Ast.Declaration.ClassDeclaration x) = pretty x
   pretty' (HIndent.Ast.Declaration.TypeSynonym x) = pretty x
-  pretty' (TyClDecl x) = pretty x
   pretty' (HIndent.Ast.Declaration.ClassInstance x) = pretty x
-  pretty' (InstDecl x) = pretty x
+  pretty' (HIndent.Ast.Declaration.DataFamilyInstance x) = pretty x
+  pretty' (HIndent.Ast.Declaration.TypeFamilyInstance x) = pretty x
   pretty' (DerivDecl x) = pretty x
   pretty' (ValDecl x) = pretty x
   pretty' (SigDecl x) = pretty x
@@ -160,13 +167,15 @@ instance Pretty Declaration where
   pretty' (RoleAnnotDecl x) = pretty x
 
 instance Pretty DataDeclaration where
-  pretty' GADT {..} = do
-    pretty header
+  pretty' HIndent.Ast.Declaration.Data.DataDeclaration {..} =
+    pretty header >> pretty body
+
+instance Pretty HIndent.Ast.Declaration.Data.Body.DataBody where
+  pretty' HIndent.Ast.Declaration.Data.Body.GADT {..} = do
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
     indentedBlock $ newlinePrefixed $ fmap pretty constructors
-  pretty' HIndent.Ast.Declaration.Data.Record {..} = do
-    pretty header
+  pretty' HIndent.Ast.Declaration.Data.Body.Record {..} = do
     case dd_cons of
       [] -> indentedBlock derivingsAfterNewline
       [x@(GHC.L _ GHC.ConDeclH98 {con_args = GHC.RecCon {}})] -> do
@@ -241,8 +250,9 @@ instance Pretty TypeSynonym where
       ver = newline >> indentedBlock (string "= " |=> pretty rhs)
 
 instance Pretty TypeSynonymLhs where
-  pretty' Prefix {..} = spaced $ pretty name : fmap pretty typeVariables
-  pretty' Infix {..} =
+  pretty' HIndent.Ast.Declaration.TypeSynonym.Lhs.Prefix {..} =
+    spaced $ pretty name : fmap pretty typeVariables
+  pretty' HIndent.Ast.Declaration.TypeSynonym.Lhs.Infix {..} =
     spaced [pretty left, pretty $ fmap InfixOp name, pretty right]
 
 instance Pretty Injectivity where
@@ -381,144 +391,59 @@ instance Pretty NewOrData where
   pretty' Newtype = string "newtype"
   pretty' Data = string "data"
 
+instance Pretty HIndent.Ast.Declaration.Class.ClassDeclaration where
+  pretty' (HIndent.Ast.Declaration.Class.ClassDeclaration {..}) = do
+    if isJust context
+      then verHead
+      else horHead <-|> verHead
+    indentedBlock $ newlinePrefixed $ fmap pretty associatedThings
+    where
+      horHead = do
+        string "class "
+        pretty nameAndTypeVariables
+        unless (null functionalDependencies)
+          $ string " | " >> hCommaSep (fmap pretty functionalDependencies)
+        unless (null associatedThings) $ string " where"
+      verHead = do
+        string "class " |=> do
+          whenJust context $ \ctx -> pretty ctx >> string " =>" >> newline
+          pretty nameAndTypeVariables
+        unless (null functionalDependencies) $ do
+          newline
+          indentedBlock
+            $ string "| " |=> vCommaSep (fmap pretty functionalDependencies)
+        unless (null associatedThings)
+          $ newline >> indentedBlock (string "where")
+
+instance Pretty NameAndTypeVariables where
+  pretty' HIndent.Ast.Declaration.Class.NameAndTypeVariables.Prefix {..} =
+    spaced $ pretty name : fmap pretty typeVariables
+  pretty' HIndent.Ast.Declaration.Class.NameAndTypeVariables.Infix {..} = do
+    parens $ spaced [pretty left, pretty $ fmap InfixOp name, pretty right]
+    spacePrefixed $ fmap pretty remains
+
+instance Pretty FunctionalDependency where
+  pretty' (FunctionalDependency {..}) =
+    spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to
+
+instance Pretty DataFamilyInstance where
+  pretty' (HIndent.Ast.Declaration.Instance.Family.Data.DataFamilyInstance {..}) = do
+    spaced
+      $ pretty newOrData : string "instance" : pretty name : fmap pretty types
+    pretty body
+
+instance Pretty TypeFamilyInstance where
+  pretty' (HIndent.Ast.Declaration.Instance.Family.Type.TypeFamilyInstance {..}) = do
+    spaced $ string "type instance" : pretty name : fmap pretty types
+    string " = "
+    pretty bind
+
 -- Do nothing if there are no pragmas, module headers, imports, or
 -- declarations. Otherwise, extra blank lines will be inserted if only
 -- comments are present in the source code. See
 -- https://github.com/mihaimaruseac/hindent/issues/586#issuecomment-1374992624.
 instance (CommentExtraction l, Pretty e) => Pretty (GHC.GenLocated l e) where
   pretty' (GHC.L _ e) = pretty e
-
-instance Pretty (GHC.TyClDecl GHC.GhcPs) where
-  pretty' = prettyTyClDecl
-
-prettyTyClDecl :: GHC.TyClDecl GHC.GhcPs -> Printer ()
-prettyTyClDecl (GHC.FamDecl _ x) = pretty x
-prettyTyClDecl GHC.SynDecl {..} = do
-  string "type "
-  case tcdFixity of
-    GHC.Prefix ->
-      spaced $ pretty tcdLName : fmap pretty (GHC.hsq_explicit tcdTyVars)
-    GHC.Infix ->
-      case GHC.hsq_explicit tcdTyVars of
-        (l:r:xs) -> do
-          spaced [pretty l, pretty $ fmap InfixOp tcdLName, pretty r]
-          forM_ xs $ \x -> do
-            space
-            pretty x
-        _ -> error "Not enough parameters are given."
-  hor <-|> ver
-  where
-    hor = string " = " >> pretty tcdRhs
-    ver = newline >> indentedBlock (string "= " |=> pretty tcdRhs)
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-prettyTyClDecl GHC.DataDecl {..} = do
-  printDataNewtype |=> do
-    whenJust (GHC.dd_ctxt tcdDataDefn) $ \x -> do
-      pretty $ Context x
-      string " =>"
-      newline
-    pretty tcdLName
-  spacePrefixed $ pretty <$> GHC.hsq_explicit tcdTyVars
-  pretty tcdDataDefn
-  where
-    printDataNewtype =
-      case GHC.dd_cons tcdDataDefn of
-        GHC.DataTypeCons {} -> string "data "
-        GHC.NewTypeCon {} -> string "newtype "
-#elif MIN_VERSION_ghc_lib_parser(9,4,1)
-prettyTyClDecl GHC.DataDecl {..} = do
-  printDataNewtype |=> do
-    whenJust (GHC.dd_ctxt tcdDataDefn) $ \x -> do
-      pretty $ Context x
-      string " =>"
-      newline
-    pretty tcdLName
-  spacePrefixed $ pretty <$> GHC.hsq_explicit tcdTyVars
-  pretty tcdDataDefn
-  where
-    printDataNewtype =
-      case GHC.dd_ND tcdDataDefn of
-        GHC.DataType -> string "data "
-        GHC.NewType -> string "newtype "
-#else
-prettyTyClDecl GHC.DataDecl {..} = do
-  printDataNewtype |=> do
-    whenJust (GHC.dd_ctxt tcdDataDefn) $ \_ -> do
-      pretty $ Context $ GHC.dd_ctxt tcdDataDefn
-      string " =>"
-      newline
-    pretty tcdLName
-  spacePrefixed $ pretty <$> GHC.hsq_explicit tcdTyVars
-  pretty tcdDataDefn
-  where
-    printDataNewtype =
-      case GHC.dd_ND tcdDataDefn of
-        GHC.DataType -> string "data "
-        GHC.NewType -> string "newtype "
-#endif
-prettyTyClDecl GHC.ClassDecl {..} = do
-  if isJust tcdCtxt
-    then verHead
-    else horHead <-|> verHead
-  indentedBlock $ newlinePrefixed $ fmap pretty sigsMethodsFamilies
-  where
-    horHead = do
-      string "class "
-      printNameAndTypeVariables
-      unless (null tcdFDs) $ do
-        string " | "
-        hCommaSep
-          (fmap
-             (\x ->
-                printCommentsAnd x $ \(GHC.FunDep _ from to) ->
-                  spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to)
-             tcdFDs)
-      unless (null sigsMethodsFamilies) $ string " where"
-    verHead = do
-      string "class " |=> do
-        whenJust tcdCtxt $ \ctx -> do
-          printCommentsAnd ctx $ \case
-            [] -> string "()"
-            [x] -> pretty x
-            xs -> hvTuple $ fmap pretty xs
-          string " =>"
-          newline
-        printNameAndTypeVariables
-      unless (null tcdFDs) $ do
-        newline
-        indentedBlock
-          $ string "| "
-              |=> vCommaSep
-                    (flip fmap tcdFDs $ \x ->
-                       printCommentsAnd x $ \(GHC.FunDep _ from to) ->
-                         spaced
-                           $ fmap pretty from ++ [string "->"] ++ fmap pretty to)
-      unless (null sigsMethodsFamilies) $ do
-        newline
-        indentedBlock $ string "where"
-    printNameAndTypeVariables =
-      case tcdFixity of
-        GHC.Prefix ->
-          spaced $ pretty tcdLName : fmap pretty (GHC.hsq_explicit tcdTyVars)
-        GHC.Infix ->
-          case GHC.hsq_explicit tcdTyVars of
-            (l:r:xs) -> do
-              parens
-                $ spaced [pretty l, pretty $ fmap InfixOp tcdLName, pretty r]
-              spacePrefixed $ fmap pretty xs
-            _ -> error "Not enough parameters are given."
-    sigsMethodsFamilies =
-      SBF.mkSortedLSigBindFamilyList
-        tcdSigs
-        (GHC.bagToList tcdMeths)
-        tcdATs
-        []
-        []
-
-instance Pretty (GHC.InstDecl GHC.GhcPs) where
-  pretty' GHC.ClsInstD {..} = pretty cid_inst
-  pretty' GHC.DataFamInstD {..} = pretty dfid_inst
-  pretty' GHC.TyFamInstD {..} = pretty $ TopLevelTyFamInstDecl tfid_inst
 
 instance Pretty (GHC.HsBind GHC.GhcPs) where
   pretty' = prettyHsBind

@@ -39,8 +39,12 @@ library
       HIndent.Ast
       HIndent.Ast.Context
       HIndent.Ast.Declaration
+      HIndent.Ast.Declaration.Class
+      HIndent.Ast.Declaration.Class.FunctionalDependency
+      HIndent.Ast.Declaration.Class.NameAndTypeVariables
       HIndent.Ast.Declaration.Collection
       HIndent.Ast.Declaration.Data
+      HIndent.Ast.Declaration.Data.Body
       HIndent.Ast.Declaration.Data.GADT.Constructor
       HIndent.Ast.Declaration.Data.GADT.Constructor.Signature
       HIndent.Ast.Declaration.Data.Header
@@ -50,6 +54,8 @@ library
       HIndent.Ast.Declaration.Family.Type.Injectivity
       HIndent.Ast.Declaration.Family.Type.ResultSignature
       HIndent.Ast.Declaration.Instance.Class
+      HIndent.Ast.Declaration.Instance.Family.Data
+      HIndent.Ast.Declaration.Instance.Family.Type
       HIndent.Ast.Declaration.TypeSynonym
       HIndent.Ast.Declaration.TypeSynonym.Lhs
       HIndent.Ast.FileHeaderPragma

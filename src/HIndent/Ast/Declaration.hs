@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module HIndent.Ast.Declaration
   ( Declaration(..)
   , mkDeclaration
@@ -6,10 +8,13 @@ module HIndent.Ast.Declaration
 
 import Control.Applicative
 import Data.Maybe
+import qualified HIndent.Ast.Declaration.Class
 import HIndent.Ast.Declaration.Data
 import qualified HIndent.Ast.Declaration.Family.Data
 import qualified HIndent.Ast.Declaration.Family.Type
 import qualified HIndent.Ast.Declaration.Instance.Class
+import qualified HIndent.Ast.Declaration.Instance.Family.Data
+import qualified HIndent.Ast.Declaration.Instance.Family.Type
 import qualified HIndent.Ast.Declaration.TypeSynonym
 import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -19,10 +24,13 @@ data Declaration
   = DataFamily HIndent.Ast.Declaration.Family.Data.DataFamily
   | TypeFamily HIndent.Ast.Declaration.Family.Type.TypeFamily
   | DataDeclaration DataDeclaration
+  | ClassDeclaration HIndent.Ast.Declaration.Class.ClassDeclaration
   | TypeSynonym HIndent.Ast.Declaration.TypeSynonym.TypeSynonym
-  | TyClDecl (GHC.TyClDecl GHC.GhcPs)
   | ClassInstance HIndent.Ast.Declaration.Instance.Class.ClassInstance
-  | InstDecl (GHC.InstDecl GHC.GhcPs)
+  | DataFamilyInstance
+      HIndent.Ast.Declaration.Instance.Family.Data.DataFamilyInstance
+  | TypeFamilyInstance
+      HIndent.Ast.Declaration.Instance.Family.Type.TypeFamilyInstance
   | DerivDecl (GHC.DerivDecl GHC.GhcPs)
   | ValDecl (GHC.HsBind GHC.GhcPs)
   | SigDecl (GHC.Sig GHC.GhcPs)
@@ -38,11 +46,13 @@ data Declaration
 instance CommentExtraction Declaration where
   nodeComments DataFamily {} = NodeComments [] [] []
   nodeComments TypeFamily {} = NodeComments [] [] []
-  nodeComments DataDeclaration {} = NodeComments [] [] []
+  nodeComments HIndent.Ast.Declaration.DataDeclaration {} =
+    NodeComments [] [] []
+  nodeComments ClassDeclaration {} = NodeComments [] [] []
   nodeComments TypeSynonym {} = NodeComments [] [] []
-  nodeComments TyClDecl {} = NodeComments [] [] []
   nodeComments ClassInstance {} = NodeComments [] [] []
-  nodeComments InstDecl {} = NodeComments [] [] []
+  nodeComments DataFamilyInstance {} = NodeComments [] [] []
+  nodeComments TypeFamilyInstance {} = NodeComments [] [] []
   nodeComments DerivDecl {} = NodeComments [] [] []
   nodeComments ValDecl {} = NodeComments [] [] []
   nodeComments SigDecl {} = NodeComments [] [] []
@@ -62,13 +72,27 @@ mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) =
         <|> TypeFamily <$> HIndent.Ast.Declaration.Family.Type.mkTypeFamily x
 mkDeclaration (GHC.TyClD _ x@GHC.SynDecl {}) =
   TypeSynonym $ HIndent.Ast.Declaration.TypeSynonym.mkTypeSynonym x
-mkDeclaration (GHC.TyClD _ x@(GHC.DataDecl {}))
-  | Just decl <- mkDataDeclaration x = DataDeclaration decl
-mkDeclaration (GHC.TyClD _ x) = TyClDecl x
-mkDeclaration (GHC.InstD _ x)
-  | Just inst <- HIndent.Ast.Declaration.Instance.Class.mkClassInstance x =
-    ClassInstance inst
-  | otherwise = InstDecl x
+mkDeclaration (GHC.TyClD _ x@GHC.DataDecl {}) =
+  maybe
+    (error "Unreachable.")
+    HIndent.Ast.Declaration.DataDeclaration
+    (mkDataDeclaration x)
+mkDeclaration (GHC.TyClD _ x@GHC.ClassDecl {}) =
+  maybe
+    (error "Unreachable.")
+    ClassDeclaration
+    (HIndent.Ast.Declaration.Class.mkClassDeclaration x)
+mkDeclaration (GHC.InstD _ x@GHC.ClsInstD {}) =
+  maybe
+    (error "Unreachable.")
+    ClassInstance
+    (HIndent.Ast.Declaration.Instance.Class.mkClassInstance x)
+mkDeclaration (GHC.InstD _ GHC.DataFamInstD {GHC.dfid_inst = GHC.DataFamInstDecl {..}}) =
+  DataFamilyInstance
+    $ HIndent.Ast.Declaration.Instance.Family.Data.mkDataFamilyInstance dfid_eqn
+mkDeclaration (GHC.InstD _ x@GHC.TyFamInstD {}) =
+  maybe (error "Unreachable.") TypeFamilyInstance
+    $ HIndent.Ast.Declaration.Instance.Family.Type.mkTypeFamilyInstance x
 mkDeclaration (GHC.DerivD _ x) = DerivDecl x
 mkDeclaration (GHC.ValD _ x) = ValDecl x
 mkDeclaration (GHC.SigD _ x) = SigDecl x
