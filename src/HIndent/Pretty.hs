@@ -440,11 +440,6 @@ instance Pretty TypeFamilyInstance where
 instance (CommentExtraction l, Pretty e) => Pretty (GHC.GenLocated l e) where
   pretty' (GHC.L _ e) = pretty e
 
-instance Pretty (GHC.InstDecl GHC.GhcPs) where
-  pretty' GHC.ClsInstD {..}     = pretty cid_inst
-  pretty' GHC.DataFamInstD {..} = pretty dfid_inst
-  pretty' GHC.TyFamInstD {..}   = pretty $ TopLevelTyFamInstDecl tfid_inst
-
 instance Pretty (GHC.HsBind GHC.GhcPs) where
   pretty' = prettyHsBind
 
