@@ -2,16 +2,18 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Data.GADT.Constructor
-  ( GADTConstructor(..)
+  ( GADTConstructor
   , mkGADTConstructor
   ) where
 
 import Data.Maybe
 import qualified GHC.Types.SrcLoc as GHC
+import HIndent.Ast.Context
 import HIndent.Ast.Declaration.Data.GADT.Constructor.Signature
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
@@ -27,6 +29,37 @@ data GADTConstructor = GADTConstructor
 
 instance CommentExtraction GADTConstructor where
   nodeComments GADTConstructor {} = NodeComments [] [] []
+
+instance Pretty GADTConstructor where
+  pretty' (GADTConstructor {..}) = do
+    hCommaSep $ fmap (`prettyWith` string) names
+    hor <-|> ver
+    where
+      hor = string " :: " |=> body
+      ver = newline >> indentedBlock (string ":: " |=> body)
+      body =
+        case (forallNeeded, con_mb_cxt) of
+          (True, Just ctx) -> withForallCtx ctx
+          (True, Nothing) -> withForallOnly
+          (False, Just ctx) -> withCtxOnly ctx
+          (False, Nothing) -> noForallCtx
+      withForallCtx ctx = do
+        pretty bindings
+        (space >> pretty (mkContext <$> fromGenLocated ctx))
+          <-|> (newline >> pretty (mkContext <$> fromGenLocated ctx))
+        newline
+        prefixed "=> " $ prettyVertically signature
+      withForallOnly = do
+        pretty bindings
+        (space >> prettyHorizontally signature)
+          <-|> (newline >> prettyVertically signature)
+      withCtxOnly ctx =
+        (pretty (mkContext <$> fromGenLocated ctx)
+           >> string " => "
+           >> prettyHorizontally signature)
+          <-|> (pretty (mkContext <$> fromGenLocated ctx)
+                  >> prefixed "=> " (prettyVertically signature))
+      noForallCtx = prettyHorizontally signature <-|> prettyVertically signature
 
 mkGADTConstructor :: GHC.ConDecl GHC.GhcPs -> Maybe GADTConstructor
 mkGADTConstructor decl@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}

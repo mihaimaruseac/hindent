@@ -1,17 +1,20 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Family.Data
-  ( DataFamily(..)
+  ( DataFamily
   , mkDataFamily
   ) where
 
+import Control.Monad
 import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.SrcLoc as GHC
+import HIndent.Applicative
 import HIndent.Ast.NodeComments hiding (fromEpAnn)
 import HIndent.Ast.Type
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
@@ -24,6 +27,14 @@ data DataFamily = DataFamily
 
 instance CommentExtraction DataFamily where
   nodeComments DataFamily {} = NodeComments [] [] []
+
+instance Pretty DataFamily where
+  pretty' DataFamily {..} = do
+    string "data "
+    when isTopLevel $ string "family "
+    string name
+    spacePrefixed $ fmap pretty typeVariables
+    whenJust signature $ \sig -> space >> pretty sig
 
 mkDataFamily :: GHC.FamilyDecl GHC.GhcPs -> Maybe DataFamily
 mkDataFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
