@@ -14,6 +14,7 @@ import qualified HIndent.Ast.Declaration.Family.Data
 import qualified HIndent.Ast.Declaration.Family.Type
 import qualified HIndent.Ast.Declaration.Instance.Class
 import qualified HIndent.Ast.Declaration.Instance.Family.Data
+import qualified HIndent.Ast.Declaration.Instance.Family.Type
 import qualified HIndent.Ast.Declaration.TypeSynonym
 import           HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs           as GHC
@@ -28,7 +29,8 @@ data Declaration
   | ClassInstance HIndent.Ast.Declaration.Instance.Class.ClassInstance
   | DataFamilyInstance
       HIndent.Ast.Declaration.Instance.Family.Data.DataFamilyInstance
-  | TypeFamilyInstance (GHC.InstDecl GHC.GhcPs)
+  | TypeFamilyInstance
+      HIndent.Ast.Declaration.Instance.Family.Type.TypeFamilyInstance
   | InstDecl (GHC.InstDecl GHC.GhcPs)
   | DerivDecl (GHC.DerivDecl GHC.GhcPs)
   | ValDecl (GHC.HsBind GHC.GhcPs)

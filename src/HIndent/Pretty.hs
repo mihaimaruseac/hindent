@@ -77,6 +77,7 @@ import qualified GHC.Core.DataCon                                        as GHC
 #endif
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
 import qualified GHC.Unit                                                as GHC
+import           HIndent.Ast.Declaration.Instance.Family.Type
 #endif
 -- | This function pretty-prints the given AST node with comments.
 pretty :: Pretty a => a -> Printer ()
@@ -150,7 +151,7 @@ instance Pretty Declaration where
   pretty' (HIndent.Ast.Declaration.TypeSynonym x)        = pretty x
   pretty' (HIndent.Ast.Declaration.ClassInstance x)      = pretty x
   pretty' (HIndent.Ast.Declaration.DataFamilyInstance x) = pretty x
-  pretty' (TypeFamilyInstance x)                         = pretty x
+  pretty' (HIndent.Ast.Declaration.TypeFamilyInstance x) = pretty x
   pretty' (InstDecl x)                                   = pretty x
   pretty' (DerivDecl x)                                  = pretty x
   pretty' (ValDecl x)                                    = pretty x
@@ -426,6 +427,10 @@ instance Pretty DataFamilyInstance where
     spaced $
       pretty newOrData : string "instance" : pretty name : fmap pretty types
     pretty body
+
+instance Pretty TypeFamilyInstance where
+  pretty' (HIndent.Ast.Declaration.Instance.Family.Type.TypeFamilyInstance x) =
+    pretty x
 
 -- Do nothing if there are no pragmas, module headers, imports, or
 -- declarations. Otherwise, extra blank lines will be inserted if only
