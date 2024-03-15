@@ -6,18 +6,18 @@ module HIndent.Ast.Declaration
   , isSignature
   ) where
 
-import Control.Applicative
-import Data.Maybe
+import           Control.Applicative
+import           Data.Maybe
 import qualified HIndent.Ast.Declaration.Class
-import HIndent.Ast.Declaration.Data
+import           HIndent.Ast.Declaration.Data
 import qualified HIndent.Ast.Declaration.Family.Data
 import qualified HIndent.Ast.Declaration.Family.Type
 import qualified HIndent.Ast.Declaration.Instance.Class
 import qualified HIndent.Ast.Declaration.Instance.Family.Data
 import qualified HIndent.Ast.Declaration.TypeSynonym
-import HIndent.Ast.NodeComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import HIndent.Pretty.NodeComments
+import           HIndent.Ast.NodeComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs           as GHC
+import           HIndent.Pretty.NodeComments
 
 data Declaration
   = DataFamily HIndent.Ast.Declaration.Family.Data.DataFamily
@@ -28,6 +28,7 @@ data Declaration
   | ClassInstance HIndent.Ast.Declaration.Instance.Class.ClassInstance
   | DataFamilyInstance
       HIndent.Ast.Declaration.Instance.Family.Data.DataFamilyInstance
+  | TypeFamilyInstance (GHC.InstDecl GHC.GhcPs)
   | InstDecl (GHC.InstDecl GHC.GhcPs)
   | DerivDecl (GHC.DerivDecl GHC.GhcPs)
   | ValDecl (GHC.HsBind GHC.GhcPs)
@@ -50,6 +51,7 @@ instance CommentExtraction Declaration where
   nodeComments TypeSynonym {} = NodeComments [] [] []
   nodeComments ClassInstance {} = NodeComments [] [] []
   nodeComments DataFamilyInstance {} = NodeComments [] [] []
+  nodeComments TypeFamilyInstance {} = NodeComments [] [] []
   nodeComments InstDecl {} = NodeComments [] [] []
   nodeComments DerivDecl {} = NodeComments [] [] []
   nodeComments ValDecl {} = NodeComments [] [] []
@@ -65,9 +67,9 @@ instance CommentExtraction Declaration where
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
 mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) =
-  fromMaybe (error "Unreachable.")
-    $ DataFamily <$> HIndent.Ast.Declaration.Family.Data.mkDataFamily x
-        <|> TypeFamily <$> HIndent.Ast.Declaration.Family.Type.mkTypeFamily x
+  fromMaybe (error "Unreachable.") $
+  DataFamily <$> HIndent.Ast.Declaration.Family.Data.mkDataFamily x <|>
+  TypeFamily <$> HIndent.Ast.Declaration.Family.Type.mkTypeFamily x
 mkDeclaration (GHC.TyClD _ x@GHC.SynDecl {}) =
   TypeSynonym $ HIndent.Ast.Declaration.TypeSynonym.mkTypeSynonym x
 mkDeclaration (GHC.TyClD _ x@GHC.DataDecl {}) =
@@ -84,8 +86,8 @@ mkDeclaration (GHC.InstD _ x@GHC.ClsInstD {})
   | Just inst <- HIndent.Ast.Declaration.Instance.Class.mkClassInstance x =
     ClassInstance inst
 mkDeclaration (GHC.InstD _ GHC.DataFamInstD {GHC.dfid_inst = GHC.DataFamInstDecl {..}}) =
-  DataFamilyInstance
-    $ HIndent.Ast.Declaration.Instance.Family.Data.mkDataFamilyInstance dfid_eqn
+  DataFamilyInstance $
+  HIndent.Ast.Declaration.Instance.Family.Data.mkDataFamilyInstance dfid_eqn
 mkDeclaration (GHC.InstD _ x) = InstDecl x
 mkDeclaration (GHC.DerivD _ x) = DerivDecl x
 mkDeclaration (GHC.ValD _ x) = ValDecl x
@@ -104,4 +106,4 @@ mkDeclaration GHC.DocD {} =
 
 isSignature :: Declaration -> Bool
 isSignature SigDecl {} = True
-isSignature _ = False
+isSignature _          = False
