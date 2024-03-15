@@ -76,6 +76,7 @@ import qualified GHC.Core.DataCon                                        as GHC
 #endif
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
 import qualified GHC.Unit                                                as GHC
+import qualified HIndent.Ast.Declaration.Data.Body
 #endif
 -- | This function pretty-prints the given AST node with comments.
 pretty :: Pretty a => a -> Printer ()
@@ -144,7 +145,7 @@ class CommentExtraction a =>
 instance Pretty Declaration where
   pretty' (HIndent.Ast.Declaration.DataFamily x)         = pretty x
   pretty' (HIndent.Ast.Declaration.TypeFamily x)         = pretty x
-  pretty' (DataDeclaration x)                            = pretty x
+  pretty' (HIndent.Ast.Declaration.DataDeclaration x)    = pretty x
   pretty' (HIndent.Ast.Declaration.ClassDeclaration x)   = pretty x
   pretty' (HIndent.Ast.Declaration.TypeSynonym x)        = pretty x
   pretty' (HIndent.Ast.Declaration.ClassInstance x)      = pretty x
@@ -163,13 +164,15 @@ instance Pretty Declaration where
   pretty' (RoleAnnotDecl x)                              = pretty x
 
 instance Pretty DataDeclaration where
-  pretty' GADT {..} = do
-    pretty header
+  pretty' HIndent.Ast.Declaration.Data.DataDeclaration {..} =
+    pretty header >> pretty body
+
+instance Pretty HIndent.Ast.Declaration.Data.Body.DataBody where
+  pretty' HIndent.Ast.Declaration.Data.Body.GADT {..} = do
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
     indentedBlock $ newlinePrefixed $ fmap pretty constructors
-  pretty' HIndent.Ast.Declaration.Data.Record {..} = do
-    pretty header
+  pretty' HIndent.Ast.Declaration.Data.Body.Record {..} = do
     case dd_cons of
       [] -> indentedBlock derivingsAfterNewline
       [x@(GHC.L _ GHC.ConDeclH98 {con_args = GHC.RecCon {}})] -> do

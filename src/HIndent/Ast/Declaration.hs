@@ -4,18 +4,18 @@ module HIndent.Ast.Declaration
   , isSignature
   ) where
 
-import Control.Applicative
-import Data.Maybe
+import           Control.Applicative
+import           Data.Maybe
 import qualified HIndent.Ast.Declaration.Class
-import HIndent.Ast.Declaration.Data
+import           HIndent.Ast.Declaration.Data
 import qualified HIndent.Ast.Declaration.Family.Data
 import qualified HIndent.Ast.Declaration.Family.Type
 import qualified HIndent.Ast.Declaration.Instance.Class
 import qualified HIndent.Ast.Declaration.Instance.Family.Data
 import qualified HIndent.Ast.Declaration.TypeSynonym
-import HIndent.Ast.NodeComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import HIndent.Pretty.NodeComments
+import           HIndent.Ast.NodeComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs           as GHC
+import           HIndent.Pretty.NodeComments
 
 data Declaration
   = DataFamily HIndent.Ast.Declaration.Family.Data.DataFamily
@@ -42,7 +42,8 @@ data Declaration
 instance CommentExtraction Declaration where
   nodeComments DataFamily {} = NodeComments [] [] []
   nodeComments TypeFamily {} = NodeComments [] [] []
-  nodeComments DataDeclaration {} = NodeComments [] [] []
+  nodeComments HIndent.Ast.Declaration.DataDeclaration {} =
+    NodeComments [] [] []
   nodeComments ClassDeclaration {} = NodeComments [] [] []
   nodeComments TypeSynonym {} = NodeComments [] [] []
   nodeComments ClassInstance {} = NodeComments [] [] []
@@ -62,13 +63,16 @@ instance CommentExtraction Declaration where
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
 mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) =
-  fromMaybe (error "Unreachable.")
-    $ DataFamily <$> HIndent.Ast.Declaration.Family.Data.mkDataFamily x
-        <|> TypeFamily <$> HIndent.Ast.Declaration.Family.Type.mkTypeFamily x
+  fromMaybe (error "Unreachable.") $
+  DataFamily <$> HIndent.Ast.Declaration.Family.Data.mkDataFamily x <|>
+  TypeFamily <$> HIndent.Ast.Declaration.Family.Type.mkTypeFamily x
 mkDeclaration (GHC.TyClD _ x@GHC.SynDecl {}) =
   TypeSynonym $ HIndent.Ast.Declaration.TypeSynonym.mkTypeSynonym x
 mkDeclaration (GHC.TyClD _ x@GHC.DataDecl {}) =
-  maybe (error "Unreachable.") DataDeclaration (mkDataDeclaration x)
+  maybe
+    (error "Unreachable.")
+    HIndent.Ast.Declaration.DataDeclaration
+    (mkDataDeclaration x)
 mkDeclaration (GHC.TyClD _ x@GHC.ClassDecl {}) =
   maybe
     (error "Unreachable.")
@@ -99,4 +103,4 @@ mkDeclaration GHC.DocD {} =
 
 isSignature :: Declaration -> Bool
 isSignature SigDecl {} = True
-isSignature _ = False
+isSignature _          = False
