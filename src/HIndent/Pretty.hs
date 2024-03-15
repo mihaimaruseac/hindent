@@ -422,7 +422,7 @@ instance Pretty DataFamilyInstance where
                                                                            , ..
                                                                            }) = do
     spaced $
-      pretty newOrData : string "instance" : pretty name : fmap pretty feqn_pats
+      pretty newOrData : string "instance" : pretty name : fmap pretty types
     pretty feqn_rhs
 
 -- Do nothing if there are no pragmas, module headers, imports, or

@@ -14,6 +14,7 @@ import           HIndent.Pretty.NodeComments
 data DataFamilyInstance = DataFamilyInstance
   { newOrData :: NewOrData
   , name      :: GHC.LIdP GHC.GhcPs
+  , types     :: GHC.HsTyPats GHC.GhcPs
   , inst      :: GHC.DataFamInstDecl GHC.GhcPs
   }
 
@@ -25,5 +26,6 @@ mkDataFamilyInstance GHC.DataFamInstD {..} = Just $ DataFamilyInstance {..}
   where
     newOrData = mkNewOrData $ GHC.feqn_rhs $ GHC.dfid_eqn dfid_inst
     name = GHC.feqn_tycon $ GHC.dfid_eqn dfid_inst
+    types = GHC.feqn_pats $ GHC.dfid_eqn dfid_inst
     inst = dfid_inst
 mkDataFamilyInstance _ = Nothing
