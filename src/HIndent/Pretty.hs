@@ -418,8 +418,8 @@ instance Pretty FunctionalDependency where
     spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to
 
 instance Pretty DataFamilyInstance where
-  pretty' (HIndent.Ast.Declaration.Instance.Family.Data.DataFamilyInstance {inst = GHC.DataFamInstDecl {dfid_eqn = GHC.FamEqn {..}}}) = do
-    spaced $ string "data instance" : pretty feqn_tycon : fmap pretty feqn_pats
+  pretty' (HIndent.Ast.Declaration.Instance.Family.Data.DataFamilyInstance {inst = GHC.DataFamInstDecl {dfid_eqn = GHC.FamEqn {..}},..}) = do
+    spaced $ pretty newOrData: string "instance" : pretty feqn_tycon : fmap pretty feqn_pats
     pretty feqn_rhs
 
 -- Do nothing if there are no pragmas, module headers, imports, or
