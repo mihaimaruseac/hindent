@@ -5,14 +5,14 @@ module HIndent.Ast.Declaration.Instance.Family.Type
   , mkTypeFamilyInstance
   ) where
 
-import           HIndent.Ast.NodeComments
+import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import           HIndent.Pretty.NodeComments
+import HIndent.Pretty.NodeComments
 
 data TypeFamilyInstance = TypeFamilyInstance
-  { name  :: GHC.LIdP GHC.GhcPs
+  { name :: GHC.LIdP GHC.GhcPs
   , types :: GHC.HsTyPats GHC.GhcPs
-  , bind  :: GHC.LHsType GHC.GhcPs
+  , bind :: GHC.LHsType GHC.GhcPs
   }
 
 instance CommentExtraction TypeFamilyInstance where
