@@ -428,8 +428,8 @@ instance Pretty DataFamilyInstance where
     pretty body
 
 instance Pretty TypeFamilyInstance where
-  pretty' (HIndent.Ast.Declaration.Instance.Family.Type.TypeFamilyInstance x) =
-    pretty x
+  pretty' (HIndent.Ast.Declaration.Instance.Family.Type.TypeFamilyInstance {..}) =
+    pretty inst
 
 -- Do nothing if there are no pragmas, module headers, imports, or
 -- declarations. Otherwise, extra blank lines will be inserted if only
