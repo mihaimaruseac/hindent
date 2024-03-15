@@ -30,9 +30,8 @@ instance CommentExtraction DataBody where
   nodeComments GADT {}   = NodeComments [] [] []
   nodeComments Record {} = NodeComments [] [] []
 
-mkDataBody :: GHC.TyClDecl GHC.GhcPs -> Maybe DataBody
-mkDataBody GHC.DataDecl {tcdDataDefn = defn@GHC.HsDataDefn {..}} =
-  Just $
+mkDataBody :: GHC.HsDataDefn GHC.GhcPs -> DataBody
+mkDataBody defn@GHC.HsDataDefn {..} =
   if isGADT defn
     then GADT
            { constructors =
@@ -44,7 +43,6 @@ mkDataBody GHC.DataDecl {tcdDataDefn = defn@GHC.HsDataDefn {..}} =
     else Record {dd_cons = getConDecls defn, ..}
   where
     kind = fmap mkType . fromGenLocated <$> dd_kindSig
-mkDataBody _ = Nothing
 
 isGADT :: GHC.HsDataDefn GHC.GhcPs -> Bool
 isGADT (getConDecls -> (GHC.L _ GHC.ConDeclGADT {}:_)) = True

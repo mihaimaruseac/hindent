@@ -1,4 +1,5 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP             #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Data
   ( DataDeclaration(..)
@@ -20,4 +21,6 @@ instance CommentExtraction DataDeclaration where
   nodeComments DataDeclaration {} = NodeComments [] [] []
 
 mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> Maybe DataDeclaration
-mkDataDeclaration decl = DataDeclaration <$> mkHeader decl <*> mkDataBody decl
+mkDataDeclaration decl@GHC.DataDecl {..} =
+  DataDeclaration <$> mkHeader decl <*> pure (mkDataBody tcdDataDefn)
+mkDataDeclaration _ = Nothing
