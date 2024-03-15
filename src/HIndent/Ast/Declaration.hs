@@ -31,7 +31,6 @@ data Declaration
       HIndent.Ast.Declaration.Instance.Family.Data.DataFamilyInstance
   | TypeFamilyInstance
       HIndent.Ast.Declaration.Instance.Family.Type.TypeFamilyInstance
-  | InstDecl (GHC.InstDecl GHC.GhcPs)
   | DerivDecl (GHC.DerivDecl GHC.GhcPs)
   | ValDecl (GHC.HsBind GHC.GhcPs)
   | SigDecl (GHC.Sig GHC.GhcPs)
@@ -54,7 +53,6 @@ instance CommentExtraction Declaration where
   nodeComments ClassInstance {} = NodeComments [] [] []
   nodeComments DataFamilyInstance {} = NodeComments [] [] []
   nodeComments TypeFamilyInstance {} = NodeComments [] [] []
-  nodeComments InstDecl {} = NodeComments [] [] []
   nodeComments DerivDecl {} = NodeComments [] [] []
   nodeComments ValDecl {} = NodeComments [] [] []
   nodeComments SigDecl {} = NodeComments [] [] []
@@ -84,13 +82,17 @@ mkDeclaration (GHC.TyClD _ x@GHC.ClassDecl {}) =
     (error "Unreachable.")
     ClassDeclaration
     (HIndent.Ast.Declaration.Class.mkClassDeclaration x)
-mkDeclaration (GHC.InstD _ x@GHC.ClsInstD {})
-  | Just inst <- HIndent.Ast.Declaration.Instance.Class.mkClassInstance x =
-    ClassInstance inst
+mkDeclaration (GHC.InstD _ x@GHC.ClsInstD {}) =
+  maybe
+    (error "Unreachable.")
+    ClassInstance
+    (HIndent.Ast.Declaration.Instance.Class.mkClassInstance x)
 mkDeclaration (GHC.InstD _ GHC.DataFamInstD {GHC.dfid_inst = GHC.DataFamInstDecl {..}}) =
   DataFamilyInstance $
   HIndent.Ast.Declaration.Instance.Family.Data.mkDataFamilyInstance dfid_eqn
-mkDeclaration (GHC.InstD _ x) = InstDecl x
+mkDeclaration (GHC.InstD _ x@GHC.TyFamInstD {}) =
+  maybe (error "Unreachable.") TypeFamilyInstance $
+  HIndent.Ast.Declaration.Instance.Family.Type.mkTypeFamilyInstance x
 mkDeclaration (GHC.DerivD _ x) = DerivDecl x
 mkDeclaration (GHC.ValD _ x) = ValDecl x
 mkDeclaration (GHC.SigD _ x) = SigDecl x

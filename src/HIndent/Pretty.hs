@@ -152,7 +152,6 @@ instance Pretty Declaration where
   pretty' (HIndent.Ast.Declaration.ClassInstance x)      = pretty x
   pretty' (HIndent.Ast.Declaration.DataFamilyInstance x) = pretty x
   pretty' (HIndent.Ast.Declaration.TypeFamilyInstance x) = pretty x
-  pretty' (InstDecl x)                                   = pretty x
   pretty' (DerivDecl x)                                  = pretty x
   pretty' (ValDecl x)                                    = pretty x
   pretty' (SigDecl x)                                    = pretty x

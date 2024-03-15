@@ -13,5 +13,6 @@ newtype TypeFamilyInstance =
 instance CommentExtraction TypeFamilyInstance where
   nodeComments TypeFamilyInstance {} = NodeComments [] [] []
 
-mkTypeFamilyInstance :: GHC.InstDecl GHC.GhcPs -> TypeFamilyInstance
-mkTypeFamilyInstance = TypeFamilyInstance
+mkTypeFamilyInstance :: GHC.InstDecl GHC.GhcPs -> Maybe TypeFamilyInstance
+mkTypeFamilyInstance x@GHC.TyFamInstD {} = Just $ TypeFamilyInstance x
+mkTypeFamilyInstance _                   = Nothing
