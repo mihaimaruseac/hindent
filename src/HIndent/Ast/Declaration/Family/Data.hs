@@ -1,25 +1,26 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE NoFieldSelectors #-}
+{-# LANGUAGE RecordWildCards  #-}
 
 module HIndent.Ast.Declaration.Family.Data
   ( DataFamily(..)
   , mkDataFamily
   ) where
 
-import qualified GHC.Types.Basic as GHC
-import qualified GHC.Types.SrcLoc as GHC
-import HIndent.Ast.NodeComments hiding (fromEpAnn)
-import HIndent.Ast.Type
-import HIndent.Ast.Type.Variable
-import HIndent.Ast.WithComments
+import qualified GHC.Types.Basic                    as GHC
+import qualified GHC.Types.SrcLoc                   as GHC
+import           HIndent.Ast.NodeComments           hiding (fromEpAnn)
+import           HIndent.Ast.Type
+import           HIndent.Ast.Type.Variable
+import           HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
+import           HIndent.Pretty.Combinators
+import           HIndent.Pretty.NodeComments
 
 data DataFamily = DataFamily
-  { isTopLevel :: Bool
-  , name :: String
+  { isTopLevel    :: Bool
+  , name          :: String
   , typeVariables :: [WithComments TypeVariable]
-  , signature :: Maybe (WithComments Type)
+  , signature     :: Maybe (WithComments Type)
   }
 
 instance CommentExtraction DataFamily where
@@ -33,7 +34,7 @@ mkDataFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
   where
     isTopLevel =
       case fdTopLevel of
-        GHC.TopLevel -> True
+        GHC.TopLevel    -> True
         GHC.NotTopLevel -> False
     name = showOutputable fdLName
     typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit

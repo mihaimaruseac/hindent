@@ -1,4 +1,5 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE NoFieldSelectors #-}
+{-# LANGUAGE RecordWildCards  #-}
 
 module HIndent.Ast.Declaration.Data.Header
   ( Header(..)

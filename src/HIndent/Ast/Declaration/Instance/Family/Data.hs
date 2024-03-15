@@ -1,4 +1,5 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE NoFieldSelectors #-}
+{-# LANGUAGE RecordWildCards  #-}
 
 module HIndent.Ast.Declaration.Instance.Family.Data
   ( DataFamilyInstance(..)
@@ -17,7 +18,6 @@ data DataFamilyInstance = DataFamilyInstance
   , name      :: GHC.LIdP GHC.GhcPs
   , types     :: GHC.HsTyPats GHC.GhcPs
   , body      :: DataBody
-  , inst      :: GHC.DataFamInstDecl GHC.GhcPs
   }
 
 instance CommentExtraction DataFamilyInstance where
@@ -30,5 +30,4 @@ mkDataFamilyInstance GHC.DataFamInstD {..} = Just $ DataFamilyInstance {..}
     name = GHC.feqn_tycon $ GHC.dfid_eqn dfid_inst
     types = GHC.feqn_pats $ GHC.dfid_eqn dfid_inst
     body = mkDataBody $ GHC.feqn_rhs $ GHC.dfid_eqn dfid_inst
-    inst = dfid_inst
 mkDataFamilyInstance _ = Nothing
