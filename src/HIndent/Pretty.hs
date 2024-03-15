@@ -428,8 +428,11 @@ instance Pretty DataFamilyInstance where
     pretty body
 
 instance Pretty TypeFamilyInstance where
-  pretty' (HIndent.Ast.Declaration.Instance.Family.Type.TypeFamilyInstance {..}) =
-    pretty inst
+  pretty' (HIndent.Ast.Declaration.Instance.Family.Type.TypeFamilyInstance {inst = GHC.TyFamInstD {tfid_inst = GHC.TyFamInstDecl {GHC.tfid_eqn = GHC.FamEqn {..}}}}) = do
+    spaced $ string "type instance" : pretty feqn_tycon : fmap pretty feqn_pats
+    string " = "
+    pretty feqn_rhs
+  pretty' _ = undefined
 
 -- Do nothing if there are no pragmas, module headers, imports, or
 -- declarations. Otherwise, extra blank lines will be inserted if only
