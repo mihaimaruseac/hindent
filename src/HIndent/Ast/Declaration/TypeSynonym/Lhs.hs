@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.TypeSynonym.Lhs
-  ( TypeSynonymLhs(..)
+  ( TypeSynonymLhs
   , mkTypeSynonymLhs
   ) where
 
@@ -10,7 +10,10 @@ import HIndent.Ast.NodeComments
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
+import HIndent.Pretty.Types
 
 data TypeSynonymLhs
   = Prefix
@@ -26,6 +29,11 @@ data TypeSynonymLhs
 instance CommentExtraction TypeSynonymLhs where
   nodeComments Prefix {} = NodeComments [] [] []
   nodeComments Infix {} = NodeComments [] [] []
+
+instance Pretty TypeSynonymLhs where
+  pretty' Prefix {..} = spaced $ pretty name : fmap pretty typeVariables
+  pretty' Infix {..} =
+    spaced [pretty left, pretty $ fmap InfixOp name, pretty right]
 
 mkTypeSynonymLhs :: GHC.TyClDecl GHC.GhcPs -> TypeSynonymLhs
 mkTypeSynonymLhs GHC.SynDecl {tcdFixity = GHC.Prefix, ..} =

@@ -1,10 +1,11 @@
 module HIndent.Ast.Type
-  ( Type(..)
+  ( Type
   , mkType
   ) where
 
 import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.NodeComments
 
 newtype Type =
@@ -12,6 +13,9 @@ newtype Type =
 
 instance CommentExtraction Type where
   nodeComments (Type _) = NodeComments [] [] []
+
+instance Pretty Type where
+  pretty' (Type x) = pretty x
 
 mkType :: GHC.HsType GHC.GhcPs -> Type
 mkType = Type

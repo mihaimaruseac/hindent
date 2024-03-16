@@ -18,6 +18,7 @@ import qualified HIndent.Ast.Declaration.Instance.Family.Type
 import qualified HIndent.Ast.Declaration.TypeSynonym
 import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.NodeComments
 
 data Declaration
@@ -64,6 +65,27 @@ instance CommentExtraction Declaration where
   nodeComments RuleDecl {} = NodeComments [] [] []
   nodeComments SpliceDecl {} = NodeComments [] [] []
   nodeComments RoleAnnotDecl {} = NodeComments [] [] []
+
+instance Pretty Declaration where
+  pretty' (HIndent.Ast.Declaration.DataFamily x) = pretty x
+  pretty' (HIndent.Ast.Declaration.TypeFamily x) = pretty x
+  pretty' (HIndent.Ast.Declaration.DataDeclaration x) = pretty x
+  pretty' (HIndent.Ast.Declaration.ClassDeclaration x) = pretty x
+  pretty' (HIndent.Ast.Declaration.TypeSynonym x) = pretty x
+  pretty' (HIndent.Ast.Declaration.ClassInstance x) = pretty x
+  pretty' (HIndent.Ast.Declaration.DataFamilyInstance x) = pretty x
+  pretty' (HIndent.Ast.Declaration.TypeFamilyInstance x) = pretty x
+  pretty' (DerivDecl x) = pretty x
+  pretty' (ValDecl x) = pretty x
+  pretty' (SigDecl x) = pretty x
+  pretty' (KindSigDecl x) = pretty x
+  pretty' (DefDecl x) = pretty x
+  pretty' (ForDecl x) = pretty x
+  pretty' (WarningDecl x) = pretty x
+  pretty' (AnnDecl x) = pretty x
+  pretty' (RuleDecl x) = pretty x
+  pretty' (SpliceDecl x) = pretty x
+  pretty' (RoleAnnotDecl x) = pretty x
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
 mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) =

@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Class.NameAndTypeVariables
-  ( NameAndTypeVariables(..)
+  ( NameAndTypeVariables
   , mkNameAndTypeVariables
   ) where
 
@@ -10,7 +10,10 @@ import HIndent.Ast.NodeComments
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
+import HIndent.Pretty.Types
 
 data NameAndTypeVariables
   = Prefix
@@ -27,6 +30,12 @@ data NameAndTypeVariables
 instance CommentExtraction NameAndTypeVariables where
   nodeComments Prefix {} = NodeComments [] [] []
   nodeComments Infix {} = NodeComments [] [] []
+
+instance Pretty NameAndTypeVariables where
+  pretty' Prefix {..} = spaced $ pretty name : fmap pretty typeVariables
+  pretty' Infix {..} = do
+    parens $ spaced [pretty left, pretty $ fmap InfixOp name, pretty right]
+    spacePrefixed $ fmap pretty remains
 
 mkNameAndTypeVariables :: GHC.TyClDecl GHC.GhcPs -> Maybe NameAndTypeVariables
 mkNameAndTypeVariables GHC.ClassDecl {tcdFixity = GHC.Prefix, ..} =

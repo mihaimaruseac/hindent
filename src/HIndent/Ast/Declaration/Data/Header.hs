@@ -1,16 +1,19 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Data.Header
-  ( Header(..)
+  ( Header
   , mkHeader
   ) where
 
+import HIndent.Applicative
 import HIndent.Ast.Context
 import HIndent.Ast.Declaration.Data.NewOrData
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 data Header = Header
@@ -22,6 +25,13 @@ data Header = Header
 
 instance CommentExtraction Header where
   nodeComments Header {} = NodeComments [] [] []
+
+instance Pretty Header where
+  pretty' Header {..} = do
+    (pretty newOrData >> space) |=> do
+      whenJust context $ \c -> pretty c >> string " =>" >> newline
+      pretty name
+    spacePrefixed $ fmap pretty typeVariables
 
 mkHeader :: GHC.TyClDecl GHC.GhcPs -> Maybe Header
 mkHeader GHC.DataDecl {tcdDataDefn = defn@GHC.HsDataDefn {..}, ..} =

@@ -3,17 +3,21 @@
 {-# LANGUAGE ViewPatterns #-}
 
 module HIndent.Ast.Declaration.Data.Body
-  ( DataBody(..)
+  ( DataBody
   , mkDataBody
   ) where
 
+import Control.Monad
 import Data.Maybe
 import qualified GHC.Types.SrcLoc as GHC
+import HIndent.Applicative
 import HIndent.Ast.Declaration.Data.GADT.Constructor
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 data DataBody
@@ -29,6 +33,34 @@ data DataBody
 instance CommentExtraction DataBody where
   nodeComments GADT {} = NodeComments [] [] []
   nodeComments Record {} = NodeComments [] [] []
+
+instance Pretty DataBody where
+  pretty' GADT {..} = do
+    whenJust kind $ \x -> string " :: " >> pretty x
+    string " where"
+    indentedBlock $ newlinePrefixed $ fmap pretty constructors
+  pretty' Record {..} = do
+    case dd_cons of
+      [] -> indentedBlock derivingsAfterNewline
+      [x@(GHC.L _ GHC.ConDeclH98 {con_args = GHC.RecCon {}})] -> do
+        string " = "
+        pretty x
+        unless (null dd_derivs) $ space |=> printDerivings
+      [x] -> do
+        string " ="
+        newline
+        indentedBlock $ do
+          pretty x
+          derivingsAfterNewline
+      _ ->
+        indentedBlock $ do
+          newline
+          string "= " |=> vBarSep (fmap pretty dd_cons)
+          derivingsAfterNewline
+    where
+      derivingsAfterNewline =
+        unless (null dd_derivs) $ newline >> printDerivings
+      printDerivings = lined $ fmap pretty dd_derivs
 
 mkDataBody :: GHC.HsDataDefn GHC.GhcPs -> DataBody
 mkDataBody defn@GHC.HsDataDefn {..} =
