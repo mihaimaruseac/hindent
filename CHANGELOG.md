@@ -18,6 +18,7 @@
 - Fix the bug of not pretty-printing multiple module-level warning messages ([#822])
 - Fix the bug of wrongly converting a `newtype` instance to a `data` one ([#839])
 - Fix the bug of not pretty-printing multiple functional dependencies in a typeclass ([#843])
+- Fix the bug of not pretty-printing data declarations with records and typeclass constraints ([#849])
 
 ### Removed
 
@@ -373,6 +374,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#849]: https://github.com/mihaimaruseac/hindent/pull/849
 [#843]: https://github.com/mihaimaruseac/hindent/pull/843
 [#839]: https://github.com/mihaimaruseac/hindent/pull/839
 [#829]: https://github.com/mihaimaruseac/hindent/pull/829

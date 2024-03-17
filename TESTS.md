@@ -824,10 +824,8 @@ data Foo = Foo
 Single
 
 ```haskell
--- https://github.com/mihaimaruseac/hindent/issues/278
-data Link c1 c2 a c =
-  forall b. (c1 a b, c2 b c) =>
-            Link (Proxy b)
+data D =
+  forall a. D a
 ```
 
 Multiple
@@ -838,6 +836,46 @@ Multiple
 
 data D =
   forall a b c. D a b c
+```
+
+With an infix constructor
+
+```haskell
+data D =
+  forall a. a :== a
+```
+
+#### Fields with contexts
+
+Without a `forall`
+
+```haskell
+data Foo =
+  Eq a => Foo a
+```
+
+With a `forall`
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/278
+data Link c1 c2 a c =
+  forall b. (c1 a b, c2 b c) =>
+            Link (Proxy b)
+```
+
+With an infix constructor without a `forall`
+
+```haskell
+data Foo =
+  Eq a => a :== a
+```
+
+With an infix constructor with a `forall`
+
+```haskell
+data Foo =
+  forall a. Eq a =>
+            a :== a
 ```
 
 #### Derivings

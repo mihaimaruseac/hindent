@@ -880,39 +880,65 @@ prettyConDecl GHC.ConDeclGADT {..} = do
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 prettyConDecl GHC.ConDeclH98 {con_forall = True, ..} =
-  (do
-     string "forall "
-     spaced $ fmap pretty con_ex_tvs
-     string ". ")
-    |=> (do
-           whenJust con_mb_cxt $ \c -> do
-             pretty $ Context c
-             string " =>"
-             newline
-           pretty con_name
-           pretty con_args)
-#else
-prettyConDecl GHC.ConDeclH98 {con_forall = True, ..} =
-  (do
-     string "forall "
-     spaced $ fmap pretty con_ex_tvs
-     string ". ")
-    |=> (do
-           whenJust con_mb_cxt $ \_ -> do
-             pretty $ Context con_mb_cxt
-             string " =>"
-             newline
-           pretty con_name
-           pretty con_args)
-#endif
+  (string "forall " >> spaced (fmap pretty con_ex_tvs) >> string ". ")
+    |=> (case con_args of
+           (GHC.InfixCon l r) -> do
+             whenJust con_mb_cxt $ \c -> do
+               pretty $ Context c
+               string " =>"
+               newline
+             spaced [pretty l, pretty $ fmap InfixOp con_name, pretty r]
+           _ -> do
+             whenJust con_mb_cxt $ \c -> do
+               pretty $ Context c
+               string " =>"
+               newline
+             pretty con_name
+             pretty con_args)
 prettyConDecl GHC.ConDeclH98 {con_forall = False, ..} =
   case con_args of
-    (GHC.InfixCon l r) ->
+    (GHC.InfixCon l r) -> do
+      whenJust con_mb_cxt $ \c -> do
+        pretty $ Context c
+        string " => "
       spaced [pretty l, pretty $ fmap InfixOp con_name, pretty r]
     _ -> do
+      whenJust con_mb_cxt $ \c -> do
+        pretty $ Context c
+        string " => "
       pretty con_name
       pretty con_args
-
+#else
+prettyConDecl GHC.ConDeclH98 {con_forall = True, ..} =
+  (string "forall " >> spaced (fmap pretty con_ex_tvs) >> string ". ")
+    |=> (case con_args of
+           (GHC.InfixCon l r) -> do
+             whenJust con_mb_cxt $ \_ -> do
+               pretty $ Context con_mb_cxt
+               string " =>"
+               newline
+             spaced [pretty l, pretty $ fmap InfixOp con_name, pretty r]
+           _ -> do
+             whenJust con_mb_cxt $ \_ -> do
+               pretty $ Context con_mb_cxt
+               string " =>"
+               newline
+             pretty con_name
+             pretty con_args)
+prettyConDecl GHC.ConDeclH98 {con_forall = False, ..} =
+  case con_args of
+    (GHC.InfixCon l r) -> do
+      whenJust con_mb_cxt $ \_ -> do
+        pretty $ Context con_mb_cxt
+        string " => "
+      spaced [pretty l, pretty $ fmap InfixOp con_name, pretty r]
+    _ -> do
+      whenJust con_mb_cxt $ \_ -> do
+        pretty $ Context con_mb_cxt
+        string " => "
+      pretty con_name
+      pretty con_args
+#endif
 instance Pretty
            (GHC.Match
               GHC.GhcPs
