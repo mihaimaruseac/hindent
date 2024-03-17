@@ -4,6 +4,7 @@
 module HIndent.Pretty
   ( Pretty(..)
   , pretty
+  , printCommentsAnd
   ) where
 
 import qualified GHC.Core.Type as GHC
@@ -23,6 +24,11 @@ class CommentExtraction a =>
   pretty' :: a -> Printer ()
 
 pretty :: Pretty a => a -> Printer ()
+printCommentsAnd ::
+     (CommentExtraction l)
+  => GHC.GenLocated l e
+  -> (e -> Printer ())
+  -> Printer ()
 instance (CommentExtraction l, Pretty e) => Pretty (GHC.GenLocated l e)
 
 instance Pretty GHC.EpaComment
@@ -60,8 +66,6 @@ instance Pretty (GHC.DerivDecl GHC.GhcPs)
 
 instance Pretty (GHC.HsBind GHC.GhcPs)
 
-instance Pretty (GHC.Sig GHC.GhcPs)
-
 instance Pretty (GHC.StandaloneKindSig GHC.GhcPs)
 
 instance Pretty (GHC.DefaultDecl GHc.GhcPs)
@@ -77,6 +81,8 @@ instance Pretty (GHC.RuleDecls GHC.GhcPs)
 instance Pretty (GHC.SpliceDecl GHC.GhcPs)
 
 instance Pretty (GHC.RoleAnnotDecl GHC.GhcPs)
+
+instance Pretty (GHC.HsSigType GHC.GhcPs)
 #if MIN_VERSION_ghc_lib_parser(9, 8, 1)
 instance Pretty
            (GHC.HsArg
