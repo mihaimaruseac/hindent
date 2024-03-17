@@ -56,6 +56,12 @@ library
       HIndent.Ast.Declaration.Instance.Class
       HIndent.Ast.Declaration.Instance.Family.Data
       HIndent.Ast.Declaration.Instance.Family.Type
+      HIndent.Ast.Declaration.Signature
+      HIndent.Ast.Declaration.Signature.BooleanFormula
+      HIndent.Ast.Declaration.Signature.Fixity
+      HIndent.Ast.Declaration.Signature.Fixity.Associativity
+      HIndent.Ast.Declaration.Signature.Inline.Phase
+      HIndent.Ast.Declaration.Signature.Inline.Spec
       HIndent.Ast.Declaration.TypeSynonym
       HIndent.Ast.Declaration.TypeSynonym.Lhs
       HIndent.Ast.FileHeaderPragma

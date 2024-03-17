@@ -15,6 +15,7 @@ import qualified HIndent.Ast.Declaration.Family.Type
 import qualified HIndent.Ast.Declaration.Instance.Class
 import qualified HIndent.Ast.Declaration.Instance.Family.Data
 import qualified HIndent.Ast.Declaration.Instance.Family.Type
+import HIndent.Ast.Declaration.Signature
 import qualified HIndent.Ast.Declaration.TypeSynonym
 import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -34,7 +35,7 @@ data Declaration
       HIndent.Ast.Declaration.Instance.Family.Type.TypeFamilyInstance
   | DerivDecl (GHC.DerivDecl GHC.GhcPs)
   | ValDecl (GHC.HsBind GHC.GhcPs)
-  | SigDecl (GHC.Sig GHC.GhcPs)
+  | Signature Signature
   | KindSigDecl (GHC.StandaloneKindSig GHC.GhcPs)
   | DefDecl (GHC.DefaultDecl GHC.GhcPs)
   | ForDecl (GHC.ForeignDecl GHC.GhcPs)
@@ -56,7 +57,7 @@ instance CommentExtraction Declaration where
   nodeComments TypeFamilyInstance {} = NodeComments [] [] []
   nodeComments DerivDecl {} = NodeComments [] [] []
   nodeComments ValDecl {} = NodeComments [] [] []
-  nodeComments SigDecl {} = NodeComments [] [] []
+  nodeComments Signature {} = NodeComments [] [] []
   nodeComments KindSigDecl {} = NodeComments [] [] []
   nodeComments DefDecl {} = NodeComments [] [] []
   nodeComments ForDecl {} = NodeComments [] [] []
@@ -77,7 +78,7 @@ instance Pretty Declaration where
   pretty' (HIndent.Ast.Declaration.TypeFamilyInstance x) = pretty x
   pretty' (DerivDecl x) = pretty x
   pretty' (ValDecl x) = pretty x
-  pretty' (SigDecl x) = pretty x
+  pretty' (HIndent.Ast.Declaration.Signature x) = pretty x
   pretty' (KindSigDecl x) = pretty x
   pretty' (DefDecl x) = pretty x
   pretty' (ForDecl x) = pretty x
@@ -117,7 +118,8 @@ mkDeclaration (GHC.InstD _ x@GHC.TyFamInstD {}) =
     $ HIndent.Ast.Declaration.Instance.Family.Type.mkTypeFamilyInstance x
 mkDeclaration (GHC.DerivD _ x) = DerivDecl x
 mkDeclaration (GHC.ValD _ x) = ValDecl x
-mkDeclaration (GHC.SigD _ x) = SigDecl x
+mkDeclaration (GHC.SigD _ x) =
+  Signature $ HIndent.Ast.Declaration.Signature.mkSignature x
 mkDeclaration (GHC.KindSigD _ x) = KindSigDecl x
 mkDeclaration (GHC.DefD _ x) = DefDecl x
 mkDeclaration (GHC.ForD _ x) = ForDecl x
@@ -131,5 +133,5 @@ mkDeclaration GHC.DocD {} =
     "This node should never appear in the AST. If you see this error, please report it to the HIndent maintainers."
 
 isSignature :: Declaration -> Bool
-isSignature SigDecl {} = True
+isSignature Signature {} = True
 isSignature _ = False
