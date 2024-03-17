@@ -18,6 +18,7 @@
 module HIndent.Pretty
   ( Pretty(..)
   , pretty
+  , printCommentsAnd
   ) where
 
 import Control.Monad
@@ -26,7 +27,6 @@ import Data.Maybe
 import Data.Void
 import qualified GHC.Core.Coercion as GHC
 import qualified GHC.Data.Bag as GHC
-import qualified GHC.Data.BooleanFormula as GHC
 import qualified GHC.Data.FastString as GHC
 import qualified GHC.Hs as GHC
 import GHC.Stack
@@ -40,6 +40,8 @@ import qualified GHC.Types.SrcLoc as GHC
 import qualified GHC.Unit.Module.Warnings as GHC
 import HIndent.Applicative
 import HIndent.Ast.Declaration
+import HIndent.Ast.Declaration.Data.Body
+import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import HIndent.Config
@@ -142,223 +144,7 @@ prettyHsBind GHC.VarBind {} = notGeneratedByParser
 prettyHsBind GHC.AbsBinds {} = notGeneratedByParser
 #endif
 prettyHsBind (GHC.PatSynBind _ x) = pretty x
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-instance Pretty (GHC.Sig GHC.GhcPs) where
-  pretty' (GHC.TypeSig _ funName params) = do
-    printFunName
-    string " ::"
-    horizontal <-|> vertical
-    where
-      horizontal = do
-        space
-        pretty $ HsSigTypeInsideDeclSig <$> GHC.hswc_body params
-      vertical = do
-        headLen <- printerLength printFunName
-        indentSpaces <- getIndentSpaces
-        if headLen < indentSpaces
-          then space
-                 |=> pretty (HsSigTypeInsideDeclSig <$> GHC.hswc_body params)
-          else do
-            newline
-            indentedBlock
-              $ indentedWithSpace 3
-              $ pretty
-              $ HsSigTypeInsideDeclSig <$> GHC.hswc_body params
-      printFunName = hCommaSep $ fmap pretty funName
-  pretty' (GHC.PatSynSig _ names sig) =
-    spaced
-      [string "pattern", hCommaSep $ fmap pretty names, string "::", pretty sig]
-  pretty' (GHC.ClassOpSig _ True funNames params) =
-    spaced
-      [ string "default"
-      , hCommaSep $ fmap pretty funNames
-      , string "::"
-      , printCommentsAnd params pretty
-      ]
-  pretty' (GHC.ClassOpSig _ False funNames params) = do
-    hCommaSep $ fmap pretty funNames
-    string " ::"
-    hor <-|> ver
-    where
-      hor = space >> printCommentsAnd params (pretty . HsSigTypeInsideDeclSig)
-      ver = do
-        newline
-        indentedBlock
-          $ indentedWithSpace 3
-          $ printCommentsAnd params (pretty . HsSigTypeInsideDeclSig)
-  pretty' (GHC.FixSig _ x) = pretty x
-  pretty' (GHC.InlineSig _ name detail) =
-    spaced [string "{-#", pretty detail, pretty name, string "#-}"]
-  pretty' (GHC.SpecSig _ name sigs _) =
-    spaced
-      [ string "{-# SPECIALISE"
-      , pretty name
-      , string "::"
-      , hCommaSep $ fmap pretty sigs
-      , string "#-}"
-      ]
-  pretty' (GHC.SpecInstSig _ sig) =
-    spaced [string "{-# SPECIALISE instance", pretty sig, string "#-}"]
-  pretty' (GHC.MinimalSig _ xs) =
-    string "{-# MINIMAL " |=> do
-      pretty xs
-      string " #-}"
-  pretty' (GHC.SCCFunSig _ name _) =
-    spaced [string "{-# SCC", pretty name, string "#-}"]
-  pretty' (GHC.CompleteMatchSig _ names _) =
-    spaced
-      [ string "{-# COMPLETE"
-      , printCommentsAnd names (hCommaSep . fmap pretty)
-      , string "#-}"
-      ]
-#else
-instance Pretty (GHC.Sig GHC.GhcPs) where
-  pretty' (GHC.TypeSig _ funName params) = do
-    printFunName
-    string " ::"
-    horizontal <-|> vertical
-    where
-      horizontal = do
-        space
-        pretty $ HsSigTypeInsideDeclSig <$> GHC.hswc_body params
-      vertical = do
-        headLen <- printerLength printFunName
-        indentSpaces <- getIndentSpaces
-        if headLen < indentSpaces
-          then space
-                 |=> pretty (HsSigTypeInsideDeclSig <$> GHC.hswc_body params)
-          else do
-            newline
-            indentedBlock
-              $ indentedWithSpace 3
-              $ pretty
-              $ HsSigTypeInsideDeclSig <$> GHC.hswc_body params
-      printFunName = hCommaSep $ fmap pretty funName
-  pretty' (GHC.PatSynSig _ names sig) =
-    spaced
-      [string "pattern", hCommaSep $ fmap pretty names, string "::", pretty sig]
-  pretty' (GHC.ClassOpSig _ True funNames params) =
-    spaced
-      [ string "default"
-      , hCommaSep $ fmap pretty funNames
-      , string "::"
-      , printCommentsAnd params pretty
-      ]
-  pretty' (GHC.ClassOpSig _ False funNames params) = do
-    hCommaSep $ fmap pretty funNames
-    string " ::"
-    hor <-|> ver
-    where
-      hor = space >> printCommentsAnd params (pretty . HsSigTypeInsideDeclSig)
-      ver = do
-        newline
-        indentedBlock
-          $ indentedWithSpace 3
-          $ printCommentsAnd params (pretty . HsSigTypeInsideDeclSig)
-  pretty' GHC.IdSig {} = notGeneratedByParser
-  pretty' (GHC.FixSig _ x) = pretty x
-  pretty' (GHC.InlineSig _ name detail) =
-    spaced [string "{-#", pretty detail, pretty name, string "#-}"]
-  pretty' (GHC.SpecSig _ name sigs _) =
-    spaced
-      [ string "{-# SPECIALISE"
-      , pretty name
-      , string "::"
-      , hCommaSep $ fmap pretty sigs
-      , string "#-}"
-      ]
-  pretty' (GHC.SpecInstSig _ _ sig) =
-    spaced [string "{-# SPECIALISE instance", pretty sig, string "#-}"]
-  pretty' (GHC.MinimalSig _ _ xs) =
-    string "{-# MINIMAL " |=> do
-      pretty xs
-      string " #-}"
-  pretty' (GHC.SCCFunSig _ _ name _) =
-    spaced [string "{-# SCC", pretty name, string "#-}"]
-  pretty' (GHC.CompleteMatchSig _ _ names _) =
-    spaced
-      [ string "{-# COMPLETE"
-      , printCommentsAnd names (hCommaSep . fmap pretty)
-      , string "#-}"
-      ]
-#endif
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-instance Pretty (GHC.HsDataDefn GHC.GhcPs) where
-  pretty' GHC.HsDataDefn {..} =
-    if isGADT
-      then do
-        whenJust dd_kindSig $ \x -> do
-          string " :: "
-          pretty x
-        string " where"
-        indentedBlock $ newlinePrefixed $ fmap pretty cons
-      else do
-        case cons of
-          [] -> indentedBlock derivingsAfterNewline
-          [x@(GHC.L _ GHC.ConDeclH98 {con_args = GHC.RecCon {}})] -> do
-            string " = "
-            pretty x
-            unless (null dd_derivs) $ space |=> printDerivings
-          [x] -> do
-            string " ="
-            newline
-            indentedBlock $ do
-              pretty x
-              derivingsAfterNewline
-          _ ->
-            indentedBlock $ do
-              newline
-              string "= " |=> vBarSep (fmap pretty cons)
-              derivingsAfterNewline
-    where
-      cons =
-        case dd_cons of
-          GHC.NewTypeCon x -> [x]
-          GHC.DataTypeCons _ xs -> xs
-      isGADT =
-        case dd_cons of
-          (GHC.DataTypeCons _ (GHC.L _ GHC.ConDeclGADT {}:_)) -> True
-          _ -> False
-      derivingsAfterNewline =
-        unless (null dd_derivs) $ newline >> printDerivings
-      printDerivings = lined $ fmap pretty dd_derivs
-#else
-instance Pretty (GHC.HsDataDefn GHC.GhcPs) where
-  pretty' GHC.HsDataDefn {..} =
-    if isGADT
-      then do
-        whenJust dd_kindSig $ \x -> do
-          string " :: "
-          pretty x
-        string " where"
-        indentedBlock $ newlinePrefixed $ fmap pretty dd_cons
-      else do
-        case dd_cons of
-          [] -> indentedBlock derivingsAfterNewline
-          [x@(GHC.L _ GHC.ConDeclH98 {con_args = GHC.RecCon {}})] -> do
-            string " = "
-            pretty x
-            unless (null dd_derivs) $ space |=> printDerivings
-          [x] -> do
-            string " ="
-            newline
-            indentedBlock $ do
-              pretty x
-              derivingsAfterNewline
-          _ ->
-            indentedBlock $ do
-              newline
-              string "= " |=> vBarSep (fmap pretty dd_cons)
-              derivingsAfterNewline
-    where
-      isGADT =
-        case dd_cons of
-          (GHC.L _ GHC.ConDeclGADT {}:_) -> True
-          _ -> False
-      derivingsAfterNewline =
-        unless (null dd_derivs) $ newline >> printDerivings
-      printDerivings = lined $ fmap pretty dd_derivs
-#endif
+
 instance Pretty (GHC.ClsInstDecl GHC.GhcPs) where
   pretty' GHC.ClsInstDecl {..} = do
     string "instance " |=> do
@@ -751,167 +537,6 @@ instance Pretty HsSigType' where
         space
       _ -> return ()
     pretty $ HsType' for dir <$> sig_body
-
-instance Pretty (GHC.ConDecl GHC.GhcPs) where
-  pretty' = prettyConDecl
-
-prettyConDecl :: GHC.ConDecl GHC.GhcPs -> Printer ()
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-prettyConDecl GHC.ConDeclGADT {..} = do
-  hCommaSep $ fmap pretty $ NonEmpty.toList con_names
-  hor <-|> ver
-  where
-    hor = string " :: " |=> body
-    ver = do
-      newline
-      indentedBlock (string ":: " |=> body)
-    body =
-      case (forallNeeded, con_mb_cxt) of
-        (True, Just ctx) -> withForallCtx ctx
-        (True, Nothing) -> withForallOnly
-        (False, Just ctx) -> withCtxOnly ctx
-        (False, Nothing) -> noForallCtx
-    withForallOnly = do
-      pretty con_bndrs
-      (space >> horArgs) <-|> (newline >> verArgs)
-    noForallCtx = horArgs <-|> verArgs
-    withForallCtx ctx = do
-      pretty con_bndrs
-      (space >> pretty (Context ctx)) <-|> (newline >> pretty (Context ctx))
-      newline
-      prefixed "=> " verArgs
-    withCtxOnly ctx =
-      (pretty (Context ctx) >> string " => " >> horArgs)
-        <-|> (pretty (Context ctx) >> prefixed "=> " verArgs)
-    horArgs =
-      case con_g_args of
-        GHC.PrefixConGADT xs ->
-          inter (string " -> ")
-            $ fmap (\(GHC.HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
-        GHC.RecConGADT xs _ ->
-          inter (string " -> ") [recArg xs, pretty con_res_ty]
-    verArgs =
-      case con_g_args of
-        GHC.PrefixConGADT xs ->
-          prefixedLined "-> "
-            $ fmap (\(GHC.HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
-        GHC.RecConGADT xs _ ->
-          prefixedLined "-> " [recArg xs, pretty con_res_ty]
-    recArg xs = printCommentsAnd xs $ \xs' -> vFields' $ fmap pretty xs'
-    forallNeeded =
-      case GHC.unLoc con_bndrs of
-        GHC.HsOuterImplicit {} -> False
-        GHC.HsOuterExplicit {} -> True
-#else
-prettyConDecl GHC.ConDeclGADT {..} = do
-  hCommaSep $ fmap pretty con_names
-  hor <-|> ver
-  where
-    hor = string " :: " |=> body
-    ver = do
-      newline
-      indentedBlock (string ":: " |=> body)
-    body =
-      case (forallNeeded, con_mb_cxt) of
-        (True, Just ctx) -> withForallCtx ctx
-        (True, Nothing) -> withForallOnly
-        (False, Just ctx) -> withCtxOnly ctx
-        (False, Nothing) -> noForallCtx
-    withForallOnly = do
-      pretty con_bndrs
-      (space >> horArgs) <-|> (newline >> verArgs)
-    noForallCtx = horArgs <-|> verArgs
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
-    withForallCtx ctx = do
-      pretty con_bndrs
-      (space >> pretty (Context ctx)) <-|> (newline >> pretty (Context ctx))
-      newline
-      prefixed "=> " verArgs
-    
-    withCtxOnly ctx =
-      (pretty (Context ctx) >> string " => " >> horArgs)
-        <-|> (pretty (Context ctx) >> prefixed "=> " verArgs)
-    
-    horArgs =
-      case con_g_args of
-        GHC.PrefixConGADT xs ->
-          inter (string " -> ")
-            $ fmap (\(GHC.HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
-        GHC.RecConGADT xs _ -> inter (string " -> ") [recArg xs, pretty con_res_ty]
-    
-    verArgs =
-      case con_g_args of
-        GHC.PrefixConGADT xs ->
-          prefixedLined "-> "
-            $ fmap (\(GHC.HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
-        GHC.RecConGADT xs _ -> prefixedLined "-> " [recArg xs, pretty con_res_ty]
-#else
-    withForallCtx _ = do
-      pretty con_bndrs
-      (space >> pretty (Context con_mb_cxt))
-        <-|> (newline >> pretty (Context con_mb_cxt))
-      newline
-      prefixed "=> " verArgs
-    
-    withCtxOnly _ =
-      (pretty (Context con_mb_cxt) >> string " => " >> horArgs)
-        <-|> (pretty (Context con_mb_cxt) >> prefixed "=> " verArgs)
-    
-    horArgs =
-      case con_g_args of
-        GHC.PrefixConGADT xs ->
-          inter (string " -> ")
-            $ fmap (\(GHC.HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
-        GHC.RecConGADT xs -> inter (string " -> ") [recArg xs, pretty con_res_ty]
-    
-    verArgs =
-      case con_g_args of
-        GHC.PrefixConGADT xs ->
-          prefixedLined "-> "
-            $ fmap (\(GHC.HsScaled _ x) -> pretty x) xs ++ [pretty con_res_ty]
-        GHC.RecConGADT xs -> prefixedLined "-> " [recArg xs, pretty con_res_ty]
-#endif
-    recArg xs = printCommentsAnd xs $ \xs' -> vFields' $ fmap pretty xs'
-    
-    forallNeeded =
-      case GHC.unLoc con_bndrs of
-        GHC.HsOuterImplicit {} -> False
-        GHC.HsOuterExplicit {} -> True
-#endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
-prettyConDecl GHC.ConDeclH98 {con_forall = True, ..} =
-  (do
-     string "forall "
-     spaced $ fmap pretty con_ex_tvs
-     string ". ")
-    |=> (do
-           whenJust con_mb_cxt $ \c -> do
-             pretty $ Context c
-             string " =>"
-             newline
-           pretty con_name
-           pretty con_args)
-#else
-prettyConDecl GHC.ConDeclH98 {con_forall = True, ..} =
-  (do
-     string "forall "
-     spaced $ fmap pretty con_ex_tvs
-     string ". ")
-    |=> (do
-           whenJust con_mb_cxt $ \_ -> do
-             pretty $ Context con_mb_cxt
-             string " =>"
-             newline
-           pretty con_name
-           pretty con_args)
-#endif
-prettyConDecl GHC.ConDeclH98 {con_forall = False, ..} =
-  case con_args of
-    (GHC.InfixCon l r) ->
-      spaced [pretty l, pretty $ fmap InfixOp con_name, pretty r]
-    _ -> do
-      pretty con_name
-      pretty con_args
 
 instance Pretty
            (GHC.Match
@@ -1424,7 +1049,7 @@ instance Pretty (GHC.HsBracket GHC.GhcPs) where
   pretty' (GHC.TExpBr _ x) = typedBrackets $ pretty x
 #endif
 instance Pretty SBF.SigBindFamily where
-  pretty' (SBF.Sig x) = pretty x
+  pretty' (SBF.Sig x) = pretty $ mkSignature x
   pretty' (SBF.Bind x) = pretty x
   pretty' (SBF.TypeFamily x) = pretty x
   pretty' (SBF.TyFamInst x) = pretty x
@@ -1517,28 +1142,6 @@ instance Pretty (GHC.FieldOcc GHC.GhcPs) where
 instance Pretty (GHC.FieldOcc GHC.GhcPs) where
   pretty' GHC.FieldOcc {..} = pretty rdrNameFieldOcc
 #endif
--- HsConDeclH98Details
-instance Pretty
-           (GHC.HsConDetails
-              Void
-              (GHC.HsScaled
-                 GHC.GhcPs
-                 (GHC.GenLocated GHC.SrcSpanAnnA (GHC.BangType GHC.GhcPs)))
-              (GHC.GenLocated
-                 GHC.SrcSpanAnnL
-                 [GHC.GenLocated GHC.SrcSpanAnnA (GHC.ConDeclField GHC.GhcPs)])) where
-  pretty' (GHC.PrefixCon _ xs) = horizontal <-|> vertical
-    where
-      horizontal = spacePrefixed $ fmap pretty xs
-      vertical = indentedBlock $ newlinePrefixed $ fmap pretty xs
-  pretty' (GHC.RecCon x) =
-    printCommentsAnd x $ \rec -> do
-      newline
-      indentedBlock $ vFields $ fmap pretty rec
-  pretty' GHC.InfixCon {} =
-    error
-      "Cannot handle here because 'InfixCon' does not have the information of its constructor."
-
 instance Pretty a => Pretty (GHC.HsScaled GHC.GhcPs a) where
   pretty' (GHC.HsScaled _ x) = pretty x
 
@@ -1613,12 +1216,6 @@ instance Pretty InfixApp where
           collect x = [x]
       isSameAssoc (findFixity -> GHC.Fixity _ lv d) = lv == level && d == dir
       GHC.Fixity _ level dir = findFixity op
-
-instance Pretty a => Pretty (GHC.BooleanFormula a) where
-  pretty' (GHC.Var x) = pretty x
-  pretty' (GHC.And xs) = hvCommaSep $ fmap pretty xs
-  pretty' (GHC.Or xs) = hvBarSep $ fmap pretty xs
-  pretty' (GHC.Parens x) = parens $ pretty x
 
 instance Pretty (GHC.FieldLabelStrings GHC.GhcPs) where
   pretty' (GHC.FieldLabelStrings xs) = hDotSep $ fmap pretty xs
@@ -1830,7 +1427,7 @@ instance Pretty (GHC.FamEqn GHC.GhcPs (GHC.HsDataDefn GHC.GhcPs)) where
 instance Pretty FamEqn' where
   pretty' FamEqn' {famEqn = GHC.FamEqn {..}, ..} = do
     spaced $ string prefix : pretty feqn_tycon : fmap pretty feqn_pats
-    pretty feqn_rhs
+    pretty (mkDataBody feqn_rhs)
     where
       prefix =
         case (famEqnFor, GHC.dd_cons feqn_rhs) of
@@ -1842,7 +1439,7 @@ instance Pretty FamEqn' where
 instance Pretty FamEqn' where
   pretty' FamEqn' {famEqn = GHC.FamEqn {..}, ..} = do
     spaced $ string prefix : pretty feqn_tycon : fmap pretty feqn_pats
-    pretty feqn_rhs
+    pretty (mkDataBody feqn_rhs)
     where
       prefix =
         case (famEqnFor, GHC.dd_ND feqn_rhs) of
@@ -2161,39 +1758,6 @@ instance Pretty
     error
       "Cannot handle here because `InfixCon` does not have the information of the constructor."
 
-instance Pretty (GHC.FixitySig GHC.GhcPs) where
-  pretty' (GHC.FixitySig _ names fixity) =
-    spaced [pretty fixity, hCommaSep $ fmap (pretty . fmap InfixOp) names]
-
-instance Pretty GHC.Fixity where
-  pretty' (GHC.Fixity _ level dir) = spaced [pretty dir, string $ show level]
-
-instance Pretty GHC.FixityDirection where
-  pretty' GHC.InfixL = string "infixl"
-  pretty' GHC.InfixR = string "infixr"
-  pretty' GHC.InfixN = string "infix"
-
-instance Pretty GHC.InlinePragma where
-  pretty' GHC.InlinePragma {..} = do
-    pretty inl_inline
-    case inl_act of
-      GHC.ActiveBefore _ x -> space >> brackets (string $ "~" ++ show x)
-      GHC.ActiveAfter _ x -> space >> brackets (string $ show x)
-      _ -> pure ()
-
-instance Pretty GHC.InlineSpec where
-  pretty' = prettyInlineSpec
-
-prettyInlineSpec :: GHC.InlineSpec -> Printer ()
-prettyInlineSpec GHC.Inline {} = string "INLINE"
-prettyInlineSpec GHC.Inlinable {} = string "INLINABLE"
-prettyInlineSpec GHC.NoInline {} = string "NOINLINE"
-prettyInlineSpec GHC.NoUserInlinePrag =
-  error
-    "This branch is executed if the inline pragma is not written, but executing this branch means that the pragma is already about to be output, which indicates something goes wrong."
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
-prettyInlineSpec GHC.Opaque {} = string "OPAQUE"
-#endif
 instance Pretty (GHC.HsPatSynDir GHC.GhcPs) where
   pretty' GHC.Unidirectional = string "<-"
   pretty' GHC.ImplicitBidirectional = string "="

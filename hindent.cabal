@@ -47,6 +47,8 @@ library
       HIndent.Ast.Declaration.Data.Body
       HIndent.Ast.Declaration.Data.GADT.Constructor
       HIndent.Ast.Declaration.Data.GADT.Constructor.Signature
+      HIndent.Ast.Declaration.Data.Haskell98.Constructor
+      HIndent.Ast.Declaration.Data.Haskell98.Constructor.Body
       HIndent.Ast.Declaration.Data.Header
       HIndent.Ast.Declaration.Data.NewOrData
       HIndent.Ast.Declaration.Family.Data
@@ -56,6 +58,12 @@ library
       HIndent.Ast.Declaration.Instance.Class
       HIndent.Ast.Declaration.Instance.Family.Data
       HIndent.Ast.Declaration.Instance.Family.Type
+      HIndent.Ast.Declaration.Signature
+      HIndent.Ast.Declaration.Signature.BooleanFormula
+      HIndent.Ast.Declaration.Signature.Fixity
+      HIndent.Ast.Declaration.Signature.Fixity.Associativity
+      HIndent.Ast.Declaration.Signature.Inline.Phase
+      HIndent.Ast.Declaration.Signature.Inline.Spec
       HIndent.Ast.Declaration.TypeSynonym
       HIndent.Ast.Declaration.TypeSynonym.Lhs
       HIndent.Ast.FileHeaderPragma

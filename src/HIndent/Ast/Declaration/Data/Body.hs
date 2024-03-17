@@ -12,6 +12,7 @@ import Data.Maybe
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Applicative
 import HIndent.Ast.Declaration.Data.GADT.Constructor
+import HIndent.Ast.Declaration.Data.Haskell98.Constructor
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
@@ -25,33 +26,32 @@ data DataBody
       { kind :: Maybe (WithComments Type)
       , constructors :: [WithComments GADTConstructor]
       }
-  | Record
-      { dd_cons :: [GHC.LConDecl GHC.GhcPs]
+  | Haskell98
+      { dd_cons :: [WithComments Haskell98Constructor]
       , dd_derivs :: GHC.HsDeriving GHC.GhcPs
       }
 
 instance CommentExtraction DataBody where
   nodeComments GADT {} = NodeComments [] [] []
-  nodeComments Record {} = NodeComments [] [] []
+  nodeComments Haskell98 {} = NodeComments [] [] []
 
 instance Pretty DataBody where
   pretty' GADT {..} = do
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
     indentedBlock $ newlinePrefixed $ fmap pretty constructors
-  pretty' Record {..} = do
+  pretty' Haskell98 {..} = do
     case dd_cons of
       [] -> indentedBlock derivingsAfterNewline
-      [x@(GHC.L _ GHC.ConDeclH98 {con_args = GHC.RecCon {}})] -> do
-        string " = "
-        pretty x
-        unless (null dd_derivs) $ space |=> printDerivings
+      [x]
+        | hasSingleRecordConstructor $ getNode x -> do
+          string " = "
+          pretty x
+          unless (null dd_derivs) $ space |=> printDerivings
       [x] -> do
         string " ="
         newline
-        indentedBlock $ do
-          pretty x
-          derivingsAfterNewline
+        indentedBlock $ pretty x >> derivingsAfterNewline
       _ ->
         indentedBlock $ do
           newline
@@ -72,7 +72,14 @@ mkDataBody defn@GHC.HsDataDefn {..} =
                  $ getConDecls defn
            , ..
            }
-    else Record {dd_cons = getConDecls defn, ..}
+    else Haskell98
+           { dd_cons =
+               fmap
+                 (fmap (fromMaybe undefined . mkHaskell98Constructor)
+                    . fromGenLocated)
+                 $ getConDecls defn
+           , ..
+           }
   where
     kind = fmap mkType . fromGenLocated <$> dd_kindSig
 
