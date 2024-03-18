@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE FlexibleInstances #-}
 
 module HIndent.Pretty
@@ -7,16 +7,16 @@ module HIndent.Pretty
   , printCommentsAnd
   ) where
 
-import qualified GHC.Core.Type as GHC
-import qualified GHC.Types.Basic as GHC
-import qualified GHC.Types.Name.Reader as GHC
-import qualified GHC.Types.SrcLoc as GHC
+import qualified GHC.Core.Type                      as GHC
+import qualified GHC.Types.Basic                    as GHC
+import qualified GHC.Types.Name.Reader              as GHC
+import qualified GHC.Types.SrcLoc                   as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHc
-import HIndent.Pretty.NodeComments
-import HIndent.Pretty.SigBindFamily
-import HIndent.Pretty.Types
-import HIndent.Printer
+import           HIndent.Pretty.NodeComments
+import           HIndent.Pretty.SigBindFamily
+import           HIndent.Pretty.Types
+import           HIndent.Printer
 
 class CommentExtraction a =>
       Pretty a
@@ -50,10 +50,6 @@ instance Pretty (GHC.ConDeclField GHC.GhcPs)
 
 instance Pretty (GHC.HsOuterTyVarBndrs GHC.Specificity GHc.GhcPs)
 
-instance Pretty (GHC.ConDecl GHC.GhcPs)
-
-instance Pretty (GHC.HsDerivingClause GHC.GhcPs)
-
 instance Pretty SigBindFamily
 
 instance Pretty InfixOp
@@ -83,6 +79,14 @@ instance Pretty (GHC.SpliceDecl GHC.GhcPs)
 instance Pretty (GHC.RoleAnnotDecl GHC.GhcPs)
 
 instance Pretty (GHC.HsSigType GHC.GhcPs)
+
+instance Pretty (GHC.HsTyVarBndr a GHC.GhcPs)
+
+instance Pretty Context
+
+instance Pretty (GHC.DerivClauseTys GHC.GhcPs)
+
+instance Pretty a => Pretty (GHC.HsScaled GHC.GhcPs a)
 #if MIN_VERSION_ghc_lib_parser(9, 8, 1)
 instance Pretty
            (GHC.HsArg

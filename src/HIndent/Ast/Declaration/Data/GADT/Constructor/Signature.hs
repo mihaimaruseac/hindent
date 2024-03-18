@@ -28,21 +28,21 @@ data ConstructorSignature
       }
 
 instance CommentExtraction ConstructorSignature where
-  nodeComments (ByArrows {}) = NodeComments [] [] []
-  nodeComments (Record {}) = NodeComments [] [] []
+  nodeComments ByArrows {} = NodeComments [] [] []
+  nodeComments Record {} = NodeComments [] [] []
 
 prettyHorizontally :: ConstructorSignature -> Printer ()
-prettyHorizontally (ByArrows {..}) =
+prettyHorizontally ByArrows {..} =
   inter (string " -> ") $ fmap pretty parameters ++ [pretty result]
-prettyHorizontally (Record {..}) =
+prettyHorizontally Record {..} =
   inter
     (string " -> ")
     [prettyWith fields (vFields' . fmap pretty), pretty result]
 
 prettyVertically :: ConstructorSignature -> Printer ()
-prettyVertically (ByArrows {..}) =
+prettyVertically ByArrows {..} =
   prefixedLined "-> " $ fmap pretty parameters ++ [pretty result]
-prettyVertically (Record {..}) =
+prettyVertically Record {..} =
   prefixedLined
     "-> "
     [prettyWith fields (vFields' . fmap pretty), pretty result]
