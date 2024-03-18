@@ -45,8 +45,13 @@ library
       HIndent.Ast.Declaration.Collection
       HIndent.Ast.Declaration.Data
       HIndent.Ast.Declaration.Data.Body
+      HIndent.Ast.Declaration.Data.Deriving
+      HIndent.Ast.Declaration.Data.Deriving.Clause
+      HIndent.Ast.Declaration.Data.Deriving.Strategy
       HIndent.Ast.Declaration.Data.GADT.Constructor
       HIndent.Ast.Declaration.Data.GADT.Constructor.Signature
+      HIndent.Ast.Declaration.Data.Haskell98.Constructor
+      HIndent.Ast.Declaration.Data.Haskell98.Constructor.Body
       HIndent.Ast.Declaration.Data.Header
       HIndent.Ast.Declaration.Data.NewOrData
       HIndent.Ast.Declaration.Family.Data

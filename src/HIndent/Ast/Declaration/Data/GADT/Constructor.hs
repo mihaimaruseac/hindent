@@ -23,7 +23,7 @@ data GADTConstructor = GADTConstructor
   { names :: [WithComments String]
   , forallNeeded :: Bool
   , bindings :: WithComments (GHC.HsOuterSigTyVarBndrs GHC.GhcPs)
-  , con_mb_cxt :: Maybe (GHC.LHsContext GHC.GhcPs)
+  , context :: Maybe (WithComments Context)
   , signature :: ConstructorSignature
   }
 
@@ -38,15 +38,14 @@ instance Pretty GADTConstructor where
       hor = string " :: " |=> body
       ver = newline >> indentedBlock (string ":: " |=> body)
       body =
-        case (forallNeeded, con_mb_cxt) of
+        case (forallNeeded, context) of
           (True, Just ctx) -> withForallCtx ctx
           (True, Nothing) -> withForallOnly
           (False, Just ctx) -> withCtxOnly ctx
           (False, Nothing) -> noForallCtx
       withForallCtx ctx = do
         pretty bindings
-        (space >> pretty (mkContext <$> fromGenLocated ctx))
-          <-|> (newline >> pretty (mkContext <$> fromGenLocated ctx))
+        (space >> pretty ctx) <-|> (newline >> pretty ctx)
         newline
         prefixed "=> " $ prettyVertically signature
       withForallOnly = do
@@ -54,11 +53,8 @@ instance Pretty GADTConstructor where
         (space >> prettyHorizontally signature)
           <-|> (newline >> prettyVertically signature)
       withCtxOnly ctx =
-        (pretty (mkContext <$> fromGenLocated ctx)
-           >> string " => "
-           >> prettyHorizontally signature)
-          <-|> (pretty (mkContext <$> fromGenLocated ctx)
-                  >> prefixed "=> " (prettyVertically signature))
+        (pretty ctx >> string " => " >> prettyHorizontally signature)
+          <-|> (pretty ctx >> prefixed "=> " (prettyVertically signature))
       noForallCtx = prettyHorizontally signature <-|> prettyVertically signature
 
 mkGADTConstructor :: GHC.ConDecl GHC.GhcPs -> Maybe GADTConstructor
@@ -72,6 +68,7 @@ mkGADTConstructor decl@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}
         GHC.HsOuterExplicit {} -> True
     signature =
       fromMaybe (error "Couldn't get signature.") $ mkConstructorSignature decl
+    context = fmap (fmap mkContext . fromGenLocated) con_mb_cxt
 mkGADTConstructor _ = Nothing
 
 getNames :: GHC.ConDecl GHC.GhcPs -> Maybe [WithComments String]

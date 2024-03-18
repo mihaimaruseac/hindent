@@ -9,10 +9,13 @@ module HIndent.Ast.Declaration.Data.Body
 
 import Control.Monad
 import Data.Maybe
+import GHC.Hs (HsDataDefn(dd_derivs))
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Applicative
+import HIndent.Ast.Declaration.Data.Deriving.Clause
 import HIndent.Ast.Declaration.Data.GADT.Constructor
-import HIndent.Ast.NodeComments
+import HIndent.Ast.Declaration.Data.Haskell98.Constructor
+import HIndent.Ast.NodeComments hiding (fromEpAnn)
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -25,42 +28,40 @@ data DataBody
       { kind :: Maybe (WithComments Type)
       , constructors :: [WithComments GADTConstructor]
       }
-  | Record
-      { dd_cons :: [GHC.LConDecl GHC.GhcPs]
-      , dd_derivs :: GHC.HsDeriving GHC.GhcPs
+  | Haskell98
+      { constructorsH98 :: [WithComments Haskell98Constructor]
+      , derivings :: DerivingClause
       }
 
 instance CommentExtraction DataBody where
   nodeComments GADT {} = NodeComments [] [] []
-  nodeComments Record {} = NodeComments [] [] []
+  nodeComments Haskell98 {} = NodeComments [] [] []
 
 instance Pretty DataBody where
   pretty' GADT {..} = do
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
     indentedBlock $ newlinePrefixed $ fmap pretty constructors
-  pretty' Record {..} = do
-    case dd_cons of
+  pretty' Haskell98 {..} = do
+    case constructorsH98 of
       [] -> indentedBlock derivingsAfterNewline
-      [x@(GHC.L _ GHC.ConDeclH98 {con_args = GHC.RecCon {}})] -> do
-        string " = "
-        pretty x
-        unless (null dd_derivs) $ space |=> printDerivings
-      [x] -> do
-        string " ="
-        newline
-        indentedBlock $ do
+      [x]
+        | hasSingleRecordConstructor $ getNode x -> do
+          string " = "
           pretty x
-          derivingsAfterNewline
+          when (hasDerivings derivings) $ space |=> pretty derivings
+        | otherwise -> do
+          string " ="
+          newline
+          indentedBlock $ pretty x >> derivingsAfterNewline
       _ ->
         indentedBlock $ do
           newline
-          string "= " |=> vBarSep (fmap pretty dd_cons)
+          string "= " |=> vBarSep (fmap pretty constructorsH98)
           derivingsAfterNewline
     where
       derivingsAfterNewline =
-        unless (null dd_derivs) $ newline >> printDerivings
-      printDerivings = lined $ fmap pretty dd_derivs
+        when (hasDerivings derivings) $ newline >> pretty derivings
 
 mkDataBody :: GHC.HsDataDefn GHC.GhcPs -> DataBody
 mkDataBody defn@GHC.HsDataDefn {..} =
@@ -72,9 +73,19 @@ mkDataBody defn@GHC.HsDataDefn {..} =
                  $ getConDecls defn
            , ..
            }
-    else Record {dd_cons = getConDecls defn, ..}
+    else Haskell98
+           { constructorsH98 =
+               fmap
+                 (fromMaybe
+                    (error "Some constructors are not in the Haskell 98 style.")
+                    . mkHaskell98Constructor)
+                 . fromGenLocated
+                 <$> getConDecls defn
+           , ..
+           }
   where
     kind = fmap mkType . fromGenLocated <$> dd_kindSig
+    derivings = mkDerivingClause dd_derivs
 
 isGADT :: GHC.HsDataDefn GHC.GhcPs -> Bool
 isGADT (getConDecls -> (GHC.L _ GHC.ConDeclGADT {}:_)) = True
