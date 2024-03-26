@@ -58,8 +58,6 @@ instance Pretty GHC.OverlapMode
 
 instance Pretty HsSigType'
 
-instance Pretty (GHC.DerivDecl GHC.GhcPs)
-
 instance Pretty (GHC.HsBind GHC.GhcPs)
 
 instance Pretty (GHC.StandaloneKindSig GHC.GhcPs)

@@ -41,7 +41,6 @@ import qualified GHC.Unit.Module.Warnings as GHC
 import HIndent.Applicative
 import HIndent.Ast.Declaration
 import HIndent.Ast.Declaration.Data.Body
-import HIndent.Ast.Declaration.Data.Deriving.Strategy
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
@@ -1580,31 +1579,6 @@ instance Pretty (GHC.RuleDecl GHC.GhcPs) where
 #endif
 instance Pretty GHC.OccName where
   pretty' = output
-
-instance Pretty (GHC.DerivDecl GHC.GhcPs) where
-  pretty' GHC.DerivDecl { deriv_strategy = (Just deriv_strategy@(GHC.L _ GHC.ViaStrategy {}))
-                        , ..
-                        } =
-    spaced
-      [ string "deriving"
-      , pretty $ mkDerivingStrategy <$> fromGenLocated deriv_strategy
-      , string "instance"
-      , pretty deriv_type
-      ]
-  pretty' GHC.DerivDecl {..} = do
-    string "deriving "
-    whenJust deriv_strategy $ \x -> do
-      pretty $ mkDerivingStrategy <$> fromGenLocated x
-      space
-    string "instance "
-    pretty deriv_type
-
--- | 'Pretty' for 'LHsSigWcType GhcPs'.
-instance Pretty
-           (GHC.HsWildCardBndrs
-              GHC.GhcPs
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsSigType GHC.GhcPs))) where
-  pretty' GHC.HsWC {..} = pretty hswc_body
 
 -- | 'Pretty' for 'LHsWcType'
 instance Pretty

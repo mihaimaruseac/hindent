@@ -16,6 +16,7 @@ import qualified HIndent.Ast.Declaration.Instance.Class
 import qualified HIndent.Ast.Declaration.Instance.Family.Data
 import qualified HIndent.Ast.Declaration.Instance.Family.Type
 import HIndent.Ast.Declaration.Signature
+import qualified HIndent.Ast.Declaration.StandAloneDeriving
 import qualified HIndent.Ast.Declaration.TypeSynonym
 import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -33,7 +34,8 @@ data Declaration
       HIndent.Ast.Declaration.Instance.Family.Data.DataFamilyInstance
   | TypeFamilyInstance
       HIndent.Ast.Declaration.Instance.Family.Type.TypeFamilyInstance
-  | DerivDecl (GHC.DerivDecl GHC.GhcPs)
+  | StandAloneDeriving
+      HIndent.Ast.Declaration.StandAloneDeriving.StandAloneDeriving
   | ValDecl (GHC.HsBind GHC.GhcPs)
   | Signature Signature
   | KindSigDecl (GHC.StandaloneKindSig GHC.GhcPs)
@@ -55,7 +57,7 @@ instance CommentExtraction Declaration where
   nodeComments ClassInstance {} = NodeComments [] [] []
   nodeComments DataFamilyInstance {} = NodeComments [] [] []
   nodeComments TypeFamilyInstance {} = NodeComments [] [] []
-  nodeComments DerivDecl {} = NodeComments [] [] []
+  nodeComments StandAloneDeriving {} = NodeComments [] [] []
   nodeComments ValDecl {} = NodeComments [] [] []
   nodeComments Signature {} = NodeComments [] [] []
   nodeComments KindSigDecl {} = NodeComments [] [] []
@@ -76,7 +78,7 @@ instance Pretty Declaration where
   pretty' (HIndent.Ast.Declaration.ClassInstance x) = pretty x
   pretty' (HIndent.Ast.Declaration.DataFamilyInstance x) = pretty x
   pretty' (HIndent.Ast.Declaration.TypeFamilyInstance x) = pretty x
-  pretty' (DerivDecl x) = pretty x
+  pretty' (HIndent.Ast.Declaration.StandAloneDeriving x) = pretty x
   pretty' (ValDecl x) = pretty x
   pretty' (HIndent.Ast.Declaration.Signature x) = pretty x
   pretty' (KindSigDecl x) = pretty x
@@ -116,7 +118,9 @@ mkDeclaration (GHC.InstD _ GHC.DataFamInstD {GHC.dfid_inst = GHC.DataFamInstDecl
 mkDeclaration (GHC.InstD _ x@GHC.TyFamInstD {}) =
   maybe (error "Unreachable.") TypeFamilyInstance
     $ HIndent.Ast.Declaration.Instance.Family.Type.mkTypeFamilyInstance x
-mkDeclaration (GHC.DerivD _ x) = DerivDecl x
+mkDeclaration (GHC.DerivD _ x) =
+  StandAloneDeriving
+    $ HIndent.Ast.Declaration.StandAloneDeriving.mkStandAloneDeriving x
 mkDeclaration (GHC.ValD _ x) = ValDecl x
 mkDeclaration (GHC.SigD _ x) =
   Signature $ HIndent.Ast.Declaration.Signature.mkSignature x
