@@ -67,6 +67,7 @@ library
       HIndent.Ast.Declaration.Signature.Fixity.Associativity
       HIndent.Ast.Declaration.Signature.Inline.Phase
       HIndent.Ast.Declaration.Signature.Inline.Spec
+      HIndent.Ast.Declaration.StandAloneDeriving
       HIndent.Ast.Declaration.TypeSynonym
       HIndent.Ast.Declaration.TypeSynonym.Lhs
       HIndent.Ast.FileHeaderPragma
