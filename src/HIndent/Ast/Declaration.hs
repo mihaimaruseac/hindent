@@ -8,34 +8,31 @@ module HIndent.Ast.Declaration
 
 import Control.Applicative
 import Data.Maybe
-import qualified HIndent.Ast.Declaration.Class
+import HIndent.Ast.Declaration.Class
 import HIndent.Ast.Declaration.Data
-import qualified HIndent.Ast.Declaration.Family.Data
-import qualified HIndent.Ast.Declaration.Family.Type
-import qualified HIndent.Ast.Declaration.Instance.Class
-import qualified HIndent.Ast.Declaration.Instance.Family.Data
-import qualified HIndent.Ast.Declaration.Instance.Family.Type
+import HIndent.Ast.Declaration.Family.Data
+import HIndent.Ast.Declaration.Family.Type
+import HIndent.Ast.Declaration.Instance.Class
+import HIndent.Ast.Declaration.Instance.Family.Data
+import HIndent.Ast.Declaration.Instance.Family.Type
 import HIndent.Ast.Declaration.Signature
-import qualified HIndent.Ast.Declaration.StandAloneDeriving
-import qualified HIndent.Ast.Declaration.TypeSynonym
+import HIndent.Ast.Declaration.StandAloneDeriving
+import HIndent.Ast.Declaration.TypeSynonym
 import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.NodeComments
 
 data Declaration
-  = DataFamily HIndent.Ast.Declaration.Family.Data.DataFamily
-  | TypeFamily HIndent.Ast.Declaration.Family.Type.TypeFamily
+  = DataFamily DataFamily
+  | TypeFamily TypeFamily
   | DataDeclaration DataDeclaration
-  | ClassDeclaration HIndent.Ast.Declaration.Class.ClassDeclaration
-  | TypeSynonym HIndent.Ast.Declaration.TypeSynonym.TypeSynonym
-  | ClassInstance HIndent.Ast.Declaration.Instance.Class.ClassInstance
-  | DataFamilyInstance
-      HIndent.Ast.Declaration.Instance.Family.Data.DataFamilyInstance
-  | TypeFamilyInstance
-      HIndent.Ast.Declaration.Instance.Family.Type.TypeFamilyInstance
-  | StandAloneDeriving
-      HIndent.Ast.Declaration.StandAloneDeriving.StandAloneDeriving
+  | ClassDeclaration ClassDeclaration
+  | TypeSynonym TypeSynonym
+  | ClassInstance ClassInstance
+  | DataFamilyInstance DataFamilyInstance
+  | TypeFamilyInstance TypeFamilyInstance
+  | StandAloneDeriving StandAloneDeriving
   | ValDecl (GHC.HsBind GHC.GhcPs)
   | Signature Signature
   | KindSigDecl (GHC.StandaloneKindSig GHC.GhcPs)
@@ -50,8 +47,7 @@ data Declaration
 instance CommentExtraction Declaration where
   nodeComments DataFamily {} = NodeComments [] [] []
   nodeComments TypeFamily {} = NodeComments [] [] []
-  nodeComments HIndent.Ast.Declaration.DataDeclaration {} =
-    NodeComments [] [] []
+  nodeComments DataDeclaration {} = NodeComments [] [] []
   nodeComments ClassDeclaration {} = NodeComments [] [] []
   nodeComments TypeSynonym {} = NodeComments [] [] []
   nodeComments ClassInstance {} = NodeComments [] [] []
@@ -70,17 +66,17 @@ instance CommentExtraction Declaration where
   nodeComments RoleAnnotDecl {} = NodeComments [] [] []
 
 instance Pretty Declaration where
-  pretty' (HIndent.Ast.Declaration.DataFamily x) = pretty x
-  pretty' (HIndent.Ast.Declaration.TypeFamily x) = pretty x
-  pretty' (HIndent.Ast.Declaration.DataDeclaration x) = pretty x
-  pretty' (HIndent.Ast.Declaration.ClassDeclaration x) = pretty x
-  pretty' (HIndent.Ast.Declaration.TypeSynonym x) = pretty x
-  pretty' (HIndent.Ast.Declaration.ClassInstance x) = pretty x
-  pretty' (HIndent.Ast.Declaration.DataFamilyInstance x) = pretty x
-  pretty' (HIndent.Ast.Declaration.TypeFamilyInstance x) = pretty x
-  pretty' (HIndent.Ast.Declaration.StandAloneDeriving x) = pretty x
+  pretty' (DataFamily x) = pretty x
+  pretty' (TypeFamily x) = pretty x
+  pretty' (DataDeclaration x) = pretty x
+  pretty' (ClassDeclaration x) = pretty x
+  pretty' (TypeSynonym x) = pretty x
+  pretty' (ClassInstance x) = pretty x
+  pretty' (DataFamilyInstance x) = pretty x
+  pretty' (TypeFamilyInstance x) = pretty x
+  pretty' (StandAloneDeriving x) = pretty x
   pretty' (ValDecl x) = pretty x
-  pretty' (HIndent.Ast.Declaration.Signature x) = pretty x
+  pretty' (Signature x) = pretty x
   pretty' (KindSigDecl x) = pretty x
   pretty' (DefDecl x) = pretty x
   pretty' (ForDecl x) = pretty x
@@ -93,37 +89,21 @@ instance Pretty Declaration where
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
 mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) =
   fromMaybe (error "Unreachable.")
-    $ DataFamily <$> HIndent.Ast.Declaration.Family.Data.mkDataFamily x
-        <|> TypeFamily <$> HIndent.Ast.Declaration.Family.Type.mkTypeFamily x
-mkDeclaration (GHC.TyClD _ x@GHC.SynDecl {}) =
-  TypeSynonym $ HIndent.Ast.Declaration.TypeSynonym.mkTypeSynonym x
+    $ DataFamily <$> mkDataFamily x <|> TypeFamily <$> mkTypeFamily x
+mkDeclaration (GHC.TyClD _ x@GHC.SynDecl {}) = TypeSynonym $ mkTypeSynonym x
 mkDeclaration (GHC.TyClD _ x@GHC.DataDecl {}) =
-  maybe
-    (error "Unreachable.")
-    HIndent.Ast.Declaration.DataDeclaration
-    (mkDataDeclaration x)
+  maybe (error "Unreachable.") DataDeclaration (mkDataDeclaration x)
 mkDeclaration (GHC.TyClD _ x@GHC.ClassDecl {}) =
-  maybe
-    (error "Unreachable.")
-    ClassDeclaration
-    (HIndent.Ast.Declaration.Class.mkClassDeclaration x)
+  maybe (error "Unreachable.") ClassDeclaration (mkClassDeclaration x)
 mkDeclaration (GHC.InstD _ x@GHC.ClsInstD {}) =
-  maybe
-    (error "Unreachable.")
-    ClassInstance
-    (HIndent.Ast.Declaration.Instance.Class.mkClassInstance x)
+  maybe (error "Unreachable.") ClassInstance (mkClassInstance x)
 mkDeclaration (GHC.InstD _ GHC.DataFamInstD {GHC.dfid_inst = GHC.DataFamInstDecl {..}}) =
-  DataFamilyInstance
-    $ HIndent.Ast.Declaration.Instance.Family.Data.mkDataFamilyInstance dfid_eqn
+  DataFamilyInstance $ mkDataFamilyInstance dfid_eqn
 mkDeclaration (GHC.InstD _ x@GHC.TyFamInstD {}) =
-  maybe (error "Unreachable.") TypeFamilyInstance
-    $ HIndent.Ast.Declaration.Instance.Family.Type.mkTypeFamilyInstance x
-mkDeclaration (GHC.DerivD _ x) =
-  StandAloneDeriving
-    $ HIndent.Ast.Declaration.StandAloneDeriving.mkStandAloneDeriving x
+  maybe (error "Unreachable.") TypeFamilyInstance $ mkTypeFamilyInstance x
+mkDeclaration (GHC.DerivD _ x) = StandAloneDeriving $ mkStandAloneDeriving x
 mkDeclaration (GHC.ValD _ x) = ValDecl x
-mkDeclaration (GHC.SigD _ x) =
-  Signature $ HIndent.Ast.Declaration.Signature.mkSignature x
+mkDeclaration (GHC.SigD _ x) = Signature $ mkSignature x
 mkDeclaration (GHC.KindSigD _ x) = KindSigDecl x
 mkDeclaration (GHC.DefD _ x) = DefDecl x
 mkDeclaration (GHC.ForD _ x) = ForDecl x
