@@ -7,11 +7,11 @@ module HIndent.Ast.Declaration.Data.Haskell98.Constructor
   , hasSingleRecordConstructor
   ) where
 
-import qualified GHC.Core.Type as GHC
 import HIndent.Applicative
 import HIndent.Ast.Context
 import HIndent.Ast.Declaration.Data.Haskell98.Constructor.Body
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -19,7 +19,7 @@ import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 data Haskell98Constructor = Haskell98Constructor
-  { existentialVariables :: [GHC.LHsTyVarBndr GHC.Specificity GHC.GhcPs]
+  { existentialVariables :: [WithComments TypeVariable]
   , context :: Maybe (WithComments Context)
   , body :: Haskell98ConstructorBody
   }
@@ -45,7 +45,7 @@ mkHaskell98Constructor GHC.ConDeclH98 {..}
   where
     existentialVariables =
       if con_forall
-        then con_ex_tvs
+        then fmap (fmap mkTypeVariable . fromGenLocated) con_ex_tvs
         else []
     context = fmap (fmap mkContext . fromGenLocated) con_mb_cxt
 mkHaskell98Constructor _ = Nothing
