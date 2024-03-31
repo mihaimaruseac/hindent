@@ -39,6 +39,7 @@ library
       HIndent.Ast
       HIndent.Ast.Context
       HIndent.Ast.Declaration
+      HIndent.Ast.Declaration.Bind
       HIndent.Ast.Declaration.Class
       HIndent.Ast.Declaration.Class.FunctionalDependency
       HIndent.Ast.Declaration.Class.NameAndTypeVariables

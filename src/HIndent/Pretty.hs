@@ -40,6 +40,7 @@ import qualified GHC.Types.SrcLoc as GHC
 import qualified GHC.Unit.Module.Warnings as GHC
 import HIndent.Applicative
 import HIndent.Ast.Declaration
+import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Data.Body
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.NodeComments
@@ -132,18 +133,6 @@ class CommentExtraction a =>
 -- https://github.com/mihaimaruseac/hindent/issues/586#issuecomment-1374992624.
 instance (CommentExtraction l, Pretty e) => Pretty (GHC.GenLocated l e) where
   pretty' (GHC.L _ e) = pretty e
-
-instance Pretty (GHC.HsBind GHC.GhcPs) where
-  pretty' = prettyHsBind
-
-prettyHsBind :: GHC.HsBind GHC.GhcPs -> Printer ()
-prettyHsBind GHC.FunBind {..} = pretty fun_matches
-prettyHsBind GHC.PatBind {..} = pretty pat_lhs >> pretty pat_rhs
-prettyHsBind GHC.VarBind {} = notGeneratedByParser
-#if !MIN_VERSION_ghc_lib_parser(9,4,1)
-prettyHsBind GHC.AbsBinds {} = notGeneratedByParser
-#endif
-prettyHsBind (GHC.PatSynBind _ x) = pretty x
 
 instance Pretty (GHC.ClsInstDecl GHC.GhcPs) where
   pretty' GHC.ClsInstDecl {..} = do
@@ -1050,7 +1039,7 @@ instance Pretty (GHC.HsBracket GHC.GhcPs) where
 #endif
 instance Pretty SBF.SigBindFamily where
   pretty' (SBF.Sig x) = pretty $ mkSignature x
-  pretty' (SBF.Bind x) = pretty x
+  pretty' (SBF.Bind x) = pretty $ mkBind x
   pretty' (SBF.TypeFamily x) = pretty x
   pretty' (SBF.TyFamInst x) = pretty x
   pretty' (SBF.DataFamInst x) = pretty $ DataFamInstDeclInsideClassInst x
@@ -1693,21 +1682,6 @@ instance Pretty (GHC.DataFamInstDecl GHC.GhcPs) where
 instance Pretty DataFamInstDecl' where
   pretty' DataFamInstDecl' {dataFamInstDecl = GHC.DataFamInstDecl {..}, ..} =
     pretty $ FamEqn' dataFamInstDeclFor dfid_eqn
-
-instance Pretty (GHC.PatSynBind GHC.GhcPs GHC.GhcPs) where
-  pretty' GHC.PSB {..} = do
-    string "pattern "
-    case psb_args of
-      GHC.InfixCon l r ->
-        spaced [pretty l, pretty $ fmap InfixOp psb_id, pretty r]
-      GHC.PrefixCon _ [] -> pretty psb_id
-      _ -> spaced [pretty psb_id, pretty psb_args]
-    spacePrefixed [pretty psb_dir, pretty $ fmap PatInsidePatDecl psb_def]
-    case psb_dir of
-      GHC.ExplicitBidirectional matches -> do
-        newline
-        indentedBlock $ string "where " |=> pretty matches
-      _ -> pure ()
 
 -- | 'Pretty' for 'HsPatSynDetails'.
 instance Pretty

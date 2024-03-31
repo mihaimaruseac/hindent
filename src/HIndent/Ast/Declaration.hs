@@ -8,6 +8,7 @@ module HIndent.Ast.Declaration
 
 import Control.Applicative
 import Data.Maybe
+import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Class
 import HIndent.Ast.Declaration.Data
 import HIndent.Ast.Declaration.Family.Data
@@ -33,7 +34,7 @@ data Declaration
   | DataFamilyInstance DataFamilyInstance
   | TypeFamilyInstance TypeFamilyInstance
   | StandAloneDeriving StandAloneDeriving
-  | ValDecl (GHC.HsBind GHC.GhcPs)
+  | Bind Bind
   | Signature Signature
   | KindSigDecl (GHC.StandaloneKindSig GHC.GhcPs)
   | DefDecl (GHC.DefaultDecl GHC.GhcPs)
@@ -54,7 +55,7 @@ instance CommentExtraction Declaration where
   nodeComments DataFamilyInstance {} = NodeComments [] [] []
   nodeComments TypeFamilyInstance {} = NodeComments [] [] []
   nodeComments StandAloneDeriving {} = NodeComments [] [] []
-  nodeComments ValDecl {} = NodeComments [] [] []
+  nodeComments Bind {} = NodeComments [] [] []
   nodeComments Signature {} = NodeComments [] [] []
   nodeComments KindSigDecl {} = NodeComments [] [] []
   nodeComments DefDecl {} = NodeComments [] [] []
@@ -75,7 +76,7 @@ instance Pretty Declaration where
   pretty' (DataFamilyInstance x) = pretty x
   pretty' (TypeFamilyInstance x) = pretty x
   pretty' (StandAloneDeriving x) = pretty x
-  pretty' (ValDecl x) = pretty x
+  pretty' (Bind x) = pretty x
   pretty' (Signature x) = pretty x
   pretty' (KindSigDecl x) = pretty x
   pretty' (DefDecl x) = pretty x
@@ -102,7 +103,7 @@ mkDeclaration (GHC.InstD _ GHC.DataFamInstD {GHC.dfid_inst = GHC.DataFamInstDecl
 mkDeclaration (GHC.InstD _ x@GHC.TyFamInstD {}) =
   maybe (error "Unreachable.") TypeFamilyInstance $ mkTypeFamilyInstance x
 mkDeclaration (GHC.DerivD _ x) = StandAloneDeriving $ mkStandAloneDeriving x
-mkDeclaration (GHC.ValD _ x) = ValDecl x
+mkDeclaration (GHC.ValD _ x) = Bind $ mkBind x
 mkDeclaration (GHC.SigD _ x) = Signature $ mkSignature x
 mkDeclaration (GHC.KindSigD _ x) = KindSigDecl x
 mkDeclaration (GHC.DefD _ x) = DefDecl x
