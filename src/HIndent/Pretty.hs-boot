@@ -7,6 +7,7 @@ module HIndent.Pretty
   , printCommentsAnd
   ) where
 
+import           Data.Void
 import qualified GHC.Core.Type                      as GHC
 import qualified GHC.Types.Basic                    as GHC
 import qualified GHC.Types.Name.Reader              as GHC
@@ -58,7 +59,27 @@ instance Pretty GHC.OverlapMode
 
 instance Pretty HsSigType'
 
-instance Pretty (GHC.HsBind GHC.GhcPs)
+instance Pretty
+           (GHC.MatchGroup
+              GHC.GhcPs
+              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
+
+instance Pretty (GHC.Pat GHC.GhcPs)
+
+instance Pretty
+           (GHc.GRHSs
+              GHC.GhcPs
+              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
+
+instance Pretty
+           (GHC.HsConDetails
+              Void
+              (GHC.GenLocated GHC.SrcSpanAnnN GHC.RdrName)
+              [GHC.RecordPatSynField GHC.GhcPs])
+
+instance Pretty (GHC.HsPatSynDir GHC.GhcPs)
+
+instance Pretty PatInsidePatDecl
 
 instance Pretty (GHC.StandaloneKindSig GHC.GhcPs)
 
