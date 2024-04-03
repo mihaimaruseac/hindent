@@ -36,10 +36,7 @@ instance Pretty TypeFamily where
     when isTopLevel $ string "family "
     string name
     spacePrefixed $ fmap pretty typeVariables
-    case getNode signature of
-      ResultSignature GHC.NoSig {} -> pure ()
-      ResultSignature GHC.TyVarSig {} -> string " = " >> pretty signature
-      _ -> space >> pretty signature
+    pretty signature
     whenJust injectivity $ \x -> string " | " >> pretty x
     whenJust equations $ \xs ->
       string " where" >> newline >> indentedBlock (lined $ fmap pretty xs)
@@ -55,7 +52,7 @@ mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
         GHC.NotTopLevel -> False
     name = showOutputable fdLName
     typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
-    signature = ResultSignature <$> fromGenLocated fdResultSig
+    signature = mkResultSignature <$> fromGenLocated fdResultSig
     injectivity = fmap (fmap mkInjectivity . fromGenLocated) fdInjectivityAnn
     equations =
       case fdInfo of

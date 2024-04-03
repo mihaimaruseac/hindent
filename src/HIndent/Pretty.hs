@@ -7,6 +7,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE InstanceSigs #-}
 
 -- | Pretty printing.
 --
@@ -42,8 +43,10 @@ import HIndent.Applicative
 import HIndent.Ast.Declaration
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Data.Body
+import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import HIndent.Config
 import HIndent.Fixity
@@ -476,7 +479,7 @@ instance Pretty HsSigType' where
     case sig_bndrs of
       GHC.HsOuterExplicit _ xs -> do
         string "forall "
-        spaced $ fmap pretty xs
+        spaced $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) xs
         dot
         case GHC.unLoc sig_body of
           GHC.HsQualTy {..} ->
@@ -507,7 +510,7 @@ instance Pretty HsSigType' where
     case sig_bndrs of
       GHC.HsOuterExplicit _ xs -> do
         string "forall "
-        spaced $ fmap pretty xs
+        spaced $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) xs
         dot
         printCommentsAnd sig_body $ \case
           GHC.HsQualTy {..} -> do
@@ -521,7 +524,7 @@ instance Pretty HsSigType' where
     case sig_bndrs of
       GHC.HsOuterExplicit _ xs -> do
         string "forall "
-        spaced $ fmap pretty xs
+        spaced $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) xs
         dot
         space
       _ -> return ()
@@ -1040,7 +1043,9 @@ instance Pretty (GHC.HsBracket GHC.GhcPs) where
 instance Pretty SBF.SigBindFamily where
   pretty' (SBF.Sig x) = pretty $ mkSignature x
   pretty' (SBF.Bind x) = pretty $ mkBind x
-  pretty' (SBF.TypeFamily x) = pretty x
+  pretty' (SBF.TypeFamily x)
+    | Just fam <- mkTypeFamily x = pretty fam
+    | otherwise = error "Unreachable"
   pretty' (SBF.TyFamInst x) = pretty x
   pretty' (SBF.DataFamInst x) = pretty $ DataFamInstDeclInsideClassInst x
 
@@ -1227,47 +1232,6 @@ instance Pretty GHC.OverlapMode where
 instance Pretty GHC.StringLiteral where
   pretty' = output
 
--- | This instance is for type family declarations inside a class declaration.
-instance Pretty (GHC.FamilyDecl GHC.GhcPs) where
-  pretty' GHC.FamilyDecl {..} = do
-    string
-      $ case fdInfo of
-          GHC.DataFamily -> "data"
-          GHC.OpenTypeFamily -> "type"
-          GHC.ClosedTypeFamily {} -> "type"
-    case fdTopLevel of
-      GHC.TopLevel -> string " family "
-      GHC.NotTopLevel -> space
-    pretty fdLName
-    spacePrefixed $ pretty <$> GHC.hsq_explicit fdTyVars
-    case GHC.unLoc fdResultSig of
-      GHC.NoSig {} -> pure ()
-      GHC.TyVarSig {} -> do
-        string " = "
-        pretty fdResultSig
-      _ -> do
-        space
-        pretty fdResultSig
-    whenJust fdInjectivityAnn $ \x -> do
-      string " | "
-      pretty x
-    case fdInfo of
-      GHC.ClosedTypeFamily (Just xs) -> do
-        string " where"
-        newline
-        indentedBlock $ lined $ fmap pretty xs
-      _ -> pure ()
-
-instance Pretty (GHC.FamilyResultSig GHC.GhcPs) where
-  pretty' GHC.NoSig {} = pure ()
-  pretty' (GHC.KindSig _ x) = string ":: " >> pretty x
-  pretty' (GHC.TyVarSig _ x) = pretty x
-
-instance Pretty (GHC.HsTyVarBndr a GHC.GhcPs) where
-  pretty' (GHC.UserTyVar _ _ x) = pretty x
-  pretty' (GHC.KindedTyVar _ _ name ty) =
-    parens $ spaced [pretty name, string "::", pretty ty]
-
 instance Pretty (GHC.InjectivityAnn GHC.GhcPs) where
   pretty' (GHC.InjectivityAnn _ from to) =
     spaced $ pretty from : string "->" : fmap pretty to
@@ -1285,11 +1249,12 @@ instance Pretty (GHC.ArithSeqInfo GHC.GhcPs) where
 instance Pretty (GHC.HsForAllTelescope GHC.GhcPs) where
   pretty' GHC.HsForAllVis {..} = do
     string "forall "
-    spaced $ fmap pretty hsf_vis_bndrs
+    spaced $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) hsf_vis_bndrs
     dot
   pretty' GHC.HsForAllInvis {..} = do
     string "forall "
-    spaced $ fmap pretty hsf_invis_bndrs
+    spaced
+      $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) hsf_invis_bndrs
     dot
 
 instance Pretty InfixOp where
@@ -1919,7 +1884,8 @@ instance Pretty (GHC.HsOuterSigTyVarBndrs GHC.GhcPs) where
   pretty' GHC.HsOuterImplicit {} = pure ()
   pretty' GHC.HsOuterExplicit {..} = do
     string "forall"
-    spacePrefixed $ fmap pretty hso_bndrs
+    spacePrefixed
+      $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) hso_bndrs
     dot
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty GHC.FieldLabelString where

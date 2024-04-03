@@ -36,8 +36,6 @@ instance Pretty GHC.EpaComment
 
 instance Pretty (GHC.HsType GHC.GhcPs)
 
-instance Pretty (GHC.FamilyResultSig GHC.GhcPs)
-
 instance Pretty (GHC.InjectivityAnn GHC.GhcPs)
 
 instance Pretty
@@ -98,8 +96,6 @@ instance Pretty (GHC.SpliceDecl GHC.GhcPs)
 instance Pretty (GHC.RoleAnnotDecl GHC.GhcPs)
 
 instance Pretty (GHC.HsSigType GHC.GhcPs)
-
-instance Pretty (GHC.HsTyVarBndr a GHC.GhcPs)
 
 instance Pretty Context
 
