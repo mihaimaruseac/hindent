@@ -5,15 +5,15 @@ module HIndent.Ast.Declaration.Family.Type.Injectivity
   , mkInjectivity
   ) where
 
-import                          HIndent.Ast.NodeComments
-import                qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-}           HIndent.Pretty
-import                          HIndent.Pretty.Combinators
-import                          HIndent.Pretty.NodeComments
+import HIndent.Ast.NodeComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
 
 data Injectivity = Injectivity
   { from :: GHC.LIdP GHC.GhcPs
-  , to   :: [GHC.LIdP GHC.GhcPs]
+  , to :: [GHC.LIdP GHC.GhcPs]
   }
 
 instance CommentExtraction Injectivity where
