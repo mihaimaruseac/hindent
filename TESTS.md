@@ -2831,6 +2831,17 @@ Unboxed `String`
 a = "Foo"#
 ```
 
+`UnboxedTuple`
+
+```haskell
+{-# LANGUAGE UnboxedTuples #-}
+
+f :: (# Int, Int #) -> (# Int, Int #)
+f t =
+  case t of
+    (# x, y #) -> (# x, y #)
+```
+
 `NumericUnderscores`
 
 ```haskell

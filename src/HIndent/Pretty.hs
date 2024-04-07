@@ -244,15 +244,23 @@ prettyHsExpr (GHC.HsPar _ expr) = parens $ pretty expr
 #endif
 prettyHsExpr (GHC.SectionL _ l o) = spaced [pretty l, pretty (InfixExpr o)]
 prettyHsExpr (GHC.SectionR _ o r) = (pretty (InfixExpr o) >> space) |=> pretty r
-prettyHsExpr (GHC.ExplicitTuple _ full _) = horizontal <-|> vertical
+prettyHsExpr (GHC.ExplicitTuple _ full boxity) = horizontal <-|> vertical
   where
-    horizontal = hTuple $ fmap pretty full
+    horizontal = parH $ fmap pretty full
     vertical =
-      parens
+      parV
         $ prefixedLined ","
         $ fmap (\e -> unless (isMissing e) (space |=> pretty e)) full
     isMissing GHC.Missing {} = True
     isMissing _ = False
+    parH =
+      case boxity of
+        GHC.Boxed -> hTuple
+        GHC.Unboxed -> hUnboxedTuple
+    parV =
+      case boxity of
+        GHC.Boxed -> parens
+        GHC.Unboxed -> unboxedParens
 prettyHsExpr (GHC.ExplicitSum _ position numElem expr) = do
   string "(#"
   forM_ [1 .. numElem] $ \idx -> do
