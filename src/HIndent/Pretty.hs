@@ -1232,10 +1232,6 @@ instance Pretty GHC.OverlapMode where
 instance Pretty GHC.StringLiteral where
   pretty' = output
 
-instance Pretty (GHC.InjectivityAnn GHC.GhcPs) where
-  pretty' (GHC.InjectivityAnn _ from to) =
-    spaced $ pretty from : string "->" : fmap pretty to
-
 instance Pretty (GHC.ArithSeqInfo GHC.GhcPs) where
   pretty' (GHC.From from) = brackets $ spaced [pretty from, string ".."]
   pretty' (GHC.FromThen from next) =

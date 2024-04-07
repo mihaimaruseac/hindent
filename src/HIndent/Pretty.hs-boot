@@ -36,8 +36,6 @@ instance Pretty GHC.EpaComment
 
 instance Pretty (GHC.HsType GHC.GhcPs)
 
-instance Pretty (GHC.InjectivityAnn GHC.GhcPs)
-
 instance Pretty
            (GHC.FamEqn
               GHC.GhcPs
