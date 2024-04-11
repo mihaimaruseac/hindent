@@ -17,6 +17,7 @@ import HIndent.Ast.Declaration.Instance.Class
 import HIndent.Ast.Declaration.Instance.Family.Data
 import HIndent.Ast.Declaration.Instance.Family.Type
 import HIndent.Ast.Declaration.Signature
+import HIndent.Ast.Declaration.Signature.StandaloneKind
 import HIndent.Ast.Declaration.StandAloneDeriving
 import HIndent.Ast.Declaration.TypeSynonym
 import HIndent.Ast.NodeComments
@@ -36,7 +37,7 @@ data Declaration
   | StandAloneDeriving StandAloneDeriving
   | Bind Bind
   | Signature Signature
-  | KindSigDecl (GHC.StandaloneKindSig GHC.GhcPs)
+  | StandaloneKindSignature StandaloneKind
   | DefDecl (GHC.DefaultDecl GHC.GhcPs)
   | ForDecl (GHC.ForeignDecl GHC.GhcPs)
   | WarningDecl (GHC.WarnDecls GHC.GhcPs)
@@ -57,7 +58,7 @@ instance CommentExtraction Declaration where
   nodeComments StandAloneDeriving {} = NodeComments [] [] []
   nodeComments Bind {} = NodeComments [] [] []
   nodeComments Signature {} = NodeComments [] [] []
-  nodeComments KindSigDecl {} = NodeComments [] [] []
+  nodeComments StandaloneKindSignature {} = NodeComments [] [] []
   nodeComments DefDecl {} = NodeComments [] [] []
   nodeComments ForDecl {} = NodeComments [] [] []
   nodeComments WarningDecl {} = NodeComments [] [] []
@@ -78,7 +79,7 @@ instance Pretty Declaration where
   pretty' (StandAloneDeriving x) = pretty x
   pretty' (Bind x) = pretty x
   pretty' (Signature x) = pretty x
-  pretty' (KindSigDecl x) = pretty x
+  pretty' (StandaloneKindSignature x) = pretty x
   pretty' (DefDecl x) = pretty x
   pretty' (ForDecl x) = pretty x
   pretty' (WarningDecl x) = pretty x
@@ -105,7 +106,7 @@ mkDeclaration (GHC.InstD _ x@GHC.TyFamInstD {}) =
 mkDeclaration (GHC.DerivD _ x) = StandAloneDeriving $ mkStandAloneDeriving x
 mkDeclaration (GHC.ValD _ x) = Bind $ mkBind x
 mkDeclaration (GHC.SigD _ x) = Signature $ mkSignature x
-mkDeclaration (GHC.KindSigD _ x) = KindSigDecl x
+mkDeclaration (GHC.KindSigD _ x) = StandaloneKindSignature $ mkStandaloneKind x
 mkDeclaration (GHC.DefD _ x) = DefDecl x
 mkDeclaration (GHC.ForD _ x) = ForDecl x
 mkDeclaration (GHC.WarningD _ x) = WarningDecl x

@@ -77,8 +77,6 @@ instance Pretty (GHC.HsPatSynDir GHC.GhcPs)
 
 instance Pretty PatInsidePatDecl
 
-instance Pretty (GHC.StandaloneKindSig GHC.GhcPs)
-
 instance Pretty (GHC.DefaultDecl GHc.GhcPs)
 
 instance Pretty (GHC.ForeignDecl GHC.GhcPs)
