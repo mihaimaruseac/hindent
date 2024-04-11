@@ -1545,10 +1545,6 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
   pretty' GHC.HsWC {..} = pretty hswc_body
 
-instance Pretty (GHC.StandaloneKindSig GHC.GhcPs) where
-  pretty' (GHC.StandaloneKindSig _ name kind) =
-    spaced [string "type", pretty name, string "::", pretty kind]
-
 instance Pretty (GHC.DefaultDecl GHC.GhcPs) where
   pretty' (GHC.DefaultDecl _ xs) =
     spaced [string "default", hTuple $ fmap pretty xs]
