@@ -11,6 +11,7 @@ import Data.Maybe
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Class
 import HIndent.Ast.Declaration.Data
+import HIndent.Ast.Declaration.Default
 import HIndent.Ast.Declaration.Family.Data
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Instance.Class
@@ -38,7 +39,7 @@ data Declaration
   | Bind Bind
   | Signature Signature
   | StandaloneKindSignature StandaloneKind
-  | DefDecl (GHC.DefaultDecl GHC.GhcPs)
+  | Default DefaultDeclaration
   | ForDecl (GHC.ForeignDecl GHC.GhcPs)
   | WarningDecl (GHC.WarnDecls GHC.GhcPs)
   | AnnDecl (GHC.AnnDecl GHC.GhcPs)
@@ -59,7 +60,7 @@ instance CommentExtraction Declaration where
   nodeComments Bind {} = NodeComments [] [] []
   nodeComments Signature {} = NodeComments [] [] []
   nodeComments StandaloneKindSignature {} = NodeComments [] [] []
-  nodeComments DefDecl {} = NodeComments [] [] []
+  nodeComments Default {} = NodeComments [] [] []
   nodeComments ForDecl {} = NodeComments [] [] []
   nodeComments WarningDecl {} = NodeComments [] [] []
   nodeComments AnnDecl {} = NodeComments [] [] []
@@ -80,7 +81,7 @@ instance Pretty Declaration where
   pretty' (Bind x) = pretty x
   pretty' (Signature x) = pretty x
   pretty' (StandaloneKindSignature x) = pretty x
-  pretty' (DefDecl x) = pretty x
+  pretty' (Default x) = pretty x
   pretty' (ForDecl x) = pretty x
   pretty' (WarningDecl x) = pretty x
   pretty' (AnnDecl x) = pretty x
@@ -107,7 +108,7 @@ mkDeclaration (GHC.DerivD _ x) = StandAloneDeriving $ mkStandAloneDeriving x
 mkDeclaration (GHC.ValD _ x) = Bind $ mkBind x
 mkDeclaration (GHC.SigD _ x) = Signature $ mkSignature x
 mkDeclaration (GHC.KindSigD _ x) = StandaloneKindSignature $ mkStandaloneKind x
-mkDeclaration (GHC.DefD _ x) = DefDecl x
+mkDeclaration (GHC.DefD _ x) = Default $ mkDefaultDeclaration x
 mkDeclaration (GHC.ForD _ x) = ForDecl x
 mkDeclaration (GHC.WarningD _ x) = WarningDecl x
 mkDeclaration (GHC.AnnD _ x) = AnnDecl x
