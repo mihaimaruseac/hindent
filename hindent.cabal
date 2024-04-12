@@ -55,6 +55,7 @@ library
       HIndent.Ast.Declaration.Data.Haskell98.Constructor.Body
       HIndent.Ast.Declaration.Data.Header
       HIndent.Ast.Declaration.Data.NewOrData
+      HIndent.Ast.Declaration.Default
       HIndent.Ast.Declaration.Family.Data
       HIndent.Ast.Declaration.Family.Type
       HIndent.Ast.Declaration.Family.Type.Injectivity
