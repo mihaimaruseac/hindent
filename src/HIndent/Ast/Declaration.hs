@@ -14,6 +14,7 @@ import HIndent.Ast.Declaration.Data
 import HIndent.Ast.Declaration.Default
 import HIndent.Ast.Declaration.Family.Data
 import HIndent.Ast.Declaration.Family.Type
+import HIndent.Ast.Declaration.Foreign
 import HIndent.Ast.Declaration.Instance.Class
 import HIndent.Ast.Declaration.Instance.Family.Data
 import HIndent.Ast.Declaration.Instance.Family.Type
@@ -40,7 +41,7 @@ data Declaration
   | Signature Signature
   | StandaloneKindSignature StandaloneKind
   | Default DefaultDeclaration
-  | ForDecl (GHC.ForeignDecl GHC.GhcPs)
+  | Foreign ForeignDeclaration
   | WarningDecl (GHC.WarnDecls GHC.GhcPs)
   | AnnDecl (GHC.AnnDecl GHC.GhcPs)
   | RuleDecl (GHC.RuleDecls GHC.GhcPs)
@@ -61,7 +62,7 @@ instance CommentExtraction Declaration where
   nodeComments Signature {} = NodeComments [] [] []
   nodeComments StandaloneKindSignature {} = NodeComments [] [] []
   nodeComments Default {} = NodeComments [] [] []
-  nodeComments ForDecl {} = NodeComments [] [] []
+  nodeComments Foreign {} = NodeComments [] [] []
   nodeComments WarningDecl {} = NodeComments [] [] []
   nodeComments AnnDecl {} = NodeComments [] [] []
   nodeComments RuleDecl {} = NodeComments [] [] []
@@ -82,7 +83,7 @@ instance Pretty Declaration where
   pretty' (Signature x) = pretty x
   pretty' (StandaloneKindSignature x) = pretty x
   pretty' (Default x) = pretty x
-  pretty' (ForDecl x) = pretty x
+  pretty' (Foreign x) = pretty x
   pretty' (WarningDecl x) = pretty x
   pretty' (AnnDecl x) = pretty x
   pretty' (RuleDecl x) = pretty x
@@ -109,7 +110,7 @@ mkDeclaration (GHC.ValD _ x) = Bind $ mkBind x
 mkDeclaration (GHC.SigD _ x) = Signature $ mkSignature x
 mkDeclaration (GHC.KindSigD _ x) = StandaloneKindSignature $ mkStandaloneKind x
 mkDeclaration (GHC.DefD _ x) = Default $ mkDefaultDeclaration x
-mkDeclaration (GHC.ForD _ x) = ForDecl x
+mkDeclaration (GHC.ForD _ x) = Foreign $ mkForeignDeclaration x
 mkDeclaration (GHC.WarningD _ x) = WarningDecl x
 mkDeclaration (GHC.AnnD _ x) = AnnDecl x
 mkDeclaration (GHC.RuleD _ x) = RuleDecl x

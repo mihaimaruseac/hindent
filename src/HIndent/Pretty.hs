@@ -7,7 +7,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE InstanceSigs #-}
 
 -- | Pretty printing.
 --
@@ -33,7 +32,6 @@ import qualified GHC.Hs as GHC
 import GHC.Stack
 import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.Fixity as GHC
-import qualified GHC.Types.ForeignCall as GHC
 import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import qualified GHC.Types.SourceText as GHC
@@ -1544,64 +1542,6 @@ instance Pretty
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
   pretty' GHC.HsWC {..} = pretty hswc_body
-
-instance Pretty (GHC.ForeignDecl GHC.GhcPs) where
-  pretty' GHC.ForeignImport {..} =
-    spaced
-      [ string "foreign import"
-      , pretty fd_fi
-      , pretty fd_name
-      , string "::"
-      , pretty fd_sig_ty
-      ]
-  pretty' GHC.ForeignExport {..} =
-    spaced
-      [ string "foreign export"
-      , pretty fd_fe
-      , pretty fd_name
-      , string "::"
-      , pretty fd_sig_ty
-      ]
-#if MIN_VERSION_ghc_lib_parser(9,8,0)
-instance Pretty (GHC.ForeignImport GHC.GhcPs) where
-  pretty' (GHC.CImport (GHC.L _ (GHC.SourceText s)) conv safety _ _) =
-    spaced [pretty conv, pretty safety, output s]
-  pretty' (GHC.CImport _ conv safety _ _) = spaced [pretty conv, pretty safety]
-#elif MIN_VERSION_ghc_lib_parser(9,6,0)
-instance Pretty (GHC.ForeignImport GHC.GhcPs) where
-  pretty' (GHC.CImport (GHC.L _ (GHC.SourceText s)) conv safety _ _) =
-    spaced [pretty conv, pretty safety, string s]
-  pretty' (GHC.CImport _ conv safety _ _) = spaced [pretty conv, pretty safety]
-#else
-instance Pretty GHC.ForeignImport where
-  pretty' (GHC.CImport conv safety _ _ (GHC.L _ (GHC.SourceText s))) =
-    spaced [pretty conv, pretty safety, string s]
-  pretty' (GHC.CImport conv safety _ _ _) = spaced [pretty conv, pretty safety]
-#endif
-
-#if MIN_VERSION_ghc_lib_parser(9,8,0)
-instance Pretty (GHC.ForeignExport GHC.GhcPs) where
-  pretty' (GHC.CExport (GHC.L _ (GHC.SourceText s)) conv) =
-    spaced [pretty conv, output s]
-  pretty' (GHC.CExport _ conv) = pretty conv
-#elif MIN_VERSION_ghc_lib_parser(9,6,0)
-instance Pretty (GHC.ForeignExport GHC.GhcPs) where
-  pretty' (GHC.CExport (GHC.L _ (GHC.SourceText s)) conv) =
-    spaced [pretty conv, string s]
-  pretty' (GHC.CExport _ conv) = pretty conv
-#else
-instance Pretty GHC.ForeignExport where
-  pretty' (GHC.CExport conv (GHC.L _ (GHC.SourceText s))) =
-    spaced [pretty conv, string s]
-  pretty' (GHC.CExport conv _) = pretty conv
-#endif
-instance Pretty GHC.CExportSpec where
-  pretty' (GHC.CExportStatic _ _ x) = pretty x
-
-instance Pretty GHC.Safety where
-  pretty' GHC.PlaySafe = string "safe"
-  pretty' GHC.PlayInterruptible = string "interruptible"
-  pretty' GHC.PlayRisky = string "unsafe"
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (GHC.AnnDecl GHC.GhcPs) where
   pretty' (GHC.HsAnnotation _ (GHC.ValueAnnProvenance name) expr) =
@@ -1852,13 +1792,6 @@ instance Pretty (GHC.RuleBndr GHC.GhcPs) where
   pretty' (GHC.RuleBndr _ name) = pretty name
   pretty' (GHC.RuleBndrSig _ name sig) =
     parens $ spaced [pretty name, string "::", pretty sig]
-
-instance Pretty GHC.CCallConv where
-  pretty' GHC.CCallConv = string "ccall"
-  pretty' GHC.CApiConv = string "capi"
-  pretty' GHC.StdCallConv = string "stdcall"
-  pretty' GHC.PrimCallConv = string "prim"
-  pretty' GHC.JavaScriptCallConv = string "javascript"
 
 instance Pretty GHC.HsSrcBang where
   pretty' (GHC.HsSrcBang _ unpack strictness) = do

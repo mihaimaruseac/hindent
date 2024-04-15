@@ -60,6 +60,9 @@ library
       HIndent.Ast.Declaration.Family.Type
       HIndent.Ast.Declaration.Family.Type.Injectivity
       HIndent.Ast.Declaration.Family.Type.ResultSignature
+      HIndent.Ast.Declaration.Foreign
+      HIndent.Ast.Declaration.Foreign.CallingConvention
+      HIndent.Ast.Declaration.Foreign.Safety
       HIndent.Ast.Declaration.Instance.Class
       HIndent.Ast.Declaration.Instance.Family.Data
       HIndent.Ast.Declaration.Instance.Family.Type
