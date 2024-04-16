@@ -5,6 +5,7 @@
 ### Added
 
 - Support for GHC 9.8 ([#775]).
+- Support for `ImportPostQualified` ([#875]).
 
 ### Changed
 
@@ -376,6 +377,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#875]: https://github.com/mihaimaruseac/hindent/pull/875
 [#873]: https://github.com/mihaimaruseac/hindent/pull/873
 [#868]: https://github.com/mihaimaruseac/hindent/pull/868
 [#849]: https://github.com/mihaimaruseac/hindent/pull/849
