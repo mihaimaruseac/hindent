@@ -337,6 +337,14 @@ import CommentAfter
 import qualified "base" Prelude as P
 ```
 
+`ImportQualifiedPost`
+
+```haskell
+{-# LANGUAGE ImportQualifiedPost #-}
+
+import Data.Text qualified as T
+```
+
 Importing a `#`
 
 ```haskell
