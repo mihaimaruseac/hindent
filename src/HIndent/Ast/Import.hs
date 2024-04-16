@@ -13,7 +13,6 @@ import Data.List
 import qualified GHC.Unit as GHC
 import HIndent.Applicative
 import HIndent.Ast.Import.Entry.Collection
-import HIndent.Ast.Import.Qualification
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -22,11 +21,21 @@ import HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
+data QualificationPosition
+  = Pre
+  | Post
+  deriving (Eq)
+
+data Qualification = Qualification
+  { qualifiedAs :: Maybe String
+  , position :: QualificationPosition
+  } deriving (Eq)
+
 data Import = Import
   { moduleName :: String
   , isSafe :: Bool
   , isBoot :: Bool
-  , qualification :: Qualification
+  , qualification :: Maybe Qualification
   , packageName :: Maybe String
   , importEntries :: Maybe (WithComments ImportEntryCollection)
   }
@@ -39,11 +48,13 @@ instance Pretty Import where
     string "import "
     when isBoot $ string "{-# SOURCE #-} "
     when isSafe $ string "safe "
-    unless (qualification == NotQualified) $ string "qualified "
+    when (fmap position qualification == Just Pre) $ string "qualified "
     whenJust packageName $ \name -> string name >> space
     string moduleName
+    when (fmap position qualification == Just Post) $ string " qualified"
     case qualification of
-      QualifiedAs name -> string " as " >> string name
+      Just Qualification {qualifiedAs = Just name} ->
+        string " as " >> string name
       _ -> pure ()
     whenJust importEntries pretty
 
@@ -54,10 +65,20 @@ mkImport decl@GHC.ImportDecl {..} = Import {..}
     isSafe = ideclSafe
     isBoot = ideclSource == GHC.IsBoot
     qualification =
-      case (ideclQualified, ideclAs) of
-        (GHC.NotQualified, _) -> NotQualified
-        (_, Nothing) -> FullyQualified
-        (_, Just name) -> QualifiedAs $ showOutputable name
+      case (ideclQualified, ideclAs, ideclQualified) of
+        (GHC.NotQualified, _, _) -> Nothing
+        (_, Nothing, GHC.QualifiedPre) ->
+          Just Qualification {qualifiedAs = Nothing, position = Pre}
+        (_, Nothing, GHC.QualifiedPost) ->
+          Just Qualification {qualifiedAs = Nothing, position = Post}
+        (_, Just name, GHC.QualifiedPre) ->
+          Just
+            Qualification
+              {qualifiedAs = Just $ showOutputable name, position = Pre}
+        (_, Just name, GHC.QualifiedPost) ->
+          Just
+            Qualification
+              {qualifiedAs = Just $ showOutputable name, position = Post}
     packageName = showOutputable <$> GHC.getPackageName decl
     importEntries = mkImportEntryCollection decl
 
