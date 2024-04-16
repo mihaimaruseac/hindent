@@ -10,6 +10,7 @@
 ### Changed
 
 - The formatting style of import declarations with constructors ([#829]).
+- HIndent no longer inserts an empty line after a standalone kind signature ([#873]).
 
 ### Fixed
 
@@ -377,6 +378,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@toku-sa-n]: https://github.com/toku-sa-n
 
 [#875]: https://github.com/mihaimaruseac/hindent/pull/875
+[#873]: https://github.com/mihaimaruseac/hindent/pull/873
 [#868]: https://github.com/mihaimaruseac/hindent/pull/868
 [#849]: https://github.com/mihaimaruseac/hindent/pull/849
 [#843]: https://github.com/mihaimaruseac/hindent/pull/843

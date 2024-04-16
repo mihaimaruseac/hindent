@@ -122,4 +122,5 @@ mkDeclaration GHC.DocD {} =
 
 isSignature :: Declaration -> Bool
 isSignature Signature {} = True
+isSignature StandaloneKindSignature {} = True
 isSignature _ = False
