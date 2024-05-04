@@ -11,6 +11,7 @@ import           Data.Void
 import qualified GHC.Core.Type                      as GHC
 import qualified GHC.Types.Basic                    as GHC
 import qualified GHC.Types.Name.Reader              as GHC
+import qualified GHC.Types.SourceText               as GHC
 import qualified GHC.Types.SrcLoc                   as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHc
@@ -77,7 +78,7 @@ instance Pretty (GHC.HsPatSynDir GHC.GhcPs)
 
 instance Pretty PatInsidePatDecl
 
-instance Pretty (GHC.WarnDecls GHC.GhcPs)
+instance Pretty GHC.StringLiteral
 
 instance Pretty (GHC.AnnDecl GHC.GhcPs)
 

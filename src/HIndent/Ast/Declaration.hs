@@ -22,6 +22,7 @@ import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Declaration.Signature.StandaloneKind
 import HIndent.Ast.Declaration.StandAloneDeriving
 import HIndent.Ast.Declaration.TypeSynonym
+import HIndent.Ast.Declaration.Warning.Collection
 import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -42,7 +43,7 @@ data Declaration
   | StandaloneKindSignature StandaloneKind
   | Default DefaultDeclaration
   | Foreign ForeignDeclaration
-  | WarningDecl (GHC.WarnDecls GHC.GhcPs)
+  | Warnings WarningCollection
   | AnnDecl (GHC.AnnDecl GHC.GhcPs)
   | RuleDecl (GHC.RuleDecls GHC.GhcPs)
   | SpliceDecl (GHC.SpliceDecl GHC.GhcPs)
@@ -63,7 +64,7 @@ instance CommentExtraction Declaration where
   nodeComments StandaloneKindSignature {} = NodeComments [] [] []
   nodeComments Default {} = NodeComments [] [] []
   nodeComments Foreign {} = NodeComments [] [] []
-  nodeComments WarningDecl {} = NodeComments [] [] []
+  nodeComments Warnings {} = NodeComments [] [] []
   nodeComments AnnDecl {} = NodeComments [] [] []
   nodeComments RuleDecl {} = NodeComments [] [] []
   nodeComments SpliceDecl {} = NodeComments [] [] []
@@ -84,7 +85,7 @@ instance Pretty Declaration where
   pretty' (StandaloneKindSignature x) = pretty x
   pretty' (Default x) = pretty x
   pretty' (Foreign x) = pretty x
-  pretty' (WarningDecl x) = pretty x
+  pretty' (Warnings x) = pretty x
   pretty' (AnnDecl x) = pretty x
   pretty' (RuleDecl x) = pretty x
   pretty' (SpliceDecl x) = pretty x
@@ -111,7 +112,7 @@ mkDeclaration (GHC.SigD _ x) = Signature $ mkSignature x
 mkDeclaration (GHC.KindSigD _ x) = StandaloneKindSignature $ mkStandaloneKind x
 mkDeclaration (GHC.DefD _ x) = Default $ mkDefaultDeclaration x
 mkDeclaration (GHC.ForD _ x) = Foreign $ mkForeignDeclaration x
-mkDeclaration (GHC.WarningD _ x) = WarningDecl x
+mkDeclaration (GHC.WarningD _ x) = Warnings $ mkWarningCollection x
 mkDeclaration (GHC.AnnD _ x) = AnnDecl x
 mkDeclaration (GHC.RuleD _ x) = RuleDecl x
 mkDeclaration (GHC.SpliceD _ x) = SpliceDecl x

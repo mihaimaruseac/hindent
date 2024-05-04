@@ -1,9 +1,9 @@
-module HIndent.Ast.Module.Warning.Kind
+module HIndent.Ast.Declaration.Warning.Kind
   ( Kind(..)
   ) where
 
 import HIndent.Ast.NodeComments
-import HIndent.Pretty
+import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
