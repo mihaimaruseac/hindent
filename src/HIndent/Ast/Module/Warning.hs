@@ -6,7 +6,7 @@ module HIndent.Ast.Module.Warning
   , mkModuleWarning
   ) where
 
-import HIndent.Ast.Module.Warning.Kind
+import HIndent.Ast.Declaration.Warning.Kind
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC

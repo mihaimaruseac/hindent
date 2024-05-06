@@ -76,6 +76,9 @@ library
       HIndent.Ast.Declaration.StandAloneDeriving
       HIndent.Ast.Declaration.TypeSynonym
       HIndent.Ast.Declaration.TypeSynonym.Lhs
+      HIndent.Ast.Declaration.Warning
+      HIndent.Ast.Declaration.Warning.Collection
+      HIndent.Ast.Declaration.Warning.Kind
       HIndent.Ast.FileHeaderPragma
       HIndent.Ast.FileHeaderPragma.Collection
       HIndent.Ast.Import
@@ -89,7 +92,6 @@ library
       HIndent.Ast.Module.Export.Entry
       HIndent.Ast.Module.Name
       HIndent.Ast.Module.Warning
-      HIndent.Ast.Module.Warning.Kind
       HIndent.Ast.NodeComments
       HIndent.Ast.Type
       HIndent.Ast.Type.Variable

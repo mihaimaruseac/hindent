@@ -36,7 +36,6 @@ import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
-import qualified GHC.Unit.Module.Warnings as GHC
 import HIndent.Applicative
 import HIndent.Ast.Declaration
 import HIndent.Ast.Declaration.Bind
@@ -1424,42 +1423,6 @@ instance Pretty (GHC.HsQuote GHC.GhcPs) where
   pretty' (GHC.TypBr _ x) = brackets $ string "t" >> wrapWithBars (pretty x)
   pretty' (GHC.VarBr _ True x) = string "'" >> pretty x
   pretty' (GHC.VarBr _ False x) = string "''" >> pretty x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-instance Pretty (GHC.WarnDecls GHC.GhcPs) where
-  pretty' (GHC.Warnings _ x) = lined $ fmap pretty x
-#else
-instance Pretty (GHC.WarnDecls GHC.GhcPs) where
-  pretty' (GHC.Warnings _ _ x) = lined $ fmap pretty x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9,8,1)
-instance Pretty (GHC.WarnDecl GHC.GhcPs) where
-  pretty' (GHC.Warning _ names deprecatedOrWarning) =
-    case deprecatedOrWarning of
-      GHC.DeprecatedTxt _ reasons -> prettyWithTitleReasons "DEPRECATED" reasons
-      GHC.WarningTxt _ _ reasons -> prettyWithTitleReasons "WARNING" reasons
-    where
-      prettyWithTitleReasons title reasons =
-        lined
-          [ string $ "{-# " ++ title
-          , spaced
-              [hCommaSep $ fmap pretty names, hCommaSep $ fmap pretty reasons]
-          , string " #-}"
-          ]
-#else
-instance Pretty (GHC.WarnDecl GHC.GhcPs) where
-  pretty' (GHC.Warning _ names deprecatedOrWarning) =
-    case deprecatedOrWarning of
-      GHC.DeprecatedTxt _ reasons -> prettyWithTitleReasons "DEPRECATED" reasons
-      GHC.WarningTxt _ reasons -> prettyWithTitleReasons "WARNING" reasons
-    where
-      prettyWithTitleReasons title reasons =
-        lined
-          [ string $ "{-# " ++ title
-          , spaced
-              [hCommaSep $ fmap pretty names, hCommaSep $ fmap pretty reasons]
-          , string " #-}"
-          ]
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance Pretty (GHC.WithHsDocIdentifiers GHC.StringLiteral GHC.GhcPs) where
