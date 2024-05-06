@@ -8,6 +8,7 @@ module HIndent.Ast.Declaration
 
 import Control.Applicative
 import Data.Maybe
+import HIndent.Ast.Declaration.Annotation
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Class
 import HIndent.Ast.Declaration.Data
@@ -44,7 +45,7 @@ data Declaration
   | Default DefaultDeclaration
   | Foreign ForeignDeclaration
   | Warnings WarningCollection
-  | AnnDecl (GHC.AnnDecl GHC.GhcPs)
+  | Annotation Annotation
   | RuleDecl (GHC.RuleDecls GHC.GhcPs)
   | SpliceDecl (GHC.SpliceDecl GHC.GhcPs)
   | RoleAnnotDecl (GHC.RoleAnnotDecl GHC.GhcPs)
@@ -65,7 +66,7 @@ instance CommentExtraction Declaration where
   nodeComments Default {} = NodeComments [] [] []
   nodeComments Foreign {} = NodeComments [] [] []
   nodeComments Warnings {} = NodeComments [] [] []
-  nodeComments AnnDecl {} = NodeComments [] [] []
+  nodeComments Annotation {} = NodeComments [] [] []
   nodeComments RuleDecl {} = NodeComments [] [] []
   nodeComments SpliceDecl {} = NodeComments [] [] []
   nodeComments RoleAnnotDecl {} = NodeComments [] [] []
@@ -86,7 +87,7 @@ instance Pretty Declaration where
   pretty' (Default x) = pretty x
   pretty' (Foreign x) = pretty x
   pretty' (Warnings x) = pretty x
-  pretty' (AnnDecl x) = pretty x
+  pretty' (Annotation x) = pretty x
   pretty' (RuleDecl x) = pretty x
   pretty' (SpliceDecl x) = pretty x
   pretty' (RoleAnnotDecl x) = pretty x
@@ -113,7 +114,7 @@ mkDeclaration (GHC.KindSigD _ x) = StandaloneKindSignature $ mkStandaloneKind x
 mkDeclaration (GHC.DefD _ x) = Default $ mkDefaultDeclaration x
 mkDeclaration (GHC.ForD _ x) = Foreign $ mkForeignDeclaration x
 mkDeclaration (GHC.WarningD _ x) = Warnings $ mkWarningCollection x
-mkDeclaration (GHC.AnnD _ x) = AnnDecl x
+mkDeclaration (GHC.AnnD _ x) = Annotation $ mkAnnotation x
 mkDeclaration (GHC.RuleD _ x) = RuleDecl x
 mkDeclaration (GHC.SpliceD _ x) = SpliceDecl x
 mkDeclaration (GHC.RoleAnnotD _ x) = RoleAnnotDecl x
