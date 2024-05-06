@@ -16,7 +16,10 @@ jobs:
     strategy:
       fail-fast: false # don't cancel other jobs if one fails
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        # We use `macos-13` instead of `macos-latest` due to a bug in
+        # `haskell-actions/setup`.
+        # See https://github.com/haskell-actions/setup/issues/77.
+        os: [ubuntu-latest, macos-13, windows-latest]
         ghc: [8.10.7, 9.0.2, 9.2.8, 9.4.8, 9.6.4, 9.8.1]
     defaults:
       run:
