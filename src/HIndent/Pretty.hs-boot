@@ -80,8 +80,6 @@ instance Pretty PatInsidePatDecl
 
 instance Pretty GHC.StringLiteral
 
-instance Pretty (GHC.AnnDecl GHC.GhcPs)
-
 instance Pretty (GHC.RuleDecls GHC.GhcPs)
 
 instance Pretty (GHC.SpliceDecl GHC.GhcPs)
@@ -107,3 +105,4 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHc.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
 #endif
+instance Pretty (GHC.HsExpr GHC.GhcPs)

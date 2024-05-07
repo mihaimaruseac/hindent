@@ -1505,23 +1505,7 @@ instance Pretty
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
   pretty' GHC.HsWC {..} = pretty hswc_body
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-instance Pretty (GHC.AnnDecl GHC.GhcPs) where
-  pretty' (GHC.HsAnnotation _ (GHC.ValueAnnProvenance name) expr) =
-    spaced [string "{-# ANN", pretty name, pretty expr, string "#-}"]
-  pretty' (GHC.HsAnnotation _ (GHC.TypeAnnProvenance name) expr) =
-    spaced [string "{-# ANN type", pretty name, pretty expr, string "#-}"]
-  pretty' (GHC.HsAnnotation _ GHC.ModuleAnnProvenance expr) =
-    spaced [string "{-# ANN module", pretty expr, string "#-}"]
-#else
-instance Pretty (GHC.AnnDecl GHC.GhcPs) where
-  pretty' (GHC.HsAnnotation _ _ (GHC.ValueAnnProvenance name) expr) =
-    spaced [string "{-# ANN", pretty name, pretty expr, string "#-}"]
-  pretty' (GHC.HsAnnotation _ _ (GHC.TypeAnnProvenance name) expr) =
-    spaced [string "{-# ANN type", pretty name, pretty expr, string "#-}"]
-  pretty' (GHC.HsAnnotation _ _ GHC.ModuleAnnProvenance expr) =
-    spaced [string "{-# ANN module", pretty expr, string "#-}"]
-#endif
+
 instance Pretty (GHC.RoleAnnotDecl GHC.GhcPs) where
   pretty' (GHC.RoleAnnotDecl _ name roles) =
     spaced
