@@ -1454,48 +1454,6 @@ instance Pretty (GHC.HsFieldLabel GHC.GhcPs) where
   pretty' GHC.HsFieldLabel {..} =
     printCommentsAnd hflLabel (string . GHC.unpackFS)
 #endif
-instance Pretty (GHC.RuleDecls GHC.GhcPs) where
-  pretty' GHC.HsRules {..} =
-    lined $ string "{-# RULES" : fmap pretty rds_rules ++ [string " #-}"]
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-instance Pretty (GHC.RuleDecl GHC.GhcPs) where
-  pretty' GHC.HsRule {..} =
-    spaced
-      [ printCommentsAnd rd_name (doubleQuotes . string . GHC.unpackFS)
-      , lhs
-      , string "="
-      , pretty rd_rhs
-      ]
-    where
-      lhs =
-        if null rd_tmvs
-          then pretty rd_lhs
-          else do
-            string "forall "
-            spaced $ fmap pretty rd_tmvs
-            dot
-            space
-            pretty rd_lhs
-#else
-instance Pretty (GHC.RuleDecl GHC.GhcPs) where
-  pretty' GHC.HsRule {..} =
-    spaced
-      [ printCommentsAnd rd_name (doubleQuotes . string . GHC.unpackFS . snd)
-      , lhs
-      , string "="
-      , pretty rd_rhs
-      ]
-    where
-      lhs =
-        if null rd_tmvs
-          then pretty rd_lhs
-          else do
-            string "forall "
-            spaced $ fmap pretty rd_tmvs
-            dot
-            space
-            pretty rd_lhs
-#endif
 instance Pretty GHC.OccName where
   pretty' = output
 
@@ -1734,11 +1692,6 @@ instance Pretty QualifiedDo where
 instance Pretty LetIn where
   pretty' LetIn {..} =
     lined [string "let " |=> pretty letBinds, string " in " |=> pretty inExpr]
-
-instance Pretty (GHC.RuleBndr GHC.GhcPs) where
-  pretty' (GHC.RuleBndr _ name) = pretty name
-  pretty' (GHC.RuleBndrSig _ name sig) =
-    parens $ spaced [pretty name, string "::", pretty sig]
 
 instance Pretty GHC.HsSrcBang where
   pretty' (GHC.HsSrcBang _ unpack strictness) = do
