@@ -19,6 +19,7 @@ import HIndent.Ast.Declaration.Foreign
 import HIndent.Ast.Declaration.Instance.Class
 import HIndent.Ast.Declaration.Instance.Family.Data
 import HIndent.Ast.Declaration.Instance.Family.Type
+import HIndent.Ast.Declaration.Rule.Collection
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Declaration.Signature.StandaloneKind
 import HIndent.Ast.Declaration.StandAloneDeriving
@@ -46,7 +47,7 @@ data Declaration
   | Foreign ForeignDeclaration
   | Warnings WarningCollection
   | Annotation Annotation
-  | RuleDecl (GHC.RuleDecls GHC.GhcPs)
+  | RuleDecl RuleCollection
   | SpliceDecl (GHC.SpliceDecl GHC.GhcPs)
   | RoleAnnotDecl (GHC.RoleAnnotDecl GHC.GhcPs)
 
@@ -115,7 +116,7 @@ mkDeclaration (GHC.DefD _ x) = Default $ mkDefaultDeclaration x
 mkDeclaration (GHC.ForD _ x) = Foreign $ mkForeignDeclaration x
 mkDeclaration (GHC.WarningD _ x) = Warnings $ mkWarningCollection x
 mkDeclaration (GHC.AnnD _ x) = Annotation $ mkAnnotation x
-mkDeclaration (GHC.RuleD _ x) = RuleDecl x
+mkDeclaration (GHC.RuleD _ x) = RuleDecl $ mkRuleCollection x
 mkDeclaration (GHC.SpliceD _ x) = SpliceDecl x
 mkDeclaration (GHC.RoleAnnotD _ x) = RoleAnnotDecl x
 mkDeclaration GHC.DocD {} =
