@@ -939,9 +939,6 @@ instance Pretty GHC.EpaCommentTok where
         -- contains indent spaces for all lines except the first one.
         indentedWithFixedLevel 0 $ lined $ fmap string xs
   pretty' _ = docNode
-
-instance Pretty (GHC.SpliceDecl GHC.GhcPs) where
-  pretty' (GHC.SpliceDecl _ sp _) = pretty sp
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (GHC.HsSplice GHC.GhcPs) where
   pretty' (GHC.HsTypedSplice _ _ _ body) = string "$$" >> pretty body

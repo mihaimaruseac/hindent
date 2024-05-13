@@ -78,6 +78,7 @@ library
       HIndent.Ast.Declaration.Signature.Inline.Phase
       HIndent.Ast.Declaration.Signature.Inline.Spec
       HIndent.Ast.Declaration.Signature.StandaloneKind
+      HIndent.Ast.Declaration.Splice
       HIndent.Ast.Declaration.StandAloneDeriving
       HIndent.Ast.Declaration.TypeSynonym
       HIndent.Ast.Declaration.TypeSynonym.Lhs

@@ -80,8 +80,6 @@ instance Pretty PatInsidePatDecl
 
 instance Pretty GHC.StringLiteral
 
-instance Pretty (GHC.SpliceDecl GHC.GhcPs)
-
 instance Pretty (GHC.RoleAnnotDecl GHC.GhcPs)
 
 instance Pretty (GHC.HsSigType GHC.GhcPs)
@@ -104,3 +102,8 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
 #endif
 instance Pretty (GHC.HsExpr GHC.GhcPs)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+instance Pretty (GHC.HsUntypedSplice GHC.GhcPs)
+#else
+instance Pretty (GHC.HsSplice GHC.GhcPs)
+#endif

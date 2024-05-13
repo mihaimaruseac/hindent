@@ -1,0 +1,19 @@
+cradle:
+  stack:
+    - path: "././"
+      component: "hindent:bench:S.md"
+
+    - path: "./src"
+      component: "hindent:lib"
+
+    - path: "./internal"
+      component: "hindent:lib:hindent-internal"
+
+    - path: "./app/Main.hs"
+      component: "hindent:exe:hindent"
+
+    - path: "./tests"
+      component: "hindent:test:hindent-test"
+
+    - path: "./benchmarks/Main.hs"
+      component: "hindent:bench:hindent-bench"
