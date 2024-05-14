@@ -22,6 +22,7 @@ import HIndent.Ast.Declaration.Instance.Family.Type
 import HIndent.Ast.Declaration.Rule.Collection
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Declaration.Signature.StandaloneKind
+import HIndent.Ast.Declaration.Splice
 import HIndent.Ast.Declaration.StandAloneDeriving
 import HIndent.Ast.Declaration.TypeSynonym
 import HIndent.Ast.Declaration.Warning.Collection
@@ -48,7 +49,7 @@ data Declaration
   | Warnings WarningCollection
   | Annotation Annotation
   | RuleDecl RuleCollection
-  | SpliceDecl (GHC.SpliceDecl GHC.GhcPs)
+  | Splice SpliceDeclaration
   | RoleAnnotDecl (GHC.RoleAnnotDecl GHC.GhcPs)
 
 instance CommentExtraction Declaration where
@@ -69,7 +70,7 @@ instance CommentExtraction Declaration where
   nodeComments Warnings {} = NodeComments [] [] []
   nodeComments Annotation {} = NodeComments [] [] []
   nodeComments RuleDecl {} = NodeComments [] [] []
-  nodeComments SpliceDecl {} = NodeComments [] [] []
+  nodeComments Splice {} = NodeComments [] [] []
   nodeComments RoleAnnotDecl {} = NodeComments [] [] []
 
 instance Pretty Declaration where
@@ -90,7 +91,7 @@ instance Pretty Declaration where
   pretty' (Warnings x) = pretty x
   pretty' (Annotation x) = pretty x
   pretty' (RuleDecl x) = pretty x
-  pretty' (SpliceDecl x) = pretty x
+  pretty' (Splice x) = pretty x
   pretty' (RoleAnnotDecl x) = pretty x
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
@@ -117,7 +118,7 @@ mkDeclaration (GHC.ForD _ x) = Foreign $ mkForeignDeclaration x
 mkDeclaration (GHC.WarningD _ x) = Warnings $ mkWarningCollection x
 mkDeclaration (GHC.AnnD _ x) = Annotation $ mkAnnotation x
 mkDeclaration (GHC.RuleD _ x) = RuleDecl $ mkRuleCollection x
-mkDeclaration (GHC.SpliceD _ x) = SpliceDecl x
+mkDeclaration (GHC.SpliceD _ x) = Splice $ mkSpliceDeclaration x
 mkDeclaration (GHC.RoleAnnotD _ x) = RoleAnnotDecl x
 mkDeclaration GHC.DocD {} =
   error
