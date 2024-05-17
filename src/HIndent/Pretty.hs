@@ -25,7 +25,6 @@ import Control.Monad
 import Control.Monad.RWS
 import Data.Maybe
 import Data.Void
-import qualified GHC.Core.Coercion as GHC
 import qualified GHC.Data.Bag as GHC
 import qualified GHC.Data.FastString as GHC
 import qualified GHC.Hs as GHC
@@ -1460,17 +1459,6 @@ instance Pretty
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
   pretty' GHC.HsWC {..} = pretty hswc_body
-
-instance Pretty (GHC.RoleAnnotDecl GHC.GhcPs) where
-  pretty' (GHC.RoleAnnotDecl _ name roles) =
-    spaced
-      $ [string "type role", pretty name]
-          ++ fmap (maybe (string "_") pretty . GHC.unLoc) roles
-
-instance Pretty GHC.Role where
-  pretty' GHC.Nominal = string "nominal"
-  pretty' GHC.Representational = string "representational"
-  pretty' GHC.Phantom = string "phantom"
 
 instance Pretty (GHC.TyFamInstDecl GHC.GhcPs) where
   pretty' GHC.TyFamInstDecl {..} = string "type " >> pretty tfid_eqn
