@@ -80,7 +80,6 @@ instance Pretty PatInsidePatDecl
 
 instance Pretty GHC.StringLiteral
 
-instance Pretty (GHC.RoleAnnotDecl GHC.GhcPs)
 
 instance Pretty (GHC.HsSigType GHC.GhcPs)
 
@@ -107,3 +106,4 @@ instance Pretty (GHC.HsUntypedSplice GHC.GhcPs)
 #else
 instance Pretty (GHC.HsSplice GHC.GhcPs)
 #endif
+

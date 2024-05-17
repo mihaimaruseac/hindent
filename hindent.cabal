@@ -41,6 +41,7 @@ library
       HIndent.Ast.Declaration
       HIndent.Ast.Declaration.Annotation
       HIndent.Ast.Declaration.Annotation.Provenance
+      HIndent.Ast.Declaration.Annotation.Role
       HIndent.Ast.Declaration.Bind
       HIndent.Ast.Declaration.Class
       HIndent.Ast.Declaration.Class.FunctionalDependency
@@ -99,6 +100,7 @@ library
       HIndent.Ast.Module.Name
       HIndent.Ast.Module.Warning
       HIndent.Ast.NodeComments
+      HIndent.Ast.Role
       HIndent.Ast.Type
       HIndent.Ast.Type.Variable
       HIndent.Ast.WithComments

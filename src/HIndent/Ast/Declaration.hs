@@ -9,6 +9,7 @@ module HIndent.Ast.Declaration
 import Control.Applicative
 import Data.Maybe
 import HIndent.Ast.Declaration.Annotation
+import HIndent.Ast.Declaration.Annotation.Role
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Class
 import HIndent.Ast.Declaration.Data
@@ -50,7 +51,7 @@ data Declaration
   | Annotation Annotation
   | RuleDecl RuleCollection
   | Splice SpliceDeclaration
-  | RoleAnnotDecl (GHC.RoleAnnotDecl GHC.GhcPs)
+  | RoleAnnotDecl RoleAnnotation
 
 instance CommentExtraction Declaration where
   nodeComments DataFamily {} = NodeComments [] [] []
@@ -119,7 +120,7 @@ mkDeclaration (GHC.WarningD _ x) = Warnings $ mkWarningCollection x
 mkDeclaration (GHC.AnnD _ x) = Annotation $ mkAnnotation x
 mkDeclaration (GHC.RuleD _ x) = RuleDecl $ mkRuleCollection x
 mkDeclaration (GHC.SpliceD _ x) = Splice $ mkSpliceDeclaration x
-mkDeclaration (GHC.RoleAnnotD _ x) = RoleAnnotDecl x
+mkDeclaration (GHC.RoleAnnotD _ x) = RoleAnnotDecl $ mkRoleAnnotation x
 mkDeclaration GHC.DocD {} =
   error
     "This node should never appear in the AST. If you see this error, please report it to the HIndent maintainers."
