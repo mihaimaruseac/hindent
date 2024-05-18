@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Import.Entry
@@ -15,32 +16,38 @@ import HIndent.Ast.WithComments
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 data ImportEntry
-  = SingleIdentifier String
+  = SingleIdentifier (GHC.LIEWrappedName GHC.GhcPs)
   | WithSpecificConstructors
-      { name :: String
-      , constructors :: [String]
+      { name :: GHC.LIEWrappedName GHC.GhcPs
+      , constructors :: [GHC.LIEWrappedName GHC.GhcPs]
       }
-  | WithAllConstructors String
-
+  | WithAllConstructors (GHC.LIEWrappedName GHC.GhcPs)
+#else
+data ImportEntry
+  = SingleIdentifier (GHC.LIEWrappedName (GHC.IdP GHC.GhcPs))
+  | WithSpecificConstructors
+      { name :: GHC.LIEWrappedName (GHC.IdP GHC.GhcPs)
+      , constructors :: [GHC.LIEWrappedName (GHC.IdP GHC.GhcPs)]
+      }
+  | WithAllConstructors (GHC.LIEWrappedName (GHC.IdP GHC.GhcPs))
+#endif
 instance CommentExtraction ImportEntry where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty ImportEntry where
-  pretty' (SingleIdentifier wrapped) = string wrapped
-  pretty' (WithAllConstructors wrapped) = string wrapped >> string "(..)"
+  pretty' (SingleIdentifier wrapped) = pretty wrapped
+  pretty' (WithAllConstructors wrapped) = pretty wrapped >> string "(..)"
   pretty' WithSpecificConstructors {..} =
-    string name >> hFillingTuple (fmap string constructors)
+    pretty name >> hFillingTuple (fmap pretty constructors)
 
 mkImportEntry :: GHC.IE GHC.GhcPs -> ImportEntry
-mkImportEntry (GHC.IEVar _ name) = SingleIdentifier $ showOutputable name
-mkImportEntry (GHC.IEThingAbs _ name) = SingleIdentifier $ showOutputable name
-mkImportEntry (GHC.IEThingAll _ name) =
-  WithAllConstructors $ showOutputable name
-mkImportEntry (GHC.IEThingWith _ name _ xs) =
-  WithSpecificConstructors
-    {name = showOutputable name, constructors = fmap showOutputable xs}
+mkImportEntry (GHC.IEVar _ name) = SingleIdentifier name
+mkImportEntry (GHC.IEThingAbs _ name) = SingleIdentifier name
+mkImportEntry (GHC.IEThingAll _ name) = WithAllConstructors name
+mkImportEntry (GHC.IEThingWith _ name _ constructors) =
+  WithSpecificConstructors {..}
 mkImportEntry _ = undefined
 
 sortVariantsAndExplicitImports ::
@@ -53,7 +60,8 @@ sortVariants :: WithComments ImportEntry -> WithComments ImportEntry
 sortVariants = fmap f
   where
     f WithSpecificConstructors {..} =
-      WithSpecificConstructors {constructors = sort constructors, ..}
+      WithSpecificConstructors
+        {constructors = sortBy (compare `on` showOutputable) constructors, ..}
     f x = x
 
 -- | This function sorts the given explicit imports by their names.
@@ -62,11 +70,14 @@ sortExplicitImports = sortBy (compareImportEntities `on` getNode)
 
 -- | This function compares two import declarations by their module names.
 compareImportEntities :: ImportEntry -> ImportEntry -> Ordering
-compareImportEntities = compareIdentifier `on` getModuleName
-
+compareImportEntities = compareIdentifier `on` showOutputable . getModuleName
 -- | This function returns a 'Just' value with the module name extracted
 -- from the import declaration. Otherwise, it returns a 'Nothing'.
-getModuleName :: ImportEntry -> String
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+getModuleName :: ImportEntry -> GHC.LIEWrappedName GHC.GhcPs
+#else
+getModuleName :: ImportEntry -> GHC.LIEWrappedName (GHC.IdP GHC.GhcPs)
+#endif
 getModuleName (SingleIdentifier wrapped) = wrapped
 getModuleName (WithAllConstructors wrapped) = wrapped
 getModuleName (WithSpecificConstructors wrapped _) = wrapped

@@ -10,6 +10,7 @@ module HIndent.Ast.Import
 import Control.Monad
 import Data.Function
 import Data.List
+import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Unit as GHC
 import HIndent.Applicative
 import HIndent.Ast.Import.Entry.Collection
@@ -27,16 +28,16 @@ data QualificationPosition
   deriving (Eq)
 
 data Qualification = Qualification
-  { qualifiedAs :: Maybe String
+  { qualifiedAs :: Maybe (GHC.XRec GHC.GhcPs GHC.ModuleName)
   , position :: QualificationPosition
   } deriving (Eq)
 
 data Import = Import
-  { moduleName :: String
+  { moduleName :: GHC.XRec GHC.GhcPs GHC.ModuleName
   , isSafe :: Bool
   , isBoot :: Bool
   , qualification :: Maybe Qualification
-  , packageName :: Maybe String
+  , packageName :: Maybe GHC.StringLiteral
   , importEntries :: Maybe (WithComments ImportEntryCollection)
   }
 
@@ -49,19 +50,19 @@ instance Pretty Import where
     when isBoot $ string "{-# SOURCE #-} "
     when isSafe $ string "safe "
     when (fmap position qualification == Just Pre) $ string "qualified "
-    whenJust packageName $ \name -> string name >> space
-    string moduleName
+    whenJust packageName $ \name -> pretty name >> space
+    pretty moduleName
     when (fmap position qualification == Just Post) $ string " qualified"
     case qualification of
       Just Qualification {qualifiedAs = Just name} ->
-        string " as " >> string name
+        string " as " >> pretty name
       _ -> pure ()
     whenJust importEntries pretty
 
 mkImport :: GHC.ImportDecl GHC.GhcPs -> Import
 mkImport decl@GHC.ImportDecl {..} = Import {..}
   where
-    moduleName = showOutputable ideclName
+    moduleName = ideclName
     isSafe = ideclSafe
     isBoot = ideclSource == GHC.IsBoot
     qualification =
@@ -72,14 +73,10 @@ mkImport decl@GHC.ImportDecl {..} = Import {..}
         (_, Nothing, GHC.QualifiedPost) ->
           Just Qualification {qualifiedAs = Nothing, position = Post}
         (_, Just name, GHC.QualifiedPre) ->
-          Just
-            Qualification
-              {qualifiedAs = Just $ showOutputable name, position = Pre}
+          Just Qualification {qualifiedAs = Just name, position = Pre}
         (_, Just name, GHC.QualifiedPost) ->
-          Just
-            Qualification
-              {qualifiedAs = Just $ showOutputable name, position = Post}
-    packageName = showOutputable <$> GHC.getPackageName decl
+          Just Qualification {qualifiedAs = Just name, position = Post}
+    packageName = GHC.getPackageName decl
     importEntries = mkImportEntryCollection decl
 
 sortByName :: [WithComments Import] -> [WithComments Import]
@@ -87,7 +84,7 @@ sortByName = fmap sortExplicitImportsInDecl . sortByModuleName
 
 -- | This function sorts import declarations by their module names.
 sortByModuleName :: [WithComments Import] -> [WithComments Import]
-sortByModuleName = sortBy (compare `on` moduleName . getNode)
+sortByModuleName = sortBy (compare `on` showOutputable . moduleName . getNode)
 
 -- | This function sorts explicit imports in the given import declaration
 -- by their names.

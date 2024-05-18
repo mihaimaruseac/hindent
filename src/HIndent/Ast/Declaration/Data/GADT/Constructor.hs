@@ -20,7 +20,7 @@ import HIndent.Pretty.NodeComments
 import qualified Data.List.NonEmpty as NE
 #endif
 data GADTConstructor = GADTConstructor
-  { names :: [WithComments String]
+  { names :: [WithComments (GHC.IdP GHC.GhcPs)]
   , forallNeeded :: Bool
   , bindings :: WithComments (GHC.HsOuterSigTyVarBndrs GHC.GhcPs)
   , context :: Maybe (WithComments Context)
@@ -32,7 +32,7 @@ instance CommentExtraction GADTConstructor where
 
 instance Pretty GADTConstructor where
   pretty' (GADTConstructor {..}) = do
-    hCommaSep $ fmap (`prettyWith` string) names
+    hCommaSep $ fmap (`prettyWith` pretty) names
     hor <-|> ver
     where
       hor = string " :: " |=> body
@@ -71,12 +71,10 @@ mkGADTConstructor decl@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}
     context = fmap (fmap mkContext . fromGenLocated) con_mb_cxt
 mkGADTConstructor _ = Nothing
 
-getNames :: GHC.ConDecl GHC.GhcPs -> Maybe [WithComments String]
+getNames :: GHC.ConDecl GHC.GhcPs -> Maybe [WithComments (GHC.IdP GHC.GhcPs)]
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
-getNames GHC.ConDeclGADT {..} =
-  Just $ NE.toList $ fmap (fmap showOutputable . fromGenLocated) con_names
+getNames GHC.ConDeclGADT {..} = Just $ NE.toList $ fmap fromGenLocated con_names
 #else
-getNames GHC.ConDeclGADT {..} =
-  Just $ fmap (fmap showOutputable . fromGenLocated) con_names
+getNames GHC.ConDeclGADT {..} = Just $ fmap fromGenLocated con_names
 #endif
 getNames _ = Nothing
