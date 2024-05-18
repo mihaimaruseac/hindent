@@ -20,7 +20,7 @@ import HIndent.Pretty.NodeComments
 
 data DataFamily = DataFamily
   { isTopLevel :: Bool
-  , name :: String
+  , name :: GHC.LIdP GHC.GhcPs
   , typeVariables :: [WithComments TypeVariable]
   , signature :: Maybe (WithComments Type)
   }
@@ -32,7 +32,7 @@ instance Pretty DataFamily where
   pretty' DataFamily {..} = do
     string "data "
     when isTopLevel $ string "family "
-    string name
+    pretty name
     spacePrefixed $ fmap pretty typeVariables
     whenJust signature $ \sig -> space >> pretty sig
 
@@ -46,7 +46,7 @@ mkDataFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
       case fdTopLevel of
         GHC.TopLevel -> True
         GHC.NotTopLevel -> False
-    name = showOutputable fdLName
+    name = fdLName
     typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
     signature =
       case GHC.unLoc fdResultSig of

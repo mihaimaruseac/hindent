@@ -14,7 +14,7 @@ import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 data TypeVariable = TypeVariable
-  { name :: WithComments String
+  { name :: WithComments (GHC.IdP GHC.GhcPs)
   , kind :: Maybe (WithComments Type)
   }
 
@@ -23,14 +23,12 @@ instance CommentExtraction TypeVariable where
 
 instance Pretty TypeVariable where
   pretty' TypeVariable {kind = Just kind, ..} =
-    parens $ prettyWith name string >> string " :: " >> pretty kind
-  pretty' TypeVariable {kind = Nothing, ..} = prettyWith name string
+    parens $ pretty name >> string " :: " >> pretty kind
+  pretty' TypeVariable {kind = Nothing, ..} = pretty name
 
 mkTypeVariable :: GHC.HsTyVarBndr a GHC.GhcPs -> TypeVariable
 mkTypeVariable (GHC.UserTyVar _ _ n) =
-  TypeVariable {name = showOutputable <$> fromGenLocated n, kind = Nothing}
+  TypeVariable {name = fromGenLocated n, kind = Nothing}
 mkTypeVariable (GHC.KindedTyVar _ _ n k) =
   TypeVariable
-    { name = showOutputable <$> fromGenLocated n
-    , kind = Just $ mkType <$> fromGenLocated k
-    }
+    {name = fromGenLocated n, kind = Just $ mkType <$> fromGenLocated k}
