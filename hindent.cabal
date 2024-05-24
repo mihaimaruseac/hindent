@@ -151,7 +151,7 @@ library
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.9
+    , ghc-lib-parser >=9.2 && <9.11
     , ghc-lib-parser-ex
     , monad-loops
     , mtl
@@ -186,7 +186,7 @@ library hindent-internal
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.9
+    , ghc-lib-parser >=9.2 && <9.11
     , ghc-lib-parser-ex
     , monad-loops
     , mtl
@@ -219,7 +219,7 @@ executable hindent
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.9
+    , ghc-lib-parser >=9.2 && <9.11
     , ghc-lib-parser-ex
     , hindent
     , monad-loops
@@ -255,7 +255,7 @@ test-suite hindent-test
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.9
+    , ghc-lib-parser >=9.2 && <9.11
     , ghc-lib-parser-ex
     , hindent
     , hindent-internal
@@ -294,7 +294,7 @@ benchmark hindent-bench
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.9
+    , ghc-lib-parser >=9.2 && <9.11
     , ghc-lib-parser-ex
     , hindent
     , hindent-internal
