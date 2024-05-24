@@ -20,7 +20,7 @@ jobs:
         # `haskell-actions/setup`.
         # See https://github.com/haskell-actions/setup/issues/77.
         os: [ubuntu-latest, macos-13, windows-latest]
-        ghc: [8.10.7, 9.0.2, 9.2.8, 9.4.8, 9.6.4, 9.8.1]
+        ghc: [8.10.7, 9.0.2, 9.2.8, 9.4.8, 9.6.4, 9.8.1, 9.10.1]
     defaults:
       run:
         # The default shell on Windows is `pwsh`. However, it doesn't expand
