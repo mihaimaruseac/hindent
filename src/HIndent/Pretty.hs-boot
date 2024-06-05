@@ -43,8 +43,6 @@ instance Pretty
 
 instance Pretty GHC.RdrName
 
-instance Pretty (GHC.ConDeclField GHC.GhcPs)
-
 instance Pretty SigBindFamily
 
 instance Pretty InfixOp
@@ -77,7 +75,6 @@ instance Pretty PatInsidePatDecl
 
 instance Pretty GHC.StringLiteral
 
-
 instance Pretty (GHC.HsSigType GHC.GhcPs)
 
 instance Pretty Context
@@ -103,4 +100,4 @@ instance Pretty (GHC.HsUntypedSplice GHC.GhcPs)
 #else
 instance Pretty (GHC.HsSplice GHC.GhcPs)
 #endif
-
+instance Pretty (GHC.FieldOcc GHC.GhcPs)

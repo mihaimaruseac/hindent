@@ -6,7 +6,9 @@ module HIndent.Ast.Declaration.Data.Haskell98.Constructor.Body
   , isRecord
   ) where
 
+import HIndent.Ast.Declaration.Data.Record.Field
 import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -25,7 +27,7 @@ data Haskell98ConstructorBody
       }
   | Record
       { name :: GHC.LIdP GHC.GhcPs
-      , record :: GHC.XRec GHC.GhcPs [GHC.LConDeclField GHC.GhcPs]
+      , records :: WithComments [WithComments RecordField]
       }
 
 instance CommentExtraction Haskell98ConstructorBody where
@@ -42,7 +44,7 @@ instance Pretty Haskell98ConstructorBody where
       ver = indentedBlock $ newlinePrefixed $ fmap pretty types
   pretty' Record {..} = do
     pretty name
-    printCommentsAnd record $ \r ->
+    prettyWith records $ \r ->
       newline >> indentedBlock (vFields $ fmap pretty r)
 
 mkHaskell98ConstructorBody ::
@@ -51,9 +53,15 @@ mkHaskell98ConstructorBody GHC.ConDeclH98 { con_args = GHC.InfixCon left right
                                           , ..
                                           } = Just Infix {name = con_name, ..}
 mkHaskell98ConstructorBody GHC.ConDeclH98 {con_args = GHC.PrefixCon _ types, ..} =
-  Just Prefix {name = con_name, ..}
-mkHaskell98ConstructorBody GHC.ConDeclH98 {con_args = GHC.RecCon record, ..} =
-  Just Record {name = con_name, ..}
+  Just Prefix {..}
+  where
+    name = con_name
+mkHaskell98ConstructorBody GHC.ConDeclH98 {con_args = GHC.RecCon rs, ..} =
+  Just Record {..}
+  where
+    name = con_name
+    records =
+      fromGenLocated $ fmap (fmap (fmap mkRecordField . fromGenLocated)) rs
 mkHaskell98ConstructorBody GHC.ConDeclGADT {} = Nothing
 
 isRecord :: Haskell98ConstructorBody -> Bool
