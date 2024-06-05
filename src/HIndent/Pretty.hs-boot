@@ -8,7 +8,6 @@ module HIndent.Pretty
   ) where
 
 import           Data.Void
-import qualified GHC.Core.Type                      as GHC
 import qualified GHC.Types.Basic                    as GHC
 import qualified GHC.Types.Name.Reader              as GHC
 import qualified GHC.Types.SourceText               as GHC
@@ -45,8 +44,6 @@ instance Pretty
 instance Pretty GHC.RdrName
 
 instance Pretty (GHC.ConDeclField GHC.GhcPs)
-
-instance Pretty (GHC.HsOuterTyVarBndrs GHC.Specificity GHc.GhcPs)
 
 instance Pretty SigBindFamily
 
