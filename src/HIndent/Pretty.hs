@@ -39,6 +39,7 @@ import HIndent.Applicative
 import HIndent.Ast.Declaration
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Data.Body
+import HIndent.Ast.Declaration.Data.Record.Field
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.NodeComments
@@ -773,7 +774,8 @@ prettyHsType (GHC.HsKindSig _ t k) = spaced [pretty t, string "::", pretty k]
 prettyHsType (GHC.HsSpliceTy _ sp) = pretty sp
 prettyHsType GHC.HsDocTy {} = docNode
 prettyHsType (GHC.HsBangTy _ pack x) = pretty pack >> pretty x
-prettyHsType (GHC.HsRecTy _ xs) = hvFields $ fmap pretty xs
+prettyHsType (GHC.HsRecTy _ xs) =
+  hvFields $ fmap (pretty . fmap mkRecordField . fromGenLocated) xs
 prettyHsType (GHC.HsExplicitListTy _ _ xs) =
   case xs of
     [] -> string "'[]"
@@ -1139,16 +1141,6 @@ instance Pretty (GHC.FieldOcc GHC.GhcPs) where
 #endif
 instance Pretty a => Pretty (GHC.HsScaled GHC.GhcPs a) where
   pretty' (GHC.HsScaled _ x) = pretty x
-
-instance Pretty (GHC.ConDeclField GHC.GhcPs) where
-  pretty' GHC.ConDeclField {..}
-    -- Here, we *ignore* the 'cd_fld_doc' field because doc strings are
-    -- also stored as comments, and printing both results in duplicated
-    -- comments.
-   = do
-    hCommaSep $ fmap pretty cd_fld_names
-    string " :: "
-    pretty cd_fld_type
 
 instance Pretty InfixExpr where
   pretty' (InfixExpr (GHC.L _ (GHC.HsVar _ bind))) = pretty $ fmap InfixOp bind
