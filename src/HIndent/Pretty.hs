@@ -1685,14 +1685,6 @@ instance Pretty GHC.SrcStrictness where
   pretty' GHC.SrcLazy = string "~"
   pretty' GHC.SrcStrict = string "!"
   pretty' GHC.NoSrcStrict = pure ()
-
-instance Pretty (GHC.HsOuterSigTyVarBndrs GHC.GhcPs) where
-  pretty' GHC.HsOuterImplicit {} = pure ()
-  pretty' GHC.HsOuterExplicit {..} = do
-    string "forall"
-    spacePrefixed
-      $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) hso_bndrs
-    dot
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty GHC.FieldLabelString where
   pretty' = output
