@@ -7,9 +7,10 @@ module HIndent.Ast.Declaration.Instance.Class
 
 import Control.Monad
 import qualified GHC.Data.Bag as GHC
-import qualified GHC.Types.Basic as GHc
 import HIndent.Applicative
+import HIndent.Ast.Declaration.Instance.Class.OverlapMode
 import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -18,7 +19,7 @@ import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
 
 data ClassInstance = ClassInstance
-  { cid_overlap_mode :: Maybe (GHC.XRec GHC.GhcPs GHc.OverlapMode)
+  { overlapMode :: Maybe (WithComments OverlapMode)
   , cid_sigs :: [GHC.LSig GHC.GhcPs]
   , cid_binds :: GHC.LHsBinds GHC.GhcPs
   , cid_tyfam_insts :: [GHC.LTyFamInstDecl GHC.GhcPs]
@@ -32,7 +33,7 @@ instance CommentExtraction ClassInstance where
 instance Pretty ClassInstance where
   pretty' (ClassInstance {..}) = do
     string "instance " |=> do
-      whenJust cid_overlap_mode $ \x -> do
+      whenJust overlapMode $ \x -> do
         pretty x
         space
       pretty (fmap HsSigTypeInsideInstDecl cid_poly_ty)
@@ -52,4 +53,6 @@ instance Pretty ClassInstance where
 mkClassInstance :: GHC.InstDecl GHC.GhcPs -> Maybe ClassInstance
 mkClassInstance GHC.ClsInstD {cid_inst = GHC.ClsInstDecl {..}} =
   Just $ ClassInstance {..}
+  where
+    overlapMode = fmap (fmap mkOverlapMode . fromGenLocated) cid_overlap_mode
 mkClassInstance _ = Nothing

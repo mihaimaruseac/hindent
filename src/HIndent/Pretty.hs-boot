@@ -8,7 +8,6 @@ module HIndent.Pretty
   ) where
 
 import           Data.Void
-import qualified GHC.Types.Basic                    as GHC
 import qualified GHC.Types.Name.Reader              as GHC
 import qualified GHC.Types.SourceText               as GHC
 import qualified GHC.Types.SrcLoc                   as GHC
@@ -46,8 +45,6 @@ instance Pretty GHC.RdrName
 instance Pretty SigBindFamily
 
 instance Pretty InfixOp
-
-instance Pretty GHC.OverlapMode
 
 instance Pretty HsSigType'
 
