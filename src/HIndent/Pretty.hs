@@ -35,7 +35,6 @@ import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
-import HIndent.Applicative
 import HIndent.Ast.Declaration
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Data.Body
@@ -133,26 +132,6 @@ class CommentExtraction a =>
 -- https://github.com/mihaimaruseac/hindent/issues/586#issuecomment-1374992624.
 instance (CommentExtraction l, Pretty e) => Pretty (GHC.GenLocated l e) where
   pretty' (GHC.L _ e) = pretty e
-
-instance Pretty (GHC.ClsInstDecl GHC.GhcPs) where
-  pretty' GHC.ClsInstDecl {..} = do
-    string "instance " |=> do
-      whenJust cid_overlap_mode $ \x -> do
-        pretty x
-        space
-      pretty (fmap HsSigTypeInsideInstDecl cid_poly_ty)
-        |=> unless (null sigsAndMethods) (string " where")
-    unless (null sigsAndMethods) $ do
-      newline
-      indentedBlock $ lined $ fmap pretty sigsAndMethods
-    where
-      sigsAndMethods =
-        SBF.mkSortedLSigBindFamilyList
-          cid_sigs
-          (GHC.bagToList cid_binds)
-          []
-          cid_tyfam_insts
-          cid_datafam_insts
 
 instance Pretty
            (GHC.MatchGroup
@@ -1214,13 +1193,6 @@ instance Pretty (GHC.AmbiguousFieldOcc GHC.GhcPs) where
 instance Pretty (GHC.DerivClauseTys GHC.GhcPs) where
   pretty' (GHC.DctSingle _ ty) = parens $ pretty ty
   pretty' (GHC.DctMulti _ ts) = hvTuple $ fmap pretty ts
-
-instance Pretty GHC.OverlapMode where
-  pretty' GHC.NoOverlap {} = notUsedInParsedStage
-  pretty' GHC.Overlappable {} = string "{-# OVERLAPPABLE #-}"
-  pretty' GHC.Overlapping {} = string "{-# OVERLAPPING #-}"
-  pretty' GHC.Overlaps {} = string "{-# OVERLAPS #-}"
-  pretty' GHC.Incoherent {} = string "{-# INCOHERENT #-}"
 
 instance Pretty GHC.StringLiteral where
   pretty' = output

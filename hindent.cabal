@@ -68,6 +68,7 @@ library
       HIndent.Ast.Declaration.Foreign.CallingConvention
       HIndent.Ast.Declaration.Foreign.Safety
       HIndent.Ast.Declaration.Instance.Class
+      HIndent.Ast.Declaration.Instance.Class.OverlapMode
       HIndent.Ast.Declaration.Instance.Family.Data
       HIndent.Ast.Declaration.Instance.Family.Type
       HIndent.Ast.Declaration.Rule
