@@ -41,6 +41,7 @@ import HIndent.Ast.Declaration.Data.Body
 import HIndent.Ast.Declaration.Data.Record.Field
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Signature
+import HIndent.Ast.Expression.Splice
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Operator.Infix
 import HIndent.Ast.Operator.Prefix
@@ -409,7 +410,7 @@ prettyHsExpr (GHC.ExprWithTySig _ e sig) = do
   pretty $ GHC.hswc_body sig
 prettyHsExpr (GHC.ArithSeq _ _ x) = pretty x
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
-prettyHsExpr (GHC.HsSpliceE _ x) = pretty x
+prettyHsExpr (GHC.HsSpliceE _ x) = pretty $ mkSplice x
 #endif
 prettyHsExpr (GHC.HsProc _ pat x@(GHC.L _ (GHC.HsCmdTop _ (GHC.L _ (GHC.HsCmdDo _ xs))))) = do
   spaced [string "proc", pretty pat, string "-> do"]
@@ -444,7 +445,7 @@ prettyHsExpr GHC.HsTcBracketOut {} = notGeneratedByParser
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 prettyHsExpr (GHC.HsTypedSplice _ x) = string "$$" >> pretty x
-prettyHsExpr (GHC.HsUntypedSplice _ x) = pretty x
+prettyHsExpr (GHC.HsUntypedSplice _ x) = pretty $ mkSplice x
 #endif
 instance Pretty LambdaCase where
   pretty' (LambdaCase matches caseOrCases) = do
@@ -752,7 +753,7 @@ prettyHsType (GHC.HsIParamTy _ x ty) =
   spaced [string "?" >> pretty x, string "::", pretty ty]
 prettyHsType GHC.HsStarTy {} = string "*"
 prettyHsType (GHC.HsKindSig _ t k) = spaced [pretty t, string "::", pretty k]
-prettyHsType (GHC.HsSpliceTy _ sp) = pretty sp
+prettyHsType (GHC.HsSpliceTy _ sp) = pretty $ mkSplice sp
 prettyHsType GHC.HsDocTy {} = docNode
 prettyHsType (GHC.HsBangTy _ pack x) = pretty pack >> pretty x
 prettyHsType (GHC.HsRecTy _ xs) =
@@ -921,29 +922,7 @@ instance Pretty GHC.EpaCommentTok where
         -- contains indent spaces for all lines except the first one.
         indentedWithFixedLevel 0 $ lined $ fmap string xs
   pretty' _ = docNode
-#if !MIN_VERSION_ghc_lib_parser(9,6,1)
-instance Pretty (GHC.HsSplice GHC.GhcPs) where
-  pretty' (GHC.HsTypedSplice _ _ _ body) = string "$$" >> pretty body
-  pretty' (GHC.HsUntypedSplice _ GHC.DollarSplice _ body) =
-    string "$" >> pretty body
-  pretty' (GHC.HsUntypedSplice _ GHC.BareSplice _ body) = pretty body
-  -- The body of a quasi-quote must not be changed by a formatter.
-  -- Changing it will modify the actual behavior of the code.
-  pretty' (GHC.HsQuasiQuote _ _ l _ r) =
-    brackets $ do
-      pretty l
-      wrapWithBars
-        $ indentedWithFixedLevel 0
-        $ sequence_
-        $ printers [] ""
-        $ GHC.unpackFS r
-    where
-      printers ps s [] = reverse (string (reverse s) : ps)
-      printers ps s ('\n':xs) =
-        printers (newline : string (reverse s) : ps) "" xs
-      printers ps s (x:xs) = printers ps (x : s) xs
-  pretty' GHC.HsSpliced {} = notGeneratedByParser
-#endif
+
 instance Pretty (GHC.Pat GHC.GhcPs) where
   pretty' = prettyPat
 
@@ -991,7 +970,7 @@ prettyPat GHC.ConPat {..} =
       unlessSpecialOp (GHC.unLoc pat_con) space
       pretty b
 prettyPat (GHC.ViewPat _ l r) = spaced [pretty l, string "->", pretty r]
-prettyPat (GHC.SplicePat _ x) = pretty x
+prettyPat (GHC.SplicePat _ x) = pretty $ mkSplice x
 prettyPat (GHC.LitPat _ x) = pretty x
 prettyPat (GHC.NPat _ x _ _) = pretty x
 prettyPat (GHC.NPlusKPat _ n k _ _ _) = pretty n >> string "+" >> pretty k
@@ -1639,28 +1618,6 @@ instance Pretty GHC.SrcStrictness where
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty GHC.FieldLabelString where
   pretty' = output
-
-instance Pretty (GHC.HsUntypedSplice GHC.GhcPs) where
-  pretty' (GHC.HsUntypedSpliceExpr _ x) = string "$" >> pretty x
-  -- The body of a quasi-quote must not be changed by a formatter.
-  -- Changing it will modify the actual behavior of the code.
-  --
-  -- TODO: Remove duplicated code
-  pretty' (GHC.HsQuasiQuote _ l r) =
-    brackets $ do
-      pretty l
-      printCommentsAnd
-        r
-        (wrapWithBars
-           . indentedWithFixedLevel 0
-           . sequence_
-           . printers [] ""
-           . GHC.unpackFS)
-    where
-      printers ps s [] = reverse (string (reverse s) : ps)
-      printers ps s ('\n':xs) =
-        printers (newline : string (reverse s) : ps) "" xs
-      printers ps s (x:xs) = printers ps (x : s) xs
 #endif
 -- | Marks an AST node as never appearing in an AST.
 --

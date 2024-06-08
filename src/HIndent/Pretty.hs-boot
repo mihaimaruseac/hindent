@@ -92,11 +92,7 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
 #endif
 instance Pretty (GHC.HsExpr GHC.GhcPs)
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-instance Pretty (GHC.HsUntypedSplice GHC.GhcPs)
-#else
-instance Pretty (GHC.HsSplice GHC.GhcPs)
-#endif
+
 instance Pretty (GHC.FieldOcc GHC.GhcPs)
 
 instance Pretty GHC.OccName
