@@ -14,6 +14,7 @@ import HIndent.Ast.Declaration.Signature.Fixity
 import HIndent.Ast.Declaration.Signature.Inline.Phase
 import HIndent.Ast.Declaration.Signature.Inline.Spec
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Operator.Infix
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -121,7 +122,8 @@ instance Pretty Signature where
           $ indentedWithSpace 3
           $ printCommentsAnd signature (pretty . HsSigTypeInsideDeclSig)
   pretty' Fixity {..} =
-    spaced [pretty fixity, hCommaSep $ fmap (pretty . fmap InfixOp) names]
+    spaced
+      [pretty fixity, hCommaSep $ fmap (pretty . fmap mkInfixOperator) names]
   pretty' Inline {..} = do
     string "{-# "
     pretty spec

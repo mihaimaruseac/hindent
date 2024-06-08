@@ -8,9 +8,11 @@ module HIndent.Pretty
   ) where
 
 import           Data.Void
+import qualified GHC.Types.Name                     as GHC
 import qualified GHC.Types.Name.Reader              as GHC
 import qualified GHC.Types.SourceText               as GHC
 import qualified GHC.Types.SrcLoc                   as GHC
+import qualified GHC.Unit                           as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHc
 import           HIndent.Pretty.NodeComments
@@ -43,8 +45,6 @@ instance Pretty
 instance Pretty GHC.RdrName
 
 instance Pretty SigBindFamily
-
-instance Pretty InfixOp
 
 instance Pretty HsSigType'
 
@@ -98,3 +98,7 @@ instance Pretty (GHC.HsUntypedSplice GHC.GhcPs)
 instance Pretty (GHC.HsSplice GHC.GhcPs)
 #endif
 instance Pretty (GHC.FieldOcc GHC.GhcPs)
+
+instance Pretty GHC.OccName
+
+instance Pretty GHC.ModuleName
