@@ -102,6 +102,8 @@ library
       HIndent.Ast.Module.Name
       HIndent.Ast.Module.Warning
       HIndent.Ast.NodeComments
+      HIndent.Ast.Operator.Infix
+      HIndent.Ast.Operator.Prefix
       HIndent.Ast.Role
       HIndent.Ast.Type
       HIndent.Ast.Type.Variable
