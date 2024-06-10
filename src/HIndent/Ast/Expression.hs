@@ -389,7 +389,7 @@ mkExpression (GHC.HsDo _ (GHC.MDoExpr moduleName) statements) =
 mkExpression (GHC.HsDo _ GHC.GhciStmtCtxt {} _) =
   error "We're not using GHCi, are we?"
 mkExpression (GHC.RecordCon _ name fields) = RecordConstructor {..}
-#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
+#if MIN_VERSION_ghc_lib_parser(9, 8, 0)
 mkExpression (GHC.RecordUpd _ base GHC.RegularRecUpdFields {..}) =
   RecordUpdate {..}
   where
