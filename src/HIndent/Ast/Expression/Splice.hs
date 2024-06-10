@@ -7,6 +7,7 @@ module HIndent.Ast.Expression.Splice
 
 import qualified GHC.Data.FastString as GHC
 import qualified GHC.Types.Name.Reader as GHC
+import {-# SOURCE #-} HIndent.Ast.Expression
 import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -28,9 +29,9 @@ instance CommentExtraction Splice where
   nodeComments QuasiQuote {} = NodeComments [] [] []
 
 instance Pretty Splice where
-  pretty' (Typed x) = string "$$" >> pretty x
-  pretty' (UntypedDollar x) = string "$" >> pretty x
-  pretty' (UntypedBare x) = pretty x
+  pretty' (Typed x) = string "$$" >> pretty (fmap mkExpression x)
+  pretty' (UntypedDollar x) = string "$" >> pretty (fmap mkExpression x)
+  pretty' (UntypedBare x) = pretty $ fmap mkExpression x
   pretty' (QuasiQuote l r) =
     brackets $ do
       pretty l

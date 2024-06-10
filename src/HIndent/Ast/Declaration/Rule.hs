@@ -9,6 +9,7 @@ module HIndent.Ast.Declaration.Rule
 import qualified GHC.Core as GHC
 import qualified GHC.Data.FastString as GHC
 import HIndent.Ast.Declaration.Rule.Binder
+import {-# SOURCE #-} HIndent.Ast.Expression
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -32,18 +33,18 @@ instance Pretty RuleDeclaration where
       [ prettyWith name (doubleQuotes . string . GHC.unpackFS)
       , prettyLhs
       , string "="
-      , pretty rhs
+      , pretty $ fmap mkExpression rhs
       ]
     where
       prettyLhs =
         if null binders
-          then pretty lhs
+          then pretty $ fmap mkExpression lhs
           else do
             string "forall "
             spaced $ fmap pretty binders
             dot
             space
-            pretty lhs
+            pretty $ fmap mkExpression lhs
 
 mkRuleDeclaration :: GHC.RuleDecl GHC.GhcPs -> RuleDeclaration
 mkRuleDeclaration rule@GHC.HsRule {..} = RuleDeclaration {..}

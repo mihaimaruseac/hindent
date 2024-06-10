@@ -91,10 +91,66 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHc.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
 #endif
-instance Pretty (GHC.HsExpr GHC.GhcPs)
-
 instance Pretty (GHC.FieldOcc GHC.GhcPs)
 
 instance Pretty GHC.OccName
+
+instance Pretty GHC.HsIPName
+
+instance Pretty (GHC.HsOverLit GHC.GhcPs)
+
+instance Pretty (GHC.HsLit GHC.GhcPs)
+
+instance Pretty LambdaCase
+
+instance Pretty
+           (GHC.HsWildCardBndrs
+              GHC.GhcPs
+              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
+
+instance Pretty InfixApp
+
+instance Pretty InfixExpr
+
+instance Pretty (GHC.HsTupArg GHC.GhcPs)
+
+instance Pretty
+           (GHC.StmtLR
+              GHC.GhcPs
+              GHC.GhcPs
+              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
+
+instance Pretty QualifiedDo
+
+instance Pretty GRHSExpr
+
+instance Pretty LetIn
+
+instance Pretty ListComprehension
+
+instance Pretty DoExpression
+
+instance Pretty
+           (GHC.HsRecFields
+              GHC.GhcPs
+              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
+
+instance Pretty (GHC.AmbiguousFieldOcc GHC.GhcPs)
+
+instance Pretty (GHC.FieldLabelStrings GHC.GhcPs)
+#if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
+instance Pretty (GHC.HsFieldLabel GHC.GhcPs)
+#endif
+instance Pretty (GHC.ArithSeqInfo GHC.GhcPs)
+
+instance Pretty
+           (GHC.StmtLR
+              GHC.GhcPs
+              GHC.GhcPs
+              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsCmd GHC.GhcPs)))
+
+instance Pretty (GHC.HsCmdTop GHC.GhcPs)
+
+instance Pretty (GHC.HsPragE GHC.GhcPs)
 
 instance Pretty GHC.ModuleName

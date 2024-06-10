@@ -7,6 +7,7 @@ module HIndent.Ast.Declaration.Annotation
   ) where
 
 import HIndent.Ast.Declaration.Annotation.Provenance
+import {-# SOURCE #-} HIndent.Ast.Expression
 import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -23,7 +24,12 @@ instance CommentExtraction Annotation where
 
 instance Pretty Annotation where
   pretty' Annotation {..} =
-    spaced [string "{-# ANN", pretty provenance, pretty expr, string "#-}"]
+    spaced
+      [ string "{-# ANN"
+      , pretty provenance
+      , pretty $ fmap mkExpression expr
+      , string "#-}"
+      ]
 
 mkAnnotation :: GHC.AnnDecl GHC.GhcPs -> Annotation
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)

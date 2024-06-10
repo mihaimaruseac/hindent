@@ -59,6 +59,7 @@ library
       HIndent.Ast.Declaration.Data.Header
       HIndent.Ast.Declaration.Data.NewOrData
       HIndent.Ast.Declaration.Data.Record.Field
+      HIndent.Ast.Declaration.Data.Record.Field.Name
       HIndent.Ast.Declaration.Default
       HIndent.Ast.Declaration.Family.Data
       HIndent.Ast.Declaration.Family.Type
@@ -88,7 +89,12 @@ library
       HIndent.Ast.Declaration.Warning
       HIndent.Ast.Declaration.Warning.Collection
       HIndent.Ast.Declaration.Warning.Kind
+      HIndent.Ast.Expression
+      HIndent.Ast.Expression.Bracket
+      HIndent.Ast.Expression.Record.Field
+      HIndent.Ast.Expression.Record.Field.Label
       HIndent.Ast.Expression.Splice
+      HIndent.Ast.Expression.Variable
       HIndent.Ast.FileHeaderPragma
       HIndent.Ast.FileHeaderPragma.Collection
       HIndent.Ast.Import
