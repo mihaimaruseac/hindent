@@ -20,8 +20,8 @@ import HIndent.Pretty.NodeComments
 data RuleDeclaration = RuleDeclaration
   { name :: WithComments GHC.RuleName
   , binders :: [WithComments RuleBinder]
-  , lhs :: WithComments (GHC.HsExpr GHC.GhcPs)
-  , rhs :: WithComments (GHC.HsExpr GHC.GhcPs)
+  , lhs :: WithComments Expression
+  , rhs :: WithComments Expression
   }
 
 instance CommentExtraction RuleDeclaration where
@@ -33,26 +33,26 @@ instance Pretty RuleDeclaration where
       [ prettyWith name (doubleQuotes . string . GHC.unpackFS)
       , prettyLhs
       , string "="
-      , pretty $ fmap mkExpression rhs
+      , pretty rhs
       ]
     where
       prettyLhs =
         if null binders
-          then pretty $ fmap mkExpression lhs
+          then pretty lhs
           else do
             string "forall "
             spaced $ fmap pretty binders
             dot
             space
-            pretty $ fmap mkExpression lhs
+            pretty lhs
 
 mkRuleDeclaration :: GHC.RuleDecl GHC.GhcPs -> RuleDeclaration
 mkRuleDeclaration rule@GHC.HsRule {..} = RuleDeclaration {..}
   where
     name = getName rule
     binders = fmap (fmap mkRuleBinder . fromGenLocated) rd_tmvs
-    lhs = fromGenLocated rd_lhs
-    rhs = fromGenLocated rd_rhs
+    lhs = fmap mkExpression $ fromGenLocated rd_lhs
+    rhs = fmap mkExpression $ fromGenLocated rd_rhs
 
 getName :: GHC.RuleDecl GHC.GhcPs -> WithComments GHC.RuleName
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
