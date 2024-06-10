@@ -6,6 +6,7 @@ module HIndent.Ast.Expression
   , mkExpression
   ) where
 
+import Control.Monad
 import Control.Monad.RWS
 import Data.List.NonEmpty
 import qualified GHC.Data.FastString as GHC
@@ -388,7 +389,16 @@ mkExpression (GHC.HsDo _ (GHC.MDoExpr moduleName) statements) =
 mkExpression (GHC.HsDo _ GHC.GhciStmtCtxt {} _) =
   error "We're not using GHCi, are we?"
 mkExpression (GHC.RecordCon _ name fields) = RecordConstructor {..}
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
+mkExpression (GHC.RecordUpd _ base GHC.RegularRecUpdFields {..}) =
+  RecordUpdate {..}
+  where
+    updaters = fmap (fmap mkRecordField . fromGenLocated) recUpdFields
+mkExpression (GHC.RecordUpd _ base GHC.OverloadedRecUpdFields {..}) =
+  RecordUpdate {..}
+  where
+    updaters = fmap (fmap mkRecordField . fromGenLocated) olRecUpdFields
+#elif MIN_VERSION_ghc_lib_parser(9, 4, 0)
 mkExpression (GHC.RecordUpd _ base us) = RecordUpdate {..}
   where
     updaters =

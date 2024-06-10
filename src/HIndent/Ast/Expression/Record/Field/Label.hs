@@ -16,7 +16,9 @@ import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 import HIndent.Printer
-#if MIN_VERSION_ghc_lib_parser(9, 4, 0)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
+import qualified Language.Haskell.Syntax.Basic as GHC
+#elif MIN_VERSION_ghc_lib_parser(9, 4, 0)
 import qualified GHC.Types.FieldLabel as GHC
 #endif
 newtype FieldLabel =
