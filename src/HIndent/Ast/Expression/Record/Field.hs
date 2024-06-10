@@ -45,5 +45,5 @@ mkRecordField ::
 mkRecordField GHC.HsRecField {..} = RecordField {..}
   where
     label = fmap mkFieldLabel $ fromGenLocated hsRecFieldLbl
-    expr = fromGenLocated $ fmap mkExpression hsRecFieldArg
+    expr = fmap mkExpression $ fromGenLocated hsRecFieldArg
 #endif
