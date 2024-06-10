@@ -17,7 +17,7 @@ import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 import HIndent.Printer
 #if MIN_VERSION_ghc_lib_parser(9, 4, 0)
-import qualified Language.Haskell.Syntax.Basic as GHC
+import qualified GHC.Types.FieldLabel as GHC
 #endif
 newtype FieldLabel =
   FieldLabel [Printer ()]
@@ -49,11 +49,10 @@ instance MkFieldLabel (GHC.FieldOcc GHC.GhcPs) where
 instance MkFieldLabel (GHC.FieldLabelStrings GHC.GhcPs) where
   mkFieldLabel (GHC.FieldLabelStrings xs) =
     FieldLabel
-      $ fmap (\x -> prettyWith x string)
-      $ (`fmap` xs)
-          (\x ->
-             let GHC.L _ (GHC.HsFieldLabel {..}) = x
-              in fmap GHC.unpackFS $ fromGenLocated hflLabel)
+      $ fmap
+          (\(GHC.L _ GHC.HsFieldLabel {..}) ->
+             prettyWith (fmap GHC.unpackFS $ fromGenLocated hflLabel) string)
+          xs
 
 instance MkFieldLabel (GHC.HsFieldLabel GHC.GhcPs) where
   mkFieldLabel GHC.HsFieldLabel {..} =
