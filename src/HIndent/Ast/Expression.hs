@@ -333,7 +333,7 @@ mkExpression (GHC.HsVar _ x) = Variable $ fmap mkVariable $ fromGenLocated x
 mkExpression (GHC.HsUnboundVar _ x) =
   Variable $ fmap mkVariable $ mkWithComments x
 mkExpression (GHC.HsLit _ x) = Literal x
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkExpression (GHC.HsOverLabel _ _ x) = OverloadedLabel x
 #else
 mkExpression (GHC.HsOverLabel _ x) = OverloadedLabel x
@@ -350,7 +350,7 @@ mkExpression (GHC.HsLamCase _ x) = LambdaCase x
 mkExpression (GHC.NegApp _ x _) = Negation x
 mkExpression (GHC.HsApp _ l r) = Application {..}
 mkExpression (GHC.OpApp _ l o r) = OperatorApplication {..}
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkExpression (GHC.HsAppType _ v _ ty) = TypeApplication {..}
 #else
 mkExpression (GHC.HsAppType _ v ty) = TypeApplication {..}
