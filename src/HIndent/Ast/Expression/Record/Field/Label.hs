@@ -30,7 +30,7 @@ instance CommentExtraction FieldLabel where
 
 instance Pretty FieldLabel where
   pretty' (FieldLabel xs) = hDotSep xs
-#if MIN_VERSION_ghc_lib_parser(9, 4, 0)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 instance MkFieldLabel (GHC.FieldOcc GHC.GhcPs) where
   mkFieldLabel GHC.FieldOcc {..} = FieldLabel [pretty $ fromGenLocated foLabel]
 
@@ -40,6 +40,17 @@ instance MkFieldLabel (GHC.FieldLabelStrings GHC.GhcPs) where
       $ fmap
           (\(GHC.L _ GHC.DotFieldOcc {dfoLabel = GHC.L _ (GHC.FieldLabelString {..})}) ->
              string $ GHC.unpackFS field_label)
+          xs
+#elif MIN_VERSION_ghc_lib_parser(9, 4, 0)
+instance MkFieldLabel (GHC.FieldOcc GHC.GhcPs) where
+  mkFieldLabel GHC.FieldOcc {..} = FieldLabel [pretty $ fromGenLocated foLabel]
+
+instance MkFieldLabel (GHC.FieldLabelStrings GHC.GhcPs) where
+  mkFieldLabel (GHC.FieldLabelStrings xs) =
+    FieldLabel
+      $ fmap
+          (\(GHC.L _ GHC.DotFieldOcc {dfoLabel = GHC.L _ s}) ->
+             string $ GHC.unpackFS s)
           xs
 #else
 instance MkFieldLabel (GHC.FieldOcc GHC.GhcPs) where
@@ -65,9 +76,14 @@ instance MkFieldLabel (GHC.AmbiguousFieldOcc GHC.GhcPs) where
 instance (MkFieldLabel a, CommentExtraction l) =>
          MkFieldLabel (GHC.GenLocated l a) where
   mkFieldLabel = FieldLabel . (: []) . pretty . fmap mkFieldLabel
-#if MIN_VERSION_ghc_lib_parser(9, 4, 0)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 instance MkFieldLabel (GHC.DotFieldOcc GHC.GhcPs) where
   mkFieldLabel GHC.DotFieldOcc {..} =
     let GHC.L _ (GHC.FieldLabelString {..}) = dfoLabel
      in FieldLabel [string $ GHC.unpackFS field_label]
+#elif MIN_VERSION_ghc_lib_parser(9, 4, 0)
+instance MkFieldLabel (GHC.DotFieldOcc GHC.GhcPs) where
+  mkFieldLabel GHC.DotFieldOcc {..} =
+    let GHC.L _ s = dfoLabel
+     in FieldLabel [string $ GHC.unpackFS s]
 #endif
