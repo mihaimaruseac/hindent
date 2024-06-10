@@ -34,12 +34,16 @@ instance Pretty RecordField where
         indentedBlock $ pretty expr
 #if MIN_VERSION_ghc_lib_parser(9, 4, 0)
 mkRecordField ::
-     MkFieldLabel a => GHC.FsFieldBind a (GHC.LHsExpr GHC.GhcPs) -> RecordField
+     MkFieldLabel a => GHC.HsFieldBind a (GHC.LHsExpr GHC.GhcPs) -> RecordField
+mkRecordField GHC.HsFieldBind {..} = RecordField {..}
+  where
+    label = mkWithComments $ mkFieldLabel hfbLHS
+    expr = fromGenLocated $ fmap mkExpression hfbRHS
 #else
 mkRecordField ::
      MkFieldLabel a => GHC.HsRecField' a (GHC.LHsExpr GHC.GhcPs) -> RecordField
-#endif
 mkRecordField GHC.HsRecField {..} = RecordField {..}
   where
     label = fmap mkFieldLabel $ fromGenLocated hsRecFieldLbl
     expr = fromGenLocated $ fmap mkExpression hsRecFieldArg
+#endif

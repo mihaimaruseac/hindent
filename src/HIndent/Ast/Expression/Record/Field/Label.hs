@@ -1,23 +1,23 @@
-{-# LANGUAGE CPP               #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Expression.Record.Field.Label
   ( FieldLabel
   , MkFieldLabel(..)
   ) where
 
-import                qualified GHC.Data.FastString                as GHC
-import                qualified GHC.Types.SrcLoc                   as GHC
-import                          HIndent.Ast.NodeComments
-import                          HIndent.Ast.WithComments
-import                qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-}           HIndent.Pretty
-import                          HIndent.Pretty.Combinators
-import                          HIndent.Pretty.NodeComments
-import                          HIndent.Printer
+import qualified GHC.Data.FastString as GHC
+import qualified GHC.Types.SrcLoc as GHC
+import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
+import HIndent.Printer
 #if MIN_VERSION_ghc_lib_parser(9, 4, 0)
-import                qualified Language.Haskell.Syntax.Basic      as GHC
+import qualified Language.Haskell.Syntax.Basic as GHC
 #endif
 newtype FieldLabel =
   FieldLabel [Printer ()]
@@ -61,7 +61,7 @@ instance MkFieldLabel (GHC.HsFieldLabel GHC.GhcPs) where
 #endif
 instance MkFieldLabel (GHC.AmbiguousFieldOcc GHC.GhcPs) where
   mkFieldLabel (GHC.Unambiguous _ x) = FieldLabel [pretty x]
-  mkFieldLabel (GHC.Ambiguous _ x)   = FieldLabel [pretty x]
+  mkFieldLabel (GHC.Ambiguous _ x) = FieldLabel [pretty x]
 
 instance (MkFieldLabel a, CommentExtraction l) =>
          MkFieldLabel (GHC.GenLocated l a) where
