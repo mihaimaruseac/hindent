@@ -35,12 +35,12 @@ import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
-import HIndent.Ast.Declaration
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Data.Body
 import HIndent.Ast.Declaration.Data.Record.Field
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Signature
+import HIndent.Ast.Expression.Bracket
 import HIndent.Ast.Expression.Splice
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Operator.Infix
@@ -429,7 +429,7 @@ prettyHsExpr (GHC.HsPragE _ p x) = spaced [pretty p, pretty x]
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 prettyHsExpr GHC.HsRecSel {} = notGeneratedByParser
 prettyHsExpr (GHC.HsTypedBracket _ inner) = typedBrackets $ pretty inner
-prettyHsExpr (GHC.HsUntypedBracket _ inner) = pretty inner
+prettyHsExpr (GHC.HsUntypedBracket _ inner) = pretty $ mkBracket inner
 #else
 prettyHsExpr GHC.HsConLikeOut {} = notGeneratedByParser
 prettyHsExpr GHC.HsRecFld {} = notGeneratedByParser
@@ -439,7 +439,7 @@ prettyHsExpr (GHC.HsDo _ GHC.ParStmtCtxt {} _) = notGeneratedByParser
 prettyHsExpr (GHC.HsDo _ GHC.TransStmtCtxt {} _) = notGeneratedByParser
 prettyHsExpr GHC.HsTick {} = forHpc
 prettyHsExpr GHC.HsBinTick {} = forHpc
-prettyHsExpr (GHC.HsBracket _ inner) = pretty inner
+prettyHsExpr (GHC.HsBracket _ inner) = pretty $ mkBracket inner
 prettyHsExpr GHC.HsRnBracketOut {} = notGeneratedByParser
 prettyHsExpr GHC.HsTcBracketOut {} = notGeneratedByParser
 #endif
@@ -986,23 +986,7 @@ instance Pretty RecConPat where
       fieldPrinters =
         fmap (pretty . fmap RecConField) rec_flds
           ++ maybeToList (fmap (const (string "..")) rec_dotdot)
-#if !MIN_VERSION_ghc_lib_parser(9,4,1)
-instance Pretty (GHC.HsBracket GHC.GhcPs) where
-  pretty' (GHC.ExpBr _ expr) = brackets $ wrapWithBars $ pretty expr
-  pretty' (GHC.PatBr _ expr) =
-    brackets $ string "p" >> wrapWithBars (pretty expr)
-  pretty' (GHC.DecBrL _ decls) =
-    brackets
-      $ string "d| "
-          |=> lined (fmap (pretty . fmap mkDeclaration . fromGenLocated) decls)
-          >> string " |"
-  pretty' GHC.DecBrG {} = notGeneratedByParser
-  pretty' (GHC.TypBr _ expr) =
-    brackets $ string "t" >> wrapWithBars (pretty expr)
-  pretty' (GHC.VarBr _ True var) = string "'" >> pretty var
-  pretty' (GHC.VarBr _ False var) = string "''" >> pretty var
-  pretty' (GHC.TExpBr _ x) = typedBrackets $ pretty x
-#endif
+
 instance Pretty SBF.SigBindFamily where
   pretty' (SBF.Sig x) = pretty $ mkSignature x
   pretty' (SBF.Bind x) = pretty $ mkBind x
@@ -1327,20 +1311,6 @@ instance Pretty
   pretty' (GHC.HsValArg x) = pretty x
   pretty' (GHC.HsTypeArg _ x) = string "@" >> pretty x
   pretty' GHC.HsArgPar {} = notUsedInParsedStage
-#endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
-instance Pretty (GHC.HsQuote GHC.GhcPs) where
-  pretty' (GHC.ExpBr _ x) = brackets $ wrapWithBars $ pretty x
-  pretty' (GHC.PatBr _ x) = brackets $ string "p" >> wrapWithBars (pretty x)
-  pretty' (GHC.DecBrL _ decls) =
-    brackets
-      $ string "d| "
-          |=> lined (fmap (pretty . fmap mkDeclaration . fromGenLocated) decls)
-          >> string " |"
-  pretty' GHC.DecBrG {} = notUsedInParsedStage
-  pretty' (GHC.TypBr _ x) = brackets $ string "t" >> wrapWithBars (pretty x)
-  pretty' (GHC.VarBr _ True x) = string "'" >> pretty x
-  pretty' (GHC.VarBr _ False x) = string "''" >> pretty x
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance Pretty (GHC.WithHsDocIdentifiers GHC.StringLiteral GHC.GhcPs) where
