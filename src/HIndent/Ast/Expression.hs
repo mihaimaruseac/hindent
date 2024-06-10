@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP             #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Expression
@@ -6,36 +6,35 @@ module HIndent.Ast.Expression
   , mkExpression
   ) where
 
-import Control.Monad.RWS
-import Data.List.NonEmpty
-import qualified GHC.Data.FastString as GHC
-import GHC.Stack
-import qualified GHC.Types.Basic as GHC
-import qualified GHC.Types.SrcLoc as GHC
-import qualified GHC.Unit as GHC
-import HIndent.Ast.Expression.Bracket
-import {-# SOURCE #-} HIndent.Ast.Expression.Record.Field
-import HIndent.Ast.Expression.Record.Field.Label
-import HIndent.Ast.Expression.Splice
-import HIndent.Ast.Expression.Variable
-import HIndent.Ast.NodeComments
-import HIndent.Ast.WithComments
-import HIndent.GhcLibParserWrapper.GHC.Hs
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
-import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
-import HIndent.Pretty.Types hiding
-  ( Case
-  , Cases
-  , Do
-  , LambdaCase
-  , LetIn
-  , ListComprehension
-  , Mdo
-  )
-import qualified HIndent.Pretty.Types as Pretty
-import HIndent.Printer
+import                          Control.Monad.RWS
+import                          Data.List.NonEmpty
+import                qualified GHC.Data.FastString                       as GHC
+import                          GHC.Stack
+import                qualified GHC.Types.Basic                           as GHC
+import                qualified GHC.Types.SrcLoc                          as GHC
+import                qualified GHC.Unit                                  as GHC
+import                          HIndent.Ast.Expression.Bracket
+import {-# SOURCE #-}           HIndent.Ast.Expression.Record.Field
+import                          HIndent.Ast.Expression.Record.Field.Label
+import                          HIndent.Ast.Expression.Splice
+import                          HIndent.Ast.Expression.Variable
+import                          HIndent.Ast.NodeComments
+import                          HIndent.Ast.WithComments
+import                          HIndent.GhcLibParserWrapper.GHC.Hs
+import                qualified HIndent.GhcLibParserWrapper.GHC.Hs        as GHC
+import {-# SOURCE #-}           HIndent.Pretty
+import                          HIndent.Pretty.Combinators
+import                          HIndent.Pretty.NodeComments
+import                          HIndent.Pretty.Types                      hiding
+                                                                          (Case,
+                                                                           Cases,
+                                                                           Do,
+                                                                           LambdaCase,
+                                                                           LetIn,
+                                                                           ListComprehension,
+                                                                           Mdo)
+import                qualified HIndent.Pretty.Types                      as Pretty
+import                          HIndent.Printer
 
 data Expression
   = Variable (WithComments Variable)
@@ -57,7 +56,7 @@ data Expression
       , r :: GHC.LHsExpr GHC.GhcPs
       }
   | TypeApplication
-      { v :: GHC.LHsExpr GHC.GhcPs
+      { v  :: GHC.LHsExpr GHC.GhcPs
       , ty :: GHC.LHsWcType GHC.GhcPs
       }
   | Parentheses (GHC.LHsExpr GHC.GhcPs)
@@ -71,12 +70,12 @@ data Expression
       }
   | Tuple
       { elements :: [GHC.HsTupArg GHC.GhcPs]
-      , boxity :: GHC.Boxity
+      , boxity   :: GHC.Boxity
       }
   | UnboxedSum
       { position :: Int
       , numElems :: Int
-      , expr :: GHC.LHsExpr GHC.GhcPs
+      , expr     :: GHC.LHsExpr GHC.GhcPs
       }
   | Case
       { cond :: GHC.LHsExpr GHC.GhcPs
@@ -84,13 +83,13 @@ data Expression
       }
   | If
       { cond :: GHC.LHsExpr GHC.GhcPs
-      , t :: GHC.LHsExpr GHC.GhcPs
-      , f :: GHC.LHsExpr GHC.GhcPs
+      , t    :: GHC.LHsExpr GHC.GhcPs
+      , f    :: GHC.LHsExpr GHC.GhcPs
       }
   | MultiWayIf [GHC.LGRHS GHC.GhcPs (GHC.LHsExpr GHC.GhcPs)]
   | LetIn
       { binds :: GHC.HsLocalBinds GHC.GhcPs
-      , expr :: GHC.LHsExpr GHC.GhcPs
+      , expr  :: GHC.LHsExpr GHC.GhcPs
       }
   | List [GHC.LHsExpr GHC.GhcPs]
   | ListComprehension
@@ -98,14 +97,14 @@ data Expression
   | Do
       { statements :: GHC.GenLocated GHC.SrcSpanAnnL [GHC.ExprLStmt GHC.GhcPs]
       , moduleName :: Maybe GHC.ModuleName
-      , doType :: DoOrMdo
+      , doType     :: DoOrMdo
       }
   | RecordConstructor
-      { name :: GHC.XRec GHC.GhcPs (GHC.ConLikeP GHC.GhcPs)
+      { name   :: GHC.XRec GHC.GhcPs (GHC.ConLikeP GHC.GhcPs)
       , fields :: GHC.HsRecordBinds GHC.GhcPs
       }
   | RecordUpdate
-      { base :: GHC.LHsExpr GHC.GhcPs
+      { base     :: GHC.LHsExpr GHC.GhcPs
       , updaters :: [WithComments RecordField]
       }
   | GetField (GHC.LHsExpr GHC.GhcPs) (WithComments FieldLabel)
@@ -116,38 +115,38 @@ data Expression
   | Expression (GHC.HsExpr GHC.GhcPs)
 
 instance CommentExtraction Expression where
-  nodeComments Variable {} = NodeComments [] [] []
-  nodeComments Literal {} = NodeComments [] [] []
-  nodeComments OverloadedLabel {} = NodeComments [] [] []
-  nodeComments OverloadedLiteral {} = NodeComments [] [] []
-  nodeComments ImplicitParameter {} = NodeComments [] [] []
-  nodeComments Lambda {} = NodeComments [] [] []
-  nodeComments LambdaCase {} = NodeComments [] [] []
-  nodeComments LambdaCases {} = NodeComments [] [] []
-  nodeComments Negation {} = NodeComments [] [] []
-  nodeComments Application {} = NodeComments [] [] []
+  nodeComments Variable {}            = NodeComments [] [] []
+  nodeComments Literal {}             = NodeComments [] [] []
+  nodeComments OverloadedLabel {}     = NodeComments [] [] []
+  nodeComments OverloadedLiteral {}   = NodeComments [] [] []
+  nodeComments ImplicitParameter {}   = NodeComments [] [] []
+  nodeComments Lambda {}              = NodeComments [] [] []
+  nodeComments LambdaCase {}          = NodeComments [] [] []
+  nodeComments LambdaCases {}         = NodeComments [] [] []
+  nodeComments Negation {}            = NodeComments [] [] []
+  nodeComments Application {}         = NodeComments [] [] []
   nodeComments OperatorApplication {} = NodeComments [] [] []
-  nodeComments TypeApplication {} = NodeComments [] [] []
-  nodeComments Parentheses {} = NodeComments [] [] []
-  nodeComments SectionLeft {} = NodeComments [] [] []
-  nodeComments SectionRight {} = NodeComments [] [] []
-  nodeComments Tuple {} = NodeComments [] [] []
-  nodeComments UnboxedSum {} = NodeComments [] [] []
-  nodeComments Case {} = NodeComments [] [] []
-  nodeComments If {} = NodeComments [] [] []
-  nodeComments MultiWayIf {} = NodeComments [] [] []
-  nodeComments LetIn {} = NodeComments [] [] []
-  nodeComments List {} = NodeComments [] [] []
-  nodeComments ListComprehension {} = NodeComments [] [] []
-  nodeComments Do {} = NodeComments [] [] []
-  nodeComments RecordConstructor {} = NodeComments [] [] []
-  nodeComments RecordUpdate {} = NodeComments [] [] []
-  nodeComments GetField {} = NodeComments [] [] []
-  nodeComments Projection {} = NodeComments [] [] []
-  nodeComments WithSignature {} = NodeComments [] [] []
-  nodeComments Sequence {} = NodeComments [] [] []
-  nodeComments Splice {} = NodeComments [] [] []
-  nodeComments Expression {} = NodeComments [] [] []
+  nodeComments TypeApplication {}     = NodeComments [] [] []
+  nodeComments Parentheses {}         = NodeComments [] [] []
+  nodeComments SectionLeft {}         = NodeComments [] [] []
+  nodeComments SectionRight {}        = NodeComments [] [] []
+  nodeComments Tuple {}               = NodeComments [] [] []
+  nodeComments UnboxedSum {}          = NodeComments [] [] []
+  nodeComments Case {}                = NodeComments [] [] []
+  nodeComments If {}                  = NodeComments [] [] []
+  nodeComments MultiWayIf {}          = NodeComments [] [] []
+  nodeComments LetIn {}               = NodeComments [] [] []
+  nodeComments List {}                = NodeComments [] [] []
+  nodeComments ListComprehension {}   = NodeComments [] [] []
+  nodeComments Do {}                  = NodeComments [] [] []
+  nodeComments RecordConstructor {}   = NodeComments [] [] []
+  nodeComments RecordUpdate {}        = NodeComments [] [] []
+  nodeComments GetField {}            = NodeComments [] [] []
+  nodeComments Projection {}          = NodeComments [] [] []
+  nodeComments WithSignature {}       = NodeComments [] [] []
+  nodeComments Sequence {}            = NodeComments [] [] []
+  nodeComments Splice {}              = NodeComments [] [] []
+  nodeComments Expression {}          = NodeComments [] [] []
 
 instance Pretty Expression where
   pretty' (Variable x) = pretty x
@@ -166,7 +165,7 @@ instance Pretty Expression where
       vertical = do
         let (f, args) =
               case flatten l ++ [r] of
-                [] -> error "Invalid function application."
+                []         -> error "Invalid function application."
                 (f':args') -> (f', args')
         col <- gets psColumn
         spaces <- getIndentSpaces
@@ -210,10 +209,10 @@ instance Pretty Expression where
           $ prefixedLined ","
           $ fmap (\e -> unless (isMissing e) (space |=> pretty e)) elements
       isMissing GHC.Missing {} = True
-      isMissing _ = False
+      isMissing _              = False
       (parH, parV) =
         case boxity of
-          GHC.Boxed -> (hTuple, parens)
+          GHC.Boxed   -> (hTuple, parens)
           GHC.Unboxed -> (hUnboxedTuple, unboxedParens)
   pretty' UnboxedSum {..} = do
     string "(#"
@@ -307,7 +306,7 @@ prettyHsExpr (GHC.HsPragE _ p x) =
 prettyHsExpr GHC.HsRecSel {} = notGeneratedByParser
 prettyHsExpr (GHC.HsTypedBracket _ inner) =
   typedBrackets $ pretty $ fmap mkExpression inner
-prettyHsExpr (GHC.HsUntypedBracket _ inner) = pretty $ fmap mkExpression inner
+prettyHsExpr (GHC.HsUntypedBracket _ inner) = pretty $ mkBracket inner
 #else
 prettyHsExpr GHC.HsConLikeOut {} = notGeneratedByParser
 prettyHsExpr GHC.HsRecFld {} = notGeneratedByParser
@@ -322,7 +321,8 @@ prettyHsExpr GHC.HsRnBracketOut {} = notGeneratedByParser
 prettyHsExpr GHC.HsTcBracketOut {} = notGeneratedByParser
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-prettyHsExpr (GHC.HsTypedSplice _ x) = string "$$" >> pretty x
+prettyHsExpr (GHC.HsTypedSplice _ x) =
+  string "$$" >> pretty (fmap mkExpression x)
 prettyHsExpr (GHC.HsUntypedSplice _ x) = pretty $ mkSplice x
 #endif
 prettyHsExpr _ = undefined
@@ -387,6 +387,7 @@ mkExpression (GHC.HsDo _ (GHC.MDoExpr moduleName) statements) =
 mkExpression (GHC.HsDo _ GHC.GhciStmtCtxt {} _) =
   error "We're not using GHCi, are we?"
 mkExpression (GHC.RecordCon _ name fields) = RecordConstructor {..}
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkExpression (GHC.RecordUpd _ base us) = RecordUpdate {..}
   where
     updaters =
@@ -394,6 +395,15 @@ mkExpression (GHC.RecordUpd _ base us) = RecordUpdate {..}
         (fmap (fmap mkRecordField . fromGenLocated))
         (fmap (fmap mkRecordField . fromGenLocated))
         us
+#else
+mkExpression (GHC.RecordUpd _ base us) = RecordUpdate {..}
+  where
+    updaters =
+      either
+        (fmap (fmap mkRecordField . fromGenLocated))
+        (fmap (fmap mkRecordField . fromGenLocated))
+        us
+#endif
 mkExpression (GHC.HsGetField _ e f) =
   GetField e $ fmap mkFieldLabel $ fromGenLocated f
 mkExpression (GHC.HsProjection _ fields) =
