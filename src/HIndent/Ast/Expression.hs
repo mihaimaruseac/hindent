@@ -275,8 +275,7 @@ instance Pretty Expression where
         pretty $ fmap mkExpression base
         newline
         indentedBlock
-          $ (hFields $ fmap pretty updaters)
-              <-|> (vFields $ fmap pretty updaters)
+          $ hFields (fmap pretty updaters) <-|> vFields (fmap pretty updaters)
   pretty' (GetField e f) =
     pretty (fmap mkExpression e) >> string "." >> pretty f
   pretty' (Projection fields) = parens $ forM_ fields $ \x -> dot >> pretty x
@@ -330,7 +329,7 @@ prettyHsExpr (GHC.HsUntypedSplice _ x) = pretty $ mkSplice x
 prettyHsExpr _ = undefined
 
 mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
-mkExpression (GHC.HsVar _ x) = Variable $ fmap mkVariable $ fromGenLocated x
+mkExpression (GHC.HsVar _ x) = Variable $ mkVariable <$> fromGenLocated x
 mkExpression (GHC.HsUnboundVar _ x) =
   Variable $ fmap mkVariable $ mkWithComments x
 mkExpression (GHC.HsLit _ x) = Literal x
