@@ -47,7 +47,7 @@ data Expression
   | Lambda (GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs))
   | LambdaCase (GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs))
   | LambdaCases (GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs))
-  | Negation (GHC.LHsExpr GHC.GhcPs)
+  | Negation (WithComments Expression)
   | Application
       { l :: GHC.LHsExpr GHC.GhcPs
       , r :: GHC.LHsExpr GHC.GhcPs
@@ -159,7 +159,7 @@ instance Pretty Expression where
   pretty' (Lambda x) = pretty x
   pretty' (LambdaCase x) = pretty $ Pretty.LambdaCase x Pretty.Case
   pretty' (LambdaCases x) = pretty $ Pretty.LambdaCase x Pretty.Cases
-  pretty' (Negation x) = string "-" >> pretty (fmap mkExpression x)
+  pretty' (Negation x) = string "-" >> pretty x
   pretty' Application {..} = horizontal <-|> vertical
     where
       horizontal =
@@ -347,7 +347,8 @@ mkExpression (GHC.HsLamCase _ GHC.LamCases matches) = LambdaCases matches
 #else
 mkExpression (GHC.HsLamCase _ x) = LambdaCase x
 #endif
-mkExpression (GHC.NegApp _ x _) = Negation x
+mkExpression (GHC.NegApp _ x _) =
+  Negation $ fromGenLocated $ fmap mkExpression x
 mkExpression (GHC.HsApp _ l r) = Application {..}
 mkExpression (GHC.OpApp _ l o r) = OperatorApplication {..}
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
