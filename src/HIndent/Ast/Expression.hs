@@ -49,8 +49,8 @@ data Expression
   | LambdaCases (GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs))
   | Negation (WithComments Expression)
   | FunctionApplication
-      { f :: GHC.LHsExpr GHC.GhcPs
-      , args :: [GHC.LHsExpr GHC.GhcPs]
+      { f :: WithComments Expression
+      , args :: [WithComments Expression]
       }
   | OperatorApplication
       { l :: GHC.LHsExpr GHC.GhcPs
@@ -85,8 +85,8 @@ data Expression
       }
   | If
       { cond :: GHC.LHsExpr GHC.GhcPs
-      , t :: GHC.LHsExpr GHC.GhcPs
-      , f :: GHC.LHsExpr GHC.GhcPs
+      , t :: WithComments Expression
+      , f :: WithComments Expression
       }
   | MultiWayIf [GHC.LGRHS GHC.GhcPs (GHC.LHsExpr GHC.GhcPs)]
   | LetIn
@@ -162,14 +162,11 @@ instance Pretty Expression where
   pretty' (Negation x) = string "-" >> pretty x
   pretty' FunctionApplication {..} = horizontal <-|> vertical
     where
-      horizontal =
-        spaced
-          $ pretty (fmap mkExpression f)
-              : fmap (pretty . fmap mkExpression) args
+      horizontal = spaced $ pretty f : fmap pretty args
       vertical = do
         col <- gets psColumn
         spaces <- getIndentSpaces
-        pretty $ fmap mkExpression f
+        pretty f
         col' <- gets psColumn
         let diff =
               col'
@@ -181,9 +178,7 @@ instance Pretty Expression where
           then space
           else newline
         spaces' <- getIndentSpaces
-        indentedWithSpace spaces'
-          $ lined
-          $ fmap (pretty . fmap mkExpression) args
+        indentedWithSpace spaces' $ lined $ fmap pretty args
   pretty' OperatorApplication {..} = pretty $ InfixApp l o r
   pretty' TypeApplication {..} =
     pretty (fmap mkExpression v) >> string " @" >> pretty ty
@@ -226,14 +221,11 @@ instance Pretty Expression where
     string "if " |=> pretty (fmap mkExpression cond)
     indentedBlock $ newlinePrefixed [branch "then " t, branch "else " f]
     where
-      branch :: String -> GHC.LHsExpr GHC.GhcPs -> Printer ()
+      branch :: String -> WithComments Expression -> Printer ()
       branch str e =
-        case e of
-          (GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)) ->
-            doStmt (QualifiedDo m Pretty.Do) xs
-          (GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)) ->
-            doStmt (QualifiedDo m Pretty.Mdo) xs
-          _ -> string str |=> pretty (fmap mkExpression e)
+        case getNode e of
+          Do {..} -> doStmt (QualifiedDo moduleName doType) statements
+          _ -> string str |=> pretty e
         where
           doStmt qDo stmts = do
             string str
@@ -339,7 +331,9 @@ mkExpression (GHC.NegApp _ x _) =
   Negation $ fromGenLocated $ fmap mkExpression x
 mkExpression (GHC.HsApp _ l r) = FunctionApplication {..}
   where
-    f :| args = NE.reverse (r :| reverse (flatten l))
+    f :| args =
+      fmap (fromGenLocated . fmap mkExpression)
+        $ NE.reverse (r :| reverse (flatten l))
     flatten :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
     flatten (GHC.L (GHC.SrcSpanAnn (GHC.EpAnn _ _ cs) _) (GHC.HsApp _ l' r')) =
       flatten l' ++ [insertComments cs r']
@@ -363,7 +357,10 @@ mkExpression (GHC.SectionR _ o r) = SectionRight {..}
 mkExpression (GHC.ExplicitTuple _ elements boxity) = Tuple {..}
 mkExpression (GHC.ExplicitSum _ position numElems expr) = UnboxedSum {..}
 mkExpression (GHC.HsCase _ cond arms) = Case {..}
-mkExpression (GHC.HsIf _ cond t f) = If {..}
+mkExpression (GHC.HsIf _ cond t' f') = If {..}
+  where
+    t = fromGenLocated $ fmap mkExpression t'
+    f = fromGenLocated $ fmap mkExpression f'
 mkExpression (GHC.HsMultiIf _ guards) = MultiWayIf guards
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkExpression (GHC.HsLet _ _ binds _ expr) = LetIn {..}
