@@ -414,7 +414,7 @@ mkExpression (GHC.RecordUpd _ base us) = RecordUpdate {..}
         us
 #endif
 mkExpression (GHC.HsGetField _ e f) =
-  GetField e $ fmap mkFieldLabel $ fromGenLocated f
+  GetField e $ fromGenLocated $ fmap mkFieldLabel f
 mkExpression (GHC.HsProjection _ fields) =
   Projection $ fmap (fmap mkFieldLabel . fromGenLocated) fields
 mkExpression (GHC.ExprWithTySig _ e ty) = WithSignature e ty
