@@ -21,7 +21,6 @@ import HIndent.Ast.Expression.Splice
 import HIndent.Ast.Expression.Variable
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
-import HIndent.GhcLibParserWrapper.GHC.Hs
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
