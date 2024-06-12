@@ -40,6 +40,7 @@ import HIndent.Ast.Declaration.Data.Body
 import HIndent.Ast.Declaration.Data.Record.Field
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Signature
+import HIndent.Ast.Expression.Application.Infix
 import HIndent.Ast.Expression.Bracket
 import HIndent.Ast.Expression.Splice
 import HIndent.Ast.NodeComments
@@ -48,13 +49,11 @@ import HIndent.Ast.Operator.Prefix
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import HIndent.Config
-import HIndent.Fixity
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 import qualified HIndent.Pretty.SigBindFamily as SBF
 import HIndent.Pretty.Types
 import HIndent.Printer
-import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
 import Text.Show.Unicode
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 import qualified Data.Foldable as NonEmpty
@@ -214,7 +213,7 @@ prettyHsExpr (GHC.HsAppType _ l r) = do
   string " @"
   pretty r
 #endif
-prettyHsExpr (GHC.OpApp _ l o r) = pretty (InfixApp l o r)
+prettyHsExpr (GHC.OpApp _ l o r) = pretty $ mkInfixApplication l o r
 prettyHsExpr (GHC.NegApp _ x _) = string "-" >> pretty x
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 prettyHsExpr (GHC.HsPar _ _ expr _) = parens $ pretty expr
@@ -594,7 +593,7 @@ instance Pretty
       ver = newline >> indentedBlock (pretty body)
   pretty' GHC.ApplicativeStmt {} = notGeneratedByParser
   pretty' (GHC.BodyStmt _ (GHC.L loc (GHC.OpApp _ l o r)) _ _) =
-    pretty (GHC.L loc (InfixApp l o r))
+    pretty $ GHC.L loc $ mkInfixApplication l o r
   pretty' (GHC.BodyStmt _ body _ _) = pretty body
   pretty' (GHC.LetStmt _ l) = string "let " |=> pretty l
   pretty' (GHC.ParStmt _ xs _ _) = hvBarSep $ fmap pretty xs
@@ -1090,64 +1089,6 @@ instance Pretty InfixExpr where
   pretty' (InfixExpr (GHC.L _ (GHC.HsVar _ bind))) =
     pretty $ fmap mkInfixOperator bind
   pretty' (InfixExpr x) = pretty' x
-
-instance Pretty InfixApp where
-  pretty' InfixApp {..} = horizontal <-|> vertical
-    where
-      horizontal = spaced [pretty lhs, pretty (InfixExpr op), pretty rhs]
-      vertical =
-        case findFixity op of
-          GHC.Fixity _ _ GHC.InfixL -> leftAssoc
-          GHC.Fixity _ _ GHC.InfixR -> rightAssoc
-          GHC.Fixity _ _ GHC.InfixN -> noAssoc
-      leftAssoc = prettyOps allOperantsAndOperatorsLeftAssoc
-      rightAssoc = prettyOps allOperantsAndOperatorsRightAssoc
-      noAssoc
-        | GHC.L _ (GHC.OpApp _ _ o _) <- lhs
-        , isSameAssoc o = leftAssoc
-        | otherwise = rightAssoc
-      prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Do]
-        newline
-        indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-      prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Mdo]
-        newline
-        indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-      prettyOps [l, o, r@(GHC.L _ GHC.HsLam {})] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty r]
-      prettyOps [l, o, r@(GHC.L _ GHC.HsLamCase {})] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty r]
-      prettyOps (l:xs) = do
-        pretty l
-        newline
-        indentedBlock $ f xs
-        where
-          f (o:r:rems) = do
-            (pretty (InfixExpr o) >> space) |=> pretty r
-            unless (null rems) $ do
-              newline
-              f rems
-          f _ =
-            error
-              "The number of the sum of operants and operators should be odd."
-      prettyOps _ = error "Too short list."
-      findFixity o =
-        fromMaybe GHC.defaultFixity $ lookup (GHC.varToStr o) fixities
-      allOperantsAndOperatorsLeftAssoc = reverse $ rhs : op : collect lhs
-        where
-          collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-          collect (GHC.L _ (GHC.OpApp _ l o r))
-            | isSameAssoc o = r : o : collect l
-          collect x = [x]
-      allOperantsAndOperatorsRightAssoc = lhs : op : collect rhs
-        where
-          collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-          collect (GHC.L _ (GHC.OpApp _ l o r))
-            | isSameAssoc o = l : o : collect r
-          collect x = [x]
-      isSameAssoc (findFixity -> GHC.Fixity _ lv d) = lv == level && d == dir
-      GHC.Fixity _ level dir = findFixity op
 
 instance Pretty (GHC.FieldLabelStrings GHC.GhcPs) where
   pretty' (GHC.FieldLabelStrings xs) = hDotSep $ fmap pretty xs

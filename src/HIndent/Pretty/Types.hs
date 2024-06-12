@@ -10,7 +10,6 @@ module HIndent.Pretty.Types
   ( InfixExpr(..)
   , InfixOp(..)
   , PrefixOp(..)
-  , InfixApp(..)
   , GRHSsExpr(..)
   , GRHSExpr(..)
   , GRHSProc(..)
@@ -71,21 +70,6 @@ newtype InfixOp =
 -- parentheses.
 newtype PrefixOp =
   PrefixOp RdrName
-
--- | An infix operator application.
---
--- `immediatelyAfterDo` is `True` if an application is next to a `do`
--- keyword. It needs an extra indent in such cases because
---
--- > do a
--- > * b
---
--- is not a valid Haskell code.
-data InfixApp = InfixApp
-  { lhs :: LHsExpr GhcPs
-  , op :: LHsExpr GhcPs
-  , rhs :: LHsExpr GhcPs
-  }
 
 -- | `GRHSs` with a label indicating in which context the RHS is located
 -- in.

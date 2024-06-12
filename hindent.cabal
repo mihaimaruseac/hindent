@@ -88,6 +88,7 @@ library
       HIndent.Ast.Declaration.Warning
       HIndent.Ast.Declaration.Warning.Collection
       HIndent.Ast.Declaration.Warning.Kind
+      HIndent.Ast.Expression.Application.Infix
       HIndent.Ast.Expression.Bracket
       HIndent.Ast.Expression.Splice
       HIndent.Ast.FileHeaderPragma
