@@ -8,7 +8,8 @@ module HIndent.Ast.Expression
 
 import Control.Monad
 import Control.Monad.RWS
-import Data.List.NonEmpty
+import Data.List.NonEmpty hiding (reverse)
+import qualified Data.List.NonEmpty as NE
 import qualified GHC.Data.FastString as GHC
 import GHC.Stack
 import qualified GHC.Types.Basic as GHC
@@ -47,9 +48,9 @@ data Expression
   | LambdaCase (GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs))
   | LambdaCases (GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs))
   | Negation (WithComments Expression)
-  | Application
-      { l :: GHC.LHsExpr GHC.GhcPs
-      , r :: GHC.LHsExpr GHC.GhcPs
+  | FunctionApplication
+      { f :: GHC.LHsExpr GHC.GhcPs
+      , args :: [GHC.LHsExpr GHC.GhcPs]
       }
   | OperatorApplication
       { l :: GHC.LHsExpr GHC.GhcPs
@@ -125,7 +126,7 @@ instance CommentExtraction Expression where
   nodeComments LambdaCase {} = NodeComments [] [] []
   nodeComments LambdaCases {} = NodeComments [] [] []
   nodeComments Negation {} = NodeComments [] [] []
-  nodeComments Application {} = NodeComments [] [] []
+  nodeComments FunctionApplication {} = NodeComments [] [] []
   nodeComments OperatorApplication {} = NodeComments [] [] []
   nodeComments TypeApplication {} = NodeComments [] [] []
   nodeComments Parentheses {} = NodeComments [] [] []
@@ -159,15 +160,13 @@ instance Pretty Expression where
   pretty' (LambdaCase x) = pretty $ Pretty.LambdaCase x Pretty.Case
   pretty' (LambdaCases x) = pretty $ Pretty.LambdaCase x Pretty.Cases
   pretty' (Negation x) = string "-" >> pretty x
-  pretty' Application {..} = horizontal <-|> vertical
+  pretty' FunctionApplication {..} = horizontal <-|> vertical
     where
       horizontal =
-        spaced [pretty $ fmap mkExpression l, pretty $ fmap mkExpression r]
+        spaced
+          $ pretty (fmap mkExpression f)
+              : fmap (pretty . fmap mkExpression) args
       vertical = do
-        let (f, args) =
-              case flatten l ++ [r] of
-                [] -> error "Invalid function application."
-                (f':args') -> (f', args')
         col <- gets psColumn
         spaces <- getIndentSpaces
         pretty $ fmap mkExpression f
@@ -185,15 +184,6 @@ instance Pretty Expression where
         indentedWithSpace spaces'
           $ lined
           $ fmap (pretty . fmap mkExpression) args
-      flatten :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-      flatten (GHC.L (GHC.SrcSpanAnn (GHC.EpAnn _ _ cs) _) (GHC.HsApp _ l' r')) =
-        flatten l' ++ [insertComments cs r']
-      flatten x = [x]
-      insertComments ::
-           GHC.EpAnnComments -> GHC.LHsExpr GHC.GhcPs -> GHC.LHsExpr GHC.GhcPs
-      insertComments cs (GHC.L s@GHC.SrcSpanAnn {GHC.ann = e@GHC.EpAnn {comments = cs'}} r') =
-        GHC.L (s {GHC.ann = e {GHC.comments = cs <> cs'}}) r'
-      insertComments _ x = x
   pretty' OperatorApplication {..} = pretty $ InfixApp l o r
   pretty' TypeApplication {..} =
     pretty (fmap mkExpression v) >> string " @" >> pretty ty
@@ -347,7 +337,16 @@ mkExpression (GHC.HsLamCase _ x) = LambdaCase x
 #endif
 mkExpression (GHC.NegApp _ x _) =
   Negation $ fromGenLocated $ fmap mkExpression x
-mkExpression (GHC.HsApp _ l r) = Application {..}
+mkExpression (GHC.HsApp _ l r) = FunctionApplication {..}
+  where
+    f :| args = NE.reverse (r :| reverse (flatten l))
+    flatten :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
+    flatten (GHC.L (GHC.SrcSpanAnn (GHC.EpAnn _ _ cs) _) (GHC.HsApp _ l' r')) =
+      flatten l' ++ [insertComments cs r']
+    flatten x = [x]
+    insertComments cs (GHC.L s@GHC.SrcSpanAnn {GHC.ann = e@GHC.EpAnn {comments = cs'}} r') =
+      GHC.L (s {GHC.ann = e {GHC.comments = cs <> cs'}}) r'
+    insertComments _ x = x
 mkExpression (GHC.OpApp _ l o r) = OperatorApplication {..}
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkExpression (GHC.HsAppType _ v _ ty) = TypeApplication {..}
