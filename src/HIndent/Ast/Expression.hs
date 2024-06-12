@@ -329,8 +329,7 @@ prettyHsExpr _ = undefined
 
 mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
 mkExpression (GHC.HsVar _ x) = Variable $ mkVariable <$> fromGenLocated x
-mkExpression (GHC.HsUnboundVar _ x) =
-  Variable $ fmap mkVariable $ mkWithComments x
+mkExpression (GHC.HsUnboundVar _ x) = Variable $ mkWithComments $ mkVariable x
 mkExpression (GHC.HsLit _ x) = Literal x
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkExpression (GHC.HsOverLabel _ _ x) = OverloadedLabel x
