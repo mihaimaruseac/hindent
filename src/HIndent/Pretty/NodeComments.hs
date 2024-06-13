@@ -211,7 +211,7 @@ nodeCommentsHsExpr (HsApp x _ _) = nodeComments x
 nodeCommentsHsExpr HsAppType {} = emptyNodeComments
 nodeCommentsHsExpr (OpApp x _ _ _) = nodeComments x
 nodeCommentsHsExpr (NegApp x _ _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsHsExpr (HsPar x _ _ _) = nodeComments x
 #else
 nodeCommentsHsExpr (HsPar x _) = nodeComments x
@@ -223,7 +223,7 @@ nodeCommentsHsExpr (ExplicitSum x _ _ _) = nodeComments x
 nodeCommentsHsExpr (HsCase x _ _) = nodeComments x
 nodeCommentsHsExpr (HsIf x _ _ _) = nodeComments x
 nodeCommentsHsExpr (HsMultiIf x _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsHsExpr (HsLet x _ _ _ _) = nodeComments x
 #else
 nodeCommentsHsExpr (HsLet x _ _) = nodeComments x
@@ -410,12 +410,12 @@ nodeCommentsPat :: Pat GhcPs -> NodeComments
 nodeCommentsPat WildPat {} = emptyNodeComments
 nodeCommentsPat VarPat {} = emptyNodeComments
 nodeCommentsPat (LazyPat x _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsPat (AsPat x _ _ _) = nodeComments x
 #else
 nodeCommentsPat (AsPat x _ _) = nodeComments x
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsPat (ParPat x _ _ _) = nodeComments x
 #else
 nodeCommentsPat (ParPat x _) = nodeComments x
@@ -652,7 +652,17 @@ instance CommentExtraction ModuleName where
 
 instance CommentExtraction ModuleNameWithPrefix where
   nodeComments ModuleNameWithPrefix {} = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9,8,1)
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+instance CommentExtraction (IE GhcPs) where
+  nodeComments IEVar {} = emptyNodeComments
+  nodeComments (IEThingAbs _ x _) = nodeComments x
+  nodeComments (IEThingAll _ x _) = nodeComments x
+  nodeComments (IEThingWith _ x _ _ _) = nodeComments x
+  nodeComments (IEModuleContents x _) = nodeComments x
+  nodeComments IEGroup {} = emptyNodeComments
+  nodeComments IEDoc {} = emptyNodeComments
+  nodeComments IEDocNamed {} = emptyNodeComments
+#elif MIN_VERSION_ghc_lib_parser(9, 8, 1)
 instance CommentExtraction (IE GhcPs) where
   nodeComments IEVar {} = emptyNodeComments
   nodeComments (IEThingAbs (_, x) _) = nodeComments x
@@ -957,7 +967,7 @@ nodeCommentsHsCmd (HsCmdArrApp x _ _ _ _) = nodeComments x
 nodeCommentsHsCmd (HsCmdArrForm x _ _ _ _) = nodeComments x
 nodeCommentsHsCmd (HsCmdApp x _ _) = nodeComments x
 nodeCommentsHsCmd HsCmdLam {} = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsHsCmd (HsCmdPar x _ _ _) = nodeComments x
 #else
 nodeCommentsHsCmd (HsCmdPar x _) = nodeComments x
@@ -971,7 +981,7 @@ nodeCommentsHsCmd (HsCmdLamCase x _ _) = nodeComments x
 nodeCommentsHsCmd (HsCmdLamCase x _) = nodeComments x
 #endif
 nodeCommentsHsCmd (HsCmdIf x _ _ _ _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsHsCmd (HsCmdLet x _ _ _ _) = nodeComments x
 #else
 nodeCommentsHsCmd (HsCmdLet x _ _) = nodeComments x
