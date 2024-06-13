@@ -42,7 +42,6 @@ import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression
 import HIndent.Ast.Expression.Application.Infix
-import HIndent.Ast.Expression.Bracket
 import HIndent.Ast.Expression.Splice
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Operator.Infix

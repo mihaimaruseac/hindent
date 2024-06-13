@@ -15,6 +15,7 @@ import GHC.Stack
 import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import qualified GHC.Unit as GHC
+import HIndent.Ast.Expression.Application.Infix
 import HIndent.Ast.Expression.Bracket
 import {-# SOURCE #-} HIndent.Ast.Expression.Record.Field
 import HIndent.Ast.Expression.Record.Field.Label
@@ -179,7 +180,7 @@ instance Pretty Expression where
           else newline
         spaces' <- getIndentSpaces
         indentedWithSpace spaces' $ lined $ fmap pretty args
-  pretty' OperatorApplication {..} = pretty $ InfixApp l o r
+  pretty' OperatorApplication {..} = pretty $ mkInfixApplication l o r
   pretty' TypeApplication {..} =
     pretty (fmap mkExpression v) >> string " @" >> pretty ty
   pretty' (Parentheses x) = parens $ pretty $ fmap mkExpression x

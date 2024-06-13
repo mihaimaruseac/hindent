@@ -10,6 +10,7 @@ import Control.Monad
 import Data.Maybe
 import qualified GHC.Types.Fixity as GHC
 import qualified GHC.Types.SrcLoc as GHC
+import {-# SOURCE #-} HIndent.Ast.Expression
 import HIndent.Ast.NodeComments
 import HIndent.Fixity
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -31,7 +32,12 @@ instance CommentExtraction InfixApplication where
 instance Pretty InfixApplication where
   pretty' InfixApplication {..} = horizontal <-|> vertical
     where
-      horizontal = spaced [pretty lhs, pretty (InfixExpr op), pretty rhs]
+      horizontal =
+        spaced
+          [ pretty $ fmap mkExpression lhs
+          , pretty (InfixExpr op)
+          , pretty $ fmap mkExpression rhs
+          ]
       vertical =
         case findFixity op of
           GHC.Fixity _ _ GHC.InfixL -> leftAssoc
@@ -44,24 +50,40 @@ instance Pretty InfixApplication where
         , isSameAssoc o = leftAssoc
         | otherwise = rightAssoc
       prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Do]
+        spaced
+          [ pretty $ fmap mkExpression l
+          , pretty $ InfixExpr o
+          , pretty $ QualifiedDo m Do
+          ]
         newline
         indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
       prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Mdo]
+        spaced
+          [ pretty $ fmap mkExpression l
+          , pretty $ InfixExpr o
+          , pretty $ QualifiedDo m Mdo
+          ]
         newline
         indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
       prettyOps [l, o, r@(GHC.L _ GHC.HsLam {})] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty r]
+        spaced
+          [ pretty $ fmap mkExpression l
+          , pretty $ InfixExpr o
+          , pretty $ fmap mkExpression r
+          ]
       prettyOps [l, o, r@(GHC.L _ GHC.HsLamCase {})] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty r]
+        spaced
+          [ pretty $ fmap mkExpression l
+          , pretty $ InfixExpr o
+          , pretty $ fmap mkExpression r
+          ]
       prettyOps (l:xs) = do
-        pretty l
+        pretty $ fmap mkExpression l
         newline
         indentedBlock $ f xs
         where
           f (o:r:rems) = do
-            (pretty (InfixExpr o) >> space) |=> pretty r
+            (pretty (InfixExpr o) >> space) |=> pretty (fmap mkExpression r)
             unless (null rems) $ do
               newline
               f rems

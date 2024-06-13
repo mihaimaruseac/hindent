@@ -108,19 +108,7 @@ instance Pretty
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
 
-instance Pretty InfixApp
-
-instance Pretty InfixExpr
-
 instance Pretty (GHC.HsTupArg GHC.GhcPs)
-
-instance Pretty
-           (GHC.StmtLR
-              GHC.GhcPs
-              GHC.GhcPs
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
-
-instance Pretty QualifiedDo
 
 instance Pretty GRHSExpr
 
