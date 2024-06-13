@@ -8,6 +8,7 @@ module HIndent.Ast.Declaration.Data.GADT.Constructor.Signature
   , prettyVertically
   ) where
 
+import HIndent.Ast.Declaration.Data.Record.Field
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
@@ -23,7 +24,7 @@ data ConstructorSignature
       , result :: WithComments Type
       }
   | Record
-      { fields :: WithComments [GHC.LConDeclField GHC.GhcPs]
+      { fields :: WithComments [WithComments RecordField]
       , result :: WithComments Type
       }
 
@@ -59,14 +60,18 @@ mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.PrefixConGADT xs, ..} =
 mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.RecConGADT xs _, ..} =
   Just
     $ Record
-        { fields = fromGenLocated xs
+        { fields =
+            fromGenLocated
+              $ fmap (fmap (fmap mkRecordField . fromGenLocated)) xs
         , result = mkType <$> fromGenLocated con_res_ty
         }
 #else
 mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.RecConGADT xs, ..} =
   Just
     $ Record
-        { fields = fromGenLocated xs
+        { fields =
+            fromGenLocated
+              $ fmap (fmap (fmap mkRecordField . fromGenLocated)) xs
         , result = mkType <$> fromGenLocated con_res_ty
         }
 #endif

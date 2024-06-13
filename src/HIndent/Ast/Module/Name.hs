@@ -19,4 +19,4 @@ instance Pretty ModuleName where
   pretty' (ModuleName x) = string "module " >> string x
 
 mkModuleName :: GHC.ModuleName -> ModuleName
-mkModuleName = ModuleName . showOutputable
+mkModuleName = ModuleName . GHC.moduleNameString

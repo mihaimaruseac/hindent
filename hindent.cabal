@@ -41,6 +41,7 @@ library
       HIndent.Ast.Declaration
       HIndent.Ast.Declaration.Annotation
       HIndent.Ast.Declaration.Annotation.Provenance
+      HIndent.Ast.Declaration.Annotation.Role
       HIndent.Ast.Declaration.Bind
       HIndent.Ast.Declaration.Class
       HIndent.Ast.Declaration.Class.FunctionalDependency
@@ -57,6 +58,7 @@ library
       HIndent.Ast.Declaration.Data.Haskell98.Constructor.Body
       HIndent.Ast.Declaration.Data.Header
       HIndent.Ast.Declaration.Data.NewOrData
+      HIndent.Ast.Declaration.Data.Record.Field
       HIndent.Ast.Declaration.Default
       HIndent.Ast.Declaration.Family.Data
       HIndent.Ast.Declaration.Family.Type
@@ -66,6 +68,7 @@ library
       HIndent.Ast.Declaration.Foreign.CallingConvention
       HIndent.Ast.Declaration.Foreign.Safety
       HIndent.Ast.Declaration.Instance.Class
+      HIndent.Ast.Declaration.Instance.Class.OverlapMode
       HIndent.Ast.Declaration.Instance.Family.Data
       HIndent.Ast.Declaration.Instance.Family.Type
       HIndent.Ast.Declaration.Rule
@@ -85,6 +88,8 @@ library
       HIndent.Ast.Declaration.Warning
       HIndent.Ast.Declaration.Warning.Collection
       HIndent.Ast.Declaration.Warning.Kind
+      HIndent.Ast.Expression.Bracket
+      HIndent.Ast.Expression.Splice
       HIndent.Ast.FileHeaderPragma
       HIndent.Ast.FileHeaderPragma.Collection
       HIndent.Ast.Import
@@ -99,6 +104,9 @@ library
       HIndent.Ast.Module.Name
       HIndent.Ast.Module.Warning
       HIndent.Ast.NodeComments
+      HIndent.Ast.Operator.Infix
+      HIndent.Ast.Operator.Prefix
+      HIndent.Ast.Role
       HIndent.Ast.Type
       HIndent.Ast.Type.Variable
       HIndent.Ast.WithComments
@@ -142,9 +150,10 @@ library
       Paths_hindent
   hs-source-dirs:
       src
-  ghc-options: -Wall -O2
+  ghc-options: -Wall -O2 -threaded
   build-depends:
       Cabal
+    , async
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -176,9 +185,10 @@ library hindent-internal
       Paths_hindent
   hs-source-dirs:
       internal
-  ghc-options: -Wall -O2
+  ghc-options: -Wall -O2 -threaded
   build-depends:
       Cabal
+    , async
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -210,9 +220,10 @@ executable hindent
       Paths_hindent
   hs-source-dirs:
       app
-  ghc-options: -Wall -O2
+  ghc-options: -Wall -O2 -threaded
   build-depends:
       Cabal
+    , async
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -245,10 +256,11 @@ test-suite hindent-test
       Paths_hindent
   hs-source-dirs:
       tests
-  ghc-options: -Wall -O2
+  ghc-options: -Wall -O2 -threaded
   build-depends:
       Cabal
     , Diff
+    , async
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -283,9 +295,10 @@ benchmark hindent-bench
       Paths_hindent
   hs-source-dirs:
       benchmarks
-  ghc-options: -Wall -O2
+  ghc-options: -Wall -O2 -threaded
   build-depends:
       Cabal
+    , async
     , base >=4.7 && <5
     , bytestring
     , containers

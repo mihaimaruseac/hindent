@@ -23,6 +23,7 @@ module HIndent
   , HsModule'
   ) where
 
+import Control.Concurrent.Async
 import Control.Exception
 import Control.Monad
 import Data.ByteString (ByteString)
@@ -79,7 +80,7 @@ hindent args = do
         then S8.interact
                (either (error . prettyParseError) id
                   . reformat style exts Nothing)
-        else forM_ paths $ \filepath -> do
+        else forConcurrently_ paths $ \filepath -> do
                cabalexts <- getCabalExtensionsForSourcePath filepath
                text <- S.readFile filepath
                case reformat style (cabalexts ++ exts) (Just filepath) text of

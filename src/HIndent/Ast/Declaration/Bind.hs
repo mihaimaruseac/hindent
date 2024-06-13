@@ -7,6 +7,7 @@ module HIndent.Ast.Declaration.Bind
   ) where
 
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Operator.Infix
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -45,7 +46,7 @@ instance Pretty Bind where
     string "pattern "
     case parameters of
       GHC.InfixCon l r ->
-        spaced [pretty l, pretty $ fmap InfixOp name, pretty r]
+        spaced [pretty l, pretty $ fmap mkInfixOperator name, pretty r]
       GHC.PrefixCon _ [] -> pretty name
       _ -> spaced [pretty name, pretty parameters]
     spacePrefixed [pretty direction, pretty $ fmap PatInsidePatDecl definition]

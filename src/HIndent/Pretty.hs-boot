@@ -8,11 +8,11 @@ module HIndent.Pretty
   ) where
 
 import           Data.Void
-import qualified GHC.Core.Type                      as GHC
-import qualified GHC.Types.Basic                    as GHC
+import qualified GHC.Types.Name                     as GHC
 import qualified GHC.Types.Name.Reader              as GHC
 import qualified GHC.Types.SourceText               as GHC
 import qualified GHC.Types.SrcLoc                   as GHC
+import qualified GHC.Unit                           as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHc
 import           HIndent.Pretty.NodeComments
@@ -44,15 +44,7 @@ instance Pretty
 
 instance Pretty GHC.RdrName
 
-instance Pretty (GHC.ConDeclField GHC.GhcPs)
-
-instance Pretty (GHC.HsOuterTyVarBndrs GHC.Specificity GHc.GhcPs)
-
 instance Pretty SigBindFamily
-
-instance Pretty InfixOp
-
-instance Pretty GHC.OverlapMode
 
 instance Pretty HsSigType'
 
@@ -80,8 +72,6 @@ instance Pretty PatInsidePatDecl
 
 instance Pretty GHC.StringLiteral
 
-instance Pretty (GHC.RoleAnnotDecl GHC.GhcPs)
-
 instance Pretty (GHC.HsSigType GHC.GhcPs)
 
 instance Pretty Context
@@ -102,8 +92,9 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
 #endif
 instance Pretty (GHC.HsExpr GHC.GhcPs)
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-instance Pretty (GHC.HsUntypedSplice GHC.GhcPs)
-#else
-instance Pretty (GHC.HsSplice GHC.GhcPs)
-#endif
+
+instance Pretty (GHC.FieldOcc GHC.GhcPs)
+
+instance Pretty GHC.OccName
+
+instance Pretty GHC.ModuleName

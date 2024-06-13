@@ -25,7 +25,6 @@ import Control.Monad
 import Control.Monad.RWS
 import Data.Maybe
 import Data.Void
-import qualified GHC.Core.Coercion as GHC
 import qualified GHC.Data.Bag as GHC
 import qualified GHC.Data.FastString as GHC
 import qualified GHC.Hs as GHC
@@ -36,13 +35,16 @@ import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
-import HIndent.Applicative
-import HIndent.Ast.Declaration
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Data.Body
+import HIndent.Ast.Declaration.Data.Record.Field
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Signature
+import HIndent.Ast.Expression.Bracket
+import HIndent.Ast.Expression.Splice
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Operator.Infix
+import HIndent.Ast.Operator.Prefix
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import HIndent.Config
@@ -134,26 +136,6 @@ class CommentExtraction a =>
 instance (CommentExtraction l, Pretty e) => Pretty (GHC.GenLocated l e) where
   pretty' (GHC.L _ e) = pretty e
 
-instance Pretty (GHC.ClsInstDecl GHC.GhcPs) where
-  pretty' GHC.ClsInstDecl {..} = do
-    string "instance " |=> do
-      whenJust cid_overlap_mode $ \x -> do
-        pretty x
-        space
-      pretty (fmap HsSigTypeInsideInstDecl cid_poly_ty)
-        |=> unless (null sigsAndMethods) (string " where")
-    unless (null sigsAndMethods) $ do
-      newline
-      indentedBlock $ lined $ fmap pretty sigsAndMethods
-    where
-      sigsAndMethods =
-        SBF.mkSortedLSigBindFamilyList
-          cid_sigs
-          (GHC.bagToList cid_binds)
-          []
-          cid_tyfam_insts
-          cid_datafam_insts
-
 instance Pretty
            (GHC.MatchGroup
               GHC.GhcPs
@@ -170,7 +152,7 @@ instance Pretty (GHC.HsExpr GHC.GhcPs) where
   pretty' = prettyHsExpr
 
 prettyHsExpr :: GHC.HsExpr GHC.GhcPs -> Printer ()
-prettyHsExpr (GHC.HsVar _ bind) = pretty $ fmap PrefixOp bind
+prettyHsExpr (GHC.HsVar _ bind) = pretty $ fmap mkPrefixOperator bind
 prettyHsExpr (GHC.HsUnboundVar _ x) = pretty x
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 prettyHsExpr (GHC.HsOverLabel _ _ l) = string "#" >> string (GHC.unpackFS l)
@@ -428,7 +410,7 @@ prettyHsExpr (GHC.ExprWithTySig _ e sig) = do
   pretty $ GHC.hswc_body sig
 prettyHsExpr (GHC.ArithSeq _ _ x) = pretty x
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
-prettyHsExpr (GHC.HsSpliceE _ x) = pretty x
+prettyHsExpr (GHC.HsSpliceE _ x) = pretty $ mkSplice x
 #endif
 prettyHsExpr (GHC.HsProc _ pat x@(GHC.L _ (GHC.HsCmdTop _ (GHC.L _ (GHC.HsCmdDo _ xs))))) = do
   spaced [string "proc", pretty pat, string "-> do"]
@@ -447,7 +429,7 @@ prettyHsExpr (GHC.HsPragE _ p x) = spaced [pretty p, pretty x]
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 prettyHsExpr GHC.HsRecSel {} = notGeneratedByParser
 prettyHsExpr (GHC.HsTypedBracket _ inner) = typedBrackets $ pretty inner
-prettyHsExpr (GHC.HsUntypedBracket _ inner) = pretty inner
+prettyHsExpr (GHC.HsUntypedBracket _ inner) = pretty $ mkBracket inner
 #else
 prettyHsExpr GHC.HsConLikeOut {} = notGeneratedByParser
 prettyHsExpr GHC.HsRecFld {} = notGeneratedByParser
@@ -457,13 +439,13 @@ prettyHsExpr (GHC.HsDo _ GHC.ParStmtCtxt {} _) = notGeneratedByParser
 prettyHsExpr (GHC.HsDo _ GHC.TransStmtCtxt {} _) = notGeneratedByParser
 prettyHsExpr GHC.HsTick {} = forHpc
 prettyHsExpr GHC.HsBinTick {} = forHpc
-prettyHsExpr (GHC.HsBracket _ inner) = pretty inner
+prettyHsExpr (GHC.HsBracket _ inner) = pretty $ mkBracket inner
 prettyHsExpr GHC.HsRnBracketOut {} = notGeneratedByParser
 prettyHsExpr GHC.HsTcBracketOut {} = notGeneratedByParser
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 prettyHsExpr (GHC.HsTypedSplice _ x) = string "$$" >> pretty x
-prettyHsExpr (GHC.HsUntypedSplice _ x) = pretty x
+prettyHsExpr (GHC.HsUntypedSplice _ x) = pretty $ mkSplice x
 #endif
 instance Pretty LambdaCase where
   pretty' (LambdaCase matches caseOrCases) = do
@@ -569,7 +551,7 @@ prettyMatchExpr GHC.Match {..} =
       case (m_pats, m_ctxt) of
         (l:r:xs, GHC.FunRhs {..}) -> do
           spaced
-            $ [pretty l, pretty $ fmap InfixOp mc_fun, pretty r]
+            $ [pretty l, pretty $ fmap mkInfixOperator mc_fun, pretty r]
                 ++ fmap pretty xs
           pretty m_grhss
         _ -> error "Not enough parameters are passed."
@@ -750,10 +732,10 @@ prettyHsType (GHC.HsOpTy _ _ l op r) = do
     then do
       pretty l
       newline
-      pretty $ fmap InfixOp op
+      pretty $ fmap mkInfixOperator op
       space
       pretty r
-    else spaced [pretty l, pretty $ fmap InfixOp op, pretty r]
+    else spaced [pretty l, pretty $ fmap mkInfixOperator op, pretty r]
 #else
 prettyHsType (GHC.HsOpTy _ l op r) = do
   lineBreak <- gets (configLineBreaks . psConfig)
@@ -761,20 +743,21 @@ prettyHsType (GHC.HsOpTy _ l op r) = do
     then do
       pretty l
       newline
-      pretty $ fmap InfixOp op
+      pretty $ fmap mkInfixOperator op
       space
       pretty r
-    else spaced [pretty l, pretty $ fmap InfixOp op, pretty r]
+    else spaced [pretty l, pretty $ fmap mkInfixOperator op, pretty r]
 #endif
 prettyHsType (GHC.HsParTy _ inside) = parens $ pretty inside
 prettyHsType (GHC.HsIParamTy _ x ty) =
   spaced [string "?" >> pretty x, string "::", pretty ty]
 prettyHsType GHC.HsStarTy {} = string "*"
 prettyHsType (GHC.HsKindSig _ t k) = spaced [pretty t, string "::", pretty k]
-prettyHsType (GHC.HsSpliceTy _ sp) = pretty sp
+prettyHsType (GHC.HsSpliceTy _ sp) = pretty $ mkSplice sp
 prettyHsType GHC.HsDocTy {} = docNode
 prettyHsType (GHC.HsBangTy _ pack x) = pretty pack >> pretty x
-prettyHsType (GHC.HsRecTy _ xs) = hvFields $ fmap pretty xs
+prettyHsType (GHC.HsRecTy _ xs) =
+  hvFields $ fmap (pretty . fmap mkRecordField . fromGenLocated) xs
 prettyHsType (GHC.HsExplicitListTy _ _ xs) =
   case xs of
     [] -> string "'[]"
@@ -848,7 +831,7 @@ instance Pretty ParStmtBlockInsideVerticalList where
     vCommaSep $ fmap pretty xs
 
 instance Pretty GHC.RdrName where
-  pretty' = pretty . PrefixOp
+  pretty' = pretty . mkPrefixOperator
 
 instance Pretty
            (GHC.GRHS
@@ -939,35 +922,13 @@ instance Pretty GHC.EpaCommentTok where
         -- contains indent spaces for all lines except the first one.
         indentedWithFixedLevel 0 $ lined $ fmap string xs
   pretty' _ = docNode
-#if !MIN_VERSION_ghc_lib_parser(9,6,1)
-instance Pretty (GHC.HsSplice GHC.GhcPs) where
-  pretty' (GHC.HsTypedSplice _ _ _ body) = string "$$" >> pretty body
-  pretty' (GHC.HsUntypedSplice _ GHC.DollarSplice _ body) =
-    string "$" >> pretty body
-  pretty' (GHC.HsUntypedSplice _ GHC.BareSplice _ body) = pretty body
-  -- The body of a quasi-quote must not be changed by a formatter.
-  -- Changing it will modify the actual behavior of the code.
-  pretty' (GHC.HsQuasiQuote _ _ l _ r) =
-    brackets $ do
-      pretty l
-      wrapWithBars
-        $ indentedWithFixedLevel 0
-        $ sequence_
-        $ printers [] ""
-        $ GHC.unpackFS r
-    where
-      printers ps s [] = reverse (string (reverse s) : ps)
-      printers ps s ('\n':xs) =
-        printers (newline : string (reverse s) : ps) "" xs
-      printers ps s (x:xs) = printers ps (x : s) xs
-  pretty' GHC.HsSpliced {} = notGeneratedByParser
-#endif
+
 instance Pretty (GHC.Pat GHC.GhcPs) where
   pretty' = prettyPat
 
 instance Pretty PatInsidePatDecl where
   pretty' (PatInsidePatDecl (GHC.ConPat {pat_args = (GHC.InfixCon l r), ..})) =
-    spaced [pretty l, pretty $ fmap InfixOp pat_con, pretty r]
+    spaced [pretty l, pretty $ fmap mkInfixOperator pat_con, pretty r]
   pretty' (PatInsidePatDecl x) = pretty x
 
 prettyPat :: GHC.Pat GHC.GhcPs -> Printer ()
@@ -999,17 +960,17 @@ prettyPat (GHC.SumPat _ x position numElem) = do
 prettyPat GHC.ConPat {..} =
   case pat_args of
     GHC.PrefixCon _ as -> do
-      pretty $ fmap PrefixOp pat_con
+      pretty $ fmap mkPrefixOperator pat_con
       spacePrefixed $ fmap pretty as
     GHC.RecCon rec -> (pretty pat_con >> space) |=> pretty (RecConPat rec)
     GHC.InfixCon a b -> do
       pretty a
       unlessSpecialOp (GHC.unLoc pat_con) space
-      pretty $ fmap InfixOp pat_con
+      pretty $ fmap mkInfixOperator pat_con
       unlessSpecialOp (GHC.unLoc pat_con) space
       pretty b
 prettyPat (GHC.ViewPat _ l r) = spaced [pretty l, string "->", pretty r]
-prettyPat (GHC.SplicePat _ x) = pretty x
+prettyPat (GHC.SplicePat _ x) = pretty $ mkSplice x
 prettyPat (GHC.LitPat _ x) = pretty x
 prettyPat (GHC.NPat _ x _ _) = pretty x
 prettyPat (GHC.NPlusKPat _ n k _ _ _) = pretty n >> string "+" >> pretty k
@@ -1025,23 +986,7 @@ instance Pretty RecConPat where
       fieldPrinters =
         fmap (pretty . fmap RecConField) rec_flds
           ++ maybeToList (fmap (const (string "..")) rec_dotdot)
-#if !MIN_VERSION_ghc_lib_parser(9,4,1)
-instance Pretty (GHC.HsBracket GHC.GhcPs) where
-  pretty' (GHC.ExpBr _ expr) = brackets $ wrapWithBars $ pretty expr
-  pretty' (GHC.PatBr _ expr) =
-    brackets $ string "p" >> wrapWithBars (pretty expr)
-  pretty' (GHC.DecBrL _ decls) =
-    brackets
-      $ string "d| "
-          |=> lined (fmap (pretty . fmap mkDeclaration . fromGenLocated) decls)
-          >> string " |"
-  pretty' GHC.DecBrG {} = notGeneratedByParser
-  pretty' (GHC.TypBr _ expr) =
-    brackets $ string "t" >> wrapWithBars (pretty expr)
-  pretty' (GHC.VarBr _ True var) = string "'" >> pretty var
-  pretty' (GHC.VarBr _ False var) = string "''" >> pretty var
-  pretty' (GHC.TExpBr _ x) = typedBrackets $ pretty x
-#endif
+
 instance Pretty SBF.SigBindFamily where
   pretty' (SBF.Sig x) = pretty $ mkSignature x
   pretty' (SBF.Bind x) = pretty $ mkBind x
@@ -1141,18 +1086,9 @@ instance Pretty (GHC.FieldOcc GHC.GhcPs) where
 instance Pretty a => Pretty (GHC.HsScaled GHC.GhcPs a) where
   pretty' (GHC.HsScaled _ x) = pretty x
 
-instance Pretty (GHC.ConDeclField GHC.GhcPs) where
-  pretty' GHC.ConDeclField {..}
-    -- Here, we *ignore* the 'cd_fld_doc' field because doc strings are
-    -- also stored as comments, and printing both results in duplicated
-    -- comments.
-   = do
-    hCommaSep $ fmap pretty cd_fld_names
-    string " :: "
-    pretty cd_fld_type
-
 instance Pretty InfixExpr where
-  pretty' (InfixExpr (GHC.L _ (GHC.HsVar _ bind))) = pretty $ fmap InfixOp bind
+  pretty' (InfixExpr (GHC.L _ (GHC.HsVar _ bind))) =
+    pretty $ fmap mkInfixOperator bind
   pretty' (InfixExpr x) = pretty' x
 
 instance Pretty InfixApp where
@@ -1224,13 +1160,6 @@ instance Pretty (GHC.DerivClauseTys GHC.GhcPs) where
   pretty' (GHC.DctSingle _ ty) = parens $ pretty ty
   pretty' (GHC.DctMulti _ ts) = hvTuple $ fmap pretty ts
 
-instance Pretty GHC.OverlapMode where
-  pretty' GHC.NoOverlap {} = notUsedInParsedStage
-  pretty' GHC.Overlappable {} = string "{-# OVERLAPPABLE #-}"
-  pretty' GHC.Overlapping {} = string "{-# OVERLAPPING #-}"
-  pretty' GHC.Overlaps {} = string "{-# OVERLAPS #-}"
-  pretty' GHC.Incoherent {} = string "{-# INCOHERENT #-}"
-
 instance Pretty GHC.StringLiteral where
   pretty' = output
 
@@ -1254,30 +1183,6 @@ instance Pretty (GHC.HsForAllTelescope GHC.GhcPs) where
     spaced
       $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) hsf_invis_bndrs
     dot
-
-instance Pretty InfixOp where
-  pretty' (InfixOp (GHC.Unqual name)) = backticksIfNotSymbol name $ pretty name
-  pretty' (InfixOp (GHC.Qual modName name)) =
-    backticksIfNotSymbol name $ do
-      pretty modName
-      string "."
-      pretty name
-  pretty' (InfixOp GHC.Orig {}) = notUsedInParsedStage
-  pretty' (InfixOp (GHC.Exact name)) = backticksIfNotSymbol occ $ pretty occ
-    where
-      occ = GHC.occName name
-
-instance Pretty PrefixOp where
-  pretty' (PrefixOp (GHC.Unqual name)) = parensIfSymbol name $ pretty name
-  pretty' (PrefixOp (GHC.Qual modName name)) =
-    parensIfSymbol name $ do
-      pretty modName
-      string "."
-      pretty name
-  pretty' (PrefixOp GHC.Orig {}) = notUsedInParsedStage
-  pretty' (PrefixOp (GHC.Exact name)) = parensIfSymbol occ $ output name
-    where
-      occ = GHC.occName name
 
 instance Pretty Context where
   pretty' (Context xs) =
@@ -1408,20 +1313,6 @@ instance Pretty
   pretty' GHC.HsArgPar {} = notUsedInParsedStage
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
-instance Pretty (GHC.HsQuote GHC.GhcPs) where
-  pretty' (GHC.ExpBr _ x) = brackets $ wrapWithBars $ pretty x
-  pretty' (GHC.PatBr _ x) = brackets $ string "p" >> wrapWithBars (pretty x)
-  pretty' (GHC.DecBrL _ decls) =
-    brackets
-      $ string "d| "
-          |=> lined (fmap (pretty . fmap mkDeclaration . fromGenLocated) decls)
-          >> string " |"
-  pretty' GHC.DecBrG {} = notUsedInParsedStage
-  pretty' (GHC.TypBr _ x) = brackets $ string "t" >> wrapWithBars (pretty x)
-  pretty' (GHC.VarBr _ True x) = string "'" >> pretty x
-  pretty' (GHC.VarBr _ False x) = string "''" >> pretty x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance Pretty (GHC.WithHsDocIdentifiers GHC.StringLiteral GHC.GhcPs) where
   pretty' GHC.WithHsDocIdentifiers {..} = pretty hsDocString
 #endif
@@ -1460,17 +1351,6 @@ instance Pretty
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
   pretty' GHC.HsWC {..} = pretty hswc_body
-
-instance Pretty (GHC.RoleAnnotDecl GHC.GhcPs) where
-  pretty' (GHC.RoleAnnotDecl _ name roles) =
-    spaced
-      $ [string "type role", pretty name]
-          ++ fmap (maybe (string "_") pretty . GHC.unLoc) roles
-
-instance Pretty GHC.Role where
-  pretty' GHC.Nominal = string "nominal"
-  pretty' GHC.Representational = string "representational"
-  pretty' GHC.Phantom = string "phantom"
 
 instance Pretty (GHC.TyFamInstDecl GHC.GhcPs) where
   pretty' GHC.TyFamInstDecl {..} = string "type " >> pretty tfid_eqn
@@ -1705,39 +1585,9 @@ instance Pretty GHC.SrcStrictness where
   pretty' GHC.SrcLazy = string "~"
   pretty' GHC.SrcStrict = string "!"
   pretty' GHC.NoSrcStrict = pure ()
-
-instance Pretty (GHC.HsOuterSigTyVarBndrs GHC.GhcPs) where
-  pretty' GHC.HsOuterImplicit {} = pure ()
-  pretty' GHC.HsOuterExplicit {..} = do
-    string "forall"
-    spacePrefixed
-      $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) hso_bndrs
-    dot
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty GHC.FieldLabelString where
   pretty' = output
-
-instance Pretty (GHC.HsUntypedSplice GHC.GhcPs) where
-  pretty' (GHC.HsUntypedSpliceExpr _ x) = string "$" >> pretty x
-  -- The body of a quasi-quote must not be changed by a formatter.
-  -- Changing it will modify the actual behavior of the code.
-  --
-  -- TODO: Remove duplicated code
-  pretty' (GHC.HsQuasiQuote _ l r) =
-    brackets $ do
-      pretty l
-      printCommentsAnd
-        r
-        (wrapWithBars
-           . indentedWithFixedLevel 0
-           . sequence_
-           . printers [] ""
-           . GHC.unpackFS)
-    where
-      printers ps s [] = reverse (string (reverse s) : ps)
-      printers ps s ('\n':xs) =
-        printers (newline : string (reverse s) : ps) "" xs
-      printers ps s (x:xs) = printers ps (x : s) xs
 #endif
 -- | Marks an AST node as never appearing in an AST.
 --

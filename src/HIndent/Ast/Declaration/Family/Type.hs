@@ -20,7 +20,7 @@ import HIndent.Pretty.NodeComments
 
 data TypeFamily = TypeFamily
   { isTopLevel :: Bool
-  , name :: String
+  , name :: GHC.LIdP GHC.GhcPs
   , typeVariables :: [WithComments TypeVariable]
   , signature :: WithComments ResultSignature
   , injectivity :: Maybe (WithComments Injectivity)
@@ -34,7 +34,7 @@ instance Pretty TypeFamily where
   pretty' TypeFamily {..} = do
     string "type "
     when isTopLevel $ string "family "
-    string name
+    pretty name
     spacePrefixed $ fmap pretty typeVariables
     pretty signature
     whenJust injectivity $ \x -> string " | " >> pretty x
@@ -50,7 +50,7 @@ mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
       case fdTopLevel of
         GHC.TopLevel -> True
         GHC.NotTopLevel -> False
-    name = showOutputable fdLName
+    name = fdLName
     typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
     signature = mkResultSignature <$> fromGenLocated fdResultSig
     injectivity = fmap (fmap mkInjectivity . fromGenLocated) fdInjectivityAnn
