@@ -1,28 +1,28 @@
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns    #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module HIndent.Ast.Expression.Application.Infix
   ( InfixApplication
   , mkInfixApplication
   ) where
 
-import                          Control.Monad
-import                          Data.Maybe
-import                qualified GHC.Types.Fixity                            as GHC
-import                qualified GHC.Types.SrcLoc                            as GHC
-import {-# SOURCE #-}           HIndent.Ast.Expression
-import                          HIndent.Ast.NodeComments
-import                          HIndent.Fixity
-import                qualified HIndent.GhcLibParserWrapper.GHC.Hs          as GHC
-import {-# SOURCE #-}           HIndent.Pretty
-import                          HIndent.Pretty.Combinators
-import                          HIndent.Pretty.NodeComments
-import                          HIndent.Pretty.Types
-import                qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
+import Control.Monad
+import Data.Maybe
+import qualified GHC.Types.Fixity as GHC
+import qualified GHC.Types.SrcLoc as GHC
+import {-# SOURCE #-} HIndent.Ast.Expression
+import HIndent.Ast.NodeComments
+import HIndent.Fixity
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty.Combinators
+import HIndent.Pretty.NodeComments
+import HIndent.Pretty.Types
+import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
 
 data InfixApplication = InfixApplication
   { lhs :: GHC.LHsExpr GHC.GhcPs
-  , op  :: GHC.LHsExpr GHC.GhcPs
+  , op :: GHC.LHsExpr GHC.GhcPs
   , rhs :: GHC.LHsExpr GHC.GhcPs
   }
 
