@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module HIndent.Ast.Expression
   ( Expression
@@ -10,12 +11,13 @@ import Control.Monad
 import Control.Monad.RWS
 import Data.List.NonEmpty hiding (reverse)
 import qualified Data.List.NonEmpty as NE
+import Data.Maybe
 import qualified GHC.Data.FastString as GHC
 import GHC.Stack
 import qualified GHC.Types.Basic as GHC
+import qualified GHC.Types.Fixity as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import qualified GHC.Unit as GHC
-import HIndent.Ast.Expression.Application.Infix
 import HIndent.Ast.Expression.Bracket
 import {-# SOURCE #-} HIndent.Ast.Expression.Record.Field
 import HIndent.Ast.Expression.Record.Field.Label
@@ -23,6 +25,7 @@ import HIndent.Ast.Expression.Splice
 import HIndent.Ast.Expression.Variable
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
+import HIndent.Fixity
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -38,6 +41,7 @@ import HIndent.Pretty.Types hiding
   )
 import qualified HIndent.Pretty.Types as Pretty
 import HIndent.Printer
+import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
 
 data Expression
   = Variable (WithComments Variable)
@@ -54,9 +58,9 @@ data Expression
       , args :: [WithComments Expression]
       }
   | OperatorApplication
-      { l :: GHC.LHsExpr GHC.GhcPs
-      , o :: GHC.LHsExpr GHC.GhcPs
-      , r :: GHC.LHsExpr GHC.GhcPs
+      { lhs :: GHC.LHsExpr GHC.GhcPs
+      , op :: GHC.LHsExpr GHC.GhcPs
+      , rhs :: GHC.LHsExpr GHC.GhcPs
       }
   | TypeApplication
       { v :: GHC.LHsExpr GHC.GhcPs
@@ -180,7 +184,73 @@ instance Pretty Expression where
           else newline
         spaces' <- getIndentSpaces
         indentedWithSpace spaces' $ lined $ fmap pretty args
-  pretty' OperatorApplication {..} = pretty $ mkInfixApplication l o r
+  pretty' OperatorApplication {..} = horizontal <-|> vertical
+    where
+      horizontal =
+        spaced
+          [ pretty $ fmap mkExpression lhs
+          , pretty (InfixExpr op)
+          , pretty $ fmap mkExpression rhs
+          ]
+      vertical =
+        case findFixity op of
+          GHC.Fixity _ _ GHC.InfixL -> leftAssoc
+          GHC.Fixity _ _ GHC.InfixR -> rightAssoc
+          GHC.Fixity _ _ GHC.InfixN -> noAssoc
+      leftAssoc = prettyOps allOperantsAndOperatorsLeftAssoc
+      rightAssoc = prettyOps allOperantsAndOperatorsRightAssoc
+      noAssoc
+        | GHC.L _ (GHC.OpApp _ _ o _) <- lhs
+        , isSameAssoc o = leftAssoc
+        | otherwise = rightAssoc
+      prettyOps [l, o, r@(GHC.L _ (GHC.HsDo {}))] = do
+        spaced
+          [ pretty $ fmap mkExpression l
+          , pretty $ InfixExpr o
+          , pretty $ fmap mkExpression r
+          ]
+      prettyOps [l, o, r@(GHC.L _ GHC.HsLam {})] = do
+        spaced
+          [ pretty $ fmap mkExpression l
+          , pretty $ InfixExpr o
+          , pretty $ fmap mkExpression r
+          ]
+      prettyOps [l, o, r@(GHC.L _ GHC.HsLamCase {})] = do
+        spaced
+          [ pretty $ fmap mkExpression l
+          , pretty $ InfixExpr o
+          , pretty $ fmap mkExpression r
+          ]
+      prettyOps (l:xs) = do
+        pretty $ fmap mkExpression l
+        newline
+        indentedBlock $ f xs
+        where
+          f (o:r:rems) = do
+            (pretty (InfixExpr o) >> space) |=> pretty (fmap mkExpression r)
+            unless (null rems) $ do
+              newline
+              f rems
+          f _ =
+            error
+              "The number of the sum of operants and operators should be odd."
+      prettyOps _ = error "Too short list."
+      findFixity o =
+        fromMaybe GHC.defaultFixity $ lookup (GHC.varToStr o) fixities
+      allOperantsAndOperatorsLeftAssoc = reverse $ rhs : op : collect lhs
+        where
+          collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
+          collect (GHC.L _ (GHC.OpApp _ l o r))
+            | isSameAssoc o = r : o : collect l
+          collect x = [x]
+      allOperantsAndOperatorsRightAssoc = lhs : op : collect rhs
+        where
+          collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
+          collect (GHC.L _ (GHC.OpApp _ l o r))
+            | isSameAssoc o = l : o : collect r
+          collect x = [x]
+      isSameAssoc (findFixity -> GHC.Fixity _ lv d) = lv == level && d == dir
+      GHC.Fixity _ level dir = findFixity op
   pretty' TypeApplication {..} =
     pretty (fmap mkExpression v) >> string " @" >> pretty ty
   pretty' (Parentheses x) = parens $ pretty $ fmap mkExpression x
@@ -342,7 +412,7 @@ mkExpression (GHC.HsApp _ l r) = FunctionApplication {..}
     insertComments cs (GHC.L s@GHC.SrcSpanAnn {GHC.ann = e@GHC.EpAnn {comments = cs'}} r') =
       GHC.L (s {GHC.ann = e {GHC.comments = cs <> cs'}}) r'
     insertComments _ x = x
-mkExpression (GHC.OpApp _ l o r) = OperatorApplication {..}
+mkExpression (GHC.OpApp _ lhs op rhs) = OperatorApplication {..}
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkExpression (GHC.HsAppType _ v _ ty) = TypeApplication {..}
 #else

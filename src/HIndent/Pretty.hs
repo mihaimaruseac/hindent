@@ -41,7 +41,6 @@ import HIndent.Ast.Declaration.Data.Record.Field
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression
-import HIndent.Ast.Expression.Application.Infix
 import HIndent.Ast.Expression.Splice
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Operator.Infix
@@ -293,8 +292,6 @@ instance Pretty
       hor = space >> pretty (fmap mkExpression body)
       ver = newline >> indentedBlock (pretty $ fmap mkExpression body)
   pretty' GHC.ApplicativeStmt {} = notGeneratedByParser
-  pretty' (GHC.BodyStmt _ (GHC.L loc (GHC.OpApp _ l o r)) _ _) =
-    pretty $ GHC.L loc $ mkInfixApplication l o r
   pretty' (GHC.BodyStmt _ body _ _) = pretty $ fmap mkExpression body
   pretty' (GHC.LetStmt _ l) = string "let " |=> pretty l
   pretty' (GHC.ParStmt _ xs _ _) = hvBarSep $ fmap pretty xs

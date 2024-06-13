@@ -90,7 +90,6 @@ library
       HIndent.Ast.Declaration.Warning.Collection
       HIndent.Ast.Declaration.Warning.Kind
       HIndent.Ast.Expression
-      HIndent.Ast.Expression.Application.Infix
       HIndent.Ast.Expression.Bracket
       HIndent.Ast.Expression.Record.Field
       HIndent.Ast.Expression.Record.Field.Label
