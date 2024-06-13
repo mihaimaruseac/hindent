@@ -24,10 +24,11 @@ extra-source-files:
 data-files:   elisp/hindent.el
 github:       mihaimaruseac/hindent
 
-ghc-options: -Wall -O2
+ghc-options: -Wall -O2 -threaded
 
 dependencies:
   - Cabal
+  - async
   - base >= 4.7 && < 5
   - bytestring
   - containers

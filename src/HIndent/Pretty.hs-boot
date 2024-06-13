@@ -154,3 +154,13 @@ instance Pretty (GHC.HsCmdTop GHC.GhcPs)
 instance Pretty (GHC.HsPragE GHC.GhcPs)
 
 instance Pretty GHC.ModuleName
+
+instance Pretty InfixExpr
+
+instance Pretty QualifiedDo
+
+instance Pretty
+           (GHC.StmtLR
+              GHC.GhcPs
+              GHC.GhcPs
+              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))

@@ -528,9 +528,6 @@ instance CommentExtraction (ConDeclField GhcPs) where
 instance CommentExtraction InfixExpr where
   nodeComments (InfixExpr x) = nodeComments x
 
-instance CommentExtraction InfixApp where
-  nodeComments InfixApp {} = emptyNodeComments
-
 instance CommentExtraction (BooleanFormula a) where
   nodeComments Var {} = emptyNodeComments
   nodeComments And {} = emptyNodeComments
