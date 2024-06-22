@@ -116,6 +116,10 @@ data Expression
   | GetField (WithComments Expression) (WithComments FieldLabel)
   | Projection (NonEmpty (WithComments FieldLabel))
   | WithSignature (WithComments Expression) (GHC.LHsSigWcType GHC.GhcPs)
+  | WithPragma
+      { pragma :: GHC.HsPragE GHC.GhcPs
+      , expr :: WithComments Expression
+      }
   | Sequence (GHC.ArithSeqInfo GHC.GhcPs)
   | Splice Splice
   | Bracket Bracket
@@ -152,6 +156,7 @@ instance CommentExtraction Expression where
   nodeComments GetField {} = NodeComments [] [] []
   nodeComments Projection {} = NodeComments [] [] []
   nodeComments WithSignature {} = NodeComments [] [] []
+  nodeComments WithPragma {} = NodeComments [] [] []
   nodeComments Sequence {} = NodeComments [] [] []
   nodeComments Splice {} = NodeComments [] [] []
   nodeComments Bracket {} = NodeComments [] [] []
@@ -335,6 +340,7 @@ instance Pretty Expression where
   pretty' (Projection fields) = parens $ forM_ fields $ \x -> dot >> pretty x
   pretty' (WithSignature e ty) =
     spaced [pretty e, string "::", pretty $ GHC.hswc_body ty]
+  pretty' WithPragma {..} = spaced [pretty pragma, pretty expr]
   pretty' (Sequence x) = pretty x
   pretty' (Splice x) = pretty x
   pretty' (Bracket x) = pretty x
@@ -354,8 +360,6 @@ prettyHsExpr (GHC.HsProc _ pat body) = hor <-|> ver
       spaced [string "proc", pretty pat, string "->"]
       newline
       indentedBlock (pretty body)
-prettyHsExpr (GHC.HsPragE _ p x) =
-  spaced [pretty p, pretty $ fmap mkExpression x]
 prettyHsExpr _ = undefined
 
 mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
@@ -421,6 +425,9 @@ mkExpression (GHC.HsProjection _ fields) =
   Projection $ fmap (fmap mkFieldLabel . fromGenLocated) fields
 mkExpression (GHC.ExprWithTySig _ e ty) =
   WithSignature (fromGenLocated $ fmap mkExpression e) ty
+mkExpression (GHC.HsPragE _ pragma e) = WithPragma {..}
+  where
+    expr = fromGenLocated $ fmap mkExpression e
 mkExpression (GHC.ArithSeq _ _ x) = Sequence x
 mkExpression (GHC.HsStatic _ x) = Static $ fromGenLocated $ fmap mkExpression x
 #if MIN_VERSION_ghc_lib_parser(9, 8, 0)
