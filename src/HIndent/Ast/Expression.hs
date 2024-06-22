@@ -422,6 +422,7 @@ mkExpression (GHC.HsProjection _ fields) =
 mkExpression (GHC.ExprWithTySig _ e ty) =
   WithSignature (fromGenLocated $ fmap mkExpression e) ty
 mkExpression (GHC.ArithSeq _ _ x) = Sequence x
+mkExpression (GHC.HsStatic _ x) = Static $ fromGenLocated $ fmap mkExpression x
 #if MIN_VERSION_ghc_lib_parser(9, 8, 0)
 mkExpression (GHC.RecordUpd _ b GHC.RegularRecUpdFields {..}) =
   RecordUpdate {..}
@@ -496,7 +497,6 @@ mkExpression GHC.HsRecFld {} = notGeneratedByParser
 mkExpression GHC.HsTick {} = forHpc
 mkExpression GHC.HsBinTick {} = forHpc
 #endif
-mkExpression (GHC.HsStatic _ x) = Static $ fromGenLocated $ fmap mkExpression x
 mkExpression x = Expression x
 
 notGeneratedByParser :: HasCallStack => a
