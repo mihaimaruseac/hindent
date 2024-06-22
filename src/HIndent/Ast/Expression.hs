@@ -81,7 +81,7 @@ data Expression
   | UnboxedSum
       { position :: Int
       , numElems :: Int
-      , expr :: GHC.LHsExpr GHC.GhcPs
+      , expr :: WithComments Expression
       }
   | Case
       { cond :: WithComments Expression
@@ -95,7 +95,7 @@ data Expression
   | MultiWayIf [GHC.LGRHS GHC.GhcPs (GHC.LHsExpr GHC.GhcPs)]
   | LetIn
       { binds :: GHC.HsLocalBinds GHC.GhcPs
-      , expr :: GHC.LHsExpr GHC.GhcPs
+      , expr :: WithComments Expression
       }
   | List [GHC.LHsExpr GHC.GhcPs]
   | ListComprehension
@@ -278,8 +278,8 @@ instance Pretty Expression where
     string "(#"
     forM_ [1 .. numElems] $ \idx -> do
       if idx == position
-        then string " " >> pretty (fmap mkExpression expr) >> string " "
-        else string " "
+        then space >> pretty expr >> space
+        else space
       when (idx < numElems) $ string "|"
     string "#)"
   pretty' Case {..} = do
@@ -310,10 +310,7 @@ instance Pretty Expression where
     string "if "
       |=> lined (fmap (pretty . fmap (GRHSExpr GRHSExprMultiWayIf)) guards)
   pretty' LetIn {..} =
-    lined
-      [ string "let " |=> pretty binds
-      , string " in " |=> pretty (fmap mkExpression expr)
-      ]
+    lined [string "let " |=> pretty binds, string " in " |=> pretty expr]
   pretty' (List xs) = horizontal <-|> vertical
     where
       horizontal = brackets $ hCommaSep $ fmap (pretty . fmap mkExpression) xs
@@ -409,7 +406,9 @@ mkExpression (GHC.HsPar _ expr) = Parentheses expr
 mkExpression (GHC.SectionL _ l o) = SectionLeft {..}
 mkExpression (GHC.SectionR _ o r) = SectionRight {..}
 mkExpression (GHC.ExplicitTuple _ elements boxity) = Tuple {..}
-mkExpression (GHC.ExplicitSum _ position numElems expr) = UnboxedSum {..}
+mkExpression (GHC.ExplicitSum _ position numElems e) = UnboxedSum {..}
+  where
+    expr = fromGenLocated $ fmap mkExpression e
 mkExpression (GHC.HsCase _ c arms) = Case {..}
   where
     cond = fromGenLocated $ fmap mkExpression c
@@ -420,9 +419,13 @@ mkExpression (GHC.HsIf _ c t' f') = If {..}
     f = fromGenLocated $ fmap mkExpression f'
 mkExpression (GHC.HsMultiIf _ guards) = MultiWayIf guards
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
-mkExpression (GHC.HsLet _ _ binds _ expr) = LetIn {..}
+mkExpression (GHC.HsLet _ _ binds _ e) = LetIn {..}
+  where
+    expr = fromGenLocated $ fmap mkExpression e
 #else
-mkExpression (GHC.HsLet _ binds expr) = LetIn {..}
+mkExpression (GHC.HsLet _ binds e) = LetIn {..}
+  where
+    expr = fromGenLocated $ fmap mkExpression e
 #endif
 mkExpression (GHC.ExplicitList _ xs) = List xs
 mkExpression (GHC.HsDo _ GHC.ListComp {} (GHC.L _ [])) =
