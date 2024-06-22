@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module HIndent.Ast.Expression.Bracket
   ( Bracket
@@ -22,6 +23,9 @@ data Bracket
   | Type (GHC.LHsType GHC.GhcPs)
   | Variable Bool (GHC.LIdP GHC.GhcPs)
 
+class MkBracket a where
+  mkBracket :: a -> Bracket
+
 instance CommentExtraction Bracket where
   nodeComments TypedExpression {} = NodeComments [] [] []
   nodeComments UntypedExpression {} = NodeComments [] [] []
@@ -40,19 +44,27 @@ instance Pretty Bracket where
   pretty' (Variable True var) = string "'" >> pretty var
   pretty' (Variable False var) = string "''" >> pretty var
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
-mkBracket :: GHC.HsQuote GHC.GhcPs -> Bracket
+instance MkBracket (GHC.HsQuote GHC.GhcPs) where
+  mkBracket (GHC.ExpBr _ x) =
+    UntypedExpression $ fmap mkExpression $ fromGenLocated x
+  mkBracket (GHC.PatBr _ x) = Pattern x
+  mkBracket (GHC.DecBrL _ x) =
+    Declaration $ fmap (fmap mkDeclaration . fromGenLocated) x
+  mkBracket (GHC.TypBr _ x) = Type x
+  mkBracket (GHC.VarBr _ b x) = Variable b x
+  mkBracket (GHC.DecBrG {}) = error "This AST node should never appear."
 #else
-mkBracket :: GHC.HsBracket GHC.GhcPs -> Bracket
+instance MkBracket (GHC.HsBracket GHC.GhcPs) where
+  mkBracket (GHC.ExpBr _ x) =
+    UntypedExpression $ fmap mkExpression $ fromGenLocated x
+  mkBracket (GHC.PatBr _ x) = Pattern x
+  mkBracket (GHC.DecBrL _ x) =
+    Declaration $ fmap (fmap mkDeclaration . fromGenLocated) x
+  mkBracket (GHC.TypBr _ x) = Type x
+  mkBracket (GHC.VarBr _ b x) = Variable b x
+  mkBracket (GHC.DecBrG {}) = error "This AST node should never appear."
+  mkBracket (GHC.TExpBr _ x) =
+    TypedExpression $ fmap mkExpression $ fromGenLocated x
 #endif
-mkBracket (GHC.ExpBr _ x) =
-  UntypedExpression $ fmap mkExpression $ fromGenLocated x
-mkBracket (GHC.PatBr _ x) = Pattern x
-mkBracket (GHC.DecBrL _ x) =
-  Declaration $ fmap (fmap mkDeclaration . fromGenLocated) x
-mkBracket (GHC.TypBr _ x) = Type x
-mkBracket (GHC.VarBr _ b x) = Variable b x
-mkBracket (GHC.DecBrG {}) = error "This AST node should never appear."
-#if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
-mkBracket (GHC.TExpBr _ x) =
-  TypedExpression $ fmap mkExpression $ fromGenLocated x
-#endif
+instance MkBracket (WithComments Expression) where
+  mkBracket = TypedExpression
