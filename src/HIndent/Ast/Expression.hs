@@ -111,7 +111,7 @@ data Expression
       , fields :: GHC.HsRecordBinds GHC.GhcPs
       }
   | RecordUpdate
-      { base :: GHC.LHsExpr GHC.GhcPs
+      { base :: WithComments Expression
       , updaters :: [WithComments RecordField]
       }
   | GetField (GHC.LHsExpr GHC.GhcPs) (WithComments FieldLabel)
@@ -325,10 +325,9 @@ instance Pretty Expression where
       vertical = pretty name >> newline >> indentedBlock (pretty fields)
   pretty' RecordUpdate {..} = hor <-|> ver
     where
-      hor =
-        spaced [pretty $ fmap mkExpression base, hFields $ fmap pretty updaters]
+      hor = spaced [pretty base, hFields $ fmap pretty updaters]
       ver = do
-        pretty $ fmap mkExpression base
+        pretty base
         newline
         indentedBlock
           $ hFields (fmap pretty updaters) <-|> vFields (fmap pretty updaters)
@@ -373,7 +372,7 @@ mkExpression (GHC.HsOverLabel _ x) = OverloadedLabel x
 mkExpression (GHC.HsOverLit _ x) = OverloadedLiteral x
 mkExpression (GHC.HsIPVar _ x) = ImplicitParameter x
 mkExpression (GHC.HsLam _ x) = Lambda x
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkExpression (GHC.HsLamCase _ GHC.LamCase matches) = LambdaCase matches
 mkExpression (GHC.HsLamCase _ GHC.LamCases matches) = LambdaCases matches
 #else
@@ -445,25 +444,29 @@ mkExpression (GHC.HsDo _ GHC.TransStmtCtxt {} _) = notGeneratedByParser
 #endif
 mkExpression (GHC.RecordCon _ name fields) = RecordConstructor {..}
 #if MIN_VERSION_ghc_lib_parser(9, 8, 0)
-mkExpression (GHC.RecordUpd _ base GHC.RegularRecUpdFields {..}) =
+mkExpression (GHC.RecordUpd _ b GHC.RegularRecUpdFields {..}) =
   RecordUpdate {..}
   where
+    base = fromGenLocated $ fmap mkExpression b
     updaters = fmap (fmap mkRecordField . fromGenLocated) recUpdFields
-mkExpression (GHC.RecordUpd _ base GHC.OverloadedRecUpdFields {..}) =
+mkExpression (GHC.RecordUpd _ b GHC.OverloadedRecUpdFields {..}) =
   RecordUpdate {..}
   where
+    base = fromGenLocated $ fmap mkExpression b
     updaters = fmap (fmap mkRecordField . fromGenLocated) olRecUpdFields
 #elif MIN_VERSION_ghc_lib_parser(9, 4, 0)
-mkExpression (GHC.RecordUpd _ base us) = RecordUpdate {..}
+mkExpression (GHC.RecordUpd _ b us) = RecordUpdate {..}
   where
+    base = fromGenLocated $ fmap mkExpression b
     updaters =
       either
         (fmap (fmap mkRecordField . fromGenLocated))
         (fmap (fmap mkRecordField . fromGenLocated))
         us
 #else
-mkExpression (GHC.RecordUpd _ base us) = RecordUpdate {..}
+mkExpression (GHC.RecordUpd _ b us) = RecordUpdate {..}
   where
+    base = fromGenLocated $ fmap mkExpression b
     updaters =
       either
         (fmap (fmap mkRecordField . fromGenLocated))
