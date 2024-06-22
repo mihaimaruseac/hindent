@@ -359,14 +359,6 @@ prettyHsExpr (GHC.HsProc _ pat body) = hor <-|> ver
       indentedBlock (pretty body)
 prettyHsExpr (GHC.HsPragE _ p x) =
   spaced [pretty p, pretty $ fmap mkExpression x]
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
-prettyHsExpr GHC.HsRecSel {} = notGeneratedByParser
-#else
-prettyHsExpr GHC.HsConLikeOut {} = notGeneratedByParser
-prettyHsExpr GHC.HsRecFld {} = notGeneratedByParser
-prettyHsExpr GHC.HsTick {} = forHpc
-prettyHsExpr GHC.HsBinTick {} = forHpc
-#endif
 prettyHsExpr _ = undefined
 
 mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
@@ -493,6 +485,14 @@ mkExpression (GHC.HsSpliceE _ x) = Splice $ mkSplice x
 mkExpression (GHC.HsBracket _ inner) = Bracket $ mkBracket inner
 mkExpression GHC.HsRnBracketOut {} = notGeneratedByParser
 mkExpression GHC.HsTcBracketOut {} = notGeneratedByParser
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
+mkExpression GHC.HsRecSel {} = notGeneratedByParser
+#else
+mkExpression GHC.HsConLikeOut {} = notGeneratedByParser
+mkExpression GHC.HsRecFld {} = notGeneratedByParser
+mkExpression GHC.HsTick {} = forHpc
+mkExpression GHC.HsBinTick {} = forHpc
 #endif
 mkExpression (GHC.HsStatic _ x) = Static $ fromGenLocated $ fmap mkExpression x
 mkExpression x = Expression x
