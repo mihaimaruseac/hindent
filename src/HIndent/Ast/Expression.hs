@@ -113,7 +113,7 @@ data Expression
       { base :: WithComments Expression
       , updaters :: [WithComments RecordField]
       }
-  | GetField (GHC.LHsExpr GHC.GhcPs) (WithComments FieldLabel)
+  | GetField (WithComments Expression) (WithComments FieldLabel)
   | Projection (NonEmpty (WithComments FieldLabel))
   | WithSignature (WithComments Expression) (GHC.LHsSigWcType GHC.GhcPs)
   | Sequence (GHC.ArithSeqInfo GHC.GhcPs)
@@ -331,8 +331,7 @@ instance Pretty Expression where
         newline
         indentedBlock
           $ hFields (fmap pretty updaters) <-|> vFields (fmap pretty updaters)
-  pretty' (GetField e f) =
-    pretty (fmap mkExpression e) >> string "." >> pretty f
+  pretty' (GetField e f) = pretty e >> string "." >> pretty f
   pretty' (Projection fields) = parens $ forM_ fields $ \x -> dot >> pretty x
   pretty' (WithSignature e ty) =
     spaced [pretty e, string "::", pretty $ GHC.hswc_body ty]
@@ -485,7 +484,9 @@ mkExpression (GHC.RecordUpd _ b us) = RecordUpdate {..}
         us
 #endif
 mkExpression (GHC.HsGetField _ e f) =
-  GetField e $ fromGenLocated $ fmap mkFieldLabel f
+  GetField
+    (fromGenLocated $ fmap mkExpression e)
+    (fromGenLocated $ fmap mkFieldLabel f)
 mkExpression (GHC.HsProjection _ fields) =
   Projection $ fmap (fmap mkFieldLabel . fromGenLocated) fields
 mkExpression (GHC.ExprWithTySig _ e ty) =
