@@ -112,8 +112,6 @@ instance Pretty (GHC.HsTupArg GHC.GhcPs)
 
 instance Pretty GRHSExpr
 
-instance Pretty LetIn
-
 instance Pretty ListComprehension
 
 instance Pretty DoExpression
@@ -152,3 +150,5 @@ instance Pretty
               GHC.GhcPs
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
+
+instance Pretty (GHC.HsLocalBinds GHC.GhcPs)

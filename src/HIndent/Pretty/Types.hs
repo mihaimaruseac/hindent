@@ -43,7 +43,6 @@ module HIndent.Pretty.Types
   , DoExpression(..)
   , DoOrMdo(..)
   , QualifiedDo(..)
-  , LetIn(..)
   , GRHSExprType(..)
   , GRHSProcType(..)
   , HsTypeFor(..)
@@ -247,12 +246,6 @@ data ListComprehension = ListComprehension
 data DoExpression = DoExpression
   { doStmts :: [ExprLStmt GhcPs]
   , qualifiedDo :: QualifiedDo
-  }
-
--- | Use this type to pretty-print a @let ... in ...@ expression.
-data LetIn = LetIn
-  { letBinds :: HsLocalBinds GhcPs
-  , inExpr :: LHsExpr GhcPs
   }
 
 -- | Values indicating whether `do` or `mdo` is used.

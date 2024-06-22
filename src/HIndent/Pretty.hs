@@ -1234,13 +1234,6 @@ instance Pretty QualifiedDo where
     pretty d
   pretty' (QualifiedDo Nothing d) = pretty d
 
-instance Pretty LetIn where
-  pretty' LetIn {..} =
-    lined
-      [ string "let " |=> pretty letBinds
-      , string " in " |=> pretty (fmap mkExpression inExpr)
-      ]
-
 instance Pretty GHC.HsSrcBang where
   pretty' (GHC.HsSrcBang _ unpack strictness) = do
     pretty unpack

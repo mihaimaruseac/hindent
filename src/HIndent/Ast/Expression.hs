@@ -35,7 +35,6 @@ import HIndent.Pretty.Types hiding
   , Cases
   , Do
   , LambdaCase
-  , LetIn
   , ListComprehension
   , Mdo
   )
@@ -310,7 +309,11 @@ instance Pretty Expression where
   pretty' (MultiWayIf guards) =
     string "if "
       |=> lined (fmap (pretty . fmap (GRHSExpr GRHSExprMultiWayIf)) guards)
-  pretty' LetIn {..} = pretty $ Pretty.LetIn binds expr
+  pretty' LetIn {..} =
+    lined
+      [ string "let " |=> pretty binds
+      , string " in " |=> pretty (fmap mkExpression expr)
+      ]
   pretty' (List xs) = horizontal <-|> vertical
     where
       horizontal = brackets $ hCommaSep $ fmap (pretty . fmap mkExpression) xs

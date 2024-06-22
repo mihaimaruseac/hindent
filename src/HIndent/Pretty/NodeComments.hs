@@ -948,9 +948,6 @@ instance CommentExtraction ListComprehension where
 instance CommentExtraction DoExpression where
   nodeComments DoExpression {} = emptyNodeComments
 
-instance CommentExtraction LetIn where
-  nodeComments LetIn {} = emptyNodeComments
-
 instance CommentExtraction (RuleBndr GhcPs) where
   nodeComments (RuleBndr x _) = nodeComments x
   nodeComments (RuleBndrSig x _ _) = nodeComments x
