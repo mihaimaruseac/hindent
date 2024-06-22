@@ -115,7 +115,7 @@ data Expression
       }
   | GetField (GHC.LHsExpr GHC.GhcPs) (WithComments FieldLabel)
   | Projection (NonEmpty (WithComments FieldLabel))
-  | WithSignature (GHC.LHsExpr GHC.GhcPs) (GHC.LHsSigWcType GHC.GhcPs)
+  | WithSignature (WithComments Expression) (GHC.LHsSigWcType GHC.GhcPs)
   | Sequence (GHC.ArithSeqInfo GHC.GhcPs)
   | Splice Splice
   | Bracket Bracket
@@ -335,8 +335,7 @@ instance Pretty Expression where
     pretty (fmap mkExpression e) >> string "." >> pretty f
   pretty' (Projection fields) = parens $ forM_ fields $ \x -> dot >> pretty x
   pretty' (WithSignature e ty) =
-    spaced
-      [pretty $ fmap mkExpression e, string "::", pretty $ GHC.hswc_body ty]
+    spaced [pretty e, string "::", pretty $ GHC.hswc_body ty]
   pretty' (Sequence x) = pretty x
   pretty' (Splice x) = pretty x
   pretty' (Bracket x) = pretty x
@@ -489,7 +488,8 @@ mkExpression (GHC.HsGetField _ e f) =
   GetField e $ fromGenLocated $ fmap mkFieldLabel f
 mkExpression (GHC.HsProjection _ fields) =
   Projection $ fmap (fmap mkFieldLabel . fromGenLocated) fields
-mkExpression (GHC.ExprWithTySig _ e ty) = WithSignature e ty
+mkExpression (GHC.ExprWithTySig _ e ty) =
+  WithSignature (fromGenLocated $ fmap mkExpression e) ty
 mkExpression (GHC.ArithSeq _ _ x) = Sequence x
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 mkExpression (GHC.HsTypedSplice _ x) =
