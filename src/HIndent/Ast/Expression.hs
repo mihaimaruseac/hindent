@@ -97,7 +97,7 @@ data Expression
       { binds :: GHC.HsLocalBinds GHC.GhcPs
       , expr :: WithComments Expression
       }
-  | List [GHC.LHsExpr GHC.GhcPs]
+  | List [WithComments Expression]
   | ListComprehension
       (GHC.GenLocated GHC.SrcSpanAnnL (NonEmpty (GHC.ExprLStmt GHC.GhcPs)))
   | Do
@@ -313,8 +313,8 @@ instance Pretty Expression where
     lined [string "let " |=> pretty binds, string " in " |=> pretty expr]
   pretty' (List xs) = horizontal <-|> vertical
     where
-      horizontal = brackets $ hCommaSep $ fmap (pretty . fmap mkExpression) xs
-      vertical = vList $ fmap (pretty . fmap mkExpression) xs
+      horizontal = brackets $ hCommaSep $ fmap pretty xs
+      vertical = vList $ fmap pretty xs
   pretty' (ListComprehension (GHC.L l (lhs :| rhs))) =
     pretty $ GHC.L l $ Pretty.ListComprehension lhs rhs
   pretty' Do {statements = GHC.L l stmts, ..} =
@@ -427,7 +427,9 @@ mkExpression (GHC.HsLet _ binds e) = LetIn {..}
   where
     expr = fromGenLocated $ fmap mkExpression e
 #endif
-mkExpression (GHC.ExplicitList _ xs) = List xs
+mkExpression (GHC.ExplicitList _ xs) = List xs'
+  where
+    xs' = fmap (fromGenLocated . fmap mkExpression) xs
 mkExpression (GHC.HsDo _ GHC.ListComp {} (GHC.L _ [])) =
   error "Not enough arguments are passed to create a list comprehension."
 mkExpression (GHC.HsDo _ GHC.ListComp {} (GHC.L l (lhs:rhs))) =
