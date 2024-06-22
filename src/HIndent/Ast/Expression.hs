@@ -396,7 +396,7 @@ mkExpression (GHC.HsAppType _ v _ ty) = TypeApplication {..}
 #else
 mkExpression (GHC.HsAppType _ v ty) = TypeApplication {..}
 #endif
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 0)
 mkExpression (GHC.HsPar _ _ e _) = Parentheses expr
   where
     expr = fromGenLocated $ fmap mkExpression e
@@ -420,7 +420,7 @@ mkExpression (GHC.HsIf _ c t' f') = If {..}
     t = fromGenLocated $ fmap mkExpression t'
     f = fromGenLocated $ fmap mkExpression f'
 mkExpression (GHC.HsMultiIf _ guards) = MultiWayIf guards
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 0)
 mkExpression (GHC.HsLet _ _ binds _ e) = LetIn {..}
   where
     expr = fromGenLocated $ fmap mkExpression e
@@ -492,14 +492,14 @@ mkExpression (GHC.HsProjection _ fields) =
 mkExpression (GHC.ExprWithTySig _ e ty) =
   WithSignature (fromGenLocated $ fmap mkExpression e) ty
 mkExpression (GHC.ArithSeq _ _ x) = Sequence x
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkExpression (GHC.HsTypedSplice _ x) =
   Splice $ mkSplice $ fromGenLocated $ fmap mkExpression x
 mkExpression (GHC.HsUntypedSplice _ x) = Splice $ mkSplice x
 #else
 mkExpression (GHC.HsSpliceE _ x) = Splice $ mkSplice x
 #endif
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 0)
 mkExpression (GHC.HsTypedBracket _ inner) =
   Bracket $ mkBracket $ fromGenLocated $ fmap mkExpression inner
 mkExpression (GHC.HsUntypedBracket _ inner) = Bracket $ mkBracket inner
