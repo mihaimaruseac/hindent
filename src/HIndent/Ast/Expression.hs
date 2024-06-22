@@ -367,11 +367,6 @@ prettyHsExpr GHC.HsRecFld {} = notGeneratedByParser
 prettyHsExpr GHC.HsTick {} = forHpc
 prettyHsExpr GHC.HsBinTick {} = forHpc
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-prettyHsExpr (GHC.HsTypedSplice _ x) =
-  string "$$" >> pretty (fmap mkExpression x)
-prettyHsExpr (GHC.HsUntypedSplice _ x) = pretty $ mkSplice x
-#endif
 prettyHsExpr _ = undefined
 
 mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
@@ -487,6 +482,9 @@ mkExpression (GHC.HsProjection _ fields) =
 mkExpression (GHC.ExprWithTySig _ e ty) = WithSignature e ty
 mkExpression (GHC.ArithSeq _ _ x) = Sequence x
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+mkExpression (GHC.HsTypedSplice _ x) =
+  Splice $ mkSplice $ fromGenLocated $ fmap mkExpression x
+mkExpression (GHC.HsUntypedSplice _ x) = Splice $ mkSplice x
 mkExpression (GHC.HsTypedBracket _ inner) =
   Bracket $ mkBracket $ fromGenLocated $ fmap mkExpression inner
 mkExpression (GHC.HsUntypedBracket _ inner) = Bracket $ mkBracket inner
