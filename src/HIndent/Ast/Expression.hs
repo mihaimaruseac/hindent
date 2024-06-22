@@ -85,11 +85,11 @@ data Expression
       , expr :: GHC.LHsExpr GHC.GhcPs
       }
   | Case
-      { cond :: GHC.LHsExpr GHC.GhcPs
+      { cond :: WithComments Expression
       , arms :: GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs)
       }
   | If
-      { cond :: GHC.LHsExpr GHC.GhcPs
+      { cond :: WithComments Expression
       , t :: WithComments Expression
       , f :: WithComments Expression
       }
@@ -285,7 +285,7 @@ instance Pretty Expression where
     string "#)"
   pretty' Case {..} = do
     string "case " |=> do
-      pretty $ fmap mkExpression cond
+      pretty cond
       string " of"
     if null $ GHC.unLoc $ GHC.mg_alts arms
       then string " {}"
@@ -293,7 +293,7 @@ instance Pretty Expression where
         newline
         indentedBlock $ pretty arms
   pretty' If {..} = do
-    string "if " |=> pretty (fmap mkExpression cond)
+    string "if " |=> pretty cond
     indentedBlock $ newlinePrefixed [branch "then " t, branch "else " f]
     where
       branch :: String -> WithComments Expression -> Printer ()
@@ -408,9 +408,12 @@ mkExpression (GHC.SectionL _ l o) = SectionLeft {..}
 mkExpression (GHC.SectionR _ o r) = SectionRight {..}
 mkExpression (GHC.ExplicitTuple _ elements boxity) = Tuple {..}
 mkExpression (GHC.ExplicitSum _ position numElems expr) = UnboxedSum {..}
-mkExpression (GHC.HsCase _ cond arms) = Case {..}
-mkExpression (GHC.HsIf _ cond t' f') = If {..}
+mkExpression (GHC.HsCase _ c arms) = Case {..}
   where
+    cond = fromGenLocated $ fmap mkExpression c
+mkExpression (GHC.HsIf _ c t' f') = If {..}
+  where
+    cond = fromGenLocated $ fmap mkExpression c
     t = fromGenLocated $ fmap mkExpression t'
     f = fromGenLocated $ fmap mkExpression f'
 mkExpression (GHC.HsMultiIf _ guards) = MultiWayIf guards
