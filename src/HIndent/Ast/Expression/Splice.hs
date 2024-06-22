@@ -54,11 +54,11 @@ mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) = QuasiQuote l r
 #else
 mkSplice :: GHC.HsSplice GHC.GhcPs -> Splice
 mkSplice (GHC.HsTypedSplice _ _ _ body) =
-  Typed $ fmap mkExpression $ fromGenLocated body
+  Typed $ fromGenLocated $ fmap mkExpression body
 mkSplice (GHC.HsUntypedSplice _ GHC.DollarSplice _ body) =
-  UntypedDollar $ fmap mkExpression $ fromGenLocated body
+  UntypedDollar $ fromGenLocated $ fmap mkExpression body
 mkSplice (GHC.HsUntypedSplice _ GHC.BareSplice _ body) =
-  UntypedBare $ fmap mkExpression $ fromGenLocated body
+  UntypedBare $ fromGenLocated $ fmap mkExpression body
 mkSplice (GHC.HsQuasiQuote _ _ l _ r) = QuasiQuote l r
 mkSplice GHC.HsSpliced {} = error "This AST node should never appear."
 #endif
