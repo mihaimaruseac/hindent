@@ -477,18 +477,18 @@ mkExpression (GHC.ArithSeq _ _ x) = Sequence x
 mkExpression (GHC.HsTypedSplice _ x) =
   Splice $ mkSplice $ fromGenLocated $ fmap mkExpression x
 mkExpression (GHC.HsUntypedSplice _ x) = Splice $ mkSplice x
+#else
+mkExpression (GHC.HsSpliceE _ x) = Splice $ mkSplice x
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkExpression (GHC.HsTypedBracket _ inner) =
   Bracket $ mkBracket $ fromGenLocated $ fmap mkExpression inner
 mkExpression (GHC.HsUntypedBracket _ inner) = Bracket $ mkBracket inner
+mkExpression GHC.HsRecSel {} = notGeneratedByParser
 #else
-mkExpression (GHC.HsSpliceE _ x) = Splice $ mkSplice x
 mkExpression (GHC.HsBracket _ inner) = Bracket $ mkBracket inner
 mkExpression GHC.HsRnBracketOut {} = notGeneratedByParser
 mkExpression GHC.HsTcBracketOut {} = notGeneratedByParser
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
-mkExpression GHC.HsRecSel {} = notGeneratedByParser
-#else
 mkExpression GHC.HsConLikeOut {} = notGeneratedByParser
 mkExpression GHC.HsRecFld {} = notGeneratedByParser
 mkExpression GHC.HsTick {} = forHpc
