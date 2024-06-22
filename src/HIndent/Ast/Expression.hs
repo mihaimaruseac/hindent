@@ -384,8 +384,8 @@ mkExpression (GHC.NegApp _ x _) =
 mkExpression (GHC.HsApp _ l r) = FunctionApplication {..}
   where
     f :| args =
-      fmap (fromGenLocated . fmap mkExpression)
-        $ NE.reverse (r :| reverse (flatten l))
+      (fromGenLocated . fmap mkExpression)
+        <$> NE.reverse (r :| reverse (flatten l))
     flatten :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
     flatten (GHC.L (GHC.SrcSpanAnn (GHC.EpAnn _ _ cs) _) (GHC.HsApp _ l' r')) =
       flatten l' ++ [insertComments cs r']
