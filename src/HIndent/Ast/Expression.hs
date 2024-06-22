@@ -362,20 +362,9 @@ mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
 mkExpression (GHC.HsVar _ x) = Variable $ mkVariable <$> fromGenLocated x
 mkExpression (GHC.HsUnboundVar _ x) = Variable $ mkWithComments $ mkVariable x
 mkExpression (GHC.HsLit _ x) = Literal x
-#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
-mkExpression (GHC.HsOverLabel _ _ x) = OverloadedLabel x
-#else
-mkExpression (GHC.HsOverLabel _ x) = OverloadedLabel x
-#endif
 mkExpression (GHC.HsOverLit _ x) = OverloadedLiteral x
 mkExpression (GHC.HsIPVar _ x) = ImplicitParameter x
 mkExpression (GHC.HsLam _ x) = Lambda x
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
-mkExpression (GHC.HsLamCase _ GHC.LamCase matches) = LambdaCase matches
-mkExpression (GHC.HsLamCase _ GHC.LamCases matches) = LambdaCases matches
-#else
-mkExpression (GHC.HsLamCase _ x) = LambdaCase x
-#endif
 mkExpression (GHC.NegApp _ x _) =
   Negation $ fromGenLocated $ fmap mkExpression x
 mkExpression (GHC.HsApp _ l r) = FunctionApplication {..}
@@ -391,20 +380,6 @@ mkExpression (GHC.HsApp _ l r) = FunctionApplication {..}
       GHC.L (s {GHC.ann = e {GHC.comments = cs <> cs'}}) r'
     insertComments _ x = x
 mkExpression (GHC.OpApp _ lhs op rhs) = OperatorApplication {..}
-#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
-mkExpression (GHC.HsAppType _ v _ ty) = TypeApplication {..}
-#else
-mkExpression (GHC.HsAppType _ v ty) = TypeApplication {..}
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 4, 0)
-mkExpression (GHC.HsPar _ _ e _) = Parentheses expr
-  where
-    expr = fromGenLocated $ fmap mkExpression e
-#else
-mkExpression (GHC.HsPar _ e) = Parentheses expr
-  where
-    expr = fromGenLocated $ fmap mkExpression e
-#endif
 mkExpression (GHC.SectionL _ l o) = SectionLeft {..}
 mkExpression (GHC.SectionR _ o r) = SectionRight {..}
 mkExpression (GHC.ExplicitTuple _ elements boxity) = Tuple {..}
@@ -420,15 +395,6 @@ mkExpression (GHC.HsIf _ c t' f') = If {..}
     t = fromGenLocated $ fmap mkExpression t'
     f = fromGenLocated $ fmap mkExpression f'
 mkExpression (GHC.HsMultiIf _ guards) = MultiWayIf guards
-#if MIN_VERSION_ghc_lib_parser(9, 4, 0)
-mkExpression (GHC.HsLet _ _ binds _ e) = LetIn {..}
-  where
-    expr = fromGenLocated $ fmap mkExpression e
-#else
-mkExpression (GHC.HsLet _ binds e) = LetIn {..}
-  where
-    expr = fromGenLocated $ fmap mkExpression e
-#endif
 mkExpression (GHC.ExplicitList _ xs) = List xs'
   where
     xs' = fmap (fromGenLocated . fmap mkExpression) xs
@@ -446,13 +412,16 @@ mkExpression (GHC.HsDo _ (GHC.MDoExpr moduleName) statements) =
   Do {doType = Pretty.Mdo, ..}
 mkExpression (GHC.HsDo _ GHC.GhciStmtCtxt {} _) =
   error "We're not using GHCi, are we?"
-#if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
-mkExpression (GHC.HsDo _ GHC.ArrowExpr {} _) = notGeneratedByParser
-mkExpression (GHC.HsDo _ GHC.PatGuard {} _) = notGeneratedByParser
-mkExpression (GHC.HsDo _ GHC.ParStmtCtxt {} _) = notGeneratedByParser
-mkExpression (GHC.HsDo _ GHC.TransStmtCtxt {} _) = notGeneratedByParser
-#endif
 mkExpression (GHC.RecordCon _ name fields) = RecordConstructor {..}
+mkExpression (GHC.HsGetField _ e f) =
+  GetField
+    (fromGenLocated $ fmap mkExpression e)
+    (fromGenLocated $ fmap mkFieldLabel f)
+mkExpression (GHC.HsProjection _ fields) =
+  Projection $ fmap (fmap mkFieldLabel . fromGenLocated) fields
+mkExpression (GHC.ExprWithTySig _ e ty) =
+  WithSignature (fromGenLocated $ fmap mkExpression e) ty
+mkExpression (GHC.ArithSeq _ _ x) = Sequence x
 #if MIN_VERSION_ghc_lib_parser(9, 8, 0)
 mkExpression (GHC.RecordUpd _ b GHC.RegularRecUpdFields {..}) =
   RecordUpdate {..}
@@ -483,29 +452,43 @@ mkExpression (GHC.RecordUpd _ b us) = RecordUpdate {..}
         (fmap (fmap mkRecordField . fromGenLocated))
         us
 #endif
-mkExpression (GHC.HsGetField _ e f) =
-  GetField
-    (fromGenLocated $ fmap mkExpression e)
-    (fromGenLocated $ fmap mkFieldLabel f)
-mkExpression (GHC.HsProjection _ fields) =
-  Projection $ fmap (fmap mkFieldLabel . fromGenLocated) fields
-mkExpression (GHC.ExprWithTySig _ e ty) =
-  WithSignature (fromGenLocated $ fmap mkExpression e) ty
-mkExpression (GHC.ArithSeq _ _ x) = Sequence x
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkExpression (GHC.HsTypedSplice _ x) =
   Splice $ mkSplice $ fromGenLocated $ fmap mkExpression x
 mkExpression (GHC.HsUntypedSplice _ x) = Splice $ mkSplice x
+mkExpression (GHC.HsOverLabel _ _ x) = OverloadedLabel x
+mkExpression (GHC.HsAppType _ v _ ty) = TypeApplication {..}
 #else
 mkExpression (GHC.HsSpliceE _ x) = Splice $ mkSplice x
+mkExpression (GHC.HsOverLabel _ x) = OverloadedLabel x
+mkExpression (GHC.HsAppType _ v ty) = TypeApplication {..}
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 4, 0)
 mkExpression (GHC.HsTypedBracket _ inner) =
   Bracket $ mkBracket $ fromGenLocated $ fmap mkExpression inner
 mkExpression (GHC.HsUntypedBracket _ inner) = Bracket $ mkBracket inner
+mkExpression (GHC.HsLamCase _ GHC.LamCase matches) = LambdaCase matches
+mkExpression (GHC.HsLamCase _ GHC.LamCases matches) = LambdaCases matches
+mkExpression (GHC.HsPar _ _ e _) = Parentheses expr
+  where
+    expr = fromGenLocated $ fmap mkExpression e
+mkExpression (GHC.HsLet _ _ binds _ e) = LetIn {..}
+  where
+    expr = fromGenLocated $ fmap mkExpression e
 mkExpression GHC.HsRecSel {} = notGeneratedByParser
 #else
 mkExpression (GHC.HsBracket _ inner) = Bracket $ mkBracket inner
+mkExpression (GHC.HsLamCase _ x) = LambdaCase x
+mkExpression (GHC.HsPar _ e) = Parentheses expr
+  where
+    expr = fromGenLocated $ fmap mkExpression e
+mkExpression (GHC.HsLet _ binds e) = LetIn {..}
+  where
+    expr = fromGenLocated $ fmap mkExpression e
+mkExpression (GHC.HsDo _ GHC.ArrowExpr {} _) = notGeneratedByParser
+mkExpression (GHC.HsDo _ GHC.PatGuard {} _) = notGeneratedByParser
+mkExpression (GHC.HsDo _ GHC.ParStmtCtxt {} _) = notGeneratedByParser
+mkExpression (GHC.HsDo _ GHC.TransStmtCtxt {} _) = notGeneratedByParser
 mkExpression GHC.HsRnBracketOut {} = notGeneratedByParser
 mkExpression GHC.HsTcBracketOut {} = notGeneratedByParser
 mkExpression GHC.HsConLikeOut {} = notGeneratedByParser
