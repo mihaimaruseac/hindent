@@ -65,7 +65,7 @@ data Expression
       { v :: GHC.LHsExpr GHC.GhcPs
       , ty :: GHC.LHsWcType GHC.GhcPs
       }
-  | Parentheses (GHC.LHsExpr GHC.GhcPs)
+  | Parentheses (WithComments Expression)
   | SectionLeft
       { l :: GHC.LHsExpr GHC.GhcPs
       , o :: GHC.LHsExpr GHC.GhcPs
@@ -256,7 +256,7 @@ instance Pretty Expression where
       GHC.Fixity _ level dir = findFixity op
   pretty' TypeApplication {..} =
     pretty (fmap mkExpression v) >> string " @" >> pretty ty
-  pretty' (Parentheses x) = parens $ pretty $ fmap mkExpression x
+  pretty' (Parentheses x) = parens $ pretty x
   pretty' SectionLeft {..} =
     spaced [pretty $ fmap mkExpression l, pretty $ InfixExpr o]
   pretty' SectionRight {..} =
@@ -399,9 +399,13 @@ mkExpression (GHC.HsAppType _ v _ ty) = TypeApplication {..}
 mkExpression (GHC.HsAppType _ v ty) = TypeApplication {..}
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
-mkExpression (GHC.HsPar _ _ expr _) = Parentheses expr
+mkExpression (GHC.HsPar _ _ e _) = Parentheses expr
+  where
+    expr = fromGenLocated $ fmap mkExpression e
 #else
-mkExpression (GHC.HsPar _ expr) = Parentheses expr
+mkExpression (GHC.HsPar _ e) = Parentheses expr
+  where
+    expr = fromGenLocated $ fmap mkExpression e
 #endif
 mkExpression (GHC.SectionL _ l o) = SectionLeft {..}
 mkExpression (GHC.SectionR _ o r) = SectionRight {..}
