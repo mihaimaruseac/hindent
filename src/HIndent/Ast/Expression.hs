@@ -119,6 +119,7 @@ data Expression
   | WithSignature (GHC.LHsExpr GHC.GhcPs) (GHC.LHsSigWcType GHC.GhcPs)
   | Sequence (GHC.ArithSeqInfo GHC.GhcPs)
   | Splice Splice
+  | Bracket Bracket
   | Static (WithComments Expression)
   | Expression (GHC.HsExpr GHC.GhcPs)
 
@@ -154,6 +155,7 @@ instance CommentExtraction Expression where
   nodeComments WithSignature {} = NodeComments [] [] []
   nodeComments Sequence {} = NodeComments [] [] []
   nodeComments Splice {} = NodeComments [] [] []
+  nodeComments Bracket {} = NodeComments [] [] []
   nodeComments Static {} = NodeComments [] [] []
   nodeComments Expression {} = NodeComments [] [] []
 
@@ -338,6 +340,7 @@ instance Pretty Expression where
       [pretty $ fmap mkExpression e, string "::", pretty $ GHC.hswc_body ty]
   pretty' (Sequence x) = pretty x
   pretty' (Splice x) = pretty x
+  pretty' (Bracket x) = pretty x
   pretty' (Static x) = string "static " >> pretty x
   pretty' (Expression x) = prettyHsExpr x
 
@@ -358,17 +361,11 @@ prettyHsExpr (GHC.HsPragE _ p x) =
   spaced [pretty p, pretty $ fmap mkExpression x]
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 prettyHsExpr GHC.HsRecSel {} = notGeneratedByParser
-prettyHsExpr (GHC.HsTypedBracket _ inner) =
-  pretty $ mkBracket $ fromGenLocated $ fmap mkExpression inner
-prettyHsExpr (GHC.HsUntypedBracket _ inner) = pretty $ mkBracket inner
 #else
 prettyHsExpr GHC.HsConLikeOut {} = notGeneratedByParser
 prettyHsExpr GHC.HsRecFld {} = notGeneratedByParser
 prettyHsExpr GHC.HsTick {} = forHpc
 prettyHsExpr GHC.HsBinTick {} = forHpc
-prettyHsExpr (GHC.HsBracket _ inner) = pretty $ mkBracket inner
-prettyHsExpr GHC.HsRnBracketOut {} = notGeneratedByParser
-prettyHsExpr GHC.HsTcBracketOut {} = notGeneratedByParser
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 prettyHsExpr (GHC.HsTypedSplice _ x) =
@@ -489,8 +486,15 @@ mkExpression (GHC.HsProjection _ fields) =
   Projection $ fmap (fmap mkFieldLabel . fromGenLocated) fields
 mkExpression (GHC.ExprWithTySig _ e ty) = WithSignature e ty
 mkExpression (GHC.ArithSeq _ _ x) = Sequence x
-#if !MIN_VERSION_ghc_lib_parser(9, 6, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+mkExpression (GHC.HsTypedBracket _ inner) =
+  Bracket $ mkBracket $ fromGenLocated $ fmap mkExpression inner
+mkExpression (GHC.HsUntypedBracket _ inner) = Bracket $ mkBracket inner
+#else
 mkExpression (GHC.HsSpliceE _ x) = Splice $ mkSplice x
+mkExpression (GHC.HsBracket _ inner) = Bracket $ mkBracket inner
+mkExpression GHC.HsRnBracketOut {} = notGeneratedByParser
+mkExpression GHC.HsTcBracketOut {} = notGeneratedByParser
 #endif
 mkExpression (GHC.HsStatic _ x) = Static $ fromGenLocated $ fmap mkExpression x
 mkExpression x = Expression x

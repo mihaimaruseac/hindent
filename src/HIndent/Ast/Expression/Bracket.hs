@@ -53,6 +53,9 @@ instance MkBracket (GHC.HsQuote GHC.GhcPs) where
   mkBracket (GHC.TypBr _ x) = Type x
   mkBracket (GHC.VarBr _ b x) = Variable b x
   mkBracket (GHC.DecBrG {}) = error "This AST node should never appear."
+
+instance MkBracket (WithComments Expression) where
+  mkBracket = TypedExpression
 #else
 instance MkBracket (GHC.HsBracket GHC.GhcPs) where
   mkBracket (GHC.ExpBr _ x) =
@@ -66,5 +69,3 @@ instance MkBracket (GHC.HsBracket GHC.GhcPs) where
   mkBracket (GHC.TExpBr _ x) =
     TypedExpression $ fmap mkExpression $ fromGenLocated x
 #endif
-instance MkBracket (WithComments Expression) where
-  mkBracket = TypedExpression

@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module HIndent.Ast.Expression.Splice
   ( Splice
@@ -22,6 +23,9 @@ data Splice
   | UntypedDollar (WithComments Expression)
   | UntypedBare (WithComments Expression)
   | QuasiQuote GHC.RdrName GHC.FastString
+
+class MkSplice a where
+  mkSplice :: a -> Splice
 
 instance CommentExtraction Splice where
   nodeComments Typed {} = NodeComments [] [] []
@@ -47,18 +51,21 @@ instance Pretty Splice where
         printers (newline : string (reverse s) : ps) "" xs
       printers ps s (x:xs) = printers ps (x : s) xs
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-mkSplice :: GHC.HsUntypedSplice GHC.GhcPs -> Splice
-mkSplice (GHC.HsUntypedSpliceExpr _ x) =
-  UntypedDollar $ fmap mkExpression $ fromGenLocated x
-mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) = QuasiQuote l r
+instance MkSplice (GHC.HsUntypedSplice GHC.GhcPs) where
+  mkSplice (GHC.HsUntypedSpliceExpr _ x) =
+    UntypedDollar $ fmap mkExpression $ fromGenLocated x
+  mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) = QuasiQuote l r
+
+instance MkSplice (WithComments Expression) where
+  mkSplice = Typed
 #else
-mkSplice :: GHC.HsSplice GHC.GhcPs -> Splice
-mkSplice (GHC.HsTypedSplice _ _ _ body) =
-  Typed $ fromGenLocated $ fmap mkExpression body
-mkSplice (GHC.HsUntypedSplice _ GHC.DollarSplice _ body) =
-  UntypedDollar $ fromGenLocated $ fmap mkExpression body
-mkSplice (GHC.HsUntypedSplice _ GHC.BareSplice _ body) =
-  UntypedBare $ fromGenLocated $ fmap mkExpression body
-mkSplice (GHC.HsQuasiQuote _ _ l _ r) = QuasiQuote l r
-mkSplice GHC.HsSpliced {} = error "This AST node should never appear."
+instance MkSplice (GHC.HsSplice GHC.GhcPs) where
+  mkSplice (GHC.HsTypedSplice _ _ _ body) =
+    Typed $ fromGenLocated $ fmap mkExpression body
+  mkSplice (GHC.HsUntypedSplice _ GHC.DollarSplice _ body) =
+    UntypedDollar $ fromGenLocated $ fmap mkExpression body
+  mkSplice (GHC.HsUntypedSplice _ GHC.BareSplice _ body) =
+    UntypedBare $ fromGenLocated $ fmap mkExpression body
+  mkSplice (GHC.HsQuasiQuote _ _ l _ r) = QuasiQuote l r
+  mkSplice GHC.HsSpliced {} = error "This AST node should never appear."
 #endif
