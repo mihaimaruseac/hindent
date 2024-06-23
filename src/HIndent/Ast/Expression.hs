@@ -76,7 +76,7 @@ data Expression
       }
   | Tuple
       { elements :: [GHC.HsTupArg GHC.GhcPs]
-      , boxity :: GHC.Boxity
+      , isBoxed :: Bool
       }
   | UnboxedSum
       { position :: Int
@@ -283,9 +283,9 @@ instance Pretty Expression where
       isMissing GHC.Missing {} = True
       isMissing _ = False
       (parH, parV) =
-        case boxity of
-          GHC.Boxed -> (hTuple, parens)
-          GHC.Unboxed -> (hUnboxedTuple, unboxedParens)
+        case isBoxed of
+          True -> (hTuple, parens)
+          False -> (hUnboxedTuple, unboxedParens)
   pretty' UnboxedSum {..} = do
     string "(#"
     forM_ [1 .. numElems] $ \idx -> do
@@ -389,6 +389,11 @@ mkExpression (GHC.OpApp _ lhs op rhs) = OperatorApplication {..}
 mkExpression (GHC.SectionL _ l o) = SectionLeft {..}
 mkExpression (GHC.SectionR _ o r) = SectionRight {..}
 mkExpression (GHC.ExplicitTuple _ elements boxity) = Tuple {..}
+  where
+    isBoxed =
+      case boxity of
+        GHC.Boxed -> True
+        GHC.Unboxed -> False
 mkExpression (GHC.ExplicitSum _ position numElems e) = UnboxedSum {..}
   where
     expr = fromGenLocated $ fmap mkExpression e
