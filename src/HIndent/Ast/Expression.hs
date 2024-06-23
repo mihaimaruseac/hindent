@@ -126,7 +126,7 @@ data Expression
   | Static (WithComments Expression)
   | ProcDo
       { pat :: GHC.LPat GHC.GhcPs
-      , commands :: [GHC.CmdLStmt GHC.GhcPs]
+      , commands :: WithComments [GHC.CmdLStmt GHC.GhcPs]
       }
   | Expression (GHC.HsExpr GHC.GhcPs)
 
@@ -353,15 +353,10 @@ instance Pretty Expression where
   pretty' ProcDo {..} = do
     spaced [string "proc", pretty pat, string "-> do"]
     newline
-    indentedBlock $ lined $ fmap pretty commands
+    indentedBlock $ prettyWith commands (lined . fmap pretty)
   pretty' (Expression x) = prettyHsExpr x
 
 prettyHsExpr :: GHC.HsExpr GHC.GhcPs -> Printer ()
-prettyHsExpr (GHC.HsProc _ pat x@(GHC.L _ (GHC.HsCmdTop _ (GHC.L _ (GHC.HsCmdDo _ xs))))) = do
-  spaced [string "proc", pretty pat, string "-> do"]
-  newline
-  indentedBlock
-    $ printCommentsAnd x (const (printCommentsAnd xs (lined . fmap pretty)))
 prettyHsExpr (GHC.HsProc _ pat body) = hor <-|> ver
   where
     hor = spaced [string "proc", pretty pat, string "->", pretty body]
@@ -439,6 +434,10 @@ mkExpression (GHC.HsPragE _ pragma e) = WithPragma {..}
     expr = fromGenLocated $ fmap mkExpression e
 mkExpression (GHC.ArithSeq _ _ x) = Sequence x
 mkExpression (GHC.HsStatic _ x) = Static $ fromGenLocated $ fmap mkExpression x
+mkExpression (GHC.HsProc _ pat (GHC.L _ (GHC.HsCmdTop _ (GHC.L _ (GHC.HsCmdDo _ cmds))))) =
+  ProcDo {..}
+  where
+    commands = fromGenLocated cmds
 #if MIN_VERSION_ghc_lib_parser(9, 8, 0)
 mkExpression (GHC.RecordUpd _ b GHC.RegularRecUpdFields {..}) =
   RecordUpdate {..}
