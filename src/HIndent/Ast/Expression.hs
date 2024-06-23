@@ -132,7 +132,6 @@ data Expression
       { pat :: GHC.LPat GHC.GhcPs
       , command :: GHC.LHsCmdTop GHC.GhcPs
       }
-  | Expression (GHC.HsExpr GHC.GhcPs)
 
 instance CommentExtraction Expression where
   nodeComments Variable {} = NodeComments [] [] []
@@ -171,7 +170,6 @@ instance CommentExtraction Expression where
   nodeComments Static {} = NodeComments [] [] []
   nodeComments ProcDo {} = NodeComments [] [] []
   nodeComments Proc {} = NodeComments [] [] []
-  nodeComments Expression {} = NodeComments [] [] []
 
 instance Pretty Expression where
   pretty' (Variable x) = pretty x
@@ -366,10 +364,6 @@ instance Pretty Expression where
         spaced [string "proc", pretty pat, string "->"]
         newline
         indentedBlock $ pretty command
-  pretty' (Expression x) = prettyHsExpr x
-
-prettyHsExpr :: GHC.HsExpr GHC.GhcPs -> Printer ()
-prettyHsExpr _ = undefined
 
 mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
 mkExpression (GHC.HsVar _ x) = Variable $ mkVariable <$> fromGenLocated x
