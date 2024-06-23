@@ -62,7 +62,7 @@ data Expression
       , rhs :: GHC.LHsExpr GHC.GhcPs
       }
   | TypeApplication
-      { v :: GHC.LHsExpr GHC.GhcPs
+      { v :: WithComments Expression
       , ty :: GHC.LHsWcType GHC.GhcPs
       }
   | Parentheses (WithComments Expression)
@@ -267,8 +267,7 @@ instance Pretty Expression where
           collect x = [x]
       isSameAssoc (findFixity -> GHC.Fixity _ lv d) = lv == level && d == dir
       GHC.Fixity _ level dir = findFixity op
-  pretty' TypeApplication {..} =
-    pretty (fmap mkExpression v) >> string " @" >> pretty ty
+  pretty' TypeApplication {..} = pretty v >> string " @" >> pretty ty
   pretty' (Parentheses x) = parens $ pretty x
   pretty' SectionLeft {..} =
     spaced [pretty $ fmap mkExpression l, pretty $ InfixExpr o]
@@ -473,11 +472,15 @@ mkExpression (GHC.HsTypedSplice _ x) =
   Splice $ mkSplice $ fromGenLocated $ fmap mkExpression x
 mkExpression (GHC.HsUntypedSplice _ x) = Splice $ mkSplice x
 mkExpression (GHC.HsOverLabel _ _ x) = OverloadedLabel x
-mkExpression (GHC.HsAppType _ v _ ty) = TypeApplication {..}
+mkExpression (GHC.HsAppType _ v' _ ty) = TypeApplication {..}
+  where
+    v = fromGenLocated $ fmap mkExpression v'
 #else
 mkExpression (GHC.HsSpliceE _ x) = Splice $ mkSplice x
 mkExpression (GHC.HsOverLabel _ x) = OverloadedLabel x
-mkExpression (GHC.HsAppType _ v ty) = TypeApplication {..}
+mkExpression (GHC.HsAppType _ v' ty) = TypeApplication {..}
+  where
+    v = fromGenLocated $ fmap mkExpression v'
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 4, 0)
 mkExpression (GHC.HsTypedBracket _ inner) =
