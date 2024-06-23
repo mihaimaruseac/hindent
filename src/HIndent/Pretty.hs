@@ -57,7 +57,6 @@ import HIndent.Printer
 import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
 import Text.Show.Unicode
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
-import qualified Data.Foldable as NonEmpty
 import qualified GHC.Core.DataCon as GHC
 #endif
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
