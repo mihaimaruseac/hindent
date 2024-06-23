@@ -128,6 +128,10 @@ data Expression
       { pat :: GHC.LPat GHC.GhcPs
       , commands :: WithComments [GHC.CmdLStmt GHC.GhcPs]
       }
+  | Proc
+      { pat :: GHC.LPat GHC.GhcPs
+      , command :: GHC.LHsCmdTop GHC.GhcPs
+      }
   | Expression (GHC.HsExpr GHC.GhcPs)
 
 instance CommentExtraction Expression where
@@ -166,6 +170,7 @@ instance CommentExtraction Expression where
   nodeComments Bracket {} = NodeComments [] [] []
   nodeComments Static {} = NodeComments [] [] []
   nodeComments ProcDo {} = NodeComments [] [] []
+  nodeComments Proc {} = NodeComments [] [] []
   nodeComments Expression {} = NodeComments [] [] []
 
 instance Pretty Expression where
@@ -354,16 +359,16 @@ instance Pretty Expression where
     spaced [string "proc", pretty pat, string "-> do"]
     newline
     indentedBlock $ prettyWith commands (lined . fmap pretty)
+  pretty' Proc {..} = hor <-|> ver
+    where
+      hor = spaced [string "proc", pretty pat, string "->", pretty command]
+      ver = do
+        spaced [string "proc", pretty pat, string "->"]
+        newline
+        indentedBlock $ pretty command
   pretty' (Expression x) = prettyHsExpr x
 
 prettyHsExpr :: GHC.HsExpr GHC.GhcPs -> Printer ()
-prettyHsExpr (GHC.HsProc _ pat body) = hor <-|> ver
-  where
-    hor = spaced [string "proc", pretty pat, string "->", pretty body]
-    ver = do
-      spaced [string "proc", pretty pat, string "->"]
-      newline
-      indentedBlock (pretty body)
 prettyHsExpr _ = undefined
 
 mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
@@ -438,6 +443,7 @@ mkExpression (GHC.HsProc _ pat (GHC.L _ (GHC.HsCmdTop _ (GHC.L _ (GHC.HsCmdDo _ 
   ProcDo {..}
   where
     commands = fromGenLocated cmds
+mkExpression (GHC.HsProc _ pat command) = Proc {..}
 #if MIN_VERSION_ghc_lib_parser(9, 8, 0)
 mkExpression (GHC.RecordUpd _ b GHC.RegularRecUpdFields {..}) =
   RecordUpdate {..}
@@ -512,8 +518,6 @@ mkExpression GHC.HsRecFld {} = notGeneratedByParser
 mkExpression GHC.HsTick {} = forHpc
 mkExpression GHC.HsBinTick {} = forHpc
 #endif
-mkExpression x = Expression x
-
 notGeneratedByParser :: HasCallStack => a
 notGeneratedByParser = error "`ghc-lib-parser` never generates this AST node."
 #if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
