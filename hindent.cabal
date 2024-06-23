@@ -94,9 +94,9 @@ library
       HIndent.Ast.Expression.Record.Field
       HIndent.Ast.Expression.Record.Field.Label
       HIndent.Ast.Expression.Splice
-      HIndent.Ast.Expression.Variable
       HIndent.Ast.FileHeaderPragma
       HIndent.Ast.FileHeaderPragma.Collection
+      HIndent.Ast.Identifier
       HIndent.Ast.Import
       HIndent.Ast.Import.Collection
       HIndent.Ast.Import.Entry

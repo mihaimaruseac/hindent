@@ -22,7 +22,7 @@ import HIndent.Ast.Expression.Bracket
 import {-# SOURCE #-} HIndent.Ast.Expression.Record.Field
 import HIndent.Ast.Expression.Record.Field.Label
 import HIndent.Ast.Expression.Splice
-import HIndent.Ast.Expression.Variable
+import HIndent.Ast.Identifier
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import HIndent.Fixity
@@ -43,7 +43,7 @@ import HIndent.Printer
 import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
 
 data Expression
-  = Variable (WithComments Variable)
+  = Variable (WithComments Identifier)
   | Literal (GHC.HsLit GHC.GhcPs)
   | OverloadedLabel GHC.FastString
   | OverloadedLiteral (GHC.HsOverLit GHC.GhcPs)
@@ -365,8 +365,8 @@ instance Pretty Expression where
         indentedBlock $ pretty command
 
 mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
-mkExpression (GHC.HsVar _ x) = Variable $ mkVariable <$> fromGenLocated x
-mkExpression (GHC.HsUnboundVar _ x) = Variable $ mkWithComments $ mkVariable x
+mkExpression (GHC.HsVar _ x) = Variable $ mkIdentifier <$> fromGenLocated x
+mkExpression (GHC.HsUnboundVar _ x) = Variable $ mkWithComments $ mkIdentifier x
 mkExpression (GHC.HsLit _ x) = Literal x
 mkExpression (GHC.HsOverLit _ x) = OverloadedLiteral x
 mkExpression (GHC.HsIPVar _ x) = ImplicitParameter x
