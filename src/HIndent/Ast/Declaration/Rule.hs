@@ -9,6 +9,7 @@ module HIndent.Ast.Declaration.Rule
 import qualified GHC.Core as GHC
 import qualified GHC.Data.FastString as GHC
 import HIndent.Ast.Declaration.Rule.Binder
+import {-# SOURCE #-} HIndent.Ast.Expression
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -19,8 +20,8 @@ import HIndent.Pretty.NodeComments
 data RuleDeclaration = RuleDeclaration
   { name :: WithComments GHC.RuleName
   , binders :: [WithComments RuleBinder]
-  , lhs :: WithComments (GHC.HsExpr GHC.GhcPs)
-  , rhs :: WithComments (GHC.HsExpr GHC.GhcPs)
+  , lhs :: WithComments Expression
+  , rhs :: WithComments Expression
   }
 
 instance CommentExtraction RuleDeclaration where
@@ -50,8 +51,8 @@ mkRuleDeclaration rule@GHC.HsRule {..} = RuleDeclaration {..}
   where
     name = getName rule
     binders = fmap (fmap mkRuleBinder . fromGenLocated) rd_tmvs
-    lhs = fromGenLocated rd_lhs
-    rhs = fromGenLocated rd_rhs
+    lhs = fmap mkExpression $ fromGenLocated rd_lhs
+    rhs = fmap mkExpression $ fromGenLocated rd_rhs
 
 getName :: GHC.RuleDecl GHC.GhcPs -> WithComments GHC.RuleName
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)

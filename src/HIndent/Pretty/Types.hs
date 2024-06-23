@@ -10,7 +10,6 @@ module HIndent.Pretty.Types
   ( InfixExpr(..)
   , InfixOp(..)
   , PrefixOp(..)
-  , InfixApp(..)
   , GRHSsExpr(..)
   , GRHSExpr(..)
   , GRHSProc(..)
@@ -44,7 +43,6 @@ module HIndent.Pretty.Types
   , DoExpression(..)
   , DoOrMdo(..)
   , QualifiedDo(..)
-  , LetIn(..)
   , GRHSExprType(..)
   , GRHSProcType(..)
   , HsTypeFor(..)
@@ -71,21 +69,6 @@ newtype InfixOp =
 -- parentheses.
 newtype PrefixOp =
   PrefixOp RdrName
-
--- | An infix operator application.
---
--- `immediatelyAfterDo` is `True` if an application is next to a `do`
--- keyword. It needs an extra indent in such cases because
---
--- > do a
--- > * b
---
--- is not a valid Haskell code.
-data InfixApp = InfixApp
-  { lhs :: LHsExpr GhcPs
-  , op :: LHsExpr GhcPs
-  , rhs :: LHsExpr GhcPs
-  }
 
 -- | `GRHSs` with a label indicating in which context the RHS is located
 -- in.
@@ -263,12 +246,6 @@ data ListComprehension = ListComprehension
 data DoExpression = DoExpression
   { doStmts :: [ExprLStmt GhcPs]
   , qualifiedDo :: QualifiedDo
-  }
-
--- | Use this type to pretty-print a @let ... in ...@ expression.
-data LetIn = LetIn
-  { letBinds :: HsLocalBinds GhcPs
-  , inExpr :: LHsExpr GhcPs
   }
 
 -- | Values indicating whether `do` or `mdo` is used.
