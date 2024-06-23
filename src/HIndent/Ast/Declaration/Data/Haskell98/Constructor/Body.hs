@@ -7,8 +7,8 @@ module HIndent.Ast.Declaration.Data.Haskell98.Constructor.Body
   ) where
 
 import HIndent.Ast.Declaration.Data.Record.Field
+import HIndent.Ast.Name.Infix
 import HIndent.Ast.NodeComments
-import HIndent.Ast.Operator.Infix
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -37,7 +37,7 @@ instance CommentExtraction Haskell98ConstructorBody where
 
 instance Pretty Haskell98ConstructorBody where
   pretty' Infix {..} =
-    spaced [pretty left, pretty $ fmap mkInfixOperator name, pretty right]
+    spaced [pretty left, pretty $ fmap mkInfixName name, pretty right]
   pretty' Prefix {..} = pretty name >> hor <-|> ver
     where
       hor = spacePrefixed $ fmap pretty types
