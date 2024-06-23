@@ -37,5 +37,5 @@ mkAnnotation (GHC.HsAnnotation _ prov ex) = Annotation {..}
 mkAnnotation (GHC.HsAnnotation _ _ prov ex) = Annotation {..}
   where
     provenance = mkProvenance prov
-    expr = fmap mkExpression $ fromGenLocated ex
+    expr = fromGenLocated $ fmap mkExpression ex
 #endif
