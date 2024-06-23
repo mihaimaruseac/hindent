@@ -6,8 +6,8 @@ module HIndent.Ast.Declaration.Class.NameAndTypeVariables
   ) where
 
 import qualified GHC.Types.Fixity as GHC
+import HIndent.Ast.Name.Infix
 import HIndent.Ast.NodeComments
-import HIndent.Ast.Operator.Infix
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -34,8 +34,7 @@ instance CommentExtraction NameAndTypeVariables where
 instance Pretty NameAndTypeVariables where
   pretty' Prefix {..} = spaced $ pretty name : fmap pretty typeVariables
   pretty' Infix {..} = do
-    parens
-      $ spaced [pretty left, pretty $ fmap mkInfixOperator name, pretty right]
+    parens $ spaced [pretty left, pretty $ fmap mkInfixName name, pretty right]
     spacePrefixed $ fmap pretty remains
 
 mkNameAndTypeVariables :: GHC.TyClDecl GHC.GhcPs -> Maybe NameAndTypeVariables

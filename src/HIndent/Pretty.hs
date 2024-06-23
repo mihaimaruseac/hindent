@@ -42,9 +42,9 @@ import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression.Bracket
 import HIndent.Ast.Expression.Splice
+import HIndent.Ast.Name.Infix
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
-import HIndent.Ast.Operator.Infix
-import HIndent.Ast.Operator.Prefix
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import HIndent.Config
@@ -152,7 +152,7 @@ instance Pretty (GHC.HsExpr GHC.GhcPs) where
   pretty' = prettyHsExpr
 
 prettyHsExpr :: GHC.HsExpr GHC.GhcPs -> Printer ()
-prettyHsExpr (GHC.HsVar _ bind) = pretty $ fmap mkPrefixOperator bind
+prettyHsExpr (GHC.HsVar _ bind) = pretty $ fmap mkPrefixName bind
 prettyHsExpr (GHC.HsUnboundVar _ x) = pretty x
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 prettyHsExpr (GHC.HsOverLabel _ _ l) = string "#" >> string (GHC.unpackFS l)
@@ -551,7 +551,7 @@ prettyMatchExpr GHC.Match {..} =
       case (m_pats, m_ctxt) of
         (l:r:xs, GHC.FunRhs {..}) -> do
           spaced
-            $ [pretty l, pretty $ fmap mkInfixOperator mc_fun, pretty r]
+            $ [pretty l, pretty $ fmap mkInfixName mc_fun, pretty r]
                 ++ fmap pretty xs
           pretty m_grhss
         _ -> error "Not enough parameters are passed."
@@ -732,10 +732,10 @@ prettyHsType (GHC.HsOpTy _ _ l op r) = do
     then do
       pretty l
       newline
-      pretty $ fmap mkInfixOperator op
+      pretty $ fmap mkInfixName op
       space
       pretty r
-    else spaced [pretty l, pretty $ fmap mkInfixOperator op, pretty r]
+    else spaced [pretty l, pretty $ fmap mkInfixName op, pretty r]
 #else
 prettyHsType (GHC.HsOpTy _ l op r) = do
   lineBreak <- gets (configLineBreaks . psConfig)
@@ -743,10 +743,10 @@ prettyHsType (GHC.HsOpTy _ l op r) = do
     then do
       pretty l
       newline
-      pretty $ fmap mkInfixOperator op
+      pretty $ fmap mkInfixName op
       space
       pretty r
-    else spaced [pretty l, pretty $ fmap mkInfixOperator op, pretty r]
+    else spaced [pretty l, pretty $ fmap mkInfixName op, pretty r]
 #endif
 prettyHsType (GHC.HsParTy _ inside) = parens $ pretty inside
 prettyHsType (GHC.HsIParamTy _ x ty) =
@@ -831,7 +831,7 @@ instance Pretty ParStmtBlockInsideVerticalList where
     vCommaSep $ fmap pretty xs
 
 instance Pretty GHC.RdrName where
-  pretty' = pretty . mkPrefixOperator
+  pretty' = pretty . mkPrefixName
 
 instance Pretty
            (GHC.GRHS
@@ -928,7 +928,7 @@ instance Pretty (GHC.Pat GHC.GhcPs) where
 
 instance Pretty PatInsidePatDecl where
   pretty' (PatInsidePatDecl (GHC.ConPat {pat_args = (GHC.InfixCon l r), ..})) =
-    spaced [pretty l, pretty $ fmap mkInfixOperator pat_con, pretty r]
+    spaced [pretty l, pretty $ fmap mkInfixName pat_con, pretty r]
   pretty' (PatInsidePatDecl x) = pretty x
 
 prettyPat :: GHC.Pat GHC.GhcPs -> Printer ()
@@ -960,13 +960,13 @@ prettyPat (GHC.SumPat _ x position numElem) = do
 prettyPat GHC.ConPat {..} =
   case pat_args of
     GHC.PrefixCon _ as -> do
-      pretty $ fmap mkPrefixOperator pat_con
+      pretty $ fmap mkPrefixName pat_con
       spacePrefixed $ fmap pretty as
     GHC.RecCon rec -> (pretty pat_con >> space) |=> pretty (RecConPat rec)
     GHC.InfixCon a b -> do
       pretty a
       unlessSpecialOp (GHC.unLoc pat_con) space
-      pretty $ fmap mkInfixOperator pat_con
+      pretty $ fmap mkInfixName pat_con
       unlessSpecialOp (GHC.unLoc pat_con) space
       pretty b
 prettyPat (GHC.ViewPat _ l r) = spaced [pretty l, string "->", pretty r]
@@ -1088,7 +1088,7 @@ instance Pretty a => Pretty (GHC.HsScaled GHC.GhcPs a) where
 
 instance Pretty InfixExpr where
   pretty' (InfixExpr (GHC.L _ (GHC.HsVar _ bind))) =
-    pretty $ fmap mkInfixOperator bind
+    pretty $ fmap mkInfixName bind
   pretty' (InfixExpr x) = pretty' x
 
 instance Pretty InfixApp where

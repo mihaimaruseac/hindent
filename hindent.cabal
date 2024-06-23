@@ -103,9 +103,9 @@ library
       HIndent.Ast.Module.Export.Entry
       HIndent.Ast.Module.Name
       HIndent.Ast.Module.Warning
+      HIndent.Ast.Name.Infix
+      HIndent.Ast.Name.Prefix
       HIndent.Ast.NodeComments
-      HIndent.Ast.Operator.Infix
-      HIndent.Ast.Operator.Prefix
       HIndent.Ast.Role
       HIndent.Ast.Type
       HIndent.Ast.Type.Variable

@@ -1,8 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module HIndent.Ast.Operator.Infix
-  ( InfixOperator
-  , mkInfixOperator
+module HIndent.Ast.Name.Infix
+  ( InfixName
+  , mkInfixName
   ) where
 
 import Data.Maybe
@@ -14,17 +14,17 @@ import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
-data InfixOperator = InfixOperator
+data InfixName = InfixName
   { name :: GHC.OccName
   , moduleName :: Maybe GHC.ModuleName
   , backtick :: Bool
   }
 
-instance CommentExtraction InfixOperator where
-  nodeComments InfixOperator {} = NodeComments [] [] []
+instance CommentExtraction InfixName where
+  nodeComments InfixName {} = NodeComments [] [] []
 
-instance Pretty InfixOperator where
-  pretty' InfixOperator {..} =
+instance Pretty InfixName where
+  pretty' InfixName {..} =
     wrap $ hDotSep $ catMaybes [pretty <$> moduleName, Just $ pretty name]
     where
       wrap =
@@ -32,15 +32,14 @@ instance Pretty InfixOperator where
           then backticks
           else id
 
-mkInfixOperator :: GHC.RdrName -> InfixOperator
-mkInfixOperator (GHC.Unqual name) =
-  InfixOperator name Nothing (backticksNeeded name)
-mkInfixOperator (GHC.Qual modName name) =
-  InfixOperator name (Just modName) (backticksNeeded name)
-mkInfixOperator (GHC.Orig {}) =
+mkInfixName :: GHC.RdrName -> InfixName
+mkInfixName (GHC.Unqual name) = InfixName name Nothing (backticksNeeded name)
+mkInfixName (GHC.Qual modName name) =
+  InfixName name (Just modName) (backticksNeeded name)
+mkInfixName (GHC.Orig {}) =
   error "This AST node should not appear in the parser output."
-mkInfixOperator (GHC.Exact name) =
-  InfixOperator (GHC.occName name) Nothing (backticksNeeded $ GHC.occName name)
+mkInfixName (GHC.Exact name) =
+  InfixName (GHC.occName name) Nothing (backticksNeeded $ GHC.occName name)
 
 backticksNeeded :: GHC.OccName -> Bool
 backticksNeeded = not . GHC.isSymOcc

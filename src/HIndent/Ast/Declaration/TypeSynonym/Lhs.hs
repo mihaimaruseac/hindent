@@ -6,8 +6,8 @@ module HIndent.Ast.Declaration.TypeSynonym.Lhs
   ) where
 
 import qualified GHC.Types.Fixity as GHC
+import HIndent.Ast.Name.Infix
 import HIndent.Ast.NodeComments
-import HIndent.Ast.Operator.Infix
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -33,7 +33,7 @@ instance CommentExtraction TypeSynonymLhs where
 instance Pretty TypeSynonymLhs where
   pretty' Prefix {..} = spaced $ pretty name : fmap pretty typeVariables
   pretty' Infix {..} =
-    spaced [pretty left, pretty $ fmap mkInfixOperator name, pretty right]
+    spaced [pretty left, pretty $ fmap mkInfixName name, pretty right]
 
 mkTypeSynonymLhs :: GHC.TyClDecl GHC.GhcPs -> TypeSynonymLhs
 mkTypeSynonymLhs GHC.SynDecl {tcdFixity = GHC.Prefix, ..} =
