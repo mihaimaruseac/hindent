@@ -526,11 +526,12 @@ instance Pretty
 prettyMatchExpr :: GHC.Match GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Printer ()
 prettyMatchExpr GHC.Match {m_ctxt = GHC.LambdaExpr, ..} = do
   string "\\"
-  unless (null m_pats)
-    $ case GHC.unLoc $ head m_pats of
-        GHC.LazyPat {} -> space
-        GHC.BangPat {} -> space
-        _ -> return ()
+  case m_pats of
+    p:_ -> case GHC.unLoc p of
+      GHC.LazyPat {} -> space
+      GHC.BangPat {} -> space
+      _ -> return ()
+    _ -> return ()
   spaced $ fmap pretty m_pats
   pretty $ GRHSsExpr GRHSExprLambda m_grhss
 prettyMatchExpr GHC.Match {m_ctxt = GHC.CaseAlt, ..} = do
@@ -565,11 +566,12 @@ instance Pretty
 prettyMatchProc :: GHC.Match GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> Printer ()
 prettyMatchProc GHC.Match {m_ctxt = GHC.LambdaExpr, ..} = do
   string "\\"
-  unless (null m_pats)
-    $ case GHC.unLoc $ head m_pats of
-        GHC.LazyPat {} -> space
-        GHC.BangPat {} -> space
-        _ -> return ()
+  case m_pats of
+    p:_ -> case GHC.unLoc p of
+      GHC.LazyPat {} -> space
+      GHC.BangPat {} -> space
+      _ -> return ()
+    _ -> return ()
   spaced $ fmap pretty m_pats ++ [pretty m_grhss]
 prettyMatchProc GHC.Match {m_ctxt = GHC.CaseAlt, ..} =
   spaced [mapM_ pretty m_pats, pretty m_grhss]
@@ -1246,9 +1248,9 @@ instance Pretty (GHC.IE GHC.GhcPs) where
     case lines $ showOutputable x of
       [] -> pure ()
       [x'] -> string x'
-      xs -> do
-        string $ head xs
-        indentedWithFixedLevel 0 $ newlinePrefixed $ string <$> tail xs
+      x':xs' -> do
+        string x'
+        indentedWithFixedLevel 0 $ newlinePrefixed $ string <$> xs'
   pretty' (GHC.IEModuleContents _ name) =
     pretty $ fmap ModuleNameWithPrefix name
   pretty' GHC.IEGroup {} = docNode
@@ -1547,7 +1549,7 @@ instance Pretty ListComprehension where
           string p |=> pretty (fmap StmtLRInsideVerticalList x)
           newline
         string "]"
-      stmtsAndPrefixes l = ("| ", head l) : fmap (", ", ) (tail l)
+      stmtsAndPrefixes (s:ss) = ("| ", s) : fmap (", ", ) ss
 
 instance Pretty DoExpression where
   pretty' DoExpression {..} = do
