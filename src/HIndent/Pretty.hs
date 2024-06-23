@@ -527,10 +527,11 @@ prettyMatchExpr :: GHC.Match GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Printer ()
 prettyMatchExpr GHC.Match {m_ctxt = GHC.LambdaExpr, ..} = do
   string "\\"
   case m_pats of
-    p:_ -> case GHC.unLoc p of
-      GHC.LazyPat {} -> space
-      GHC.BangPat {} -> space
-      _ -> return ()
+    p:_ ->
+      case GHC.unLoc p of
+        GHC.LazyPat {} -> space
+        GHC.BangPat {} -> space
+        _ -> return ()
     _ -> return ()
   spaced $ fmap pretty m_pats
   pretty $ GRHSsExpr GRHSExprLambda m_grhss
@@ -567,10 +568,11 @@ prettyMatchProc :: GHC.Match GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> Printer ()
 prettyMatchProc GHC.Match {m_ctxt = GHC.LambdaExpr, ..} = do
   string "\\"
   case m_pats of
-    p:_ -> case GHC.unLoc p of
-      GHC.LazyPat {} -> space
-      GHC.BangPat {} -> space
-      _ -> return ()
+    p:_ ->
+      case GHC.unLoc p of
+        GHC.LazyPat {} -> space
+        GHC.BangPat {} -> space
+        _ -> return ()
     _ -> return ()
   spaced $ fmap pretty m_pats ++ [pretty m_grhss]
 prettyMatchProc GHC.Match {m_ctxt = GHC.CaseAlt, ..} =
