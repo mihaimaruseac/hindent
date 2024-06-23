@@ -74,7 +74,7 @@ instance MkFieldLabel (GHC.FieldLabelStrings GHC.GhcPs) where
     FieldLabel
       $ fmap
           (\(GHC.L _ GHC.HsFieldLabel {..}) ->
-             prettyWith (fromGenLocated hflLabel $ fmap GHC.unpackFS) string)
+             prettyWith (GHC.unpackFS <$> fromGenLocated hflLabel) string)
           xs
 
 instance MkFieldLabel (GHC.HsFieldLabel GHC.GhcPs) where
