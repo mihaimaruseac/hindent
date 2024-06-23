@@ -124,6 +124,10 @@ data Expression
   | Splice Splice
   | Bracket Bracket
   | Static (WithComments Expression)
+  | ProcDo
+      { pat :: GHC.LPat GHC.GhcPs
+      , commands :: [GHC.CmdLStmt GHC.GhcPs]
+      }
   | Expression (GHC.HsExpr GHC.GhcPs)
 
 instance CommentExtraction Expression where
@@ -161,6 +165,7 @@ instance CommentExtraction Expression where
   nodeComments Splice {} = NodeComments [] [] []
   nodeComments Bracket {} = NodeComments [] [] []
   nodeComments Static {} = NodeComments [] [] []
+  nodeComments ProcDo {} = NodeComments [] [] []
   nodeComments Expression {} = NodeComments [] [] []
 
 instance Pretty Expression where
@@ -345,6 +350,10 @@ instance Pretty Expression where
   pretty' (Splice x) = pretty x
   pretty' (Bracket x) = pretty x
   pretty' (Static x) = string "static " >> pretty x
+  pretty' ProcDo {..} = do
+    spaced [string "proc", pretty pat, string "-> do"]
+    newline
+    indentedBlock $ lined $ fmap pretty commands
   pretty' (Expression x) = prettyHsExpr x
 
 prettyHsExpr :: GHC.HsExpr GHC.GhcPs -> Printer ()
