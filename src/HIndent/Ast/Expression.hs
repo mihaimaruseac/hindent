@@ -283,9 +283,9 @@ instance Pretty Expression where
       isMissing GHC.Missing {} = True
       isMissing _ = False
       (parH, parV) =
-        case isBoxed of
-          True -> (hTuple, parens)
-          False -> (hUnboxedTuple, unboxedParens)
+        if isBoxed
+          then (hTuple, parens)
+          else (hUnboxedTuple, unboxedParens)
   pretty' UnboxedSum {..} = do
     string "(#"
     forM_ [1 .. numElems] $ \idx -> do
