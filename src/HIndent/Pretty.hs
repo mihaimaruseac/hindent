@@ -23,6 +23,8 @@ module HIndent.Pretty
 
 import Control.Monad
 import Control.Monad.RWS
+import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NE
 import Data.Maybe
 import Data.Void
 import qualified GHC.Data.Bag as GHC
@@ -283,13 +285,17 @@ prettyHsExpr (GHC.HsLet _ binds exprs) = pretty $ LetIn binds exprs
 #endif
 prettyHsExpr (GHC.HsDo _ GHC.ListComp {} (GHC.L _ [])) =
   error "Not enough arguments are passed to pretty-print a list comprehension."
-prettyHsExpr (GHC.HsDo _ GHC.ListComp {} (GHC.L l (lhs:rhs))) =
-  pretty $ GHC.L l $ ListComprehension lhs rhs
+prettyHsExpr (GHC.HsDo _ GHC.ListComp {} (GHC.L _ [_])) =
+  error "Not enough arguments are passed to pretty-print a list comprehension."
+prettyHsExpr (GHC.HsDo _ GHC.ListComp {} (GHC.L l (lhs:rhs:rhss))) =
+  pretty $ GHC.L l $ ListComprehension lhs (rhs :| rhss)
 -- While the name contains 'Monad', 'MonadComp' is for list comprehensions.
 prettyHsExpr (GHC.HsDo _ GHC.MonadComp {} (GHC.L _ [])) =
   error "Not enough arguments are passed to pretty-print a list comprehension."
-prettyHsExpr (GHC.HsDo _ GHC.MonadComp {} (GHC.L l (lhs:rhs))) =
-  pretty $ GHC.L l $ ListComprehension lhs rhs
+prettyHsExpr (GHC.HsDo _ GHC.MonadComp {} (GHC.L _ [_])) =
+  error "Not enough arguments are passed to pretty-print a list comprehension."
+prettyHsExpr (GHC.HsDo _ GHC.MonadComp {} (GHC.L l (lhs:rhs:rhss))) =
+  pretty $ GHC.L l $ ListComprehension lhs (rhs :| rhss)
 prettyHsExpr (GHC.HsDo _ (GHC.DoExpr m) (GHC.L l xs)) =
   pretty $ GHC.L l $ DoExpression xs (QualifiedDo m Do)
 prettyHsExpr (GHC.HsDo _ (GHC.MDoExpr m) (GHC.L l xs)) =
@@ -1540,7 +1546,7 @@ instance Pretty ListComprehension where
           $ spaced
               [ pretty listCompLhs
               , string "|"
-              , hCommaSep $ fmap pretty listCompRhs
+              , hCommaSep $ NE.toList $ NE.map pretty listCompRhs
               ]
       vertical = do
         string "[ "
@@ -1550,7 +1556,7 @@ instance Pretty ListComprehension where
           string p |=> pretty (fmap StmtLRInsideVerticalList x)
           newline
         string "]"
-      stmtsAndPrefixes (s:ss) = ("| ", s) : fmap (", ", ) ss
+      stmtsAndPrefixes (s :| ss) = ("| ", s) : fmap (", ", ) ss
 
 instance Pretty DoExpression where
   pretty' DoExpression {..} = do
