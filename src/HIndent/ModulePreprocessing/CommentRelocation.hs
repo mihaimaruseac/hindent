@@ -306,13 +306,20 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
 -- | This function scans the given AST from bottom to top and locates
 -- comments in the comment pool after each node on it.
 relocateCommentsAfter :: HsModule' -> WithComments HsModule'
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+relocateCommentsAfter = everywhereMEpAnnsBackwards f
+  where
+    f epa@EpAnn {..} =
+      insertCommentsByPos (isAfter $ anchor entry) insertFollowingComments epa
+    isAfter anc comAnc = srcSpanEndLine anc <= srcSpanStartLine comAnc
+#else
 relocateCommentsAfter = everywhereMEpAnnsBackwards f
   where
     f epa@EpAnn {..} =
       insertCommentsByPos (isAfter $ anchor entry) insertFollowingComments epa
     f EpAnnNotUsed = pure EpAnnNotUsed
     isAfter anc comAnc = srcSpanEndLine anc <= srcSpanStartLine comAnc
-
+#endif
 -- | Locates comments before each element in a parent.
 relocateCommentsBeforeEachElement ::
      forall a b c. Typeable a
@@ -367,8 +374,9 @@ insertComments ::
 insertComments cond inserter epa@EpAnn {..} = do
   coms <- drainComments cond
   pure $ epa {comments = inserter comments coms}
+#if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 insertComments _ _ EpAnnNotUsed = pure EpAnnNotUsed
-
+#endif
 -- | This function inserts comments to `priorComments`.
 insertPriorComments :: EpAnnComments -> [LEpaComment] -> EpAnnComments
 insertPriorComments (EpaComments prior) cs =
@@ -470,6 +478,8 @@ sortCommentsByLocation = sortBy (compare `on` anchor . getLoc)
 compareEpaByEndPosition :: EpAnn a -> EpAnn b -> Ordering
 compareEpaByEndPosition (EpAnn a _ _) (EpAnn b _ _) =
   on compare (realSrcSpanEnd . anchor) a b
+#if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 compareEpaByEndPosition EpAnnNotUsed EpAnnNotUsed = EQ
 compareEpaByEndPosition _ EpAnnNotUsed = GT
 compareEpaByEndPosition EpAnnNotUsed _ = LT
+#endif
