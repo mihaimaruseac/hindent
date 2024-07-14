@@ -69,7 +69,10 @@ collectLanguageExtensionsSpecifiedViaLanguagePragma =
 -- or @OPTIONS_GHC@ pragmas
 collectLanguageExtensionsFromSourceViaOptionsPragma :: String -> [Extension]
 collectLanguageExtensionsFromSourceViaOptionsPragma =
-  concatMap (mapMaybe (strToExt . stripSpaces) . extractLanguageExtensionsFromOptions . snd)
+  concatMap
+    (mapMaybe (strToExt . stripSpaces)
+       . extractLanguageExtensionsFromOptions
+       . snd)
     . filter ((`elem` ["OPTIONS", "OPTIONS_GHC"]) . fst)
     . extractPragmasFromCode
 
