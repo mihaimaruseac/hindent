@@ -61,8 +61,7 @@ getExtensions = foldr f []
 -- This function ignores language extensions not supported by Cabal.
 collectLanguageExtensionsSpecifiedViaLanguagePragma :: String -> [Extension]
 collectLanguageExtensionsSpecifiedViaLanguagePragma =
-  concatMap (mapMaybe (strToExt . stripSpaces) . splitOn ",")
-    . fmap snd
+  concatMap ((mapMaybe (strToExt . stripSpaces) . splitOn ",") . snd)
     . filter ((== "LANGUAGE") . fst)
     . extractPragmasFromCode
 
@@ -70,8 +69,7 @@ collectLanguageExtensionsSpecifiedViaLanguagePragma =
 -- or @OPTIONS_GHC@ pragmas
 collectLanguageExtensionsFromSourceViaOptionsPragma :: String -> [Extension]
 collectLanguageExtensionsFromSourceViaOptionsPragma =
-  mapMaybe (strToExt . stripSpaces)
-    . concatMap (extractLanguageExtensionsFromOptions . snd)
+  concatMap (mapMaybe (strToExt . stripSpaces) . extractLanguageExtensionsFromOptions . snd)
     . filter ((`elem` ["OPTIONS", "OPTIONS_GHC"]) . fst)
     . extractPragmasFromCode
 
