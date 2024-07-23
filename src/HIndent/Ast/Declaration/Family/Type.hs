@@ -10,6 +10,7 @@ import qualified GHC.Types.Basic as GHC
 import HIndent.Applicative
 import HIndent.Ast.Declaration.Family.Type.Injectivity
 import HIndent.Ast.Declaration.Family.Type.ResultSignature
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments hiding (fromEpAnn)
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
@@ -20,7 +21,7 @@ import HIndent.Pretty.NodeComments
 
 data TypeFamily = TypeFamily
   { isTopLevel :: Bool
-  , name :: GHC.LIdP GHC.GhcPs
+  , name :: WithComments PrefixName
   , typeVariables :: [WithComments TypeVariable]
   , signature :: WithComments ResultSignature
   , injectivity :: Maybe (WithComments Injectivity)
@@ -50,7 +51,7 @@ mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
       case fdTopLevel of
         GHC.TopLevel -> True
         GHC.NotTopLevel -> False
-    name = fdLName
+    name = fromGenLocated $ fmap mkPrefixName fdLName
     typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
     signature = mkResultSignature <$> fromGenLocated fdResultSig
     injectivity = fmap (fmap mkInjectivity . fromGenLocated) fdInjectivityAnn

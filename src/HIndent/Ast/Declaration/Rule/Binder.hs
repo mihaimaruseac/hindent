@@ -5,6 +5,7 @@ module HIndent.Ast.Declaration.Rule.Binder
   , mkRuleBinder
   ) where
 
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -13,7 +14,7 @@ import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 data RuleBinder = RuleBinder
-  { name :: GHC.LIdP GHC.GhcPs
+  { name :: WithComments PrefixName
   , signature :: Maybe (WithComments (GHC.HsType GHC.GhcPs))
   }
 
@@ -26,6 +27,11 @@ instance Pretty RuleBinder where
     parens $ spaced [pretty name, string "::", pretty sig]
 
 mkRuleBinder :: GHC.RuleBndr GHC.GhcPs -> RuleBinder
-mkRuleBinder (GHC.RuleBndr _ name) = RuleBinder {signature = Nothing, ..}
-mkRuleBinder (GHC.RuleBndrSig _ name GHC.HsPS {..}) =
-  RuleBinder {signature = Just $ fromGenLocated hsps_body, ..}
+mkRuleBinder (GHC.RuleBndr _ n) = RuleBinder {..}
+  where
+    signature = Nothing
+    name = fromGenLocated $ fmap mkPrefixName n
+mkRuleBinder (GHC.RuleBndrSig _ n GHC.HsPS {..}) = RuleBinder {..}
+  where
+    signature = Just $ fromGenLocated hsps_body
+    name = fromGenLocated $ fmap mkPrefixName n

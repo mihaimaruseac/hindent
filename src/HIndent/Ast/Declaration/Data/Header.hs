@@ -8,6 +8,7 @@ module HIndent.Ast.Declaration.Data.Header
 import HIndent.Applicative
 import HIndent.Ast.Context
 import HIndent.Ast.Declaration.Data.NewOrData
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
@@ -18,7 +19,7 @@ import HIndent.Pretty.NodeComments
 
 data Header = Header
   { newOrData :: NewOrData
-  , name :: WithComments (GHC.IdP GHC.GhcPs)
+  , name :: WithComments PrefixName
   , context :: Maybe (WithComments Context)
   , typeVariables :: [WithComments TypeVariable]
   }
@@ -39,7 +40,7 @@ mkHeader GHC.DataDecl {tcdDataDefn = defn@GHC.HsDataDefn {..}, ..} =
   where
     newOrData = mkNewOrData defn
     context = fmap (fmap mkContext . fromGenLocated) dd_ctxt
-    name = fromGenLocated tcdLName
+    name = fromGenLocated $ fmap mkPrefixName tcdLName
     typeVariables =
       fmap mkTypeVariable . fromGenLocated <$> GHC.hsq_explicit tcdTyVars
 mkHeader _ = Nothing

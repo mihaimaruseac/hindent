@@ -5,6 +5,7 @@ module HIndent.Ast.Declaration.Annotation.Role
   , mkRoleAnnotation
   ) where
 
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Role
 import HIndent.Ast.WithComments
@@ -14,7 +15,7 @@ import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 data RoleAnnotation = RoleAnnotation
-  { name :: GHC.LIdP GHC.GhcPs
+  { name :: WithComments PrefixName
   , roles :: [WithComments (Maybe Role)]
   }
 
@@ -28,6 +29,7 @@ instance Pretty RoleAnnotation where
           ++ fmap (`prettyWith` maybe (string "_") pretty) roles
 
 mkRoleAnnotation :: GHC.RoleAnnotDecl GHC.GhcPs -> RoleAnnotation
-mkRoleAnnotation (GHC.RoleAnnotDecl _ name rs) = RoleAnnotation {..}
+mkRoleAnnotation (GHC.RoleAnnotDecl _ nm rs) = RoleAnnotation {..}
   where
+    name = fromGenLocated $ fmap mkPrefixName nm
     roles = fmap (fmap (fmap mkRole) . fromGenLocated) rs

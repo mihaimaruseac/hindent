@@ -7,6 +7,7 @@ module HIndent.Ast.Declaration.Bind
   ) where
 
 import HIndent.Ast.Name.Infix
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -46,9 +47,13 @@ instance Pretty Bind where
     string "pattern "
     case parameters of
       GHC.InfixCon l r ->
-        spaced [pretty l, pretty $ fmap mkInfixName name, pretty r]
-      GHC.PrefixCon _ [] -> pretty name
-      _ -> spaced [pretty name, pretty parameters]
+        spaced
+          [ pretty $ fmap mkPrefixName l
+          , pretty $ fmap mkInfixName name
+          , pretty $ fmap mkPrefixName r
+          ]
+      GHC.PrefixCon _ [] -> pretty $ fmap mkPrefixName name
+      _ -> spaced [pretty $ fmap mkPrefixName name, pretty parameters]
     spacePrefixed [pretty direction, pretty $ fmap PatInsidePatDecl definition]
     case direction of
       GHC.ExplicitBidirectional matches -> do

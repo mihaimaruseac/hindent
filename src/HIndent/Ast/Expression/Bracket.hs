@@ -6,6 +6,7 @@ module HIndent.Ast.Expression.Bracket
   ) where
 
 import HIndent.Ast.Declaration
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -19,7 +20,7 @@ data Bracket
   | Pattern (GHC.LPat GHC.GhcPs)
   | Declaration [WithComments Declaration]
   | Type (GHC.LHsType GHC.GhcPs)
-  | Variable Bool (GHC.LIdP GHC.GhcPs)
+  | Variable Bool (WithComments PrefixName)
 
 instance CommentExtraction Bracket where
   nodeComments TypedExpression {} = NodeComments [] [] []
@@ -48,7 +49,7 @@ mkBracket (GHC.PatBr _ x) = Pattern x
 mkBracket (GHC.DecBrL _ x) =
   Declaration $ fmap (fmap mkDeclaration . fromGenLocated) x
 mkBracket (GHC.TypBr _ x) = Type x
-mkBracket (GHC.VarBr _ b x) = Variable b x
+mkBracket (GHC.VarBr _ b x) = Variable b $ fromGenLocated $ fmap mkPrefixName x
 mkBracket (GHC.DecBrG {}) = error "This AST node should never appear."
 #if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkBracket (GHC.TExpBr _ x) = TypedExpression x

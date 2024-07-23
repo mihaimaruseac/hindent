@@ -9,6 +9,7 @@ import Control.Monad
 import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Applicative
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments hiding (fromEpAnn)
 import HIndent.Ast.Type
 import HIndent.Ast.Type.Variable
@@ -20,7 +21,7 @@ import HIndent.Pretty.NodeComments
 
 data DataFamily = DataFamily
   { isTopLevel :: Bool
-  , name :: GHC.LIdP GHC.GhcPs
+  , name :: WithComments PrefixName
   , typeVariables :: [WithComments TypeVariable]
   , signature :: Maybe (WithComments Type)
   }
@@ -46,7 +47,7 @@ mkDataFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
       case fdTopLevel of
         GHC.TopLevel -> True
         GHC.NotTopLevel -> False
-    name = fdLName
+    name = fromGenLocated $ fmap mkPrefixName fdLName
     typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
     signature =
       case GHC.unLoc fdResultSig of

@@ -10,6 +10,7 @@ import Data.Maybe
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Context
 import HIndent.Ast.Declaration.Data.GADT.Constructor.Signature
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
@@ -21,7 +22,7 @@ import HIndent.Pretty.NodeComments
 import qualified Data.List.NonEmpty as NE
 #endif
 data GADTConstructor = GADTConstructor
-  { names :: [WithComments (GHC.IdP GHC.GhcPs)]
+  { names :: [WithComments PrefixName]
   , bindings :: Maybe (WithComments [WithComments TypeVariable])
   , context :: Maybe (WithComments Context)
   , signature :: ConstructorSignature
@@ -79,10 +80,12 @@ mkGADTConstructor decl@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}
     context = fmap (fmap mkContext . fromGenLocated) con_mb_cxt
 mkGADTConstructor _ = Nothing
 
-getNames :: GHC.ConDecl GHC.GhcPs -> Maybe [WithComments (GHC.IdP GHC.GhcPs)]
+getNames :: GHC.ConDecl GHC.GhcPs -> Maybe [WithComments PrefixName]
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
-getNames GHC.ConDeclGADT {..} = Just $ NE.toList $ fmap fromGenLocated con_names
+getNames GHC.ConDeclGADT {..} =
+  Just $ NE.toList $ fmap (fromGenLocated . fmap mkPrefixName) con_names
 #else
-getNames GHC.ConDeclGADT {..} = Just $ fmap fromGenLocated con_names
+getNames GHC.ConDeclGADT {..} =
+  Just $ fmap (fromGenLocated . fmap mkPrefixName) con_names
 #endif
 getNames _ = Nothing

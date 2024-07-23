@@ -14,6 +14,7 @@ import HIndent.Ast.Declaration.Signature.Fixity
 import HIndent.Ast.Declaration.Signature.Inline.Phase
 import HIndent.Ast.Declaration.Signature.Inline.Spec
 import HIndent.Ast.Name.Infix
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -26,38 +27,38 @@ import HIndent.Pretty.Types
 -- doesn't allow it.
 data Signature
   = Type
-      { names :: [GHC.LIdP GHC.GhcPs]
+      { names :: [WithComments PrefixName]
       , parameters :: GHC.LHsSigWcType GHC.GhcPs
       }
   | Pattern
-      { names :: [GHC.LIdP GHC.GhcPs]
+      { names :: [WithComments PrefixName]
       , signature :: GHC.LHsSigType GHC.GhcPs
       }
   | DefaultClassMethod
-      { names :: [GHC.LIdP GHC.GhcPs]
+      { names :: [WithComments PrefixName]
       , signature :: GHC.LHsSigType GHC.GhcPs
       }
   | ClassMethod
-      { names :: [GHC.LIdP GHC.GhcPs]
+      { names :: [WithComments PrefixName]
       , signature :: GHC.LHsSigType GHC.GhcPs
       }
   | Fixity
-      { names :: [GHC.LIdP GHC.GhcPs]
+      { opNames :: [WithComments InfixName] -- Using `names` causes a type conflict.
       , fixity :: Fixity
       }
   | Inline
-      { name :: GHC.LIdP GHC.GhcPs
+      { name :: WithComments PrefixName
       , spec :: InlineSpec
       , phase :: Maybe InlinePhase
       }
   | Specialise
-      { name :: GHC.LIdP GHC.GhcPs
+      { name :: WithComments PrefixName
       , sigs :: [GHC.LHsSigType GHC.GhcPs]
       }
   | SpecialiseInstance (GHC.LHsSigType GHC.GhcPs)
   | Minimal (WithComments BooleanFormula)
-  | Scc (GHC.LIdP GHC.GhcPs)
-  | Complete (GHC.XRec GHC.GhcPs [GHC.LIdP GHC.GhcPs])
+  | Scc (WithComments PrefixName)
+  | Complete (WithComments [WithComments PrefixName])
 
 instance CommentExtraction Signature where
   nodeComments Type {} = NodeComments [] [] []
@@ -121,8 +122,7 @@ instance Pretty Signature where
         indentedBlock
           $ indentedWithSpace 3
           $ printCommentsAnd signature (pretty . HsSigTypeInsideDeclSig)
-  pretty' Fixity {..} =
-    spaced [pretty fixity, hCommaSep $ fmap (pretty . fmap mkInfixName) names]
+  pretty' Fixity {..} = spaced [pretty fixity, hCommaSep $ fmap pretty opNames]
   pretty' Inline {..} = do
     string "{-# "
     pretty spec
@@ -148,34 +148,65 @@ instance Pretty Signature where
   pretty' (Complete names) =
     spaced
       [ string "{-# COMPLETE"
-      , printCommentsAnd names (hCommaSep . fmap pretty)
+      , prettyWith names (hCommaSep . fmap pretty)
       , string "#-}"
       ]
 
 mkSignature :: GHC.Sig GHC.GhcPs -> Signature
-mkSignature (GHC.TypeSig _ names parameters) = Type {..}
-mkSignature (GHC.PatSynSig _ names signature) = Pattern {..}
-mkSignature (GHC.ClassOpSig _ True names signature) = DefaultClassMethod {..}
-mkSignature (GHC.ClassOpSig _ False names signature) = ClassMethod {..}
-mkSignature (GHC.FixSig _ (GHC.FixitySig _ names fixity)) =
-  Fixity {fixity = mkFixity fixity, ..}
-mkSignature (GHC.InlineSig _ name GHC.InlinePragma {..}) = Inline {..}
+mkSignature (GHC.TypeSig _ ns parameters) = Type {..}
   where
+    names = fmap (fromGenLocated . fmap mkPrefixName) ns
+mkSignature (GHC.PatSynSig _ ns signature) = Pattern {..}
+  where
+    names = fmap (fromGenLocated . fmap mkPrefixName) ns
+mkSignature (GHC.ClassOpSig _ True ns signature) = DefaultClassMethod {..}
+  where
+    names = fmap (fromGenLocated . fmap mkPrefixName) ns
+mkSignature (GHC.ClassOpSig _ False ns signature) = ClassMethod {..}
+  where
+    names = fmap (fromGenLocated . fmap mkPrefixName) ns
+mkSignature (GHC.FixSig _ (GHC.FixitySig _ ops fy)) = Fixity {..}
+  where
+    fixity = mkFixity fy
+    opNames = fmap (fromGenLocated . fmap mkInfixName) ops
+mkSignature (GHC.InlineSig _ n GHC.InlinePragma {..}) = Inline {..}
+  where
+    name = fromGenLocated $ fmap mkPrefixName n
     spec = mkInlineSpec inl_inline
     phase = mkInlinePhase inl_act
-mkSignature (GHC.SpecSig _ name sigs _) = Specialise {..}
+mkSignature (GHC.SpecSig _ n sigs _) = Specialise {..}
+  where
+    name = fromGenLocated $ fmap mkPrefixName n
+#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
+mkSignature (GHC.SCCFunSig _ n _) = Scc name
+  where
+    name = fromGenLocated $ fmap mkPrefixName n
+mkSignature (GHC.CompleteMatchSig _ ns _) = Complete names
+  where
+    names = fromGenLocated $ fmap (fmap (fromGenLocated . fmap mkPrefixName)) ns
+#elif MIN_VERSION_ghc_lib_parser(9, 4, 0)
+mkSignature (GHC.SCCFunSig _ _ name _) =
+  Scc $ fromGenLocated $ fmap mkPrefixName name
+mkSignature (GHC.CompleteMatchSig _ _ names _) =
+  Complete
+    $ fromGenLocated
+    $ fmap (fmap (fromGenLocated . fmap mkPrefixName)) names
+#else
+mkSignature (GHC.SCCFunSig _ _ name _) =
+  Scc $ fromGenLocated $ fmap mkPrefixName name
+mkSignature (GHC.CompleteMatchSig _ _ names _) =
+  Complete
+    $ fromGenLocated
+    $ fmap (fmap (fromGenLocated . fmap mkPrefixName)) names
+#endif
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkSignature (GHC.SpecInstSig _ sig) = SpecialiseInstance sig
 mkSignature (GHC.MinimalSig _ xs) =
   Minimal $ mkBooleanFormula <$> fromGenLocated xs
-mkSignature (GHC.SCCFunSig _ name _) = Scc name
-mkSignature (GHC.CompleteMatchSig _ names _) = Complete names
 #else
 mkSignature (GHC.SpecInstSig _ _ sig) = SpecialiseInstance sig
 mkSignature (GHC.MinimalSig _ _ xs) =
   Minimal $ mkBooleanFormula <$> fromGenLocated xs
-mkSignature (GHC.SCCFunSig _ _ name _) = Scc name
-mkSignature (GHC.CompleteMatchSig _ _ names _) = Complete names
 mkSignature GHC.IdSig {} =
   error "`ghc-lib-parser` never generates this AST node."
 #endif

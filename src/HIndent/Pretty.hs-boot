@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP               #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
 
 module HIndent.Pretty
@@ -7,18 +7,18 @@ module HIndent.Pretty
   , printCommentsAnd
   ) where
 
-import           Data.Void
-import qualified GHC.Types.Name                     as GHC
-import qualified GHC.Types.Name.Reader              as GHC
-import qualified GHC.Types.SourceText               as GHC
-import qualified GHC.Types.SrcLoc                   as GHC
-import qualified GHC.Unit                           as GHC
+import Data.Void
+import qualified GHC.Types.Name as GHC
+import qualified GHC.Types.Name.Reader as GHC
+import qualified GHC.Types.SourceText as GHC
+import qualified GHC.Types.SrcLoc as GHC
+import qualified GHC.Unit as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHc
-import           HIndent.Pretty.NodeComments
-import           HIndent.Pretty.SigBindFamily
-import           HIndent.Pretty.Types
-import           HIndent.Printer
+import HIndent.Pretty.NodeComments
+import HIndent.Pretty.SigBindFamily
+import HIndent.Pretty.Types
+import HIndent.Printer
 
 class CommentExtraction a =>
       Pretty a
@@ -41,8 +41,6 @@ instance Pretty
            (GHC.FamEqn
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
-
-instance Pretty GHC.RdrName
 
 instance Pretty SigBindFamily
 
