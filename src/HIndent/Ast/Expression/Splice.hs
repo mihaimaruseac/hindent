@@ -6,7 +6,7 @@ module HIndent.Ast.Expression.Splice
   ) where
 
 import qualified GHC.Data.FastString as GHC
-import qualified GHC.Types.Name.Reader as GHC
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -19,7 +19,7 @@ data Splice
   = Typed (GHC.LHsExpr GHC.GhcPs)
   | UntypedDollar (GHC.LHsExpr GHC.GhcPs)
   | UntypedBare (GHC.LHsExpr GHC.GhcPs)
-  | QuasiQuote GHC.RdrName GHC.FastString
+  | QuasiQuote PrefixName GHC.FastString
 
 instance CommentExtraction Splice where
   nodeComments Typed {} = NodeComments [] [] []
@@ -47,12 +47,12 @@ instance Pretty Splice where
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 mkSplice :: GHC.HsUntypedSplice GHC.GhcPs -> Splice
 mkSplice (GHC.HsUntypedSpliceExpr _ x) = UntypedDollar x
-mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) = QuasiQuote l r
+mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) = QuasiQuote (mkPrefixName l) r
 #else
 mkSplice :: GHC.HsSplice GHC.GhcPs -> Splice
 mkSplice (GHC.HsTypedSplice _ _ _ body) = Typed body
 mkSplice (GHC.HsUntypedSplice _ GHC.DollarSplice _ body) = UntypedDollar body
 mkSplice (GHC.HsUntypedSplice _ GHC.BareSplice _ body) = UntypedBare body
-mkSplice (GHC.HsQuasiQuote _ _ l _ r) = QuasiQuote l r
+mkSplice (GHC.HsQuasiQuote _ _ l _ r) = QuasiQuote (mkPrefixName l) r
 mkSplice GHC.HsSpliced {} = error "This AST node should never appear."
 #endif

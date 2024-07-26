@@ -4,6 +4,7 @@ module HIndent.Ast.Declaration.Signature.BooleanFormula
   ) where
 
 import qualified GHC.Data.BooleanFormula as GHC
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -12,7 +13,7 @@ import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 data BooleanFormula
-  = Var (GHC.LIdP GHC.GhcPs)
+  = Var (WithComments PrefixName)
   | And [WithComments BooleanFormula]
   | Or [WithComments BooleanFormula]
   | Parens (WithComments BooleanFormula)
@@ -30,7 +31,7 @@ instance Pretty BooleanFormula where
   pretty' (Parens x) = parens $ pretty x
 
 mkBooleanFormula :: GHC.BooleanFormula (GHC.LIdP GHC.GhcPs) -> BooleanFormula
-mkBooleanFormula (GHC.Var x) = Var x
+mkBooleanFormula (GHC.Var x) = Var $ fromGenLocated $ fmap mkPrefixName x
 mkBooleanFormula (GHC.And xs) =
   And $ fmap (fmap mkBooleanFormula . fromGenLocated) xs
 mkBooleanFormula (GHC.Or xs) =

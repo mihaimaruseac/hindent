@@ -3,15 +3,17 @@ module HIndent.Ast.Declaration.Annotation.Provenance
   , mkProvenance
   ) where
 
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 data Provenance
-  = Value (GHC.LIdP GHC.GhcPs)
-  | Type (GHC.LIdP GHC.GhcPs)
+  = Value (WithComments PrefixName)
+  | Type (WithComments PrefixName)
   | Module
 
 instance CommentExtraction Provenance where
@@ -25,6 +27,8 @@ instance Pretty Provenance where
   pretty' Module = string "module"
 
 mkProvenance :: GHC.AnnProvenance GHC.GhcPs -> Provenance
-mkProvenance (GHC.ValueAnnProvenance x) = Value x
-mkProvenance (GHC.TypeAnnProvenance x) = Type x
+mkProvenance (GHC.ValueAnnProvenance x) =
+  Value $ fromGenLocated $ fmap mkPrefixName x
+mkProvenance (GHC.TypeAnnProvenance x) =
+  Type $ fromGenLocated $ fmap mkPrefixName x
 mkProvenance GHC.ModuleAnnProvenance = Module
