@@ -101,7 +101,13 @@ instance CommentExtraction (HsDecl GhcPs) where
   nodeComments DocD {} =
     error "Document comments should be treated as normal ones."
   nodeComments RoleAnnotD {} = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if MIN_VERSION_ghc_lib_parser(9, 10, 0)
+instance CommentExtraction (TyClDecl GhcPs) where
+  nodeComments FamDecl {} = emptyNodeComments
+  nodeComments SynDecl {..} = nodeComments tcdSExt
+  nodeComments DataDecl {..} = nodeComments tcdDExt
+  nodeComments ClassDecl {tcdCExt = (x, _)} = nodeComments x
+#elif MIN_VERSION_ghc_lib_parser(9, 6, 0)
 instance CommentExtraction (TyClDecl GhcPs) where
   nodeComments FamDecl {} = emptyNodeComments
   nodeComments SynDecl {..} = nodeComments tcdSExt
@@ -165,10 +171,13 @@ instance CommentExtraction (Sig GhcPs) where
 #endif
 instance CommentExtraction (HsDataDefn GhcPs) where
   nodeComments HsDataDefn {} = emptyNodeComments
-
+#if MIN_VERSION_ghc_lib_parser(9, 10, 0)
+instance CommentExtraction (ClsInstDecl GhcPs) where
+  nodeComments ClsInstDecl {cid_ext = (x, _, _)} = nodeComments x
+#else
 instance CommentExtraction (ClsInstDecl GhcPs) where
   nodeComments ClsInstDecl {cid_ext = (x, _)} = nodeComments x
-
+#endif
 instance CommentExtraction (MatchGroup GhcPs a) where
   nodeComments MG {} = emptyNodeComments
 
@@ -256,7 +265,10 @@ nodeCommentsHsExpr HsRecSel {} = emptyNodeComments
 nodeCommentsHsExpr (HsTypedBracket x _) = nodeComments x
 nodeCommentsHsExpr (HsUntypedBracket x _) = nodeComments x
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+nodeCommentsHsExpr (HsTypedSplice x _) = nodeComments x
+nodeCommentsHsExpr (HsUntypedSplice x _) = nodeComments x
+#elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
 nodeCommentsHsExpr (HsTypedSplice (x, y) _) = nodeComments x <> nodeComments y
 nodeCommentsHsExpr (HsUntypedSplice x _) = nodeComments x
 #endif
