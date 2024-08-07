@@ -1046,6 +1046,13 @@ instance CommentExtraction (LHsRecUpdFields GhcPs) where
   nodeComments RegularRecUpdFields {} = emptyNodeComments
   nodeComments OverloadedRecUpdFields {} = emptyNodeComments
 #endif
+instance CommentExtraction AddEpAnn where
+  nodeComments (AddEpAnn _ x) = nodeComments x
+
+instance CommentExtraction EpaLocation where
+  nodeComments EpaSpan {} = emptyNodeComments
+  nodeComments (EpaDelta _ x) = mconcat $ fmap nodeComments x
+
 -- | Marks an AST node as never appearing in the AST.
 --
 -- Some AST node types are only used in the renaming or type-checking phase.

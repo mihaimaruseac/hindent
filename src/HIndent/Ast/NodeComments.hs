@@ -25,6 +25,14 @@ instance Semigroup NodeComments where
       , commentsAfter = commentsAfter x <> commentsAfter y
       }
 
+instance Monoid NodeComments where
+  mempty =
+    NodeComments
+      { commentsBefore = mempty
+      , commentsOnSameLine = mempty
+      , commentsAfter = mempty
+      }
+
 fromEpAnn :: GHC.EpAnn a -> NodeComments
 fromEpAnn = fromEpAnn' . filterOutEofAndPragmasFromAnn
 
