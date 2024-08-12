@@ -28,7 +28,7 @@ ghc-options: -Wall -O2 -threaded
 
 dependencies:
   - Cabal
-  - async
+  - async >= 2.2.5
   - base >= 4.7 && < 5
   - bytestring
   - containers
