@@ -153,7 +153,7 @@ library
   ghc-options: -Wall -O2 -threaded
   build-depends:
       Cabal
-    , async
+    , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -188,7 +188,7 @@ library hindent-internal
   ghc-options: -Wall -O2 -threaded
   build-depends:
       Cabal
-    , async
+    , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -223,7 +223,7 @@ executable hindent
   ghc-options: -Wall -O2 -threaded
   build-depends:
       Cabal
-    , async
+    , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -260,7 +260,7 @@ test-suite hindent-test
   build-depends:
       Cabal
     , Diff
-    , async
+    , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -298,7 +298,7 @@ benchmark hindent-bench
   ghc-options: -Wall -O2 -threaded
   build-depends:
       Cabal
-    , async
+    , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
     , containers
