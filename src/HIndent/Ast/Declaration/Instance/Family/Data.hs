@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards, CPP #-}
 
 module HIndent.Ast.Declaration.Instance.Family.Data
   ( DataFamilyInstance
@@ -15,14 +15,21 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+data DataFamilyInstance = DataFamilyInstance
+  { newOrData :: NewOrData
+  , name :: WithComments PrefixName
+  , types :: GHC.HsFamEqnPats GHC.GhcPs
+  , body :: DataBody
+  }
+#else
 data DataFamilyInstance = DataFamilyInstance
   { newOrData :: NewOrData
   , name :: WithComments PrefixName
   , types :: GHC.HsTyPats GHC.GhcPs
   , body :: DataBody
   }
-
+#endif
 instance CommentExtraction DataFamilyInstance where
   nodeComments DataFamilyInstance {} = NodeComments [] [] []
 

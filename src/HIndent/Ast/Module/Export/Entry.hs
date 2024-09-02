@@ -43,11 +43,19 @@ instance Pretty ExportEntry where
   pretty' (ByModule s) = string "module " >> pretty s
 
 mkExportEntry :: GHC.IE GHC.GhcPs -> ExportEntry
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+mkExportEntry (GHC.IEVar _ name _) = SingleIdentifier name
+mkExportEntry (GHC.IEThingAbs _ name _) = SingleIdentifier name
+mkExportEntry (GHC.IEThingAll _ name _) = WithAllConstructors name
+mkExportEntry (GHC.IEThingWith _ name _ constructors _) =
+  WithSpecificConstructors name constructors
+#else
 mkExportEntry (GHC.IEVar _ name) = SingleIdentifier name
 mkExportEntry (GHC.IEThingAbs _ name) = SingleIdentifier name
 mkExportEntry (GHC.IEThingAll _ name) = WithAllConstructors name
 mkExportEntry (GHC.IEThingWith _ name _ constructors) =
   WithSpecificConstructors name constructors
+#endif
 mkExportEntry (GHC.IEModuleContents _ name) = ByModule name
 mkExportEntry GHC.IEGroup {} = neverAppears
 mkExportEntry GHC.IEDoc {} = neverAppears

@@ -15,6 +15,7 @@ module HIndent
   , getConfig
   , -- * Extension
     Extension(..)
+  , defaultExtensions
   , -- * Error
     ParseError(..)
   , prettyParseError

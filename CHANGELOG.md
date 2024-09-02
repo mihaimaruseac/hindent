@@ -4,7 +4,7 @@
 
 ### Added
 
-- Support for GHC 9.8 ([#775]).
+- Support for GHC 9.8 ([#775]) and GHC 9.10([#904]).
 - Support for `ImportPostQualified` ([#875]).
 - HIndent now formats multiple files in parallel ([#914]).
 
@@ -13,6 +13,7 @@
 - The formatting style of import declarations with constructors ([#829]).
 - HIndent no longer inserts an empty line after a standalone kind signature ([#873]).
 - Bumped Stack LTS to 22.26 ([#918]).
+- HIndent re-assumes the default extensions are enabled ([#904]).
 
 ### Fixed
 
@@ -381,6 +382,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 [#918]: https://github.com/mihaimaruseac/hindent/pull/918
 [#914]: https://github.com/mihaimaruseac/hindent/pull/914
+[#904]: https://github.com/mihaimaruseac/hindent/pull/904
 [#875]: https://github.com/mihaimaruseac/hindent/pull/875
 [#873]: https://github.com/mihaimaruseac/hindent/pull/873
 [#868]: https://github.com/mihaimaruseac/hindent/pull/868

@@ -177,7 +177,14 @@ mkSignature (GHC.InlineSig _ n GHC.InlinePragma {..}) = Inline {..}
 mkSignature (GHC.SpecSig _ n sigs _) = Specialise {..}
   where
     name = fromGenLocated $ fmap mkPrefixName n
-#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+mkSignature (GHC.SCCFunSig _ n _) = Scc name
+  where
+    name = fromGenLocated $ fmap mkPrefixName n
+mkSignature (GHC.CompleteMatchSig _ ns _) = Complete names
+  where
+    names = mkWithComments $ fmap (fromGenLocated . fmap mkPrefixName) ns
+#elif MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkSignature (GHC.SCCFunSig _ n _) = Scc name
   where
     name = fromGenLocated $ fmap mkPrefixName n
