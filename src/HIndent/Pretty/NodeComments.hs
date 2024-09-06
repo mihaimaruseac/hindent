@@ -22,7 +22,6 @@ import GHC.Types.Name.Reader
 import GHC.Types.SourceText
 import GHC.Types.SrcLoc
 import HIndent.Ast.NodeComments
-import HIndent.Pragma
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
@@ -33,55 +32,7 @@ import GHC.Unit
 -- | An interface to extract comments from an AST node.
 class CommentExtraction a where
   nodeComments :: a -> NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (HsModule GhcPs) where
-  nodeComments =
-    nodeComments . filterOutEofAndPragmasFromAnn . hsmodAnn . hsmodExt
-    where
-      filterOutEofAndPragmasFromAnn EpAnn {..} =
-        EpAnn {comments = filterOutEofAndPragmasFromComments comments, ..}
-      filterOutEofAndPragmasFromComments comments =
-        EpaCommentsBalanced
-          { priorComments = filterOutEofAndPragmas $ priorComments comments
-          , followingComments =
-              filterOutEofAndPragmas $ getFollowingComments comments
-          }
-      filterOutEofAndPragmas = filter isNeitherEofNorPragmaComment
-      isNeitherEofNorPragmaComment (L _ (EpaComment tok _)) = not $ isPragma tok
-#elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
-instance CommentExtraction (HsModule GhcPs) where
-  nodeComments =
-    nodeComments . filterOutEofAndPragmasFromAnn . hsmodAnn . hsmodExt
-    where
-      filterOutEofAndPragmasFromAnn EpAnn {..} =
-        EpAnn {comments = filterOutEofAndPragmasFromComments comments, ..}
-      filterOutEofAndPragmasFromAnn EpAnnNotUsed = EpAnnNotUsed
-      filterOutEofAndPragmasFromComments comments =
-        EpaCommentsBalanced
-          { priorComments = filterOutEofAndPragmas $ priorComments comments
-          , followingComments =
-              filterOutEofAndPragmas $ getFollowingComments comments
-          }
-      filterOutEofAndPragmas = filter isNeitherEofNorPragmaComment
-      isNeitherEofNorPragmaComment (L _ (EpaComment EpaEofComment _)) = False
-      isNeitherEofNorPragmaComment (L _ (EpaComment tok _)) = not $ isPragma tok
-#else
-instance CommentExtraction HsModule where
-  nodeComments = nodeComments . filterOutEofAndPragmasFromAnn . hsmodAnn
-    where
-      filterOutEofAndPragmasFromAnn EpAnn {..} =
-        EpAnn {comments = filterOutEofAndPragmasFromComments comments, ..}
-      filterOutEofAndPragmasFromAnn EpAnnNotUsed = EpAnnNotUsed
-      filterOutEofAndPragmasFromComments comments =
-        EpaCommentsBalanced
-          { priorComments = filterOutEofAndPragmas $ priorComments comments
-          , followingComments =
-              filterOutEofAndPragmas $ getFollowingComments comments
-          }
-      filterOutEofAndPragmas = filter isNeitherEofNorPragmaComment
-      isNeitherEofNorPragmaComment (L _ (EpaComment EpaEofComment _)) = False
-      isNeitherEofNorPragmaComment (L _ (EpaComment tok _)) = not $ isPragma tok
-#endif
+
 instance CommentExtraction l => CommentExtraction (GenLocated l e) where
   nodeComments (L l _) = nodeComments l
 
