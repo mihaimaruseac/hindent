@@ -16,6 +16,7 @@ import Data.Function
 import Data.List
 import Data.Maybe
 import GHC.Hs
+import GHC.Stack
 import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)
 import HIndent.Fixity
@@ -23,7 +24,9 @@ import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.ModulePreprocessing.CommentRelocation
 import Language.Haskell.GhclibParserEx.Fixity
 import Type.Reflection
-
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+import qualified GHC.Data.Strict as Strict
+#endif
 -- | This function modifies the given module AST for pretty-printing.
 --
 -- Pretty-printing a module without calling this function for it before may
@@ -32,7 +35,8 @@ modifyASTForPrettyPrinting :: HsModule' -> HsModule'
 modifyASTForPrettyPrinting m = relocateComments (beforeRelocation m) allComments
   where
     beforeRelocation =
-      resetLGRHSEndPositionInModule
+      resetListCompRange
+        . resetLGRHSEndPositionInModule
         . removeAllDocDs
         . closeEpAnnOfHsFunTy
         . closeEpAnnOfMatchMExt
@@ -44,14 +48,43 @@ modifyASTForPrettyPrinting m = relocateComments (beforeRelocation m) allComments
         . sortExprLStmt
         . fixFixities
     allComments = listify (not . isEofComment . ac_tok . unLoc) m
-    isEofComment EpaEofComment = True
-    isEofComment _ = False
 
 -- | This function modifies the given module AST to apply fixities of infix
 -- operators defined in the 'base' package.
 fixFixities :: HsModule' -> HsModule'
 fixFixities = applyFixities fixities
 
+-- | This function modifies the range of `HsDo` with `ListComp` so that it
+-- includes the whole list comprehension.
+--
+-- This function is necessary for `ghc-lib-parser>=9.10.1` because `HsDo`
+-- no longer includes brackets of list comprehensions in its range.
+resetListCompRange :: HsModule' -> HsModule'
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+resetListCompRange = everywhere (mkT resetListCompRange')
+  where
+    resetListCompRange' :: HsExpr GhcPs -> HsExpr GhcPs
+    resetListCompRange' (HsDo al@AnnList { al_open = Just (AddEpAnn _ (EpaSpan (RealSrcSpan open _)))
+                                         , al_close = Just (AddEpAnn _ (EpaSpan (RealSrcSpan close _)))
+                                         } ListComp (L EpAnn {..} xs)) =
+      HsDo
+        al
+        ListComp
+        (L EpAnn
+             { entry =
+                 EpaSpan
+                   $ RealSrcSpan
+                       (mkRealSrcSpan
+                          (realSrcSpanStart open)
+                          (realSrcSpanEnd close))
+                       Strict.Nothing
+             , ..
+             }
+           xs)
+    resetListCompRange' x = x
+#else
+resetListCompRange = id
+#endif
 -- | This function sets an 'LGRHS's end position to the end position of the
 -- last RHS in the 'grhssGRHSs'.
 --
@@ -82,6 +115,10 @@ removeComments = everywhere (mkT $ const emptyComments)
 -- | This function replaces all 'EpAnnNotUsed's in 'SrcSpanAnn''s with
 -- 'EpAnn's to make it possible to locate comments on them.
 replaceAllNotUsedAnns :: HsModule' -> HsModule'
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+-- 'EpAnnNotUsed' is not used since 9.10.1.
+replaceAllNotUsedAnns = id
+#else
 replaceAllNotUsedAnns = everywhere app
   where
     app ::
@@ -110,10 +147,24 @@ replaceAllNotUsedAnns = everywhere app
     emptyNameAnn = NameAnnTrailing []
     emptyAddEpAnn = AddEpAnn AnnAnyclass emptyEpaLocation
     emptyEpaLocation = EpaDelta (SameLine 0) []
-
+#endif
 -- | This function sets the start column of 'hsmodName' of the given
 -- 'HsModule' to 1 to correctly locate comments above the module name.
 resetModuleNameColumn :: HsModule' -> HsModule'
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+resetModuleNameColumn m@HsModule {hsmodName = Just (L epa@EpAnn {..} name)} =
+  m {hsmodName = Just (L newAnn name)}
+  where
+    newAnn = epa {entry = realSpanAsAnchor newSpan}
+    newSpan =
+      mkRealSrcSpan
+        (mkRealSrcLoc (srcSpanFile anc) (srcSpanStartLine anc) 1)
+        (realSrcSpanEnd anc)
+    anc =
+      case entry of
+        EpaSpan (RealSrcSpan a _) -> a
+        _ -> error "resetModuleNameColumn: not a RealSrcSpan"
+#else
 resetModuleNameColumn m@HsModule {hsmodName = Just (L (SrcSpanAnn epa@EpAnn {..} sp) name)} =
   m {hsmodName = Just (L (SrcSpanAnn newAnn sp) name)}
   where
@@ -123,6 +174,7 @@ resetModuleNameColumn m@HsModule {hsmodName = Just (L (SrcSpanAnn epa@EpAnn {..}
         (mkRealSrcLoc (srcSpanFile anc) (srcSpanStartLine anc) 1)
         (realSrcSpanEnd anc)
     anc = anchor entry
+#endif
 resetModuleNameColumn m = m
 
 -- | This function replaces the 'EpAnn' of 'fun_id' in 'FunBind' with
@@ -132,13 +184,18 @@ resetModuleNameColumn m = m
 -- also contains the name, and we use the latter one. This function
 -- prevents comments from being located in 'fun_id'.
 closeEpAnnOfFunBindFunId :: HsModule' -> HsModule'
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+-- TODO: 'EpAnnNotUsed' is not used since 9.10.1. We need to find another
+-- way to close 'EpAnn's.
+closeEpAnnOfFunBindFunId = id
+#else
 closeEpAnnOfFunBindFunId = everywhere (mkT closeEpAnn)
   where
     closeEpAnn :: HsBind GhcPs -> HsBind GhcPs
     closeEpAnn bind@FunBind {fun_id = (L (SrcSpanAnn _ l) name)} =
       bind {fun_id = L (SrcSpanAnn EpAnnNotUsed l) name}
     closeEpAnn x = x
-
+#endif
 -- | This function replaces the 'EpAnn' of 'm_ext' in 'Match' with
 -- 'EpAnnNotUsed.
 --
@@ -146,6 +203,11 @@ closeEpAnnOfFunBindFunId = everywhere (mkT closeEpAnn)
 -- information is also stored inside the 'Match'. This function removes the
 -- duplication not to locate comments on a wrong point.
 closeEpAnnOfMatchMExt :: HsModule' -> HsModule'
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+-- TODO: 'EpAnnNotUsed' is not used since 9.10.1. We need to find another
+-- way to close 'EpAnn's.
+closeEpAnnOfMatchMExt = id
+#else
 closeEpAnnOfMatchMExt = everywhere closeEpAnn
   where
     closeEpAnn ::
@@ -157,23 +219,33 @@ closeEpAnnOfMatchMExt = everywhere closeEpAnn
       , Just HRefl <- eqTypeRep g (typeRep @Match)
       , Just HRefl <- eqTypeRep h (typeRep @GhcPs) = x {m_ext = EpAnnNotUsed}
       | otherwise = x
-
+#endif
 -- | This function replaces the 'EpAnn' of the first argument of 'HsFunTy'
 -- of 'HsType'.
 --
 -- 'HsFunTy' should not have any comments. Instead, its LHS and RHS should
 -- have them.
 closeEpAnnOfHsFunTy :: HsModule' -> HsModule'
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+-- TODO: 'EpAnnNotUsed' is not used since 9.10.1. We need to find another
+-- way to close 'EpAnn's.
+closeEpAnnOfHsFunTy = id
+#else
 closeEpAnnOfHsFunTy = everywhere (mkT closeEpAnn)
   where
     closeEpAnn :: HsType GhcPs -> HsType GhcPs
     closeEpAnn (HsFunTy _ p l r) = HsFunTy EpAnnNotUsed p l r
     closeEpAnn x = x
-
+#endif
 -- | This function replaces all 'EpAnn's that contain placeholder anchors
 -- to locate comments correctly. A placeholder anchor is an anchor pointing
 -- on (-1, -1).
 closePlaceHolderEpAnns :: HsModule' -> HsModule'
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+-- TODO: 'EpAnnNotUsed' is not used since 9.10.1. We need to find another
+-- way to close 'EpAnn's.
+closePlaceHolderEpAnns = id
+#else
 closePlaceHolderEpAnns = everywhere closeEpAnn
   where
     closeEpAnn ::
@@ -186,7 +258,7 @@ closePlaceHolderEpAnns = everywhere closeEpAnn
       , (EpAnn (Anchor sp _) _ _) <- x
       , srcSpanEndLine sp == -1 && srcSpanEndCol sp == -1 = EpAnnNotUsed
       | otherwise = x
-
+#endif
 -- | This function removes all 'DocD's from the given module. They have
 -- haddocks, but the same information is stored in 'EpaCommentTok's. Thus,
 -- we need to remove the duplication.
@@ -203,7 +275,19 @@ removeAllDocDs x@HsModule {hsmodDecls = decls} =
 -- See the documentation of 'resetLGRHSEndPositionInModule' for the reason.
 resetLGRHSEndPosition ::
      LGRHS GhcPs (LHsExpr GhcPs) -> LGRHS GhcPs (LHsExpr GhcPs)
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+resetLGRHSEndPosition (L locAnn (GRHS ext@EpAnn {..} stmt body)) =
+  let lastPosition =
+        maximum $ realSrcSpanEnd . getAnc <$> listify collectAnchor body
+      newSpan = mkRealSrcSpan (realSrcSpanStart $ getAnc entry) lastPosition
+      newLocAnn = locAnn {entry = realSpanAsAnchor newSpan}
+      newAnn = ext {entry = realSpanAsAnchor newSpan}
+   in L newLocAnn (GRHS newAnn stmt body)
+  where
+    collectAnchor :: Anchor -> Bool
+    collectAnchor (EpaSpan RealSrcSpan {}) = True
+    collectAnchor _ = False
+#elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
 resetLGRHSEndPosition (L (SrcSpanAnn locAnn@EpAnn {} sp) (GRHS ext@EpAnn {..} stmt body)) =
   let lastPosition =
         maximum $ realSrcSpanEnd . anchor <$> listify collectAnchor body
@@ -227,3 +311,16 @@ resetLGRHSEndPosition (L _ (GRHS ext@EpAnn {..} stmt body)) =
     collectAnchor _ = True
 #endif
 resetLGRHSEndPosition x = x
+
+isEofComment :: EpaCommentTok -> Bool
+#if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
+isEofComment EpaEofComment = True
+#endif
+isEofComment _ = False
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+getAnc :: HasCallStack => EpaLocation' a -> RealSrcSpan
+getAnc (EpaSpan (RealSrcSpan x _)) = x
+getAnc _ = undefined
+#else
+getAnc = anchor
+#endif

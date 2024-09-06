@@ -21,7 +21,7 @@ import Distribution.PackageDescription.Parsec
 import Distribution.PackageDescription.Parse
 #endif
 import HIndent.Language
-import HIndent.LanguageExtension
+import HIndent.LanguageExtension hiding (defaultExtensions)
 import HIndent.LanguageExtension.Conversion
 import HIndent.LanguageExtension.Types
 import Language.Haskell.Extension hiding (Extension)

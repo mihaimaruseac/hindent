@@ -58,7 +58,10 @@ line-length: 80
 force-trailing-newline: true
 sort-imports: true
 line-breaks: []
-extensions: []
+extensions: [
+    "GHC2021",
+    "ListTuplePuns",
+]
 ```
 
 By default, hindent preserves the newline or lack of newline in your input. With `force-trailing-newline`, it will make sure there is always a trailing newline.

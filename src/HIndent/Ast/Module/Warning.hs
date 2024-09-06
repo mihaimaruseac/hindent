@@ -16,7 +16,13 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+data ModuleWarning = ModuleWarning
+  { messages :: [GHC.LocatedE
+                   (GHC.WithHsDocIdentifiers GHC.StringLiteral GHC.GhcPs)]
+  , kind :: Kind
+  }
+#elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
 data ModuleWarning = ModuleWarning
   { messages :: [GHC.Located
                    (GHC.WithHsDocIdentifiers GHC.StringLiteral GHC.GhcPs)]
@@ -54,6 +60,12 @@ fromWarningTxt (GHC.WarningTxt _ messages) = ModuleWarning {..}
   where
     kind = Warning
 #endif
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 fromWarningTxt (GHC.DeprecatedTxt _ messages) = ModuleWarning {..}
   where
     kind = Deprecated
+#else
+fromWarningTxt (GHC.DeprecatedTxt _ messages) = ModuleWarning {..}
+  where
+    kind = Deprecated
+#endif

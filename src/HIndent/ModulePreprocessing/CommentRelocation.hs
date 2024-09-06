@@ -44,6 +44,7 @@ import Control.Monad.State
 import Data.Foldable
 import Data.Function
 import Data.List
+import Data.Traversable
 import GHC.Data.Bag
 import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)
@@ -51,7 +52,7 @@ import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.Pragma
 import HIndent.Pretty.SigBindFamily
 import Type.Reflection
-#if MIN_VERSION_GLASGOW_HASKELL(9,6,0,0)
+#if MIN_VERSION_GLASGOW_HASKELL(9, 6, 0, 0)
 import Control.Monad
 #endif
 -- | A wrapper type used in everywhereMEpAnnsBackwards' to collect all
@@ -80,6 +81,7 @@ relocateComments = evalState . relocate
         >=> relocateCommentsTopLevelWhereClause
         >=> relocateCommentsAfter
         >=> assertAllCommentsAreConsumed
+        >=> moveCommentsFromFunIdToMcFun
     assertAllCommentsAreConsumed x = do
       cs <- get
       assert (null cs) (pure x)
@@ -98,7 +100,20 @@ relocatePragmas m@HsModule {hsmodAnn = epa@EpAnn {}} = do
 relocatePragmas m = pure m
 -- | This function locates comments that are located before pragmas to the
 -- module's EPA.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+relocateCommentsBeforePragmas :: HsModule GhcPs -> WithComments (HsModule GhcPs)
+relocateCommentsBeforePragmas m@HsModule {hsmodExt = xmod@XModulePs {hsmodAnn = ann}}
+  | pragmaExists m = do
+    newAnn <- insertCommentsByPos (< startPosOfPragmas) insertPriorComments ann
+    pure m {hsmodExt = xmod {hsmodAnn = newAnn}}
+  | otherwise = pure m
+  where
+    startPosOfPragmas =
+      let loc = getLoc $ head $ priorComments $ comments ann
+       in case loc of
+            EpaSpan (RealSrcSpan sp _) -> sp
+            _ -> undefined
+#elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
 relocateCommentsBeforePragmas :: HsModule GhcPs -> WithComments (HsModule GhcPs)
 relocateCommentsBeforePragmas m@HsModule {hsmodExt = xmod@XModulePs {hsmodAnn = ann}}
   | pragmaExists m = do
@@ -117,6 +132,197 @@ relocateCommentsBeforePragmas m@HsModule {hsmodAnn = ann}
   where
     startPosOfPragmas = anchor $ getLoc $ head $ priorComments $ comments ann
 #endif
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+-- | This function locates comments that are located before each element of
+-- an export list.
+relocateCommentsInExportList :: HsModule' -> WithComments HsModule'
+relocateCommentsInExportList =
+  relocateCommentsBeforeEachElement
+    elemGetter
+    elemSetter
+    annGetter
+    annSetter
+    cond
+  where
+    elemGetter :: HsModule' -> [LIE GhcPs]
+    elemGetter HsModule {hsmodExports = Just (L _ xs)} = xs
+    elemGetter _ = []
+    elemSetter xs HsModule {hsmodExports = Just (L sp _), ..} =
+      HsModule {hsmodExports = Just (L sp xs), ..}
+    elemSetter _ x = x
+    annGetter (L ann _) = ann
+    annSetter newAnn (L _ x) = L newAnn x
+    cond HsModule {hsmodExports = Just (L EpAnn {entry = EpaSpan (RealSrcSpan listAnc _)} _)} (L EpAnn {entry = EpaSpan (RealSrcSpan elemAnc _)} _) comAnc =
+      srcSpanStartLine comAnc < srcSpanStartLine elemAnc
+        && realSrcSpanStart listAnc < realSrcSpanStart comAnc
+    cond _ _ _ = False
+
+-- | Locates comments before each case branch.
+relocateCommentsInCase :: HsModule' -> WithComments HsModule'
+relocateCommentsInCase =
+  relocateCommentsBeforeEachElement
+    elemGetter
+    elemSetter
+    annGetter
+    annSetter
+    cond
+  where
+    elemGetter :: LHsExpr GhcPs -> [LMatch GhcPs (LHsExpr GhcPs)]
+    elemGetter (L _ (HsCase _ _ (MG {mg_alts = L _ xs}))) = xs
+    elemGetter _ = []
+    elemSetter xs (L sp (HsCase ext expr (MG {mg_alts = L sp' _, ..}))) =
+      L sp (HsCase ext expr (MG {mg_alts = L sp' xs, ..}))
+    elemSetter _ x = x
+    annGetter (L ann _) = ann
+    annSetter newAnn (L _ x) = L newAnn x
+    cond (L EpAnn {entry = EpaSpan (RealSrcSpan caseAnchor _)} _) (L EpAnn {entry = EpaSpan (RealSrcSpan branchAnchor _)} _) comAnc =
+      srcSpanStartLine comAnc < srcSpanStartLine branchAnchor
+        && realSrcSpanStart caseAnchor < realSrcSpanStart comAnc
+    cond _ _ _ = False
+
+-- | Locates comments before each class element.
+relocateCommentsInClass :: HsModule' -> WithComments HsModule'
+relocateCommentsInClass =
+  relocateCommentsBeforeEachElement
+    elemGetter
+    elemSetter
+    annGetter
+    annSetter
+    cond
+  where
+    elemGetter :: LHsDecl GhcPs -> [LSigBindFamily]
+    elemGetter (L _ (TyClD _ ClassDecl {..})) =
+      mkSortedLSigBindFamilyList
+        tcdSigs
+        (bagToList tcdMeths)
+        tcdATs
+        tcdATDefs
+        []
+    elemGetter _ = []
+    elemSetter xs (L sp (TyClD ext ClassDecl {..})) = L sp (TyClD ext newDecl)
+      where
+        newDecl =
+          ClassDecl
+            { tcdSigs = sigs
+            , tcdMeths = listToBag binds
+            , tcdATs = typeFamilies
+            , tcdATDefs = tyFamInsts
+            , ..
+            }
+        (sigs, binds, typeFamilies, tyFamInsts, _) =
+          destructLSigBindFamilyList xs
+    elemSetter _ x = x
+    annGetter (L ann _) = ann
+    annSetter newAnn (L _ x) = L newAnn x
+    cond (L EpAnn {entry = EpaSpan (RealSrcSpan classAnchor _)} _) (L EpAnn {entry = EpaSpan (RealSrcSpan elemAnchor _)} _) comAnc =
+      srcSpanStartLine comAnc < srcSpanStartLine elemAnchor
+        && realSrcSpanStart classAnchor < realSrcSpanStart comAnc
+    cond _ _ _ = False
+
+-- | Locates comments before each statement in a do expression.
+relocateCommentsInDoExpr :: HsModule' -> WithComments HsModule'
+relocateCommentsInDoExpr =
+  relocateCommentsBeforeEachElement
+    elemGetter
+    elemSetter
+    annGetter
+    annSetter
+    cond
+  where
+    elemGetter :: LHsExpr GhcPs -> [ExprLStmt GhcPs]
+    elemGetter (L _ (HsDo _ DoExpr {} (L _ xs))) = xs
+    elemGetter (L _ (HsDo _ MDoExpr {} (L _ xs))) = xs
+    elemGetter _ = []
+    elemSetter xs (L sp (HsDo ext flavor@DoExpr {} (L sp' _))) =
+      L sp (HsDo ext flavor (L sp' xs))
+    elemSetter xs (L sp (HsDo ext flavor@MDoExpr {} (L sp' _))) =
+      L sp (HsDo ext flavor (L sp' xs))
+    elemSetter _ x = x
+    annGetter (L ann _) = ann
+    annSetter newAnn (L _ x) = L newAnn x
+    cond (L EpAnn {entry = EpaSpan (RealSrcSpan doAnchor _)} _) (L EpAnn {entry = EpaSpan (RealSrcSpan elemAnchor _)} _) comAnc =
+      srcSpanStartLine comAnc < srcSpanStartLine elemAnchor
+        && realSrcSpanStart doAnchor < realSrcSpanStart comAnc
+    cond _ _ _ = False
+
+-- | This function locates comments located before top-level declarations.
+relocateCommentsBeforeTopLevelDecls :: HsModule' -> WithComments HsModule'
+relocateCommentsBeforeTopLevelDecls = everywhereM (applyM f)
+  where
+    f epa@EpAnn {..}
+      | EpaSpan (RealSrcSpan anc _) <- entry =
+        insertCommentsByPos (isBefore anc) insertPriorComments epa
+      | otherwise = pure epa
+    isBefore anc comAnc =
+      srcSpanStartCol anc == 1
+        && srcSpanStartCol comAnc == 1
+        && srcSpanStartLine comAnc < srcSpanStartLine anc
+
+-- | This function scans the given AST from bottom to top and locates
+-- comments that are on the same line as the node.  Comments are stored in
+-- the 'followingComments' of 'EpaCommentsBalanced'.
+relocateCommentsSameLine :: HsModule' -> WithComments HsModule'
+relocateCommentsSameLine = everywhereMEpAnnsBackwards f
+  where
+    f epa@EpAnn {..}
+      | EpaSpan (RealSrcSpan anc _) <- entry =
+        insertCommentsByPos (isOnSameLine anc) insertFollowingComments epa
+      | otherwise = pure epa
+    isOnSameLine anc comAnc =
+      srcSpanStartLine comAnc == srcSpanStartLine anc
+        && srcSpanStartLine comAnc == srcSpanEndLine anc
+
+-- | This function locates comments above the top-level declarations in
+-- a 'where' clause in the topmost declaration.
+relocateCommentsTopLevelWhereClause :: HsModule' -> WithComments HsModule'
+relocateCommentsTopLevelWhereClause m@HsModule {..} = do
+  hsmodDecls' <- mapM relocateCommentsDeclWhereClause hsmodDecls
+  pure m {hsmodDecls = hsmodDecls'}
+  where
+    relocateCommentsDeclWhereClause (L l (ValD ext fb@(FunBind {fun_matches = MG {..}}))) = do
+      mg_alts' <- mapM (mapM relocateCommentsMatch) mg_alts
+      pure $ L l (ValD ext fb {fun_matches = MG {mg_alts = mg_alts', ..}})
+    relocateCommentsDeclWhereClause x = pure x
+    relocateCommentsMatch (L l match@Match {m_grhss = gs@GRHSs {grhssLocalBinds = (HsValBinds ext (ValBinds ext' binds sigs))}}) = do
+      (binds', sigs') <- relocateCommentsBindsSigs binds sigs
+      let localBinds = HsValBinds ext (ValBinds ext' binds' sigs')
+      pure $ L l match {m_grhss = gs {grhssLocalBinds = localBinds}}
+    relocateCommentsMatch x = pure x
+    relocateCommentsBindsSigs ::
+         LHsBindsLR GhcPs GhcPs
+      -> [LSig GhcPs]
+      -> WithComments (LHsBindsLR GhcPs GhcPs, [LSig GhcPs])
+    relocateCommentsBindsSigs binds sigs = do
+      bindsSigs' <- mapM addCommentsBeforeEpAnn bindsSigs
+      pure (listToBag $ filterLBind bindsSigs', filterLSig bindsSigs')
+      where
+        bindsSigs = mkSortedLSigBindFamilyList sigs (bagToList binds) [] [] []
+    addCommentsBeforeEpAnn (L epa@EpAnn {..} x)
+      | EpaSpan (RealSrcSpan anc _) <- entry = do
+        cs <- get
+        let (notAbove, above) =
+              partitionAboveNotAbove (sortCommentsByLocation cs) anc
+            epa' = epa {comments = insertPriorComments comments above}
+        put notAbove
+        pure $ L epa' x
+      | otherwise = undefined
+    addCommentsBeforeEpAnn x = pure x
+    partitionAboveNotAbove cs sp =
+      fst
+        $ foldr'
+            (\c@(L l _) ((ls, rs), lastSpan) ->
+               case l of
+                 EpaSpan (RealSrcSpan anc _) ->
+                   if anc `isAbove` lastSpan
+                     then ((ls, c : rs), anc)
+                     else ((c : ls, rs), lastSpan)
+                 _ -> undefined)
+            (([], []), sp)
+            cs
+    isAbove comAnc anc =
+      srcSpanStartCol comAnc == srcSpanStartCol anc
+        && srcSpanEndLine comAnc + 1 == srcSpanStartLine anc
+#else
 -- | This function locates comments that are located before each element of
 -- an export list.
 relocateCommentsInExportList :: HsModule' -> WithComments HsModule'
@@ -302,17 +508,24 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
     isAbove comAnc anc =
       srcSpanStartCol comAnc == srcSpanStartCol anc
         && srcSpanEndLine comAnc + 1 == srcSpanStartLine anc
-
+#endif
 -- | This function scans the given AST from bottom to top and locates
 -- comments in the comment pool after each node on it.
 relocateCommentsAfter :: HsModule' -> WithComments HsModule'
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+relocateCommentsAfter = everywhereMEpAnnsBackwards f
+  where
+    f epa@EpAnn {..} =
+      insertCommentsByPos (isAfter $ anchor entry) insertFollowingComments epa
+    isAfter anc comAnc = srcSpanEndLine anc <= srcSpanStartLine comAnc
+#else
 relocateCommentsAfter = everywhereMEpAnnsBackwards f
   where
     f epa@EpAnn {..} =
       insertCommentsByPos (isAfter $ anchor entry) insertFollowingComments epa
     f EpAnnNotUsed = pure EpAnnNotUsed
     isAfter anc comAnc = srcSpanEndLine anc <= srcSpanStartLine comAnc
-
+#endif
 -- | Locates comments before each element in a parent.
 relocateCommentsBeforeEachElement ::
      forall a b c. Typeable a
@@ -367,8 +580,9 @@ insertComments ::
 insertComments cond inserter epa@EpAnn {..} = do
   coms <- drainComments cond
   pure $ epa {comments = inserter comments coms}
+#if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 insertComments _ _ EpAnnNotUsed = pure EpAnnNotUsed
-
+#endif
 -- | This function inserts comments to `priorComments`.
 insertPriorComments :: EpAnnComments -> [LEpaComment] -> EpAnnComments
 insertPriorComments (EpaComments prior) cs =
@@ -462,14 +676,66 @@ everywhereMEpAnnsInOrder cmp f hm =
               _ -> error "Unmatches"
           | otherwise = pure x
 
+-- | This function moves comments in `fun_id` of `FunBind` to
+-- `mc_fun` of `HsMatchContext`.
+--
+-- This is a workaround for the issue that `EpAnn`s in `mc_fun` cannot be
+-- closed since 9.10.1.
+moveCommentsFromFunIdToMcFun :: HsModule' -> WithComments HsModule'
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+moveCommentsFromFunIdToMcFun = pure . everywhere (mkT f)
+  where
+    f :: HsBind GhcPs -> HsBind GhcPs
+    f fb@FunBind { fun_id = L EpAnn {comments = from, ..} fid
+                 , fun_matches = MG {mg_alts = L l alts, ..}
+                 } =
+      fb
+        { fun_id = L EpAnn {comments = EpaCommentsBalanced [] [], ..} fid
+        , fun_matches = MG {mg_alts = L l alts', ..}
+        }
+      where
+        alts' =
+          fmap
+            (\(L l' x) ->
+               case x of
+                 Match {m_ctxt = FunRhs {mc_fun = L EpAnn {..} fun, ..}, ..} ->
+                   L
+                     l'
+                     Match
+                       { m_ctxt =
+                           FunRhs
+                             {mc_fun = L EpAnn {comments = from, ..} fun, ..}
+                       , ..
+                       }
+                 x'' -> L l' x'')
+            alts
+    f x = x
+#else
+moveCommentsFromFunIdToMcFun = pure
+#endif
 -- | This function sorts comments by its location.
 sortCommentsByLocation :: [LEpaComment] -> [LEpaComment]
 sortCommentsByLocation = sortBy (compare `on` anchor . getLoc)
 
 -- | This function compares given EPAs by their end positions.
 compareEpaByEndPosition :: EpAnn a -> EpAnn b -> Ordering
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+compareEpaByEndPosition (EpAnn (EpaSpan a) _ _) (EpAnn (EpaSpan b) _ _) =
+  case (a, b) of
+    (RealSrcSpan a' _, RealSrcSpan b' _) ->
+      compare (realSrcSpanEnd a') (realSrcSpanEnd b')
+    (UnhelpfulSpan _, UnhelpfulSpan _) -> EQ
+    (_, UnhelpfulSpan _) -> GT
+    (UnhelpfulSpan _, _) -> LT
+compareEpaByEndPosition (EpAnn a _ _) (EpAnn b _ _) =
+  case (a, b) of
+    (EpaDelta {}, EpaDelta {}) -> EQ
+    (_, EpaDelta {}) -> GT
+    (EpaDelta {}, _) -> LT
+#else
 compareEpaByEndPosition (EpAnn a _ _) (EpAnn b _ _) =
   on compare (realSrcSpanEnd . anchor) a b
 compareEpaByEndPosition EpAnnNotUsed EpAnnNotUsed = EQ
 compareEpaByEndPosition _ EpAnnNotUsed = GT
 compareEpaByEndPosition EpAnnNotUsed _ = LT
+#endif

@@ -7,6 +7,7 @@ module HIndent.Ast.WithComments
   , prettyWith
   , fromGenLocated
   , fromEpAnn
+  , mkWithComments
   , getNode
   ) where
 
@@ -84,6 +85,9 @@ fromGenLocated (GHC.L l a) = WithComments (nodeComments l) a
 
 fromEpAnn :: GHC.EpAnn a -> b -> WithComments b
 fromEpAnn ann = WithComments (NodeComments.fromEpAnn ann)
+
+mkWithComments :: a -> WithComments a
+mkWithComments = WithComments mempty
 
 getNode :: WithComments a -> a
 getNode = node
