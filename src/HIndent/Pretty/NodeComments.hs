@@ -730,34 +730,38 @@ instance CommentExtraction (DotFieldOcc GhcPs) where
 instance CommentExtraction (HsFieldLabel GhcPs) where
   nodeComments HsFieldLabel {..} = nodeComments hflExt
 #endif
+instance CommentExtraction (RuleDecls GhcPs) where
+  nodeComments = nodeCommentsRuleDecls
 
+nodeCommentsRuleDecls :: RuleDecls GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (RuleDecls GhcPs) where
-  nodeComments HsRules {..} = mconcat $ fmap nodeComments $ fst rds_ext
+nodeCommentsRuleDecls HsRules {..} = mconcat $ fmap nodeComments $ fst rds_ext
 #elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
-instance CommentExtraction (RuleDecls GhcPs) where
-  nodeComments HsRules {..} = nodeComments $ fst rds_ext
+nodeCommentsRuleDecls HsRules {..} = nodeComments $ fst rds_ext
 #else
-instance CommentExtraction (RuleDecls GhcPs) where
-  nodeComments HsRules {..} = nodeComments rds_ext
+nodeCommentsRuleDecls HsRules {..} = nodeComments rds_ext
 #endif
+instance CommentExtraction (RuleDecl GhcPs) where
+  nodeComments = nodeCommentsRuleDecl
 
+nodeCommentsRuleDecl :: RuleDecl GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-instance CommentExtraction (RuleDecl GhcPs) where
-  nodeComments HsRule {..} = nodeComments $ fst rd_ext
+nodeCommentsRuleDecl HsRule {..} = nodeComments $ fst rd_ext
 #else
-instance CommentExtraction (RuleDecl GhcPs) where
-  nodeComments HsRule {..} = nodeComments rd_ext
+nodeCommentsRuleDecl HsRule {..} = nodeComments rd_ext
 #endif
 instance CommentExtraction OccName where
   nodeComments = const emptyNodeComments
+
+instance CommentExtraction (DerivDecl GhcPs) where
+  nodeComments = nodeCommentsDerivDecl
+
+nodeCommentsDerivDecl :: DerivDecl GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (DerivDecl GhcPs) where
-  nodeComments DerivDecl {deriv_ext = (x, xs)} =
-    mconcat $ maybeToList (fmap nodeComments x) <> fmap nodeComments xs
+nodeCommentsDerivDecl DerivDecl {deriv_ext = (x, xs)} =
+  mconcat $ maybeToList (fmap nodeComments x) <> fmap nodeComments xs
 #else
-instance CommentExtraction (DerivDecl GhcPs) where
-  nodeComments DerivDecl {..} = nodeComments deriv_ext
+nodeCommentsDerivDecl DerivDecl {..} = nodeComments deriv_ext
 #endif
 -- | 'Pretty' for 'LHsSigWcType GhcPs'.
 instance CommentExtraction
