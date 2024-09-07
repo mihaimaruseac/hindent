@@ -809,15 +809,13 @@ nodeCommentsForeignDecl ForeignExport {..} = nodeComments fd_e_ext
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 instance CommentExtraction (ForeignImport GhcPs) where
   nodeComments CImport {} = emptyNodeComments
-#else
-instance CommentExtraction ForeignImport where
-  nodeComments CImport {} = emptyNodeComments
-#endif
 
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance CommentExtraction (ForeignExport GhcPs) where
   nodeComments CExport {} = emptyNodeComments
 #else
+instance CommentExtraction ForeignImport where
+  nodeComments CImport {} = emptyNodeComments
+
 instance CommentExtraction ForeignExport where
   nodeComments CExport {} = emptyNodeComments
 #endif
@@ -828,30 +826,39 @@ instance CommentExtraction Safety where
   nodeComments PlaySafe = emptyNodeComments
   nodeComments PlayInterruptible = emptyNodeComments
   nodeComments PlayRisky = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+
 instance CommentExtraction (AnnDecl GhcPs) where
-  nodeComments (HsAnnotation (x, _) _ _) = nodeComments x
+  nodeComments = nodeCommentsAnnDecl
+
+nodeCommentsAnnDecl :: AnnDecl GhcPs -> NodeComments
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+nodeCommentsAnnDecl (HsAnnotation (x, _) _ _) = nodeComments x
 #else
-instance CommentExtraction (AnnDecl GhcPs) where
-  nodeComments (HsAnnotation x _ _ _) = nodeComments x
+nodeCommentsAnnDecl (HsAnnotation x _ _ _) = nodeComments x
 #endif
+instance CommentExtraction (RoleAnnotDecl GhcPs) where
+  nodeComments = nodeCommentsRoleAnnotDecl
+
+nodeCommentsRoleAnnotDecl :: RoleAnnotDecl GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (RoleAnnotDecl GhcPs) where
-  nodeComments (RoleAnnotDecl x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsRoleAnnotDecl (RoleAnnotDecl x _ _) = mconcat $ fmap nodeComments x
 #else
-instance CommentExtraction (RoleAnnotDecl GhcPs) where
-  nodeComments (RoleAnnotDecl x _ _) = nodeComments x
+nodeCommentsRoleAnnotDecl (RoleAnnotDecl x _ _) = nodeComments x
 #endif
 instance CommentExtraction Role where
   nodeComments Nominal = emptyNodeComments
   nodeComments Representational = emptyNodeComments
   nodeComments Phantom = emptyNodeComments
+
+instance CommentExtraction (TyFamInstDecl GhcPs) where
+  nodeComments = nodeCommentsTyFamInstDecl
+
+nodeCommentsTyFamInstDecl :: TyFamInstDecl GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (TyFamInstDecl GhcPs) where
-  nodeComments TyFamInstDecl {..} = mconcat $ fmap nodeComments tfid_xtn
+nodeCommentsTyFamInstDecl TyFamInstDecl {..} =
+  mconcat $ fmap nodeComments tfid_xtn
 #else
-instance CommentExtraction (TyFamInstDecl GhcPs) where
-  nodeComments TyFamInstDecl {..} = nodeComments tfid_xtn
+nodeCommentsTyFamInstDecl TyFamInstDecl {..} = nodeComments tfid_xtn
 #endif
 instance CommentExtraction TopLevelTyFamInstDecl where
   nodeComments (TopLevelTyFamInstDecl x) = nodeComments x
