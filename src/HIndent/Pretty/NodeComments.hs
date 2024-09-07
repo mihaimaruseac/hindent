@@ -480,32 +480,16 @@ instance CommentExtraction
            (HsRecField' (FieldOcc GhcPs) (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
   nodeComments HsRecField {..} = nodeComments hsRecFieldAnn
 #endif
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
+instance CommentExtraction (HsFieldBind a b) where
+  nodeComments = nodeCommentsHsFieldBind
+
+nodeCommentsHsFieldBind :: HsFieldBind a b -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction
-           (HsFieldBind
-              (GenLocated SrcSpanAnnA (FieldOcc GhcPs))
-              (GenLocated SrcSpanAnnA (Pat GhcPs))) where
-  nodeComments HsFieldBind {..} = mconcat $ fmap nodeComments hfbAnn
-
-instance CommentExtraction
-           (HsFieldBind
-              (GenLocated SrcSpanAnnA (FieldOcc GhcPs))
-              (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
-  nodeComments HsFieldBind {..} = mconcat $ fmap nodeComments hfbAnn
-#elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
--- | For pattern matchings against records.
-instance CommentExtraction
-           (HsFieldBind
-              (GenLocated (SrcAnn NoEpAnns) (FieldOcc GhcPs))
-              (GenLocated SrcSpanAnnA (Pat GhcPs))) where
-  nodeComments HsFieldBind {..} = nodeComments hfbAnn
-
--- | For record updates.
-instance CommentExtraction
-           (HsFieldBind
-              (GenLocated (SrcAnn NoEpAnns) (FieldOcc GhcPs))
-              (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
-  nodeComments HsFieldBind {..} = nodeComments hfbAnn
+nodeCommentsHsFieldBind HsFieldBind {..} = mconcat $ fmap nodeComments hfbAnn
+#else
+nodeCommentsHsFieldBind HsFieldBind {..} = nodeComments hfbAnn
+#endif
 #else
 instance CommentExtraction RecConField where
   nodeComments (RecConField x) = nodeComments x
