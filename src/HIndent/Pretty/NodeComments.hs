@@ -195,15 +195,6 @@ instance CommentExtraction (HsSigType GhcPs) where
 instance CommentExtraction HsSigType' where
   nodeComments (HsSigType' _ _ HsSig {}) = emptyNodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (ConDecl GhcPs) where
-  nodeComments ConDeclGADT {..} = mconcat $ fmap nodeComments $ snd con_g_ext
-  nodeComments ConDeclH98 {..} = mconcat $ fmap nodeComments con_ext
-#else
-instance CommentExtraction (ConDecl GhcPs) where
-  nodeComments ConDeclGADT {..} = nodeComments con_g_ext
-  nodeComments ConDeclH98 {..} = nodeComments con_ext
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance CommentExtraction (Match GhcPs a) where
   nodeComments Match {..} = mconcat $ fmap nodeComments m_ext
 #else
