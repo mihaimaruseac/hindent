@@ -35,23 +35,6 @@ class CommentExtraction a where
 
 instance CommentExtraction l => CommentExtraction (GenLocated l e) where
   nodeComments (L l _) = nodeComments l
-
-instance CommentExtraction (HsDecl GhcPs) where
-  nodeComments TyClD {} = emptyNodeComments
-  nodeComments InstD {} = emptyNodeComments
-  nodeComments DerivD {} = emptyNodeComments
-  nodeComments ValD {} = emptyNodeComments
-  nodeComments SigD {} = emptyNodeComments
-  nodeComments KindSigD {} = emptyNodeComments
-  nodeComments DefD {} = emptyNodeComments
-  nodeComments ForD {} = emptyNodeComments
-  nodeComments WarningD {} = emptyNodeComments
-  nodeComments AnnD {} = emptyNodeComments
-  nodeComments RuleD {} = emptyNodeComments
-  nodeComments SpliceD {} = emptyNodeComments
-  nodeComments DocD {} =
-    error "Document comments should be treated as normal ones."
-  nodeComments RoleAnnotD {} = emptyNodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 0)
 instance CommentExtraction (TyClDecl GhcPs) where
   nodeComments FamDecl {} = emptyNodeComments
