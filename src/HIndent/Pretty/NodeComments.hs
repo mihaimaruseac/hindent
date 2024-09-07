@@ -36,55 +36,6 @@ class CommentExtraction a where
 instance CommentExtraction l => CommentExtraction (GenLocated l e) where
   nodeComments (L l _) = nodeComments l
 
-instance CommentExtraction (HsBind GhcPs) where
-  nodeComments = nodeCommentsHsBind
-
-nodeCommentsHsBind :: HsBind GhcPs -> NodeComments
-nodeCommentsHsBind FunBind {..} = nodeComments fun_id
-#if MIN_VERSION_ghc_lib_parser(9, 10, 0)
-nodeCommentsHsBind PatBind {} = emptyNodeComments
-#else
-nodeCommentsHsBind PatBind {..} = nodeComments pat_ext
-#endif
-nodeCommentsHsBind VarBind {} = emptyNodeComments
-#if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
-nodeCommentsHsBind AbsBinds {} = emptyNodeComments
-#endif
-nodeCommentsHsBind PatSynBind {} = emptyNodeComments
-
-instance CommentExtraction (Sig GhcPs) where
-  nodeComments = nodeCommentsSig
-
-nodeCommentsSig :: Sig GhcPs -> NodeComments
-nodeCommentsSig (TypeSig x _ _) = nodeComments x
-nodeCommentsSig (PatSynSig x _ _) = nodeComments x
-nodeCommentsSig (ClassOpSig x _ _ _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsSig (FixSig x _) = mconcat $ fmap nodeComments x
-nodeCommentsSig (InlineSig x _ _) = mconcat $ fmap nodeComments x
-nodeCommentsSig (SpecSig x _ _ _) = mconcat $ fmap nodeComments x
-nodeCommentsSig (SpecInstSig (x, _) _) = mconcat $ fmap nodeComments x
-nodeCommentsSig (MinimalSig (x, _) _) = mconcat $ fmap nodeComments x
-nodeCommentsSig (SCCFunSig (x, _) _ _) = mconcat $ fmap nodeComments x
-nodeCommentsSig (CompleteMatchSig (x, _) _ _) = mconcat $ fmap nodeComments x
-#elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
-nodeCommentsSig (FixSig x _) = nodeComments x
-nodeCommentsSig (InlineSig x _ _) = nodeComments x
-nodeCommentsSig (SpecSig x _ _ _) = nodeComments x
-nodeCommentsSig (SpecInstSig (x, _) _) = nodeComments x
-nodeCommentsSig (MinimalSig (x, _) _) = nodeComments x
-nodeCommentsSig (SCCFunSig (x, _) _ _) = nodeComments x
-nodeCommentsSig (CompleteMatchSig (x, _) _ _) = nodeComments x
-#else
-nodeCommentsSig (FixSig x _) = nodeComments x
-nodeCommentsSig (InlineSig x _ _) = nodeComments x
-nodeCommentsSig (SpecSig x _ _ _) = nodeComments x
-nodeCommentsSig IdSig {} = emptyNodeComments
-nodeCommentsSig (SpecInstSig x _ _) = nodeComments x
-nodeCommentsSig (MinimalSig x _ _) = nodeComments x
-nodeCommentsSig (SCCFunSig x _ _ _) = nodeComments x
-nodeCommentsSig (CompleteMatchSig x _ _ _) = nodeComments x
-#endif
 instance CommentExtraction (HsDataDefn GhcPs) where
   nodeComments HsDataDefn {} = emptyNodeComments
 
@@ -490,6 +441,55 @@ instance CommentExtraction EpAnnUnboundVar where
 instance CommentExtraction AnnSig where
   nodeComments AnnSig {..} = mconcat $ fmap nodeComments $ asDcolon : asRest
 
+instance CommentExtraction (HsBind GhcPs) where
+  nodeComments = nodeCommentsHsBind
+
+nodeCommentsHsBind :: HsBind GhcPs -> NodeComments
+nodeCommentsHsBind FunBind {..} = nodeComments fun_id
+#if MIN_VERSION_ghc_lib_parser(9, 10, 0)
+nodeCommentsHsBind PatBind {} = emptyNodeComments
+#else
+nodeCommentsHsBind PatBind {..} = nodeComments pat_ext
+#endif
+nodeCommentsHsBind VarBind {} = emptyNodeComments
+#if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
+nodeCommentsHsBind AbsBinds {} = emptyNodeComments
+#endif
+nodeCommentsHsBind PatSynBind {} = emptyNodeComments
+
+instance CommentExtraction (Sig GhcPs) where
+  nodeComments = nodeCommentsSig
+
+nodeCommentsSig :: Sig GhcPs -> NodeComments
+nodeCommentsSig (TypeSig x _ _) = nodeComments x
+nodeCommentsSig (PatSynSig x _ _) = nodeComments x
+nodeCommentsSig (ClassOpSig x _ _ _) = nodeComments x
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+nodeCommentsSig (FixSig x _) = mconcat $ fmap nodeComments x
+nodeCommentsSig (InlineSig x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsSig (SpecSig x _ _ _) = mconcat $ fmap nodeComments x
+nodeCommentsSig (SpecInstSig (x, _) _) = mconcat $ fmap nodeComments x
+nodeCommentsSig (MinimalSig (x, _) _) = mconcat $ fmap nodeComments x
+nodeCommentsSig (SCCFunSig (x, _) _ _) = mconcat $ fmap nodeComments x
+nodeCommentsSig (CompleteMatchSig (x, _) _ _) = mconcat $ fmap nodeComments x
+#elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
+nodeCommentsSig (FixSig x _) = nodeComments x
+nodeCommentsSig (InlineSig x _ _) = nodeComments x
+nodeCommentsSig (SpecSig x _ _ _) = nodeComments x
+nodeCommentsSig (SpecInstSig (x, _) _) = nodeComments x
+nodeCommentsSig (MinimalSig (x, _) _) = nodeComments x
+nodeCommentsSig (SCCFunSig (x, _) _ _) = nodeComments x
+nodeCommentsSig (CompleteMatchSig (x, _) _ _) = nodeComments x
+#else
+nodeCommentsSig (FixSig x _) = nodeComments x
+nodeCommentsSig (InlineSig x _ _) = nodeComments x
+nodeCommentsSig (SpecSig x _ _ _) = nodeComments x
+nodeCommentsSig IdSig {} = emptyNodeComments
+nodeCommentsSig (SpecInstSig x _ _) = nodeComments x
+nodeCommentsSig (MinimalSig x _ _) = nodeComments x
+nodeCommentsSig (SCCFunSig x _ _ _) = nodeComments x
+nodeCommentsSig (CompleteMatchSig x _ _ _) = nodeComments x
+#endif
 instance CommentExtraction (HsExpr GhcPs) where
   nodeComments = nodeCommentsHsExpr
 
