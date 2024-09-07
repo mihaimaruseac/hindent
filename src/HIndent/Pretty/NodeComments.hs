@@ -494,13 +494,9 @@ nodeCommentsHsFieldBind HsFieldBind {..} = nodeComments hfbAnn
 instance CommentExtraction RecConField where
   nodeComments (RecConField x) = nodeComments x
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance CommentExtraction (FieldOcc GhcPs) where
   nodeComments FieldOcc {} = emptyNodeComments
-#else
-instance CommentExtraction (FieldOcc GhcPs) where
-  nodeComments FieldOcc {} = emptyNodeComments
-#endif
+
 -- HsConDeclH98Details
 instance CommentExtraction
            (HsConDetails
