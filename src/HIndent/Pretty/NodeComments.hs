@@ -204,49 +204,23 @@ nodeCommentsMatch Match {..} = mconcat $ fmap nodeComments m_ext
 #else
 nodeCommentsMatch Match {..} = nodeComments m_ext
 #endif
-instance CommentExtraction
-           (StmtLR GhcPs GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
-  nodeComments = nodeCommentsStmtLRExpr
+instance CommentExtraction (StmtLR GhcPs GhcPs a) where
+  nodeComments = nodeCommentsStmtLR
 
-nodeCommentsStmtLRExpr ::
-     StmtLR GhcPs GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs)) -> NodeComments
-nodeCommentsStmtLRExpr LastStmt {} = emptyNodeComments
-nodeCommentsStmtLRExpr ApplicativeStmt {} = emptyNodeComments
-nodeCommentsStmtLRExpr BodyStmt {} = emptyNodeComments
-nodeCommentsStmtLRExpr ParStmt {} = emptyNodeComments
-nodeCommentsStmtLRExpr RecStmt {..} = nodeComments recS_ext
+nodeCommentsStmtLR :: StmtLR GhcPs GhcPs a -> NodeComments
+nodeCommentsStmtLR LastStmt {} = emptyNodeComments
+nodeCommentsStmtLR ApplicativeStmt {} = emptyNodeComments
+nodeCommentsStmtLR BodyStmt {} = emptyNodeComments
+nodeCommentsStmtLR ParStmt {} = emptyNodeComments
+nodeCommentsStmtLR RecStmt {..} = nodeComments recS_ext
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsStmtLRExpr (BindStmt x _ _) = mconcat $ fmap nodeComments x
-nodeCommentsStmtLRExpr (LetStmt x _) = mconcat $ fmap nodeComments x
-nodeCommentsStmtLRExpr TransStmt {..} = mconcat $ fmap nodeComments trS_ext
+nodeCommentsStmtLR (BindStmt x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsStmtLR (LetStmt x _) = mconcat $ fmap nodeComments x
+nodeCommentsStmtLR TransStmt {..} = mconcat $ fmap nodeComments trS_ext
 #else
-nodeCommentsStmtLRExpr (BindStmt x _ _) = nodeComments x
-nodeCommentsStmtLRExpr (LetStmt x _) = nodeComments x
-nodeCommentsStmtLRExpr TransStmt {..} = nodeComments trS_ext
-#endif
-
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction
-           (StmtLR GhcPs GhcPs (GenLocated SrcSpanAnnA (HsCmd GhcPs))) where
-  nodeComments LastStmt {} = emptyNodeComments
-  nodeComments (BindStmt x _ _) = mconcat $ fmap nodeComments x
-  nodeComments ApplicativeStmt {} = emptyNodeComments
-  nodeComments BodyStmt {} = emptyNodeComments
-  nodeComments (LetStmt x _) = mconcat $ fmap nodeComments x
-  nodeComments ParStmt {} = emptyNodeComments
-  nodeComments TransStmt {..} = mconcat $ fmap nodeComments trS_ext
-  nodeComments RecStmt {..} = nodeComments recS_ext
-#else
-instance CommentExtraction
-           (StmtLR GhcPs GhcPs (GenLocated SrcSpanAnnA (HsCmd GhcPs))) where
-  nodeComments LastStmt {} = emptyNodeComments
-  nodeComments (BindStmt x _ _) = nodeComments x
-  nodeComments ApplicativeStmt {} = emptyNodeComments
-  nodeComments BodyStmt {} = emptyNodeComments
-  nodeComments (LetStmt x _) = nodeComments x
-  nodeComments ParStmt {} = emptyNodeComments
-  nodeComments TransStmt {..} = nodeComments trS_ext
-  nodeComments RecStmt {..} = nodeComments recS_ext
+nodeCommentsStmtLR (BindStmt x _ _) = nodeComments x
+nodeCommentsStmtLR (LetStmt x _) = nodeComments x
+nodeCommentsStmtLR TransStmt {..} = nodeComments trS_ext
 #endif
 instance CommentExtraction StmtLRInsideVerticalList where
   nodeComments (StmtLRInsideVerticalList x) = nodeComments x
