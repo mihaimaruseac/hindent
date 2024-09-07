@@ -772,29 +772,40 @@ instance CommentExtraction
 instance CommentExtraction
            (HsWildCardBndrs GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs))) where
   nodeComments HsWC {} = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+
 instance CommentExtraction (StandaloneKindSig GhcPs) where
-  nodeComments (StandaloneKindSig x _ _) = mconcat $ fmap nodeComments x
-#else
-instance CommentExtraction (StandaloneKindSig GhcPs) where
-  nodeComments (StandaloneKindSig x _ _) = nodeComments x
-#endif
+  nodeComments = nodeCommentsStandaloneKindSig
+
+nodeCommentsStandaloneKindSig :: StandaloneKindSig GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (DefaultDecl GhcPs) where
-  nodeComments (DefaultDecl x _) = mconcat $ fmap nodeComments x
+nodeCommentsStandaloneKindSig (StandaloneKindSig x _ _) =
+  mconcat $ fmap nodeComments x
 #else
-instance CommentExtraction (DefaultDecl GhcPs) where
-  nodeComments (DefaultDecl x _) = nodeComments x
+nodeCommentsStandaloneKindSig (StandaloneKindSig x _ _) = nodeComments x
 #endif
+instance CommentExtraction (DefaultDecl GhcPs) where
+  nodeComments = nodeCommentsDefaultDecl
+
+nodeCommentsDefaultDecl :: DefaultDecl GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (ForeignDecl GhcPs) where
-  nodeComments ForeignImport {..} = mconcat $ fmap nodeComments fd_i_ext
-  nodeComments ForeignExport {..} = mconcat $ fmap nodeComments fd_e_ext
+nodeCommentsDefaultDecl (DefaultDecl x _) = mconcat $ fmap nodeComments x
 #else
-instance CommentExtraction (ForeignDecl GhcPs) where
-  nodeComments ForeignImport {..} = nodeComments fd_i_ext
-  nodeComments ForeignExport {..} = nodeComments fd_e_ext
+nodeCommentsDefaultDecl (DefaultDecl x _) = nodeComments x
 #endif
+instance CommentExtraction (ForeignDecl GhcPs) where
+  nodeComments = nodeCommentsForeignDecl
+
+nodeCommentsForeignDecl :: ForeignDecl GhcPs -> NodeComments
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+nodeCommentsForeignDecl ForeignImport {..} =
+  mconcat $ fmap nodeComments fd_i_ext
+nodeCommentsForeignDecl ForeignExport {..} =
+  mconcat $ fmap nodeComments fd_e_ext
+#else
+nodeCommentsForeignDecl ForeignImport {..} = nodeComments fd_i_ext
+nodeCommentsForeignDecl ForeignExport {..} = nodeComments fd_e_ext
+#endif
+
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 instance CommentExtraction (ForeignImport GhcPs) where
   nodeComments CImport {} = emptyNodeComments
