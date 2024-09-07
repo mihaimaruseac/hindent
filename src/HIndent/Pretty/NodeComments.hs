@@ -342,7 +342,7 @@ instance CommentExtraction EpaCommentTok where
 
 instance CommentExtraction (SpliceDecl GhcPs) where
   nodeComments SpliceDecl {} = emptyNodeComments
-#if !MIN_VERSION_ghc_lib_parser(9,6,1)
+#if !MIN_VERSION_ghc_lib_parser(9, 6, 1)
 instance CommentExtraction (HsSplice GhcPs) where
   nodeComments (HsTypedSplice x _ _ _) = nodeComments x
   nodeComments (HsUntypedSplice x _ _ _) = nodeComments x
