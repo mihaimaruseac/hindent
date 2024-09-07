@@ -28,6 +28,8 @@
 
 ### Removed
 
+- Support for GHC 8.10 ([#950])
+
 ## [6.1.0] - 2023-05-17
 
 ### Added
