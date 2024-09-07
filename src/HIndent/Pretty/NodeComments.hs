@@ -194,36 +194,37 @@ instance CommentExtraction (HsSigType GhcPs) where
 
 instance CommentExtraction HsSigType' where
   nodeComments (HsSigType' _ _ HsSig {}) = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+
 instance CommentExtraction (Match GhcPs a) where
-  nodeComments Match {..} = mconcat $ fmap nodeComments m_ext
+  nodeComments = nodeCommentsMatch
+
+nodeCommentsMatch :: Match GhcPs a -> NodeComments
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+nodeCommentsMatch Match {..} = mconcat $ fmap nodeComments m_ext
 #else
-instance CommentExtraction (Match GhcPs a) where
-  nodeComments Match {..} = nodeComments m_ext
+nodeCommentsMatch Match {..} = nodeComments m_ext
 #endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance CommentExtraction
            (StmtLR GhcPs GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
-  nodeComments LastStmt {} = emptyNodeComments
-  nodeComments (BindStmt x _ _) = mconcat $ fmap nodeComments x
-  nodeComments ApplicativeStmt {} = emptyNodeComments
-  nodeComments BodyStmt {} = emptyNodeComments
-  nodeComments (LetStmt x _) = mconcat $ fmap nodeComments x
-  nodeComments ParStmt {} = emptyNodeComments
-  nodeComments TransStmt {..} = mconcat $ fmap nodeComments trS_ext
-  nodeComments RecStmt {..} = nodeComments recS_ext
+  nodeComments = nodeCommentsStmtLRExpr
+
+nodeCommentsStmtLRExpr ::
+     StmtLR GhcPs GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs)) -> NodeComments
+nodeCommentsStmtLRExpr LastStmt {} = emptyNodeComments
+nodeCommentsStmtLRExpr ApplicativeStmt {} = emptyNodeComments
+nodeCommentsStmtLRExpr BodyStmt {} = emptyNodeComments
+nodeCommentsStmtLRExpr ParStmt {} = emptyNodeComments
+nodeCommentsStmtLRExpr RecStmt {..} = nodeComments recS_ext
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+nodeCommentsStmtLRExpr (BindStmt x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsStmtLRExpr (LetStmt x _) = mconcat $ fmap nodeComments x
+nodeCommentsStmtLRExpr TransStmt {..} = mconcat $ fmap nodeComments trS_ext
 #else
-instance CommentExtraction
-           (StmtLR GhcPs GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
-  nodeComments LastStmt {} = emptyNodeComments
-  nodeComments (BindStmt x _ _) = nodeComments x
-  nodeComments ApplicativeStmt {} = emptyNodeComments
-  nodeComments BodyStmt {} = emptyNodeComments
-  nodeComments (LetStmt x _) = nodeComments x
-  nodeComments ParStmt {} = emptyNodeComments
-  nodeComments TransStmt {..} = nodeComments trS_ext
-  nodeComments RecStmt {..} = nodeComments recS_ext
+nodeCommentsStmtLRExpr (BindStmt x _ _) = nodeComments x
+nodeCommentsStmtLRExpr (LetStmt x _) = nodeComments x
+nodeCommentsStmtLRExpr TransStmt {..} = nodeComments trS_ext
 #endif
+
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance CommentExtraction
            (StmtLR GhcPs GhcPs (GenLocated SrcSpanAnnA (HsCmd GhcPs))) where
