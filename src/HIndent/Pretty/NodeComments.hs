@@ -1019,37 +1019,27 @@ instance CommentExtraction (HsCmd GhcPs) where
 nodeCommentsHsCmd :: HsCmd GhcPs -> NodeComments
 nodeCommentsHsCmd (HsCmdArrApp x _ _ _ _) = nodeComments x
 nodeCommentsHsCmd (HsCmdArrForm x _ _ _ _) = nodeComments x
+nodeCommentsHsCmd HsCmdLam {} = emptyNodeComments
+nodeCommentsHsCmd (HsCmdCase x _ _) = nodeComments x
+nodeCommentsHsCmd (HsCmdIf x _ _ _ _) = nodeComments x
+nodeCommentsHsCmd (HsCmdDo x _) = nodeComments x
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsHsCmd HsCmdApp {} = emptyNodeComments
 #else
 nodeCommentsHsCmd (HsCmdApp x _ _) = nodeComments x
 #endif
-nodeCommentsHsCmd HsCmdLam {} = emptyNodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsHsCmd HsCmdPar {} = emptyNodeComments
-#elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
-nodeCommentsHsCmd (HsCmdPar x _ _ _) = nodeComments x
-#else
-nodeCommentsHsCmd (HsCmdPar x _) = nodeComments x
-#endif
-nodeCommentsHsCmd (HsCmdCase x _ _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
--- No HsCmdLamCase since 9.10.1.
-#elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
-nodeCommentsHsCmd (HsCmdLamCase x _ _) = nodeComments x
-#else
-nodeCommentsHsCmd (HsCmdLamCase x _) = nodeComments x
-#endif
-nodeCommentsHsCmd (HsCmdIf x _ _ _ _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsHsCmd HsCmdLet {} = emptyNodeComments
 #elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
+nodeCommentsHsCmd (HsCmdPar x _ _ _) = nodeComments x
+nodeCommentsHsCmd (HsCmdLamCase x _ _) = nodeComments x
 nodeCommentsHsCmd (HsCmdLet x _ _ _ _) = nodeComments x
 #else
+nodeCommentsHsCmd (HsCmdPar x _) = nodeComments x
+nodeCommentsHsCmd (HsCmdLamCase x _) = nodeComments x
 nodeCommentsHsCmd (HsCmdLet x _ _) = nodeComments x
 #endif
-nodeCommentsHsCmd (HsCmdDo x _) = nodeComments x
-
 instance CommentExtraction ListComprehension where
   nodeComments ListComprehension {} = emptyNodeComments
 
@@ -1059,17 +1049,6 @@ instance CommentExtraction DoExpression where
 instance CommentExtraction LetIn where
   nodeComments LetIn {} = emptyNodeComments
 
-instance CommentExtraction (RuleBndr GhcPs) where
-  nodeComments = nodeCommentsRuleBndr
-
-nodeCommentsRuleBndr :: RuleBndr GhcPs -> NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsRuleBndr (RuleBndr x _) = mconcat $ fmap nodeComments x
-nodeCommentsRuleBndr (RuleBndrSig x _ _) = mconcat $ fmap nodeComments x
-#else
-nodeCommentsRuleBndr (RuleBndr x _) = nodeComments x
-nodeCommentsRuleBndr (RuleBndrSig x _ _) = nodeComments x
-#endif
 instance CommentExtraction CCallConv where
   nodeComments = const emptyNodeComments
 
@@ -1089,41 +1068,14 @@ instance CommentExtraction SrcStrictness where
 instance CommentExtraction (HsOuterSigTyVarBndrs GhcPs) where
   nodeComments HsOuterImplicit {} = emptyNodeComments
   nodeComments HsOuterExplicit {..} = nodeComments hso_xexplicit
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-instance CommentExtraction FieldLabelString where
-  nodeComments = const emptyNodeComments
-#endif
 
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-instance CommentExtraction (HsUntypedSplice GhcPs) where
-  nodeComments = nodeCommentsHsUntypedSplice
-
-nodeCommentsHsUntypedSplice :: HsUntypedSplice GhcPs -> NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsUntypedSplice (HsUntypedSpliceExpr x _) =
-  mconcat $ fmap nodeComments x
-#else
-nodeCommentsHsUntypedSplice (HsUntypedSpliceExpr x) = nodeComments x
-#endif
-nodeCommentsHsUntypedSplice HsQuasiQuote {} = emptyNodeComments
-#endif
-
-#if MIN_VERSION_ghc_lib_parser(9, 8, 1)
-instance CommentExtraction (LHsRecUpdFields GhcPs) where
-  nodeComments RegularRecUpdFields {} = emptyNodeComments
-  nodeComments OverloadedRecUpdFields {} = emptyNodeComments
-#endif
 instance CommentExtraction AddEpAnn where
   nodeComments (AddEpAnn _ x) = nodeComments x
 
 instance CommentExtraction EpaLocation where
   nodeComments EpaSpan {} = emptyNodeComments
   nodeComments (EpaDelta _ x) = mconcat $ fmap nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (EpaLocation' NoComments) where
-  nodeComments EpaSpan {} = emptyNodeComments
-  nodeComments EpaDelta {} = emptyNodeComments
-#endif
+
 instance CommentExtraction AnnPragma where
   nodeComments AnnPragma {..} =
     mconcat $ fmap nodeComments $ apr_open : apr_close : apr_rest
@@ -1145,26 +1097,7 @@ instance CommentExtraction EpAnnSumPat where
       $ fmap nodeComments sumPatParens
           <> fmap nodeComments sumPatVbarsBefore
           <> fmap nodeComments sumPatVbarsAfter
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction AnnList where
-  nodeComments AnnList {..} = mconcat [a, b, c, d, e]
-    where
-      a = maybe mempty nodeComments al_anchor
-      b = maybe mempty nodeComments al_open
-      c = maybe mempty nodeComments al_close
-      d = mconcat $ fmap nodeComments al_rest
-      e = mconcat $ fmap nodeComments al_trailing
 
-instance CommentExtraction TrailingAnn where
-  nodeComments AddSemiAnn {..} = nodeComments ta_location
-  nodeComments AddCommaAnn {..} = nodeComments ta_location
-  nodeComments AddVbarAnn {..} = nodeComments ta_location
-  nodeComments AddDarrowAnn {..} = nodeComments ta_location
-  nodeComments AddDarrowUAnn {..} = nodeComments ta_location
-
-instance CommentExtraction AnnParen where
-  nodeComments AnnParen {..} = mconcat $ fmap nodeComments [ap_open, ap_close]
-#endif
 instance CommentExtraction AnnProjection where
   nodeComments AnnProjection {..} =
     mconcat $ fmap nodeComments [apOpen, apClose]
@@ -1201,6 +1134,62 @@ instance CommentExtraction EpAnnUnboundVar where
 instance CommentExtraction AnnSig where
   nodeComments AnnSig {..} = mconcat $ fmap nodeComments $ asDcolon : asRest
 
+instance CommentExtraction (RuleBndr GhcPs) where
+  nodeComments = nodeCommentsRuleBndr
+
+nodeCommentsRuleBndr :: RuleBndr GhcPs -> NodeComments
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+nodeCommentsRuleBndr (RuleBndr x _) = mconcat $ fmap nodeComments x
+nodeCommentsRuleBndr (RuleBndrSig x _ _) = mconcat $ fmap nodeComments x
+#else
+nodeCommentsRuleBndr (RuleBndr x _) = nodeComments x
+nodeCommentsRuleBndr (RuleBndrSig x _ _) = nodeComments x
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+instance CommentExtraction FieldLabelString where
+  nodeComments = const emptyNodeComments
+
+instance CommentExtraction (HsUntypedSplice GhcPs) where
+  nodeComments = nodeCommentsHsUntypedSplice
+
+nodeCommentsHsUntypedSplice :: HsUntypedSplice GhcPs -> NodeComments
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+nodeCommentsHsUntypedSplice (HsUntypedSpliceExpr x _) =
+  mconcat $ fmap nodeComments x
+#else
+nodeCommentsHsUntypedSplice (HsUntypedSpliceExpr x) = nodeComments x
+#endif
+nodeCommentsHsUntypedSplice HsQuasiQuote {} = emptyNodeComments
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 8, 1)
+instance CommentExtraction (LHsRecUpdFields GhcPs) where
+  nodeComments RegularRecUpdFields {} = emptyNodeComments
+  nodeComments OverloadedRecUpdFields {} = emptyNodeComments
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+instance CommentExtraction (EpaLocation' NoComments) where
+  nodeComments EpaSpan {} = emptyNodeComments
+  nodeComments EpaDelta {} = emptyNodeComments
+
+instance CommentExtraction AnnList where
+  nodeComments AnnList {..} = mconcat [a, b, c, d, e]
+    where
+      a = maybe mempty nodeComments al_anchor
+      b = maybe mempty nodeComments al_open
+      c = maybe mempty nodeComments al_close
+      d = mconcat $ fmap nodeComments al_rest
+      e = mconcat $ fmap nodeComments al_trailing
+
+instance CommentExtraction TrailingAnn where
+  nodeComments AddSemiAnn {..} = nodeComments ta_location
+  nodeComments AddCommaAnn {..} = nodeComments ta_location
+  nodeComments AddVbarAnn {..} = nodeComments ta_location
+  nodeComments AddDarrowAnn {..} = nodeComments ta_location
+  nodeComments AddDarrowUAnn {..} = nodeComments ta_location
+
+instance CommentExtraction AnnParen where
+  nodeComments AnnParen {..} = mconcat $ fmap nodeComments [ap_open, ap_close]
+#endif
 -- | Marks an AST node as never appearing in the AST.
 --
 -- Some AST node types are only used in the renaming or type-checking phase.
