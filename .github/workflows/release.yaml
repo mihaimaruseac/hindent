@@ -99,9 +99,10 @@ jobs:
       - name: Upload executables as an artifact for later jobs in workflow
         uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
-          path: .execs/*
+          path: .execs/
           name: executables.zip # When downloading it is a zip with all executables
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 1
 
   provenance-sdist:
