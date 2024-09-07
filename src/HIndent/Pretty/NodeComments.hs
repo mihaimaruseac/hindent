@@ -511,12 +511,16 @@ instance CommentExtraction
 
 instance CommentExtraction (HsScaled GhcPs a) where
   nodeComments HsScaled {} = emptyNodeComments
+
+instance CommentExtraction (ConDeclField GhcPs) where
+  nodeComments = nodeCommentsConDeclField
+
+nodeCommentsConDeclField :: ConDeclField GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (ConDeclField GhcPs) where
-  nodeComments ConDeclField {..} = mconcat $ fmap nodeComments cd_fld_ext
+nodeCommentsConDeclField ConDeclField {..} =
+  mconcat $ fmap nodeComments cd_fld_ext
 #else
-instance CommentExtraction (ConDeclField GhcPs) where
-  nodeComments ConDeclField {..} = nodeComments cd_fld_ext
+nodeCommentsConDeclField ConDeclField {..} = nodeComments cd_fld_ext
 #endif
 instance CommentExtraction InfixExpr where
   nodeComments (InfixExpr x) = nodeComments x
