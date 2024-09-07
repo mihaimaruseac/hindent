@@ -358,10 +358,17 @@ instance CommentExtraction PatInsidePatDecl where
 nodeCommentsPat :: Pat GhcPs -> NodeComments
 nodeCommentsPat WildPat {} = emptyNodeComments
 nodeCommentsPat VarPat {} = emptyNodeComments
+nodeCommentsPat (ListPat x _) = nodeComments x
+nodeCommentsPat (SumPat x _ _ _) = nodeComments x
+nodeCommentsPat SplicePat {} = emptyNodeComments
+nodeCommentsPat LitPat {} = emptyNodeComments
+nodeCommentsPat (NPlusKPat x _ _ _ _ _) = nodeComments x
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsPat (LazyPat x _) = mconcat $ fmap nodeComments x
+nodeCommentsPat ParPat {} = emptyNodeComments
+#elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
+nodeCommentsPat (ParPat x _ _ _) = nodeComments x
 #else
-nodeCommentsPat (LazyPat x _) = nodeComments x
+nodeCommentsPat (ParPat x _) = nodeComments x
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsPat AsPat {} = emptyNodeComments
@@ -371,45 +378,20 @@ nodeCommentsPat (AsPat x _ _ _) = nodeComments x
 nodeCommentsPat (AsPat x _ _) = nodeComments x
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsPat ParPat {} = emptyNodeComments
-#elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
-nodeCommentsPat (ParPat x _ _ _) = nodeComments x
-#else
-nodeCommentsPat (ParPat x _) = nodeComments x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+nodeCommentsPat (LazyPat x _) = mconcat $ fmap nodeComments x
 nodeCommentsPat (BangPat x _) = mconcat $ fmap nodeComments x
-#else
-nodeCommentsPat (BangPat x _) = nodeComments x
-#endif
-nodeCommentsPat (ListPat x _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsPat (TuplePat x _ _) = mconcat $ fmap nodeComments x
-#else
-nodeCommentsPat (TuplePat x _ _) = nodeComments x
-#endif
-nodeCommentsPat (SumPat x _ _ _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsPat ConPat {..} = mconcat $ fmap nodeComments pat_con_ext
-#else
-nodeCommentsPat ConPat {..} = nodeComments pat_con_ext
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsPat (ViewPat x _ _) = mconcat $ fmap nodeComments x
-#else
-nodeCommentsPat (ViewPat x _ _) = nodeComments x
-#endif
-nodeCommentsPat SplicePat {} = emptyNodeComments
-nodeCommentsPat LitPat {} = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsPat (NPat x _ _ _) = mconcat $ fmap nodeComments x
-#else
-nodeCommentsPat (NPat x _ _ _) = nodeComments x
-#endif
-nodeCommentsPat (NPlusKPat x _ _ _ _ _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsPat (SigPat x _ _) = mconcat $ fmap nodeComments x
 #else
+nodeCommentsPat (LazyPat x _) = nodeComments x
+nodeCommentsPat (BangPat x _) = nodeComments x
+nodeCommentsPat (TuplePat x _ _) = nodeComments x
+nodeCommentsPat ConPat {..} = nodeComments pat_con_ext
+nodeCommentsPat (ViewPat x _ _) = nodeComments x
+nodeCommentsPat (NPat x _ _ _) = nodeComments x
 nodeCommentsPat (SigPat x _ _) = nodeComments x
 #endif
 instance CommentExtraction RecConPat where
