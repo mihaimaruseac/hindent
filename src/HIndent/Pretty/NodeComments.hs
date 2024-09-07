@@ -571,14 +571,16 @@ instance CommentExtraction OverlapMode where
 
 instance CommentExtraction StringLiteral where
   nodeComments StringLiteral {} = emptyNodeComments
+
+-- | This instance is for type family declarations inside a class declaration.
+instance CommentExtraction (FamilyDecl GhcPs) where
+  nodeComments = nodeCommentsFamilyDecl
+
+nodeCommentsFamilyDecl :: FamilyDecl GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
--- | This instance is for type family declarations inside a class declaration.
-instance CommentExtraction (FamilyDecl GhcPs) where
-  nodeComments FamilyDecl {..} = mconcat $ fmap nodeComments fdExt
+nodeCommentsFamilyDecl FamilyDecl {..} = mconcat $ fmap nodeComments fdExt
 #else
--- | This instance is for type family declarations inside a class declaration.
-instance CommentExtraction (FamilyDecl GhcPs) where
-  nodeComments FamilyDecl {..} = nodeComments fdExt
+nodeCommentsFamilyDecl FamilyDecl {..} = nodeComments fdExt
 #endif
 instance CommentExtraction (FamilyResultSig GhcPs) where
   nodeComments NoSig {} = emptyNodeComments
