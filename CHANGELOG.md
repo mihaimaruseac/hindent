@@ -4,6 +4,16 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+## [6.2.0] - 2024-09-07
+
+### Added
+
 - Support for GHC 9.8 ([#775]) and GHC 9.10([#904]).
 - Support for `ImportPostQualified` ([#875]).
 - HIndent now formats multiple files in parallel ([#914]).
