@@ -586,15 +586,19 @@ instance CommentExtraction (FamilyResultSig GhcPs) where
   nodeComments NoSig {} = emptyNodeComments
   nodeComments KindSig {} = emptyNodeComments
   nodeComments TyVarSig {} = emptyNodeComments
+
+instance CommentExtraction (HsTyVarBndr a GhcPs) where
+  nodeComments = nodeCommentsHsTyVarBndr
+
+nodeCommentsHsTyVarBndr :: HsTyVarBndr a GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (HsTyVarBndr a GhcPs) where
-  nodeComments (UserTyVar x _ _) = mconcat $ fmap nodeComments x
-  nodeComments (KindedTyVar x _ _ _) = mconcat $ fmap nodeComments x
+nodeCommentsHsTyVarBndr (UserTyVar x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsHsTyVarBndr (KindedTyVar x _ _ _) = mconcat $ fmap nodeComments x
 #else
-instance CommentExtraction (HsTyVarBndr a GhcPs) where
-  nodeComments (UserTyVar x _ _) = nodeComments x
-  nodeComments (KindedTyVar x _ _ _) = nodeComments x
+nodeCommentsHsTyVarBndr (UserTyVar x _ _) = nodeComments x
+nodeCommentsHsTyVarBndr (KindedTyVar x _ _ _) = nodeComments x
 #endif
+
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance CommentExtraction (InjectivityAnn GhcPs) where
   nodeComments (InjectivityAnn x _ _) = mconcat $ fmap nodeComments x
