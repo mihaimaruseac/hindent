@@ -616,19 +616,13 @@ instance CommentExtraction PrefixOp where
 
 instance CommentExtraction Context where
   nodeComments Context {} = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+
 instance CommentExtraction HorizontalContext where
   nodeComments HorizontalContext {} = emptyNodeComments
 
 instance CommentExtraction VerticalContext where
   nodeComments VerticalContext {} = emptyNodeComments
-#else
-instance CommentExtraction HorizontalContext where
-  nodeComments HorizontalContext {} = emptyNodeComments
 
-instance CommentExtraction VerticalContext where
-  nodeComments VerticalContext {} = emptyNodeComments
-#endif
 -- Wrap a value of this type with 'ModulenameWithPrefix' to print it with
 -- the "module " prefix.
 instance CommentExtraction ModuleName where
