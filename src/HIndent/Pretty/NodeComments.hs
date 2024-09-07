@@ -35,36 +35,6 @@ class CommentExtraction a where
 
 instance CommentExtraction l => CommentExtraction (GenLocated l e) where
   nodeComments (L l _) = nodeComments l
-#if MIN_VERSION_ghc_lib_parser(9, 10, 0)
-instance CommentExtraction (TyClDecl GhcPs) where
-  nodeComments FamDecl {} = emptyNodeComments
-  nodeComments SynDecl {..} = mconcat $ fmap nodeComments tcdSExt
-  nodeComments DataDecl {..} = mconcat $ fmap nodeComments tcdDExt
-  nodeComments ClassDecl {tcdCExt = (x, _, _)} = mconcat $ fmap nodeComments x
-#elif MIN_VERSION_ghc_lib_parser(9, 6, 0)
-instance CommentExtraction (TyClDecl GhcPs) where
-  nodeComments FamDecl {} = emptyNodeComments
-  nodeComments SynDecl {..} = nodeComments tcdSExt
-  nodeComments DataDecl {..} = nodeComments tcdDExt
-  nodeComments ClassDecl {tcdCExt = (x, _)} = nodeComments x
-#else
-instance CommentExtraction (TyClDecl GhcPs) where
-  nodeComments FamDecl {} = emptyNodeComments
-  nodeComments SynDecl {..} = nodeComments tcdSExt
-  nodeComments DataDecl {..} = nodeComments tcdDExt
-  nodeComments ClassDecl {tcdCExt = (x, _, _)} = nodeComments x
-#endif
-instance CommentExtraction (InstDecl GhcPs) where
-  nodeComments = nodeCommentsInstDecl
-
-nodeCommentsInstDecl :: InstDecl GhcPs -> NodeComments
-nodeCommentsInstDecl ClsInstD {} = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
-nodeCommentsInstDecl DataFamInstD {} = emptyNodeComments
-#else
-nodeCommentsInstDecl DataFamInstD {..} = nodeComments dfid_ext
-#endif
-nodeCommentsInstDecl TyFamInstD {} = emptyNodeComments
 
 instance CommentExtraction (HsBind GhcPs) where
   nodeComments = nodeCommentsHsBind
