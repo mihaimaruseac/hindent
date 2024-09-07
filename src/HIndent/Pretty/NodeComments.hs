@@ -543,17 +543,20 @@ instance CommentExtraction (AmbiguousFieldOcc GhcPs) where
 
 instance CommentExtraction (ImportDecl GhcPs) where
   nodeComments ImportDecl {..} = nodeComments ideclExt
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 instance CommentExtraction XImportDeclPass where
   nodeComments XImportDeclPass {..} = nodeComments ideclAnn
 #endif
+instance CommentExtraction (HsDerivingClause GhcPs) where
+  nodeComments = nodeCommentsHsDerivingClause
+
+nodeCommentsHsDerivingClause :: HsDerivingClause GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (HsDerivingClause GhcPs) where
-  nodeComments HsDerivingClause {..} =
-    mconcat $ fmap nodeComments deriv_clause_ext
+nodeCommentsHsDerivingClause HsDerivingClause {..} =
+  mconcat $ fmap nodeComments deriv_clause_ext
 #else
-instance CommentExtraction (HsDerivingClause GhcPs) where
-  nodeComments HsDerivingClause {..} = nodeComments deriv_clause_ext
+nodeCommentsHsDerivingClause HsDerivingClause {..} =
+  nodeComments deriv_clause_ext
 #endif
 instance CommentExtraction (DerivClauseTys GhcPs) where
   nodeComments DctSingle {} = emptyNodeComments
