@@ -59,15 +59,16 @@ nodeCommentsSig :: Sig GhcPs -> NodeComments
 nodeCommentsSig (TypeSig x _ _) = nodeComments x
 nodeCommentsSig (PatSynSig x _ _) = nodeComments x
 nodeCommentsSig (ClassOpSig x _ _ _) = nodeComments x
-nodeCommentsSig (FixSig x _) = nodeComments x
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsSig (InlineSig x _ _) = mconcat $ nodeComments x
-nodeCommentsSig (SpecSig x _ _ _) = mconcat $ nodeComments x
-nodeCommentsSig (SpecInstSig x _ _) = mconcat $ nodeComments x
-nodeCommentsSig (MinimalSig x _ _) = mconcat $ nodeComments x
-nodeCommentsSig (SCCFunSig x _ _ _) = mconcat $ nodeComments x
-nodeCommentsSig (CompleteMatchSig x _ _ _) = mconcat $ nodeComments x
+nodeCommentsSig (FixSig x _) = mconcat $ fmap nodeComments x
+nodeCommentsSig (InlineSig x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsSig (SpecSig x _ _ _) = mconcat $ fmap nodeComments x
+nodeCommentsSig (SpecInstSig (x, _) _) = mconcat $ fmap nodeComments x
+nodeCommentsSig (MinimalSig (x, _) _) = mconcat $ fmap nodeComments x
+nodeCommentsSig (SCCFunSig (x, _) _ _) = mconcat $ fmap nodeComments x
+nodeCommentsSig (CompleteMatchSig (x, _) _ _) = mconcat $ fmap nodeComments x
 #elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
+nodeCommentsSig (FixSig x _) = nodeComments x
 nodeCommentsSig (InlineSig x _ _) = nodeComments x
 nodeCommentsSig (SpecSig x _ _ _) = nodeComments x
 nodeCommentsSig (SpecInstSig (x, _) _) = nodeComments x
@@ -75,6 +76,7 @@ nodeCommentsSig (MinimalSig (x, _) _) = nodeComments x
 nodeCommentsSig (SCCFunSig (x, _) _ _) = nodeComments x
 nodeCommentsSig (CompleteMatchSig (x, _) _ _) = nodeComments x
 #else
+nodeCommentsSig (FixSig x _) = nodeComments x
 nodeCommentsSig (InlineSig x _ _) = nodeComments x
 nodeCommentsSig (SpecSig x _ _ _) = nodeComments x
 nodeCommentsSig IdSig {} = emptyNodeComments
@@ -85,14 +87,7 @@ nodeCommentsSig (CompleteMatchSig x _ _ _) = nodeComments x
 #endif
 instance CommentExtraction (HsDataDefn GhcPs) where
   nodeComments HsDataDefn {} = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 10, 0)
-instance CommentExtraction (ClsInstDecl GhcPs) where
-  nodeComments ClsInstDecl {cid_ext = (x, _, _)} =
-    fromMaybe mempty $ fmap nodeComments x
-#else
-instance CommentExtraction (ClsInstDecl GhcPs) where
-  nodeComments ClsInstDecl {cid_ext = (x, _)} = nodeComments x
-#endif
+
 instance CommentExtraction (MatchGroup GhcPs a) where
   nodeComments MG {} = emptyNodeComments
 
