@@ -1025,7 +1025,7 @@ nodeCommentsHsUntypedSplice :: HsUntypedSplice GhcPs -> NodeComments
 nodeCommentsHsUntypedSplice (HsUntypedSpliceExpr x _) =
   mconcat $ fmap nodeComments x
 #else
-nodeCommentsHsUntypedSplice (HsUntypedSpliceExpr x) = nodeComments x
+nodeCommentsHsUntypedSplice (HsUntypedSpliceExpr x _) = nodeComments x
 #endif
 nodeCommentsHsUntypedSplice HsQuasiQuote {} = emptyNodeComments
 #endif
