@@ -160,103 +160,32 @@ nodeCommentsHsExpr (NegApp x _ _) = mconcat $ fmap nodeComments x
 #else
 nodeCommentsHsExpr (NegApp x _ _) = nodeComments x
 #endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsExpr HsPar {} = emptyNodeComments
-#elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
-nodeCommentsHsExpr (HsPar x _ _ _) = nodeComments x
-#else
-nodeCommentsHsExpr (HsPar x _) = nodeComments x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsExpr SectionL {} = emptyNodeComments
-#else
-nodeCommentsHsExpr (SectionL x _ _) = nodeComments x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsExpr SectionR {} = emptyNodeComments
-#else
-nodeCommentsHsExpr (SectionR x _ _) = nodeComments x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsExpr (ExplicitTuple x _ _) = mconcat $ fmap nodeComments x
-#else
-nodeCommentsHsExpr (ExplicitTuple x _ _) = nodeComments x
-#endif
 nodeCommentsHsExpr (ExplicitSum x _ _ _) = nodeComments x
 nodeCommentsHsExpr (HsCase x _ _) = nodeComments x
 nodeCommentsHsExpr (HsIf x _ _ _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsExpr (HsMultiIf x _) = mconcat $ fmap nodeComments x
-#else
-nodeCommentsHsExpr (HsMultiIf x _) = nodeComments x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsExpr HsLet {} = emptyNodeComments
-#elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
-nodeCommentsHsExpr (HsLet x _ _ _ _) = nodeComments x
-#else
-nodeCommentsHsExpr (HsLet x _ _) = nodeComments x
-#endif
 nodeCommentsHsExpr (HsDo x _ _) = nodeComments x
 nodeCommentsHsExpr (ExplicitList x _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsExpr RecordCon {..} = mconcat $ fmap nodeComments rcon_ext
-#else
-nodeCommentsHsExpr RecordCon {..} = nodeComments rcon_ext
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsExpr RecordUpd {..} = mconcat $ fmap nodeComments rupd_ext
-#else
-nodeCommentsHsExpr RecordUpd {..} = nodeComments rupd_ext
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsExpr HsGetField {} = emptyNodeComments
-#else
-nodeCommentsHsExpr HsGetField {..} = nodeComments gf_ext
-#endif
 nodeCommentsHsExpr HsProjection {..} = nodeComments proj_ext
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsExpr (ExprWithTySig x _ _) = mconcat $ fmap nodeComments x
-#else
-nodeCommentsHsExpr (ExprWithTySig x _ _) = nodeComments x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsExpr (ArithSeq x _ _) = mconcat $ fmap nodeComments x
-#else
-nodeCommentsHsExpr (ArithSeq x _ _) = nodeComments x
-#endif
-#if !MIN_VERSION_ghc_lib_parser(9,4,1)
-nodeCommentsHsExpr (HsBracket x _) = nodeComments x
-nodeCommentsHsExpr HsRnBracketOut {} = notUsedInParsedStage
-nodeCommentsHsExpr HsTcBracketOut {} = notUsedInParsedStage
-#endif
-#if !MIN_VERSION_ghc_lib_parser(9,6,1)
-nodeCommentsHsExpr (HsSpliceE x _) = nodeComments x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsExpr (HsProc x _ _) = mconcat $ fmap nodeComments x
-#else
-nodeCommentsHsExpr (HsProc x _ _) = nodeComments x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsExpr (HsStatic x _) = mconcat $ fmap nodeComments x
-#else
-nodeCommentsHsExpr (HsStatic x _) = nodeComments x
-#endif
-#if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
-nodeCommentsHsExpr HsTick {} = emptyNodeComments
-nodeCommentsHsExpr HsBinTick {} = emptyNodeComments
-#endif
 nodeCommentsHsExpr HsPragE {} = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
-nodeCommentsHsExpr HsRecSel {} = emptyNodeComments
-#endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsHsExpr (HsTypedBracket x _) = mconcat $ fmap nodeComments x
 nodeCommentsHsExpr (HsUntypedBracket x _) = mconcat $ fmap nodeComments x
+nodeCommentsHsExpr HsLet {} = emptyNodeComments
+nodeCommentsHsExpr HsPar {} = emptyNodeComments
 #elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
+nodeCommentsHsExpr HsRecSel {} = emptyNodeComments
 nodeCommentsHsExpr (HsTypedBracket x _) = nodeComments x
 nodeCommentsHsExpr (HsUntypedBracket x _) = nodeComments x
+nodeCommentsHsExpr (HsLet x _ _ _ _) = nodeComments x
+nodeCommentsHsExpr (HsPar x _ _ _) = nodeComments x
+#else
+nodeCommentsHsExpr HsTick {} = emptyNodeComments
+nodeCommentsHsExpr HsBinTick {} = emptyNodeComments
+nodeCommentsHsExpr (HsBracket x _) = nodeComments x
+nodeCommentsHsExpr HsRnBracketOut {} = notUsedInParsedStage
+nodeCommentsHsExpr HsTcBracketOut {} = notUsedInParsedStage
+nodeCommentsHsExpr (HsLet x _ _) = nodeComments x
+nodeCommentsHsExpr (HsPar x _) = nodeComments x
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsHsExpr (HsTypedSplice x _) = mconcat $ fmap nodeComments x
@@ -264,6 +193,33 @@ nodeCommentsHsExpr HsUntypedSplice {} = emptyNodeComments
 #elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
 nodeCommentsHsExpr (HsTypedSplice (x, y) _) = nodeComments x <> nodeComments y
 nodeCommentsHsExpr (HsUntypedSplice x _) = nodeComments x
+#else
+nodeCommentsHsExpr (HsSpliceE x _) = nodeComments x
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+nodeCommentsHsExpr (HsStatic x _) = mconcat $ fmap nodeComments x
+nodeCommentsHsExpr (HsProc x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsHsExpr (ArithSeq x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsHsExpr (ExprWithTySig x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsHsExpr HsGetField {} = emptyNodeComments
+nodeCommentsHsExpr RecordUpd {..} = mconcat $ fmap nodeComments rupd_ext
+nodeCommentsHsExpr RecordCon {..} = mconcat $ fmap nodeComments rcon_ext
+nodeCommentsHsExpr (HsMultiIf x _) = mconcat $ fmap nodeComments x
+nodeCommentsHsExpr (ExplicitTuple x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsHsExpr SectionR {} = emptyNodeComments
+nodeCommentsHsExpr SectionL {} = emptyNodeComments
+#else
+nodeCommentsHsExpr (HsStatic x _) = nodeComments x
+nodeCommentsHsExpr (HsProc x _ _) = nodeComments x
+nodeCommentsHsExpr (ArithSeq x _ _) = nodeComments x
+nodeCommentsHsExpr (ExprWithTySig x _ _) = nodeComments x
+nodeCommentsHsExpr HsGetField {..} = nodeComments gf_ext
+nodeCommentsHsExpr RecordUpd {..} = nodeComments rupd_ext
+nodeCommentsHsExpr RecordCon {..} = nodeComments rcon_ext
+nodeCommentsHsExpr (HsMultiIf x _) = nodeComments x
+nodeCommentsHsExpr (ExplicitTuple x _ _) = nodeComments x
+nodeCommentsHsExpr (SectionR x _ _) = nodeComments x
+nodeCommentsHsExpr (SectionL x _ _) = nodeComments x
 #endif
 instance CommentExtraction (HsSigType GhcPs) where
   nodeComments HsSig {} = emptyNodeComments
