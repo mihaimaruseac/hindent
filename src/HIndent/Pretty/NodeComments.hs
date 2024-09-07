@@ -668,7 +668,7 @@ nodeCommentsFamEqn FamEqn {..} = nodeComments feqn_ext
 instance CommentExtraction FamEqn' where
   nodeComments FamEqn' {..} = nodeComments famEqn
 -- | HsArg (LHsType GhcPs) (LHsType GhcPs)
-#if MIN_VERSION_ghc_lib_parser(9,8,1)
+#if MIN_VERSION_ghc_lib_parser(9, 8, 1)
 instance CommentExtraction
            (HsArg
               GhcPs
@@ -686,7 +686,7 @@ instance CommentExtraction
   nodeComments HsTypeArg {} = emptyNodeComments
   nodeComments HsArgPar {} = emptyNodeComments
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 instance CommentExtraction (HsQuote GhcPs) where
   nodeComments ExpBr {} = emptyNodeComments
   nodeComments PatBr {} = emptyNodeComments
@@ -695,41 +695,35 @@ instance CommentExtraction (HsQuote GhcPs) where
   nodeComments TypBr {} = emptyNodeComments
   nodeComments VarBr {} = emptyNodeComments
 #endif
+instance CommentExtraction (WarnDecls GhcPs) where
+  nodeComments = nodeCommentsWarnDecls
 
+nodeCommentsWarnDecls :: WarnDecls GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (WarnDecls GhcPs) where
-  nodeComments Warnings {..} = mconcat $ fmap nodeComments $ fst wd_ext
+nodeCommentsWarnDecls Warnings {..} = mconcat $ fmap nodeComments $ fst wd_ext
 #elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
-instance CommentExtraction (WarnDecls GhcPs) where
-  nodeComments Warnings {..} = nodeComments $ fst wd_ext
+nodeCommentsWarnDecls Warnings {..} = nodeComments $ fst wd_ext
 #else
-instance CommentExtraction (WarnDecls GhcPs) where
-  nodeComments Warnings {..} = nodeComments wd_ext
+nodeCommentsWarnDecls Warnings {..} = nodeComments wd_ext
 #endif
+instance CommentExtraction (WarnDecl GhcPs) where
+  nodeComments = nodeCommentsWarnDecl
+
+nodeCommentsWarnDecl :: WarnDecl GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (WarnDecl GhcPs) where
-  nodeComments (Warning (_, x) _ _) = mconcat $ fmap nodeComments x
+nodeCommentsWarnDecl (Warning (_, x) _ _) = mconcat $ fmap nodeComments x
 #else
-instance CommentExtraction (WarnDecl GhcPs) where
-  nodeComments (Warning x _ _) = nodeComments x
+nodeCommentsWarnDecl (Warning x _ _) = nodeComments x
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 instance CommentExtraction (WithHsDocIdentifiers StringLiteral GhcPs) where
   nodeComments WithHsDocIdentifiers {} = emptyNodeComments
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-instance CommentExtraction (IEWrappedName GhcPs) where
+instance CommentExtraction (IEWrappedName a) where
   nodeComments IEName {} = emptyNodeComments
   nodeComments IEPattern {} = emptyNodeComments
   nodeComments IEType {} = emptyNodeComments
-#else
--- | 'Pretty' for 'LIEWrappedName (IdP GhcPs)'
-instance CommentExtraction (IEWrappedName RdrName) where
-  nodeComments IEName {} = emptyNodeComments
-  nodeComments IEPattern {} = emptyNodeComments
-  nodeComments IEType {} = emptyNodeComments
-#endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 instance CommentExtraction (DotFieldOcc GhcPs) where
   nodeComments DotFieldOcc {..} = nodeComments dfoExt
 #else
