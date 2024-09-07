@@ -313,7 +313,7 @@ nodeCommentsMatchContext PatSyn {} = emptyNodeComments
 #if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsMatchContext LambdaExpr {} = emptyNodeComments
 #endif
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsMatchContext LamCaseAlt {} = emptyNodeComments
 #endif
 instance CommentExtraction (ParStmtBlock GhcPs GhcPs) where
