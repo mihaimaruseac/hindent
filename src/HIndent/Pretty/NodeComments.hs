@@ -656,12 +656,10 @@ nodeCommentsIE (IEThingAll x _) = nodeComments x
 nodeCommentsIE (IEThingWith x _ _ _) = nodeComments x
 nodeCommentsIE (IEModuleContents x _) = nodeComments x
 #endif
-instance CommentExtraction
-           (FamEqn GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs))) where
+instance CommentExtraction (FamEqn GhcPs a) where
   nodeComments = nodeCommentsFamEqn
 
-nodeCommentsFamEqn ::
-     FamEqn GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs)) -> NodeComments
+nodeCommentsFamEqn :: FamEqn GhcPs a -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsFamEqn FamEqn {..} = mconcat $ fmap nodeComments feqn_ext
 #else
@@ -669,15 +667,6 @@ nodeCommentsFamEqn FamEqn {..} = nodeComments feqn_ext
 #endif
 instance CommentExtraction FamEqn' where
   nodeComments FamEqn' {..} = nodeComments famEqn
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
--- | Pretty-print a data instance.
-instance CommentExtraction (FamEqn GhcPs (HsDataDefn GhcPs)) where
-  nodeComments FamEqn {..} = mconcat $ fmap nodeComments feqn_ext
-#else
--- | Pretty-print a data instance.
-instance CommentExtraction (FamEqn GhcPs (HsDataDefn GhcPs)) where
-  nodeComments FamEqn {..} = nodeComments feqn_ext
-#endif
 -- | HsArg (LHsType GhcPs) (LHsType GhcPs)
 #if MIN_VERSION_ghc_lib_parser(9,8,1)
 instance CommentExtraction
