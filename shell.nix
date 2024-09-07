@@ -6,7 +6,7 @@ in
 pkgs.mkShell {
   packages = with pkgs; [
     cabal-install
-    haskell.compiler.ghc98
+    haskell.compiler.ghc981
     zlib.dev
   ];
 
