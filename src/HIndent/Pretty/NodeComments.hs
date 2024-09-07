@@ -455,15 +455,17 @@ instance CommentExtraction (HsLocalBindsLR GhcPs GhcPs) where
 instance CommentExtraction (HsValBindsLR GhcPs GhcPs) where
   nodeComments ValBinds {} = emptyNodeComments
   nodeComments XValBindsLR {} = notUsedInParsedStage
+
+instance CommentExtraction (HsTupArg GhcPs) where
+  nodeComments = nodeCommentsHsTupArg
+
+nodeCommentsHsTupArg :: HsTupArg GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (HsTupArg GhcPs) where
-  nodeComments Present {} = emptyNodeComments
-  nodeComments (Missing x) = nodeComments x
+nodeCommentsHsTupArg Present {} = emptyNodeComments
 #else
-instance CommentExtraction (HsTupArg GhcPs) where
-  nodeComments (Present x _) = nodeComments x
-  nodeComments (Missing x) = nodeComments x
+nodeCommentsHsTupArg (Present x _) = nodeComments x
 #endif
+nodeCommentsHsTupArg (Missing x) = nodeComments x
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 instance CommentExtraction RecConField where
   nodeComments (RecConField x) = nodeComments x
