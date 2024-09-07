@@ -635,34 +635,26 @@ instance CommentExtraction (IE GhcPs) where
   nodeComments = nodeCommentsIE
 
 nodeCommentsIE :: IE GhcPs -> NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsIE IEVar {} = emptyNodeComments
+nodeCommentsIE IEGroup {} = emptyNodeComments
+nodeCommentsIE IEDoc {} = emptyNodeComments
+nodeCommentsIE IEDocNamed {} = emptyNodeComments
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsIE (IEThingAbs _ x _) = nodeComments x
 nodeCommentsIE (IEThingAll _ x _) = nodeComments x
 nodeCommentsIE (IEThingWith _ x _ _ _) = nodeComments x
 nodeCommentsIE (IEModuleContents (x, y) _) =
   mconcat $ maybeToList (fmap nodeComments x) <> fmap nodeComments y
-nodeCommentsIE IEGroup {} = emptyNodeComments
-nodeCommentsIE IEDoc {} = emptyNodeComments
-nodeCommentsIE IEDocNamed {} = emptyNodeComments
 #elif MIN_VERSION_ghc_lib_parser(9, 8, 1)
-nodeCommentsIE IEVar {} = emptyNodeComments
 nodeCommentsIE (IEThingAbs (_, x) _) = nodeComments x
 nodeCommentsIE (IEThingAll (_, x) _) = nodeComments x
 nodeCommentsIE (IEThingWith (_, x) _ _ _) = nodeComments x
 nodeCommentsIE (IEModuleContents (_, x) _) = nodeComments x
-nodeCommentsIE IEGroup {} = emptyNodeComments
-nodeCommentsIE IEDoc {} = emptyNodeComments
-nodeCommentsIE IEDocNamed {} = emptyNodeComments
 #else
-nodeCommentsIE IEVar {} = emptyNodeComments
 nodeCommentsIE (IEThingAbs x _) = nodeComments x
 nodeCommentsIE (IEThingAll x _) = nodeComments x
 nodeCommentsIE (IEThingWith x _ _ _) = nodeComments x
 nodeCommentsIE (IEModuleContents x _) = nodeComments x
-nodeCommentsIE IEGroup {} = emptyNodeComments
-nodeCommentsIE IEDoc {} = emptyNodeComments
-nodeCommentsIE IEDocNamed {} = emptyNodeComments
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance CommentExtraction
