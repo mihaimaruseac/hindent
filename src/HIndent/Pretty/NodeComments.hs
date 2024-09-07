@@ -236,60 +236,46 @@ instance CommentExtraction
   nodeComments HsRecFields {} = emptyNodeComments
 
 instance CommentExtraction (HsType GhcPs) where
-  nodeComments = nodeComments . HsType' HsTypeForNormalDecl HsTypeNoDir
+  nodeComments = nodeCommentsHsType
+
+nodeCommentsHsType :: HsType GhcPs -> NodeComments
+nodeCommentsHsType HsForAllTy {} = emptyNodeComments
+nodeCommentsHsType HsQualTy {} = emptyNodeComments
+nodeCommentsHsType HsAppTy {} = emptyNodeComments
+nodeCommentsHsType HsAppKindTy {} = emptyNodeComments
+nodeCommentsHsType (HsListTy x _) = nodeComments x
+nodeCommentsHsType (HsTupleTy x _ _) = nodeComments x
+nodeCommentsHsType (HsSumTy x _) = nodeComments x
+nodeCommentsHsType HsOpTy {} = emptyNodeComments
+nodeCommentsHsType (HsParTy x _) = nodeComments x
+nodeCommentsHsType HsStarTy {} = emptyNodeComments
+nodeCommentsHsType HsSpliceTy {} = emptyNodeComments
+nodeCommentsHsType (HsRecTy x _) = nodeComments x
+nodeCommentsHsType HsTyLit {} = emptyNodeComments
+nodeCommentsHsType HsWildCardTy {} = emptyNodeComments
+nodeCommentsHsType XHsType {} = emptyNodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction HsType' where
-  nodeComments (HsType' _ _ HsForAllTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ HsQualTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ (HsTyVar x _ _)) = mconcat $ fmap nodeComments x
-  nodeComments (HsType' _ _ HsAppTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ HsAppKindTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ HsFunTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ (HsListTy x _)) = nodeComments x
-  nodeComments (HsType' _ _ (HsTupleTy x _ _)) = nodeComments x
-  nodeComments (HsType' _ _ (HsSumTy x _)) = nodeComments x
-  nodeComments (HsType' _ _ HsOpTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ (HsParTy x _)) = nodeComments x
-  nodeComments (HsType' _ _ (HsIParamTy x _ _)) = mconcat $ fmap nodeComments x
-  nodeComments (HsType' _ _ HsStarTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ (HsKindSig x _ _)) = mconcat $ fmap nodeComments x
-  nodeComments (HsType' _ _ HsSpliceTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ (HsDocTy x _ _)) = mconcat $ fmap nodeComments x
-  nodeComments (HsType' _ _ (HsBangTy x _ _)) = mconcat $ fmap nodeComments x
-  nodeComments (HsType' _ _ (HsRecTy x _)) = nodeComments x
-  nodeComments (HsType' _ _ (HsExplicitListTy x _ _)) =
-    mconcat $ fmap nodeComments x
-  nodeComments (HsType' _ _ (HsExplicitTupleTy x _)) =
-    mconcat $ fmap nodeComments x
-  nodeComments (HsType' _ _ HsTyLit {}) = emptyNodeComments
-  nodeComments (HsType' _ _ HsWildCardTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ XHsType {}) = emptyNodeComments
+nodeCommentsHsType (HsTyVar x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsHsType HsFunTy {} = emptyNodeComments
+nodeCommentsHsType (HsIParamTy x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsHsType (HsKindSig x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsHsType (HsDocTy x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsHsType (HsBangTy x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsHsType (HsExplicitListTy x _ _) = mconcat $ fmap nodeComments x
+nodeCommentsHsType (HsExplicitTupleTy x _) = mconcat $ fmap nodeComments x
 #else
-instance CommentExtraction HsType' where
-  nodeComments (HsType' _ _ HsForAllTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ HsQualTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ (HsTyVar x _ _)) = nodeComments x
-  nodeComments (HsType' _ _ HsAppTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ HsAppKindTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ (HsFunTy x _ _ _)) = nodeComments x
-  nodeComments (HsType' _ _ (HsListTy x _)) = nodeComments x
-  nodeComments (HsType' _ _ (HsTupleTy x _ _)) = nodeComments x
-  nodeComments (HsType' _ _ (HsSumTy x _)) = nodeComments x
-  nodeComments (HsType' _ _ HsOpTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ (HsParTy x _)) = nodeComments x
-  nodeComments (HsType' _ _ (HsIParamTy x _ _)) = nodeComments x
-  nodeComments (HsType' _ _ HsStarTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ (HsKindSig x _ _)) = nodeComments x
-  nodeComments (HsType' _ _ HsSpliceTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ (HsDocTy x _ _)) = nodeComments x
-  nodeComments (HsType' _ _ (HsBangTy x _ _)) = nodeComments x
-  nodeComments (HsType' _ _ (HsRecTy x _)) = nodeComments x
-  nodeComments (HsType' _ _ (HsExplicitListTy x _ _)) = nodeComments x
-  nodeComments (HsType' _ _ (HsExplicitTupleTy x _)) = nodeComments x
-  nodeComments (HsType' _ _ HsTyLit {}) = emptyNodeComments
-  nodeComments (HsType' _ _ HsWildCardTy {}) = emptyNodeComments
-  nodeComments (HsType' _ _ XHsType {}) = emptyNodeComments
+nodeCommentsHsType (HsTyVar x _ _) = nodeComments x
+nodeCommentsHsType (HsFunTy x _ _ _) = nodeComments x
+nodeCommentsHsType (HsIParamTy x _ _) = nodeComments x
+nodeCommentsHsType (HsKindSig x _ _) = nodeComments x
+nodeCommentsHsType (HsDocTy x _ _) = nodeComments x
+nodeCommentsHsType (HsBangTy x _ _) = nodeComments x
+nodeCommentsHsType (HsExplicitListTy x _ _) = nodeComments x
+nodeCommentsHsType (HsExplicitTupleTy x _) = nodeComments x
 #endif
+instance CommentExtraction HsType' where
+  nodeComments HsType' {..} = nodeComments hsType
+
 instance CommentExtraction (GRHSs GhcPs a) where
   nodeComments GRHSs {..} = NodeComments {..}
     where
