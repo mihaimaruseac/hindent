@@ -83,6 +83,7 @@ jobs:
         id: hash_execs
         run: |
           set -euo pipefail
+          ls -l .execs/*
           echo "hash_execs=$(sha256sum .execs/* | base64 -w0)" >> "${GITHUB_OUTPUT}"
 
       # When uploading executables we push them all to the same archive and
@@ -98,7 +99,7 @@ jobs:
       - name: Upload executables as an artifact for later jobs in workflow
         uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
-          path: .execs/
+          path: .execs/*
           name: executables.zip # When downloading it is a zip with all executables
           if-no-files-found: error
           retention-days: 1
