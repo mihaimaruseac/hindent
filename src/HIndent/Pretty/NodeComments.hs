@@ -598,16 +598,6 @@ nodeCommentsHsTyVarBndr (KindedTyVar x _ _ _) = mconcat $ fmap nodeComments x
 nodeCommentsHsTyVarBndr (UserTyVar x _ _) = nodeComments x
 nodeCommentsHsTyVarBndr (KindedTyVar x _ _ _) = nodeComments x
 #endif
-instance CommentExtraction (InjectivityAnn GhcPs) where
-  nodeComments = nodeCommentsInjectivityAnn
-
-nodeCommentsInjectivityAnn :: InjectivityAnn GhcPs -> NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsInjectivityAnn (InjectivityAnn x _ _) =
-  mconcat $ fmap nodeComments x
-#else
-nodeCommentsInjectivityAnn (InjectivityAnn x _ _) = nodeComments x
-#endif
 instance CommentExtraction (ArithSeqInfo GhcPs) where
   nodeComments From {} = emptyNodeComments
   nodeComments FromThen {} = emptyNodeComments
