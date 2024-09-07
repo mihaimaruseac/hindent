@@ -941,7 +941,7 @@ nodeCommentsHsPragE :: HsPragE GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 nodeCommentsHsPragE (HsPragSCC (x, _) _) = nodeComments x
 #else
-nodeCommentsHsPragE (HsPragSCC x _) = nodeComments x
+nodeCommentsHsPragE (HsPragSCC x _ _) = nodeComments x
 #endif
 instance CommentExtraction (IPBind GhcPs) where
   nodeComments = nodeCommentsIPBind
