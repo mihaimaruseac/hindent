@@ -656,14 +656,16 @@ nodeCommentsIE (IEThingAll x _) = nodeComments x
 nodeCommentsIE (IEThingWith x _ _ _) = nodeComments x
 nodeCommentsIE (IEModuleContents x _) = nodeComments x
 #endif
+instance CommentExtraction
+           (FamEqn GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs))) where
+  nodeComments = nodeCommentsFamEqn
+
+nodeCommentsFamEqn ::
+     FamEqn GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs)) -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction
-           (FamEqn GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs))) where
-  nodeComments FamEqn {..} = mconcat $ fmap nodeComments feqn_ext
+nodeCommentsFamEqn FamEqn {..} = mconcat $ fmap nodeComments feqn_ext
 #else
-instance CommentExtraction
-           (FamEqn GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs))) where
-  nodeComments FamEqn {..} = nodeComments feqn_ext
+nodeCommentsFamEqn FamEqn {..} = nodeComments feqn_ext
 #endif
 instance CommentExtraction FamEqn' where
   nodeComments FamEqn' {..} = nodeComments famEqn
