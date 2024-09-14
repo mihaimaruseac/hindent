@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.NodeComments
@@ -24,6 +25,11 @@ instance Semigroup NodeComments where
       , commentsAfter = commentsAfter x <> commentsAfter y
       }
 
+instance Monoid NodeComments where
+  mempty =
+    NodeComments
+      {commentsBefore = [], commentsOnSameLine = [], commentsAfter = []}
+
 fromEpAnn :: GHC.EpAnn a -> NodeComments
 fromEpAnn = fromEpAnn' . filterOutEofAndPragmasFromAnn
 
@@ -38,13 +44,15 @@ fromEpAnn' GHC.EpAnn {..} = NodeComments {..}
     isCommentOnSameLine (GHC.L comAnn _) =
       GHC.srcSpanEndLine (GHC.anchor entry)
         == GHC.srcSpanStartLine (GHC.anchor comAnn)
+#if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 fromEpAnn' GHC.EpAnnNotUsed = NodeComments [] [] []
-
+#endif
 filterOutEofAndPragmasFromAnn :: GHC.EpAnn ann -> GHC.EpAnn ann
 filterOutEofAndPragmasFromAnn GHC.EpAnn {..} =
   GHC.EpAnn {comments = filterOutEofAndPragmasFromComments comments, ..}
+#if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 filterOutEofAndPragmasFromAnn GHC.EpAnnNotUsed = GHC.EpAnnNotUsed
-
+#endif
 filterOutEofAndPragmasFromComments :: GHC.EpAnnComments -> GHC.EpAnnComments
 filterOutEofAndPragmasFromComments comments =
   GHC.EpaCommentsBalanced
@@ -58,7 +66,9 @@ filterOutEofAndPragmas ::
 filterOutEofAndPragmas = filter isNeitherEofNorPragmaComment
 
 isNeitherEofNorPragmaComment :: GHC.GenLocated l GHC.EpaComment -> Bool
+#if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 isNeitherEofNorPragmaComment (GHC.L _ (GHC.EpaComment GHC.EpaEofComment _)) =
   False
+#endif
 isNeitherEofNorPragmaComment (GHC.L _ (GHC.EpaComment tok _)) =
   not $ isPragma tok

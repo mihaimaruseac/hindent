@@ -5,15 +5,17 @@ module HIndent.Ast.Declaration.Class.FunctionalDependency
   , mkFunctionalDependency
   ) where
 
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 data FunctionalDependency = FunctionalDependency
-  { from :: [GHC.LIdP GHC.GhcPs]
-  , to :: [GHC.LIdP GHC.GhcPs]
+  { from :: [WithComments PrefixName]
+  , to :: [WithComments PrefixName]
   }
 
 instance CommentExtraction FunctionalDependency where
@@ -24,4 +26,7 @@ instance Pretty FunctionalDependency where
     spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to
 
 mkFunctionalDependency :: GHC.FunDep GHC.GhcPs -> FunctionalDependency
-mkFunctionalDependency (GHC.FunDep _ from to) = FunctionalDependency {..}
+mkFunctionalDependency (GHC.FunDep _ f t) = FunctionalDependency {..}
+  where
+    from = fmap (fromGenLocated . fmap mkPrefixName) f
+    to = fmap (fromGenLocated . fmap mkPrefixName) t

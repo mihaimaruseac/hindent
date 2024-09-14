@@ -12,7 +12,9 @@ import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Declaration.Foreign.CallingConvention
 import HIndent.Ast.Declaration.Foreign.Safety
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -25,13 +27,13 @@ data ForeignDeclaration
       { convention :: CallingConvention
       , safety :: Safety
       , srcIdent :: Maybe String
-      , dstIdent :: GHC.LIdP GHC.GhcPs
+      , dstIdent :: WithComments PrefixName
       , signature :: GHC.LHsSigType GHC.GhcPs
       }
   | ForeignExport
       { convention :: CallingConvention
       , srcIdent :: Maybe String
-      , dstIdent :: GHC.LIdP GHC.GhcPs
+      , dstIdent :: WithComments PrefixName
       , signature :: GHC.LHsSigType GHC.GhcPs
       }
 
@@ -63,7 +65,7 @@ mkForeignDeclaration GHC.ForeignImport { fd_fi = (GHC.CImport (GHC.L _ src) (GHC
       case src of
         GHC.SourceText s -> Just $ GHC.unpackFS s
         _ -> Nothing
-    dstIdent = fd_name
+    dstIdent = fromGenLocated $ fmap mkPrefixName fd_name
     signature = fd_sig_ty
 mkForeignDeclaration GHC.ForeignExport { fd_fe = (GHC.CExport (GHC.L _ src) (GHC.L _ (GHC.CExportStatic _ _ conv)))
                                        , ..
@@ -74,7 +76,7 @@ mkForeignDeclaration GHC.ForeignExport { fd_fe = (GHC.CExport (GHC.L _ src) (GHC
       case src of
         GHC.SourceText s -> Just $ GHC.unpackFS s
         _ -> Nothing
-    dstIdent = fd_name
+    dstIdent = fromGenLocated $ fmap mkPrefixName fd_name
     signature = fd_sig_ty
 #elif MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkForeignDeclaration GHC.ForeignImport { fd_fi = (GHC.CImport (GHC.L _ src) (GHC.L _ conv) (GHC.L _ sfty) _ _)
@@ -87,7 +89,7 @@ mkForeignDeclaration GHC.ForeignImport { fd_fi = (GHC.CImport (GHC.L _ src) (GHC
       case src of
         GHC.SourceText s -> Just s
         _ -> Nothing
-    dstIdent = fd_name
+    dstIdent = fromGenLocated $ fmap mkPrefixName fd_name
     signature = fd_sig_ty
 mkForeignDeclaration GHC.ForeignExport { fd_fe = (GHC.CExport (GHC.L _ src) (GHC.L _ (GHC.CExportStatic _ _ conv)))
                                        , ..
@@ -98,7 +100,7 @@ mkForeignDeclaration GHC.ForeignExport { fd_fe = (GHC.CExport (GHC.L _ src) (GHC
       case src of
         GHC.SourceText s -> Just s
         _ -> Nothing
-    dstIdent = fd_name
+    dstIdent = fromGenLocated $ fmap mkPrefixName fd_name
     signature = fd_sig_ty
 #else
 mkForeignDeclaration GHC.ForeignImport { fd_fi = (GHC.CImport (GHC.L _ conv) (GHC.L _ sfty) _ _ (GHC.L _ src))
@@ -111,7 +113,7 @@ mkForeignDeclaration GHC.ForeignImport { fd_fi = (GHC.CImport (GHC.L _ conv) (GH
       case src of
         GHC.SourceText s -> Just s
         _ -> Nothing
-    dstIdent = fd_name
+    dstIdent = fromGenLocated $ fmap mkPrefixName fd_name
     signature = fd_sig_ty
 mkForeignDeclaration GHC.ForeignExport { fd_fe = (GHC.CExport (GHC.L _ (GHC.CExportStatic _ _ conv)) (GHC.L _ src))
                                        , ..
@@ -122,6 +124,6 @@ mkForeignDeclaration GHC.ForeignExport { fd_fe = (GHC.CExport (GHC.L _ (GHC.CExp
       case src of
         GHC.SourceText s -> Just s
         _ -> Nothing
-    dstIdent = fd_name
+    dstIdent = fromGenLocated $ fmap mkPrefixName fd_name
     signature = fd_sig_ty
 #endif

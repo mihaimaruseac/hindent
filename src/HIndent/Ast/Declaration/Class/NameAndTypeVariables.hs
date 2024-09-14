@@ -6,8 +6,9 @@ module HIndent.Ast.Declaration.Class.NameAndTypeVariables
   ) where
 
 import qualified GHC.Types.Fixity as GHC
+import HIndent.Ast.Name.Infix
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
-import HIndent.Ast.Operator.Infix
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -17,12 +18,12 @@ import HIndent.Pretty.NodeComments
 
 data NameAndTypeVariables
   = Prefix
-      { name :: GHC.LIdP GHC.GhcPs
+      { pName :: WithComments PrefixName -- Using `name` in both `Prefix` and `Infix` causes a type conflict.
       , typeVariables :: [WithComments TypeVariable]
       }
   | Infix
       { left :: WithComments TypeVariable
-      , name :: GHC.LIdP GHC.GhcPs
+      , iName :: WithComments InfixName
       , right :: WithComments TypeVariable
       , remains :: [WithComments TypeVariable]
       }
@@ -32,17 +33,16 @@ instance CommentExtraction NameAndTypeVariables where
   nodeComments Infix {} = NodeComments [] [] []
 
 instance Pretty NameAndTypeVariables where
-  pretty' Prefix {..} = spaced $ pretty name : fmap pretty typeVariables
+  pretty' Prefix {..} = spaced $ pretty pName : fmap pretty typeVariables
   pretty' Infix {..} = do
-    parens
-      $ spaced [pretty left, pretty $ fmap mkInfixOperator name, pretty right]
+    parens $ spaced [pretty left, pretty iName, pretty right]
     spacePrefixed $ fmap pretty remains
 
 mkNameAndTypeVariables :: GHC.TyClDecl GHC.GhcPs -> Maybe NameAndTypeVariables
 mkNameAndTypeVariables GHC.ClassDecl {tcdFixity = GHC.Prefix, ..} =
   Just Prefix {..}
   where
-    name = tcdLName
+    pName = fromGenLocated $ fmap mkPrefixName tcdLName
     typeVariables =
       fmap mkTypeVariable . fromGenLocated <$> GHC.hsq_explicit tcdTyVars
 mkNameAndTypeVariables GHC.ClassDecl { tcdFixity = GHC.Infix
@@ -51,7 +51,7 @@ mkNameAndTypeVariables GHC.ClassDecl { tcdFixity = GHC.Infix
                                      } = Just Infix {..}
   where
     left = mkTypeVariable <$> fromGenLocated h
-    name = tcdLName
+    iName = fromGenLocated $ fmap mkInfixName tcdLName
     right = mkTypeVariable <$> fromGenLocated t
     remains = fmap (fmap mkTypeVariable . fromGenLocated) xs
 mkNameAndTypeVariables _ = Nothing

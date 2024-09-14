@@ -43,11 +43,19 @@ instance Pretty ImportEntry where
     pretty name >> hFillingTuple (fmap pretty constructors)
 
 mkImportEntry :: GHC.IE GHC.GhcPs -> ImportEntry
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+mkImportEntry (GHC.IEVar _ name _) = SingleIdentifier name
+mkImportEntry (GHC.IEThingAbs _ name _) = SingleIdentifier name
+mkImportEntry (GHC.IEThingAll _ name _) = WithAllConstructors name
+mkImportEntry (GHC.IEThingWith _ name _ constructors _) =
+  WithSpecificConstructors {..}
+#else
 mkImportEntry (GHC.IEVar _ name) = SingleIdentifier name
 mkImportEntry (GHC.IEThingAbs _ name) = SingleIdentifier name
 mkImportEntry (GHC.IEThingAll _ name) = WithAllConstructors name
 mkImportEntry (GHC.IEThingWith _ name _ constructors) =
   WithSpecificConstructors {..}
+#endif
 mkImportEntry _ = undefined
 
 sortVariantsAndExplicitImports ::

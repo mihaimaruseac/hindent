@@ -4,7 +4,17 @@
 
 ### Added
 
-- Support for GHC 9.8 ([#775]).
+### Changed
+
+### Fixed
+
+### Removed
+
+## [6.2.0] - 2024-09-07
+
+### Added
+
+- Support for GHC 9.8 ([#775]) and GHC 9.10([#904]).
 - Support for `ImportPostQualified` ([#875]).
 - HIndent now formats multiple files in parallel ([#914]).
 
@@ -13,6 +23,7 @@
 - The formatting style of import declarations with constructors ([#829]).
 - HIndent no longer inserts an empty line after a standalone kind signature ([#873]).
 - Bumped Stack LTS to 22.26 ([#918]).
+- HIndent re-assumes the default extensions are enabled ([#904]).
 
 ### Fixed
 
@@ -26,6 +37,8 @@
 - Fix the bug of not pretty-printing unboxed tuples ([#868])
 
 ### Removed
+
+- Support for GHC 8.10 ([#950])
 
 ## [6.1.0] - 2023-05-17
 
@@ -348,7 +361,8 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - A bug in printing operators in statements.
 
-[unreleased]: https://github.com/mihaimaruseac/hindent/compare/v6.1.0...HEAD
+[unreleased]: https://github.com/mihaimaruseac/hindent/compare/v6.2.0...HEAD
+[6.2.0]: https://github.com/mihaimaruseac/hindent/compare/v6.1.0...v6.2.0
 [6.1.0]: https://github.com/mihaimaruseac/hindent/compare/v6.0.0...v6.1.0
 [6.0.0]: https://github.com/mihaimaruseac/hindent/compare/v5.3.4...v6.0.0
 [5.3.4]: https://github.com/mihaimaruseac/hindent/compare/v5.3.3...v5.3.4
@@ -379,8 +393,10 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#950]: https://github.com/mihaimaruseac/hindent/pull/950
 [#918]: https://github.com/mihaimaruseac/hindent/pull/918
 [#914]: https://github.com/mihaimaruseac/hindent/pull/914
+[#904]: https://github.com/mihaimaruseac/hindent/pull/904
 [#875]: https://github.com/mihaimaruseac/hindent/pull/875
 [#873]: https://github.com/mihaimaruseac/hindent/pull/873
 [#868]: https://github.com/mihaimaruseac/hindent/pull/868

@@ -21,7 +21,7 @@ data Bracket
   | Pattern (GHC.LPat GHC.GhcPs)
   | Declaration [WithComments Declaration]
   | Type (GHC.LHsType GHC.GhcPs)
-  | Variable Bool (GHC.LIdP GHC.GhcPs)
+  | Variable Bool (WithComments PrefixName)
 
 class MkBracket a where
   mkBracket :: a -> Bracket

@@ -7,8 +7,9 @@ module HIndent.Ast.Declaration.Data.Haskell98.Constructor.Body
   ) where
 
 import HIndent.Ast.Declaration.Data.Record.Field
+import HIndent.Ast.Name.Infix
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
-import HIndent.Ast.Operator.Infix
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -17,16 +18,16 @@ import HIndent.Pretty.NodeComments
 
 data Haskell98ConstructorBody
   = Infix
-      { name :: GHC.LIdP GHC.GhcPs
+      { iName :: WithComments InfixName -- Using `name` in all constructors causes a type clash
       , left :: GHC.HsScaled GHC.GhcPs (GHC.LBangType GHC.GhcPs)
       , right :: GHC.HsScaled GHC.GhcPs (GHC.LBangType GHC.GhcPs)
       }
   | Prefix
-      { name :: GHC.LIdP GHC.GhcPs
+      { pName :: WithComments PrefixName
       , types :: [GHC.HsScaled GHC.GhcPs (GHC.LBangType GHC.GhcPs)]
       }
   | Record
-      { name :: GHC.LIdP GHC.GhcPs
+      { rName :: WithComments PrefixName
       , records :: WithComments [WithComments RecordField]
       }
 
@@ -36,14 +37,13 @@ instance CommentExtraction Haskell98ConstructorBody where
   nodeComments Record {} = NodeComments [] [] []
 
 instance Pretty Haskell98ConstructorBody where
-  pretty' Infix {..} =
-    spaced [pretty left, pretty $ fmap mkInfixOperator name, pretty right]
-  pretty' Prefix {..} = pretty name >> hor <-|> ver
+  pretty' Infix {..} = spaced [pretty left, pretty iName, pretty right]
+  pretty' Prefix {..} = pretty pName >> hor <-|> ver
     where
       hor = spacePrefixed $ fmap pretty types
       ver = indentedBlock $ newlinePrefixed $ fmap pretty types
   pretty' Record {..} = do
-    pretty name
+    pretty rName
     prettyWith records $ \r ->
       newline >> indentedBlock (vFields $ fmap pretty r)
 
@@ -51,15 +51,17 @@ mkHaskell98ConstructorBody ::
      GHC.ConDecl GHC.GhcPs -> Maybe Haskell98ConstructorBody
 mkHaskell98ConstructorBody GHC.ConDeclH98 { con_args = GHC.InfixCon left right
                                           , ..
-                                          } = Just Infix {name = con_name, ..}
+                                          } = Just Infix {..}
+  where
+    iName = fromGenLocated $ fmap mkInfixName con_name
 mkHaskell98ConstructorBody GHC.ConDeclH98 {con_args = GHC.PrefixCon _ types, ..} =
   Just Prefix {..}
   where
-    name = con_name
+    pName = fromGenLocated $ fmap mkPrefixName con_name
 mkHaskell98ConstructorBody GHC.ConDeclH98 {con_args = GHC.RecCon rs, ..} =
   Just Record {..}
   where
-    name = con_name
+    rName = fromGenLocated $ fmap mkPrefixName con_name
     records =
       fromGenLocated $ fmap (fmap (fmap mkRecordField . fromGenLocated)) rs
 mkHaskell98ConstructorBody GHC.ConDeclGADT {} = Nothing

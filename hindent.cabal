@@ -1,11 +1,11 @@
 cabal-version: 2.0
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           hindent
-version:        6.1.1
+version:        6.2.0
 synopsis:       Extensible Haskell pretty printer
 description:    Extensible Haskell pretty printer. Both a library and an executable.
                 See the GitHub page for usage \/ explanation: <https://github.com/mihaimaruseac/hindent>
@@ -108,9 +108,9 @@ library
       HIndent.Ast.Module.Export.Entry
       HIndent.Ast.Module.Name
       HIndent.Ast.Module.Warning
+      HIndent.Ast.Name.Infix
+      HIndent.Ast.Name.Prefix
       HIndent.Ast.NodeComments
-      HIndent.Ast.Operator.Infix
-      HIndent.Ast.Operator.Prefix
       HIndent.Ast.Role
       HIndent.Ast.Type
       HIndent.Ast.Type.Variable
@@ -158,14 +158,14 @@ library
   ghc-options: -Wall -O2 -threaded
   build-depends:
       Cabal
-    , async
+    , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
     , containers
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.9
+    , ghc-lib-parser >=9.2 && <9.11
     , ghc-lib-parser-ex
     , monad-loops
     , mtl
@@ -193,7 +193,7 @@ library hindent-internal
   ghc-options: -Wall -O2 -threaded
   build-depends:
       Cabal
-    , async
+    , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -201,7 +201,7 @@ library hindent-internal
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.9
+    , ghc-lib-parser >=9.2 && <9.11
     , ghc-lib-parser-ex
     , monad-loops
     , mtl
@@ -228,14 +228,14 @@ executable hindent
   ghc-options: -Wall -O2 -threaded
   build-depends:
       Cabal
-    , async
+    , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
     , containers
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.9
+    , ghc-lib-parser >=9.2 && <9.11
     , ghc-lib-parser-ex
     , hindent
     , monad-loops
@@ -265,14 +265,14 @@ test-suite hindent-test
   build-depends:
       Cabal
     , Diff
-    , async
+    , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
     , containers
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.9
+    , ghc-lib-parser >=9.2 && <9.11
     , ghc-lib-parser-ex
     , hindent
     , hindent-internal
@@ -303,7 +303,7 @@ benchmark hindent-bench
   ghc-options: -Wall -O2 -threaded
   build-depends:
       Cabal
-    , async
+    , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -312,7 +312,7 @@ benchmark hindent-bench
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.9
+    , ghc-lib-parser >=9.2 && <9.11
     , ghc-lib-parser-ex
     , hindent
     , hindent-internal

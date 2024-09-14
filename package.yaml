@@ -1,7 +1,7 @@
 spec-version: 0.30.0
 
 name:         hindent
-version:      6.1.1
+version:      6.2.0
 synopsis:     Extensible Haskell pretty printer
 description:  |
   Extensible Haskell pretty printer. Both a library and an executable.
@@ -28,14 +28,14 @@ ghc-options: -Wall -O2 -threaded
 
 dependencies:
   - Cabal
-  - async
+  - async >= 2.2.5
   - base >= 4.7 && < 5
   - bytestring
   - containers
   - directory
   - exceptions
   - filepath
-  - ghc-lib-parser >= 9.2 && < 9.9
+  - ghc-lib-parser >= 9.2 && < 9.11
   - ghc-lib-parser-ex
   - monad-loops
   - mtl

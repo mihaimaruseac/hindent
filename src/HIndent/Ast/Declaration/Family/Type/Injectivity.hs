@@ -5,15 +5,17 @@ module HIndent.Ast.Declaration.Family.Type.Injectivity
   , mkInjectivity
   ) where
 
+import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 data Injectivity = Injectivity
-  { from :: GHC.LIdP GHC.GhcPs
-  , to :: [GHC.LIdP GHC.GhcPs]
+  { from :: WithComments PrefixName
+  , to :: [WithComments PrefixName]
   }
 
 instance CommentExtraction Injectivity where
@@ -23,4 +25,7 @@ instance Pretty Injectivity where
   pretty' Injectivity {..} = spaced $ pretty from : string "->" : fmap pretty to
 
 mkInjectivity :: GHC.InjectivityAnn GHC.GhcPs -> Injectivity
-mkInjectivity (GHC.InjectivityAnn _ from to) = Injectivity {..}
+mkInjectivity (GHC.InjectivityAnn _ f t) = Injectivity {..}
+  where
+    from = fromGenLocated $ fmap mkPrefixName f
+    to = fmap (fromGenLocated . fmap mkPrefixName) t

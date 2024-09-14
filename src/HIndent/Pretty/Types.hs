@@ -51,6 +51,7 @@ module HIndent.Pretty.Types
   , DataFamInstDeclFor(..)
   ) where
 
+import Data.List.NonEmpty
 import GHC.Hs
 import GHC.Types.Name.Reader
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
@@ -239,7 +240,7 @@ data LambdaCase = LambdaCase
 -- | Use this type to pretty-print a list comprehension.
 data ListComprehension = ListComprehension
   { listCompLhs :: ExprLStmt GhcPs -- ^ @f x@ of @[f x| x <- xs]@.
-  , listCompRhs :: [ExprLStmt GhcPs] -- ^ @x <- xs@ of @[f x| x <- xs]@.
+  , listCompRhs :: NonEmpty (ExprLStmt GhcPs) -- ^ @x <- xs@ of @[f x| x <- xs]@.
   }
 
 -- | Use this type to pretty-print a do expression.

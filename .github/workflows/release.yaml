@@ -15,7 +15,7 @@ jobs:
     # are not building a new cache here, just reusing an existing one.
     env:
       os: ubuntu-latest
-      ghc: 9.6.3
+      ghc: 9.8.1
     outputs:
       hash_sdist: ${{ steps.hash_sdist.outputs.hash_sdist }}
       hash_execs: ${{ steps.hash_execs.outputs.hash_execs }}
@@ -27,7 +27,7 @@ jobs:
 
       - name: Setup Haskell Compiler (cabal)
         id: setup-haskell
-        uses: haskell-actions/setup@33585e1a16afa5875e124b0ebc89dd0c2f872c21 # v2.7.3
+        uses: haskell-actions/setup@dd344bc1cec854a369df8814ce17ef337d6e6170 # v2.7.6
         with:
           ghc-version: ${{ env.ghc }}
 
@@ -67,7 +67,7 @@ jobs:
       # scripting if needed, but it works for our use cases as it is.
       # TODO(mihaimaruseac): Maybe fix to upload the path as needed
       - name: Upload sdist as an artifact for later jobs in workflow
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
           path: hindent-*.tar.gz
           name: sdist.zip # When downloading it is a zip containing the sdist tarball
@@ -83,6 +83,7 @@ jobs:
         id: hash_execs
         run: |
           set -euo pipefail
+          ls -l .execs/*
           echo "hash_execs=$(sha256sum .execs/* | base64 -w0)" >> "${GITHUB_OUTPUT}"
 
       # When uploading executables we push them all to the same archive and
@@ -96,11 +97,12 @@ jobs:
       # [1]: https://frontside.com/blog/2022-12-12-dynamic-github-action-jobs/
       # TODO(mihaimaruseac): Maybe use automatic matrix generation here
       - name: Upload executables as an artifact for later jobs in workflow
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
           path: .execs/
           name: executables.zip # When downloading it is a zip with all executables
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 1
 
   provenance-sdist:
@@ -135,17 +137,17 @@ jobs:
       contents: write # to upload to release notes
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: executables.zip
 
       - name: Download artifact
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: sdist.zip
 
       - name: Upload assets
-        uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2.0.5
+        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
         with:
           files: ./*
 

@@ -49,6 +49,15 @@ prettyVertically Record {..} =
     [prettyWith fields (vFields' . fmap pretty), pretty result]
 
 mkConstructorSignature :: GHC.ConDecl GHC.GhcPs -> Maybe ConstructorSignature
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.PrefixConGADT _ xs, ..} =
+  Just
+    $ ByArrows
+        { parameters =
+            fmap (fmap mkType . fromGenLocated . GHC.hsScaledThing) xs
+        , result = mkType <$> fromGenLocated con_res_ty
+        }
+#else
 mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.PrefixConGADT xs, ..} =
   Just
     $ ByArrows
@@ -56,7 +65,17 @@ mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.PrefixConGADT xs, ..} =
             fmap (fmap mkType . fromGenLocated . GHC.hsScaledThing) xs
         , result = mkType <$> fromGenLocated con_res_ty
         }
-#if MIN_VERSION_ghc_lib_parser(9, 4, 0)
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.RecConGADT _ xs, ..} =
+  Just
+    $ Record
+        { fields =
+            fromGenLocated
+              $ fmap (fmap (fmap mkRecordField . fromGenLocated)) xs
+        , result = mkType <$> fromGenLocated con_res_ty
+        }
+#elif MIN_VERSION_ghc_lib_parser(9, 4, 0)
 mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.RecConGADT xs _, ..} =
   Just
     $ Record
