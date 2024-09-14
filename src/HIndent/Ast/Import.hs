@@ -28,12 +28,12 @@ data QualificationPosition
   deriving (Eq)
 
 data Qualification = Qualification
-  { qualifiedAs :: Maybe (GHC.XRec GHC.GhcPs GHC.ModuleName)
+  { qualifiedAs :: Maybe (WithComments GHC.ModuleName)
   , position :: QualificationPosition
   } deriving (Eq)
 
 data Import = Import
-  { moduleName :: GHC.XRec GHC.GhcPs GHC.ModuleName
+  { moduleName :: WithComments GHC.ModuleName
   , isSafe :: Bool
   , isBoot :: Bool
   , qualification :: Maybe Qualification
@@ -62,7 +62,7 @@ instance Pretty Import where
 mkImport :: GHC.ImportDecl GHC.GhcPs -> Import
 mkImport decl@GHC.ImportDecl {..} = Import {..}
   where
-    moduleName = ideclName
+    moduleName = fromGenLocated ideclName
     isSafe = ideclSafe
     isBoot = ideclSource == GHC.IsBoot
     qualification =
@@ -73,9 +73,13 @@ mkImport decl@GHC.ImportDecl {..} = Import {..}
         (_, Nothing, GHC.QualifiedPost) ->
           Just Qualification {qualifiedAs = Nothing, position = Post}
         (_, Just name, GHC.QualifiedPre) ->
-          Just Qualification {qualifiedAs = Just name, position = Pre}
+          Just
+            Qualification
+              {qualifiedAs = Just $ fromGenLocated name, position = Pre}
         (_, Just name, GHC.QualifiedPost) ->
-          Just Qualification {qualifiedAs = Just name, position = Post}
+          Just
+            Qualification
+              {qualifiedAs = Just $ fromGenLocated name, position = Post}
     packageName = GHC.getPackageName decl
     importEntries = mkImportEntryCollection decl
 
@@ -84,7 +88,8 @@ sortByName = fmap sortExplicitImportsInDecl . sortByModuleName
 
 -- | This function sorts import declarations by their module names.
 sortByModuleName :: [WithComments Import] -> [WithComments Import]
-sortByModuleName = sortBy (compare `on` showOutputable . moduleName . getNode)
+sortByModuleName =
+  sortBy (compare `on` showOutputable . getNode . moduleName . getNode)
 
 -- | This function sorts explicit imports in the given import declaration
 -- by their names.

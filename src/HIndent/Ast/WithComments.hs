@@ -25,7 +25,7 @@ import HIndent.Printer
 data WithComments a = WithComments
   { comments :: NodeComments
   , node :: a
-  } deriving (Foldable, Traversable)
+  } deriving (Foldable, Traversable, Eq)
 
 instance Functor WithComments where
   fmap f WithComments {..} = WithComments comments (f node)
