@@ -36,9 +36,6 @@ class CommentExtraction a where
 instance CommentExtraction l => CommentExtraction (GenLocated l e) where
   nodeComments (L l _) = nodeComments l
 
-instance CommentExtraction (HsDataDefn GhcPs) where
-  nodeComments HsDataDefn {} = emptyNodeComments
-
 instance CommentExtraction (MatchGroup GhcPs a) where
   nodeComments MG {} = emptyNodeComments
 
