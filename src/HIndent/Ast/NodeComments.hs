@@ -15,7 +15,7 @@ data NodeComments = NodeComments
   { commentsBefore :: [GHC.LEpaComment]
   , commentsOnSameLine :: [GHC.LEpaComment]
   , commentsAfter :: [GHC.LEpaComment]
-  }
+  } deriving (Eq)
 
 instance Semigroup NodeComments where
   x <> y =

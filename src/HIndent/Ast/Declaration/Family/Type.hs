@@ -25,7 +25,7 @@ data TypeFamily = TypeFamily
   , typeVariables :: [WithComments TypeVariable]
   , signature :: WithComments ResultSignature
   , injectivity :: Maybe (WithComments Injectivity)
-  , equations :: Maybe [GHC.LTyFamInstEqn GHC.GhcPs]
+  , equations :: Maybe [WithComments (GHC.TyFamInstEqn GHC.GhcPs)]
   }
 
 instance CommentExtraction TypeFamily where
@@ -60,4 +60,4 @@ mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
         GHC.DataFamily -> error "Not a TypeFamily"
         GHC.OpenTypeFamily -> Nothing
         GHC.ClosedTypeFamily Nothing -> Just []
-        GHC.ClosedTypeFamily (Just xs) -> Just xs
+        GHC.ClosedTypeFamily (Just xs) -> Just $ fmap fromGenLocated xs
