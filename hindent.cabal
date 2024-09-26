@@ -152,7 +152,7 @@ library
       src
   ghc-options: -Wall -O2 -threaded
   build-depends:
-      Cabal
+      Cabal <3.12
     , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
@@ -187,7 +187,7 @@ library hindent-internal
       internal
   ghc-options: -Wall -O2 -threaded
   build-depends:
-      Cabal
+      Cabal <3.12
     , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
@@ -222,7 +222,7 @@ executable hindent
       app
   ghc-options: -Wall -O2 -threaded
   build-depends:
-      Cabal
+      Cabal <3.12
     , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
@@ -258,7 +258,7 @@ test-suite hindent-test
       tests
   ghc-options: -Wall -O2 -threaded
   build-depends:
-      Cabal
+      Cabal <3.12
     , Diff
     , async >=2.2.5
     , base >=4.7 && <5
@@ -297,7 +297,7 @@ benchmark hindent-bench
       benchmarks
   ghc-options: -Wall -O2 -threaded
   build-depends:
-      Cabal
+      Cabal <3.12
     , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
