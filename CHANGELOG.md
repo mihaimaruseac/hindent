@@ -10,6 +10,8 @@
 
 ### Removed
 
+- Support for GHC 9.0 ([#967])
+
 ## [6.2.0] - 2024-09-07
 
 ### Added
@@ -393,6 +395,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#967]: https://github.com/mihaimaruseac/hindent/pull/967
 [#950]: https://github.com/mihaimaruseac/hindent/pull/950
 [#918]: https://github.com/mihaimaruseac/hindent/pull/918
 [#914]: https://github.com/mihaimaruseac/hindent/pull/914
