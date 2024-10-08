@@ -11,21 +11,21 @@ module HIndent.ModulePreprocessing
   ( modifyASTForPrettyPrinting
   ) where
 
-import Control.Applicative
 import Data.Function
 import Data.List
-import Data.Maybe
 import GHC.Hs
-import GHC.Stack
 import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)
 import HIndent.Fixity
 import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.ModulePreprocessing.CommentRelocation
 import Language.Haskell.GhclibParserEx.Fixity
-import Type.Reflection
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 import qualified GHC.Data.Strict as Strict
+#else
+import Control.Applicative
+import Data.Maybe
+import Type.Reflection
 #endif
 -- | This function modifies the given module AST for pretty-printing.
 --
@@ -278,8 +278,8 @@ resetLGRHSEndPosition ::
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 resetLGRHSEndPosition (L locAnn (GRHS ext@EpAnn {..} stmt body)) =
   let lastPosition =
-        maximum $ realSrcSpanEnd . getAnc <$> listify collectAnchor body
-      newSpan = mkRealSrcSpan (realSrcSpanStart $ getAnc entry) lastPosition
+        maximum $ realSrcSpanEnd . anchor <$> listify collectAnchor body
+      newSpan = mkRealSrcSpan (realSrcSpanStart $ anchor entry) lastPosition
       newLocAnn = locAnn {entry = realSpanAsAnchor newSpan}
       newAnn = ext {entry = realSpanAsAnchor newSpan}
    in L newLocAnn (GRHS newAnn stmt body)
@@ -298,6 +298,7 @@ resetLGRHSEndPosition (L (SrcSpanAnn locAnn@EpAnn {} sp) (GRHS ext@EpAnn {..} st
   where
     collectAnchor :: Anchor -> Bool
     collectAnchor _ = True
+resetLGRHSEndPosition x = x
 #else
 resetLGRHSEndPosition (L _ (GRHS ext@EpAnn {..} stmt body)) =
   let lastPosition =
@@ -309,18 +310,10 @@ resetLGRHSEndPosition (L _ (GRHS ext@EpAnn {..} stmt body)) =
   where
     collectAnchor :: Anchor -> Bool
     collectAnchor _ = True
-#endif
 resetLGRHSEndPosition x = x
-
+#endif
 isEofComment :: EpaCommentTok -> Bool
 #if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 isEofComment EpaEofComment = True
 #endif
 isEofComment _ = False
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-getAnc :: HasCallStack => EpaLocation' a -> RealSrcSpan
-getAnc (EpaSpan (RealSrcSpan x _)) = x
-getAnc _ = undefined
-#else
-getAnc = anchor
-#endif
