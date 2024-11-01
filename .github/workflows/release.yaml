@@ -32,7 +32,7 @@ jobs:
           ghc-version: ${{ env.ghc }}
 
       - name: Cache dist-newstyle
-        uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8 # v4.1.1
+        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
         with:
           path: dist-newstyle
           key: dist-newstyle-${{ env.os }}-${{ env.ghc }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('internal/**','src/**','app/**','tests/**','benchmarks/**') }}
@@ -41,7 +41,7 @@ jobs:
             dist-newstyle-${{ env.os }}-${{ env.ghc }}-
 
       - name: Cache ~/.cabal/store
-        uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8 # v4.1.1
+        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
         with:
           path: ${{ steps.setup-haskell.outputs.cabal-store }}
           key: cabal-store-${{ env.os }}-${{ env.ghc }}-${{ hashFiles('**/*.cabal') }}
