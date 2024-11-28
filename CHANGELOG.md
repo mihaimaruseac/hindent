@@ -10,6 +10,10 @@
 
 ### Removed
 
+## [6.2.1] - 2024-11-28
+
+### Removed
+
 - Support for GHC 9.0 ([#967])
 
 ## [6.2.0] - 2024-09-07
@@ -363,7 +367,8 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - A bug in printing operators in statements.
 
-[unreleased]: https://github.com/mihaimaruseac/hindent/compare/v6.2.0...HEAD
+[unreleased]: https://github.com/mihaimaruseac/hindent/compare/v6.2.1...HEAD
+[6.2.1]: https://github.com/mihaimaruseac/hindent/compare/v6.2.0...v6.2.1
 [6.2.0]: https://github.com/mihaimaruseac/hindent/compare/v6.1.0...v6.2.0
 [6.1.0]: https://github.com/mihaimaruseac/hindent/compare/v6.0.0...v6.1.0
 [6.0.0]: https://github.com/mihaimaruseac/hindent/compare/v5.3.4...v6.0.0
