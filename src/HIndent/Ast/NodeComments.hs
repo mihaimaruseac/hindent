@@ -43,8 +43,8 @@ fromEpAnn' GHC.EpAnn {..} = NodeComments {..}
     commentsAfter =
       filter (not . isCommentOnSameLine) $ GHC.getFollowingComments comments
     isCommentOnSameLine (GHC.L comAnn _) =
-      GHC.srcSpanEndLine (GHC.al_anchor entry)
-        == GHC.srcSpanStartLine (GHC.al_anchor comAnn)
+      GHC.srcSpanEndLine (GHC.epaLocationRealSrcSpan entry)
+        == GHC.srcSpanStartLine (GHC.epaLocationRealSrcSpan comAnn)
 #else
 fromEpAnn' GHC.EpAnn {..} = NodeComments {..}
   where
