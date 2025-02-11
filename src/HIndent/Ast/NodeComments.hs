@@ -34,6 +34,18 @@ fromEpAnn :: GHC.EpAnn a -> NodeComments
 fromEpAnn = fromEpAnn' . filterOutEofAndPragmasFromAnn
 
 fromEpAnn' :: GHC.EpAnn a -> NodeComments
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+fromEpAnn' GHC.EpAnn {..} = NodeComments {..}
+  where
+    commentsBefore = GHC.priorComments comments
+    commentsOnSameLine =
+      filter isCommentOnSameLine $ GHC.getFollowingComments comments
+    commentsAfter =
+      filter (not . isCommentOnSameLine) $ GHC.getFollowingComments comments
+    isCommentOnSameLine (GHC.L comAnn _) =
+      GHC.srcSpanEndLine (GHC.epaLocationRealSrcSpan entry)
+        == GHC.srcSpanStartLine (GHC.epaLocationRealSrcSpan comAnn)
+#else
 fromEpAnn' GHC.EpAnn {..} = NodeComments {..}
   where
     commentsBefore = GHC.priorComments comments
@@ -46,6 +58,7 @@ fromEpAnn' GHC.EpAnn {..} = NodeComments {..}
         == GHC.srcSpanStartLine (GHC.anchor comAnn)
 #if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 fromEpAnn' GHC.EpAnnNotUsed = NodeComments [] [] []
+#endif
 #endif
 filterOutEofAndPragmasFromAnn :: GHC.EpAnn ann -> GHC.EpAnn ann
 filterOutEofAndPragmasFromAnn GHC.EpAnn {..} =
