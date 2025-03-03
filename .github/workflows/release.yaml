@@ -27,12 +27,12 @@ jobs:
 
       - name: Setup Haskell Compiler (cabal)
         id: setup-haskell
-        uses: haskell-actions/setup@dd344bc1cec854a369df8814ce17ef337d6e6170 # v2.7.6
+        uses: haskell-actions/setup@bbd90a29996ac33b1c644a42206e312fc0379748 # v2.7.9
         with:
           ghc-version: ${{ env.ghc }}
 
       - name: Cache dist-newstyle
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        uses: actions/cache@0c907a75c2c80ebcb7f088228285e798b750cf8f # v4.2.1
         with:
           path: dist-newstyle
           key: dist-newstyle-${{ env.os }}-${{ env.ghc }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('internal/**','src/**','app/**','tests/**','benchmarks/**') }}
@@ -41,7 +41,7 @@ jobs:
             dist-newstyle-${{ env.os }}-${{ env.ghc }}-
 
       - name: Cache ~/.cabal/store
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        uses: actions/cache@0c907a75c2c80ebcb7f088228285e798b750cf8f # v4.2.1
         with:
           path: ${{ steps.setup-haskell.outputs.cabal-store }}
           key: cabal-store-${{ env.os }}-${{ env.ghc }}-${{ hashFiles('**/*.cabal') }}
@@ -67,7 +67,7 @@ jobs:
       # scripting if needed, but it works for our use cases as it is.
       # TODO(mihaimaruseac): Maybe fix to upload the path as needed
       - name: Upload sdist as an artifact for later jobs in workflow
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           path: hindent-*.tar.gz
           name: sdist.zip # When downloading it is a zip containing the sdist tarball
@@ -97,7 +97,7 @@ jobs:
       # [1]: https://frontside.com/blog/2022-12-12-dynamic-github-action-jobs/
       # TODO(mihaimaruseac): Maybe use automatic matrix generation here
       - name: Upload executables as an artifact for later jobs in workflow
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           path: .execs/
           name: executables.zip # When downloading it is a zip with all executables
@@ -111,7 +111,7 @@ jobs:
       actions: read
       id-token: write
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
     with:
       base64-subjects: "${{ needs.build.outputs.hash_sdist }}"
       upload-assets: true
@@ -123,7 +123,7 @@ jobs:
       actions: read
       id-token: write
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
     with:
       base64-subjects: "${{ needs.build.outputs.hash_execs }}"
       upload-assets: true
@@ -147,7 +147,7 @@ jobs:
           name: sdist.zip
 
       - name: Upload assets
-        uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
         with:
           files: ./*
 
