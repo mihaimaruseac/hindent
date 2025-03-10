@@ -17,7 +17,7 @@ jobs:
       fail-fast: false # don't cancel other jobs if one fails
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        ghc: [9.2.8, 9.4.8, 9.6.6, 9.8.2, 9.10.1]
+        ghc: [9.2.8, 9.4.8, 9.6.6, 9.8.2, 9.10.1, 9.12.1]
     defaults:
       run:
         # The default shell on Windows is `pwsh`. However, it doesn't expand

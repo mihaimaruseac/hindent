@@ -1157,9 +1157,18 @@ instance CommentExtraction TrailingAnn where
   nodeComments AddVbarAnn {..} = nodeComments ta_location
   nodeComments AddDarrowAnn {..} = nodeComments ta_location
   nodeComments AddDarrowUAnn {..} = nodeComments ta_location
-
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+instance CommentExtraction AnnParen where
+  nodeComments (AnnParens open close) =
+    mconcat $ fmap nodeComments [open, close]
+  nodeComments (AnnParensHash open close) =
+    mconcat $ fmap nodeComments [open, close]
+  nodeComments (AnnParensSquare open close) =
+    mconcat $ fmap nodeComments [open, close]
+#else
 instance CommentExtraction AnnParen where
   nodeComments AnnParen {..} = mconcat $ fmap nodeComments [ap_open, ap_close]
+#endif
 #else
 instance CommentExtraction Anchor where
   nodeComments Anchor {} = emptyNodeComments
