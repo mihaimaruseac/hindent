@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Instance.Class
@@ -6,7 +7,6 @@ module HIndent.Ast.Declaration.Instance.Class
   ) where
 
 import Control.Monad
-import qualified GHC.Data.Bag as GHC
 import HIndent.Applicative
 import HIndent.Ast.Declaration.Instance.Class.OverlapMode
 import HIndent.Ast.NodeComments
@@ -17,11 +17,13 @@ import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
-
+#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
+import qualified GHC.Data.Bag as GHC
+#endif
 data ClassInstance = ClassInstance
   { overlapMode :: Maybe (WithComments OverlapMode)
   , cid_sigs :: [GHC.LSig GHC.GhcPs]
-  , cid_binds :: GHC.LHsBinds GHC.GhcPs
+  , binds :: [GHC.LocatedA (GHC.HsBindLR GHC.GhcPs GHC.GhcPs)]
   , cid_tyfam_insts :: [GHC.LTyFamInstDecl GHC.GhcPs]
   , cid_datafam_insts :: [GHC.LDataFamInstDecl GHC.GhcPs]
   , cid_poly_ty :: GHC.LHsSigType GHC.GhcPs
@@ -45,14 +47,23 @@ instance Pretty ClassInstance where
       sigsAndMethods =
         mkSortedLSigBindFamilyList
           cid_sigs
-          (GHC.bagToList cid_binds)
+          binds
           []
           cid_tyfam_insts
           cid_datafam_insts
 
 mkClassInstance :: GHC.InstDecl GHC.GhcPs -> Maybe ClassInstance
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkClassInstance GHC.ClsInstD {cid_inst = GHC.ClsInstDecl {..}} =
   Just $ ClassInstance {..}
   where
+    binds = cid_binds
     overlapMode = fmap (fmap mkOverlapMode . fromGenLocated) cid_overlap_mode
+#else
+mkClassInstance GHC.ClsInstD {cid_inst = GHC.ClsInstDecl {..}} =
+  Just $ ClassInstance {..}
+  where
+    binds = GHC.bagToList cid_binds
+    overlapMode = fmap (fmap mkOverlapMode . fromGenLocated) cid_overlap_mode
+#endif
 mkClassInstance _ = Nothing

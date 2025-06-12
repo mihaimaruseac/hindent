@@ -159,7 +159,7 @@ prettyHsExpr (GHC.HsUnboundVar _ x) = pretty $ mkPrefixName x
 #else
 prettyHsExpr (GHC.HsUnboundVar _ x) = pretty x
 #endif
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1) && !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 prettyHsExpr (GHC.HsOverLabel _ _ l) = string "#" >> string (GHC.unpackFS l)
 #else
 prettyHsExpr (GHC.HsOverLabel _ l) = string "#" >> string (GHC.unpackFS l)
@@ -478,8 +478,10 @@ prettyHsExpr (GHC.HsProc _ pat body) = hor <-|> ver
       indentedBlock (pretty body)
 prettyHsExpr (GHC.HsStatic _ x) = spaced [string "static", pretty x]
 prettyHsExpr (GHC.HsPragE _ p x) = spaced [pretty p, pretty x]
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 prettyHsExpr GHC.HsRecSel {} = notGeneratedByParser
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 prettyHsExpr (GHC.HsTypedBracket _ inner) = typedBrackets $ pretty inner
 prettyHsExpr (GHC.HsUntypedBracket _ inner) = pretty $ mkBracket inner
 #else
@@ -576,7 +578,25 @@ instance Pretty
   pretty' = prettyMatchExpr
 
 prettyMatchExpr :: GHC.Match GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Printer ()
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyMatchExpr GHC.Match {m_ctxt = GHC.LamAlt GHC.LamSingle, ..} = do
+  string "\\"
+  case GHC.unLoc m_pats of
+    p:_ ->
+      case GHC.unLoc p of
+        GHC.LazyPat {} -> space
+        GHC.BangPat {} -> space
+        _ -> return ()
+    _ -> return ()
+  prettyWith (fromGenLocated m_pats) (spaced . fmap pretty)
+  pretty $ GRHSsExpr GRHSExprLambda m_grhss
+prettyMatchExpr GHC.Match {m_ctxt = GHC.LamAlt GHC.LamCase, ..} = do
+  prettyWith (fromGenLocated m_pats) (spaced . fmap pretty)
+  pretty $ GRHSsExpr GRHSExprCase m_grhss
+prettyMatchExpr GHC.Match {m_ctxt = GHC.LamAlt GHC.LamCases, ..} = do
+  prettyWith (fromGenLocated m_pats) (spaced . fmap pretty)
+  pretty $ GRHSsExpr GRHSExprCase m_grhss
+#elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
 prettyMatchExpr GHC.Match {m_ctxt = GHC.LamAlt GHC.LamSingle, ..} = do
   string "\\"
   case m_pats of
@@ -612,9 +632,31 @@ prettyMatchExpr GHC.Match {m_ctxt = GHC.LamCaseAlt {}, ..} = do
   spaced $ fmap pretty m_pats
   pretty $ GRHSsExpr GRHSExprCase m_grhss
 #endif
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyMatchExpr GHC.Match {m_ctxt = GHC.CaseAlt, ..} = do
+  prettyWith (fromGenLocated m_pats) (mapM_ pretty)
+  pretty $ GRHSsExpr GRHSExprCase m_grhss
+#else
 prettyMatchExpr GHC.Match {m_ctxt = GHC.CaseAlt, ..} = do
   mapM_ pretty m_pats
   pretty $ GRHSsExpr GRHSExprCase m_grhss
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyMatchExpr GHC.Match {..} =
+  case GHC.mc_fixity m_ctxt of
+    GHC.Prefix -> do
+      pretty m_ctxt
+      prettyWith (fromGenLocated m_pats) (spacePrefixed . fmap pretty)
+      pretty m_grhss
+    GHC.Infix -> do
+      case (GHC.unLoc m_pats, m_ctxt) of
+        (l:r:xs, GHC.FunRhs {..}) -> do
+          spaced
+            $ [pretty l, pretty $ fmap mkInfixName mc_fun, pretty r]
+                ++ fmap pretty xs
+          pretty m_grhss
+        _ -> error "Not enough parameters are passed."
+#else
 prettyMatchExpr GHC.Match {..} =
   case GHC.mc_fixity m_ctxt of
     GHC.Prefix -> do
@@ -629,7 +671,7 @@ prettyMatchExpr GHC.Match {..} =
                 ++ fmap pretty xs
           pretty m_grhss
         _ -> error "Not enough parameters are passed."
-
+#endif
 instance Pretty
            (GHC.Match
               GHC.GhcPs
@@ -637,7 +679,22 @@ instance Pretty
   pretty' = prettyMatchProc
 
 prettyMatchProc :: GHC.Match GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> Printer ()
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyMatchProc GHC.Match {m_ctxt = GHC.LamAlt GHC.LamSingle, ..} = do
+  string "\\"
+  case GHC.unLoc m_pats of
+    p:_ ->
+      case GHC.unLoc p of
+        GHC.LazyPat {} -> space
+        GHC.BangPat {} -> space
+        _ -> return ()
+    _ -> return ()
+  spaced [prettyWith (fromGenLocated m_pats) (mapM_ pretty), pretty m_grhss]
+prettyMatchProc GHC.Match {m_ctxt = GHC.LamAlt GHC.LamCase, ..} = do
+  spaced [prettyWith (fromGenLocated m_pats) (mapM_ pretty), pretty m_grhss]
+prettyMatchProc GHC.Match {m_ctxt = GHC.LamAlt GHC.LamCases, ..} = do
+  spaced [prettyWith (fromGenLocated m_pats) (mapM_ pretty), pretty m_grhss]
+#elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
 prettyMatchProc GHC.Match {m_ctxt = GHC.LamAlt GHC.LamSingle, ..} = do
   string "\\"
   case m_pats of
@@ -664,8 +721,13 @@ prettyMatchProc GHC.Match {m_ctxt = GHC.LambdaExpr, ..} = do
     _ -> return ()
   spaced $ fmap pretty m_pats ++ [pretty m_grhss]
 #endif
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyMatchProc GHC.Match {m_ctxt = GHC.CaseAlt, ..} =
+  spaced [prettyWith (fromGenLocated m_pats) (mapM_ pretty), pretty m_grhss]
+#else
 prettyMatchProc GHC.Match {m_ctxt = GHC.CaseAlt, ..} =
   spaced [mapM_ pretty m_pats, pretty m_grhss]
+#endif
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 prettyMatchProc GHC.Match {m_ctxt = GHC.LamCaseAlt {}, ..} = do
   spaced [mapM_ pretty m_pats, pretty m_grhss]
@@ -677,47 +739,67 @@ instance Pretty
               GHC.GhcPs
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
-  pretty' (GHC.LastStmt _ x _ _) = pretty x
-  pretty' (GHC.BindStmt _ pat body) = do
-    pretty pat
-    string " <-"
-    hor <-|> ver
-    where
-      hor = space >> pretty body
-      ver = newline >> indentedBlock (pretty body)
-  pretty' GHC.ApplicativeStmt {} = notGeneratedByParser
-  pretty' (GHC.BodyStmt _ (GHC.L loc (GHC.OpApp _ l o r)) _ _) =
-    pretty (GHC.L loc (InfixApp l o r))
-  pretty' (GHC.BodyStmt _ body _ _) = pretty body
-  pretty' (GHC.LetStmt _ l) = string "let " |=> pretty l
-  pretty' (GHC.ParStmt _ xs _ _) = hvBarSep $ fmap pretty xs
-  pretty' GHC.TransStmt {..} =
-    vCommaSep $ fmap pretty trS_stmts ++ [string "then " >> pretty trS_using]
-  pretty' GHC.RecStmt {..} =
-    string "rec " |=> printCommentsAnd recS_stmts (lined . fmap pretty)
+  pretty' = prettyStmtLRExpr
+
+prettyStmtLRExpr ::
+     GHC.StmtLR
+       GHC.GhcPs
+       GHC.GhcPs
+       (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))
+  -> Printer ()
+prettyStmtLRExpr (GHC.LastStmt _ x _ _) = pretty x
+prettyStmtLRExpr (GHC.BindStmt _ pat body) = do
+  pretty pat
+  string " <-"
+  hor <-|> ver
+  where
+    hor = space >> pretty body
+    ver = newline >> indentedBlock (pretty body)
+#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyStmtLRExpr GHC.ApplicativeStmt {} = notGeneratedByParser
+#endif
+prettyStmtLRExpr (GHC.BodyStmt _ (GHC.L loc (GHC.OpApp _ l o r)) _ _) =
+  pretty (GHC.L loc (InfixApp l o r))
+prettyStmtLRExpr (GHC.BodyStmt _ body _ _) = pretty body
+prettyStmtLRExpr (GHC.LetStmt _ l) = string "let " |=> pretty l
+prettyStmtLRExpr (GHC.ParStmt _ xs _ _) = hvBarSep $ fmap pretty xs
+prettyStmtLRExpr GHC.TransStmt {..} =
+  vCommaSep $ fmap pretty trS_stmts ++ [string "then " >> pretty trS_using]
+prettyStmtLRExpr GHC.RecStmt {..} =
+  string "rec " |=> printCommentsAnd recS_stmts (lined . fmap pretty)
 
 instance Pretty
            (GHC.StmtLR
               GHC.GhcPs
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsCmd GHC.GhcPs))) where
-  pretty' (GHC.LastStmt _ x _ _) = pretty x
-  pretty' (GHC.BindStmt _ pat body) = hor <-|> ver
-    where
-      hor = spaced [pretty pat, string "<-", pretty body]
-      ver = do
-        pretty pat
-        string " <-"
-        newline
-        indentedBlock $ pretty body
-  pretty' GHC.ApplicativeStmt {} = notGeneratedByParser
-  pretty' (GHC.BodyStmt _ body _ _) = pretty body
-  pretty' (GHC.LetStmt _ l) = string "let " |=> pretty l
-  pretty' (GHC.ParStmt _ xs _ _) = hvBarSep $ fmap pretty xs
-  pretty' GHC.TransStmt {..} =
-    vCommaSep $ fmap pretty trS_stmts ++ [string "then " >> pretty trS_using]
-  pretty' GHC.RecStmt {..} =
-    string "rec " |=> printCommentsAnd recS_stmts (lined . fmap pretty)
+  pretty' = prettyStmtLRCmd
+
+prettyStmtLRCmd ::
+     GHC.StmtLR
+       GHC.GhcPs
+       GHC.GhcPs
+       (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsCmd GHC.GhcPs))
+  -> Printer ()
+prettyStmtLRCmd (GHC.LastStmt _ x _ _) = pretty x
+prettyStmtLRCmd (GHC.BindStmt _ pat body) = hor <-|> ver
+  where
+    hor = spaced [pretty pat, string "<-", pretty body]
+    ver = do
+      pretty pat
+      string " <-"
+      newline
+      indentedBlock $ pretty body
+#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyStmtLRCmd GHC.ApplicativeStmt {} = notGeneratedByParser
+#endif
+prettyStmtLRCmd (GHC.BodyStmt _ body _ _) = pretty body
+prettyStmtLRCmd (GHC.LetStmt _ l) = string "let " |=> pretty l
+prettyStmtLRCmd (GHC.ParStmt _ xs _ _) = hvBarSep $ fmap pretty xs
+prettyStmtLRCmd GHC.TransStmt {..} =
+  vCommaSep $ fmap pretty trS_stmts ++ [string "then " >> pretty trS_using]
+prettyStmtLRCmd GHC.RecStmt {..} =
+  string "rec " |=> printCommentsAnd recS_stmts (lined . fmap pretty)
 
 instance Pretty StmtLRInsideVerticalList where
   pretty' (StmtLRInsideVerticalList (GHC.ParStmt _ xs _ _)) =
@@ -856,7 +938,11 @@ prettyHsType (GHC.HsExplicitListTy _ _ xs) =
   case xs of
     [] -> string "'[]"
     _ -> hvPromotedList $ fmap pretty xs
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyHsType (GHC.HsExplicitTupleTy _ _ xs) = hPromotedTuple $ fmap pretty xs
+#else
 prettyHsType (GHC.HsExplicitTupleTy _ xs) = hPromotedTuple $ fmap pretty xs
+#endif
 prettyHsType (GHC.HsTyLit _ x) = pretty x
 prettyHsType GHC.HsWildCardTy {} = string "_"
 prettyHsType GHC.XHsType {} = notGeneratedByParser
@@ -1124,12 +1210,23 @@ instance Pretty (GHC.HsLocalBindsLR GHC.GhcPs GHC.GhcPs) where
       "This branch indicates that the bind is empty, but since calling this code means that let or where has already been output, it cannot be handled here. It should be handled higher up in the AST."
 
 instance Pretty (GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs) where
-  pretty' (GHC.ValBinds _ methods sigs) = lined $ fmap pretty sigsAndMethods
-    where
-      sigsAndMethods =
-        SBF.mkSortedLSigBindFamilyList sigs (GHC.bagToList methods) [] [] []
-  pretty' GHC.XValBindsLR {} = notUsedInParsedStage
+  pretty' = prettyHsValBindsLR
 
+prettyHsValBindsLR :: GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> Printer ()
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyHsValBindsLR (GHC.ValBinds _ methods sigs) =
+  lined $ fmap pretty sigsAndMethods
+  where
+    sigsAndMethods = SBF.mkSortedLSigBindFamilyList sigs methods [] [] []
+prettyHsValBindsLR GHC.XValBindsLR {} = notUsedInParsedStage
+#else
+prettyHsValBindsLR (GHC.ValBinds _ methods sigs) =
+  lined $ fmap pretty sigsAndMethods
+  where
+    sigsAndMethods =
+      SBF.mkSortedLSigBindFamilyList sigs (GHC.bagToList methods) [] [] []
+prettyHsValBindsLR GHC.XValBindsLR {} = notUsedInParsedStage
+#endif
 instance Pretty (GHC.HsTupArg GHC.GhcPs) where
   pretty' (GHC.Present _ e) = pretty e
   pretty' GHC.Missing {} = pure () -- This appears in a tuple section.
@@ -1229,128 +1326,183 @@ instance Pretty InfixExpr where
   pretty' (InfixExpr (GHC.L _ (GHC.HsVar _ bind))) =
     pretty $ fmap mkInfixName bind
   pretty' (InfixExpr x) = pretty' x
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+
 instance Pretty InfixApp where
-  pretty' InfixApp {..} = horizontal <-|> vertical
-    where
-      horizontal = spaced [pretty lhs, pretty (InfixExpr op), pretty rhs]
-      vertical =
-        case findFixity op of
-          GHC.Fixity _ _ GHC.InfixL -> leftAssoc
-          GHC.Fixity _ _ GHC.InfixR -> rightAssoc
-          GHC.Fixity _ _ GHC.InfixN -> noAssoc
-      leftAssoc = prettyOps allOperantsAndOperatorsLeftAssoc
-      rightAssoc = prettyOps allOperantsAndOperatorsRightAssoc
-      noAssoc
-        | GHC.L _ (GHC.OpApp _ _ o _) <- lhs
-        , isSameAssoc o = leftAssoc
-        | otherwise = rightAssoc
-      prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Do]
-        newline
-        indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-      prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Mdo]
-        newline
-        indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-      prettyOps [l, o, r@(GHC.L _ GHC.HsLam {})] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty r]
-      prettyOps (l:xs) = do
-        pretty l
-        newline
-        indentedBlock $ f xs
-        where
-          f (o:r:rems) = do
-            (pretty (InfixExpr o) >> space) |=> pretty r
-            unless (null rems) $ do
-              newline
-              f rems
-          f _ =
-            error
-              "The number of the sum of operants and operators should be odd."
-      prettyOps _ = error "Too short list."
-      findFixity o =
-        fromMaybe GHC.defaultFixity $ lookup (GHC.varToStr o) fixities
-      allOperantsAndOperatorsLeftAssoc = reverse $ rhs : op : collect lhs
-        where
-          collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-          collect (GHC.L _ (GHC.OpApp _ l o r))
-            | isSameAssoc o = r : o : collect l
-          collect x = [x]
-      allOperantsAndOperatorsRightAssoc = lhs : op : collect rhs
-        where
-          collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-          collect (GHC.L _ (GHC.OpApp _ l o r))
-            | isSameAssoc o = l : o : collect r
-          collect x = [x]
-      isSameAssoc (findFixity -> GHC.Fixity _ lv d) = lv == level && d == dir
-      GHC.Fixity _ level dir = findFixity op
+  pretty' = prettyInfixApp
+
+prettyInfixApp :: InfixApp -> Printer ()
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyInfixApp InfixApp {..} = horizontal <-|> vertical
+  where
+    horizontal = spaced [pretty lhs, pretty (InfixExpr op), pretty rhs]
+    vertical =
+      case findFixity op of
+        GHC.Fixity _ GHC.InfixL -> leftAssoc
+        GHC.Fixity _ GHC.InfixR -> rightAssoc
+        GHC.Fixity _ GHC.InfixN -> noAssoc
+    leftAssoc = prettyOps allOperantsAndOperatorsLeftAssoc
+    rightAssoc = prettyOps allOperantsAndOperatorsRightAssoc
+    noAssoc
+      | GHC.L _ (GHC.OpApp _ _ o _) <- lhs
+      , isSameAssoc o = leftAssoc
+      | otherwise = rightAssoc
+    prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)] = do
+      spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Do]
+      newline
+      indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
+    prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)] = do
+      spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Mdo]
+      newline
+      indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
+    prettyOps [l, o, r@(GHC.L _ GHC.HsLam {})] = do
+      spaced [pretty l, pretty $ InfixExpr o, pretty r]
+    prettyOps (l:xs) = do
+      pretty l
+      newline
+      indentedBlock $ f xs
+      where
+        f (o:r:rems) = do
+          (pretty (InfixExpr o) >> space) |=> pretty r
+          unless (null rems) $ do
+            newline
+            f rems
+        f _ =
+          error "The number of the sum of operants and operators should be odd."
+    prettyOps _ = error "Too short list."
+    findFixity o =
+      fromMaybe GHC.defaultFixity $ lookup (GHC.varToStr o) fixities
+    allOperantsAndOperatorsLeftAssoc = reverse $ rhs : op : collect lhs
+      where
+        collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
+        collect (GHC.L _ (GHC.OpApp _ l o r))
+          | isSameAssoc o = r : o : collect l
+        collect x = [x]
+    allOperantsAndOperatorsRightAssoc = lhs : op : collect rhs
+      where
+        collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
+        collect (GHC.L _ (GHC.OpApp _ l o r))
+          | isSameAssoc o = l : o : collect r
+        collect x = [x]
+    isSameAssoc (findFixity -> GHC.Fixity lv d) = lv == level && d == dir
+    GHC.Fixity level dir = findFixity op
+#elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
+prettyInfixApp InfixApp {..} = horizontal <-|> vertical
+  where
+    horizontal = spaced [pretty lhs, pretty (InfixExpr op), pretty rhs]
+    vertical =
+      case findFixity op of
+        GHC.Fixity _ _ GHC.InfixL -> leftAssoc
+        GHC.Fixity _ _ GHC.InfixR -> rightAssoc
+        GHC.Fixity _ _ GHC.InfixN -> noAssoc
+    leftAssoc = prettyOps allOperantsAndOperatorsLeftAssoc
+    rightAssoc = prettyOps allOperantsAndOperatorsRightAssoc
+    noAssoc
+      | GHC.L _ (GHC.OpApp _ _ o _) <- lhs
+      , isSameAssoc o = leftAssoc
+      | otherwise = rightAssoc
+    prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)] = do
+      spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Do]
+      newline
+      indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
+    prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)] = do
+      spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Mdo]
+      newline
+      indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
+    prettyOps [l, o, r@(GHC.L _ GHC.HsLam {})] = do
+      spaced [pretty l, pretty $ InfixExpr o, pretty r]
+    prettyOps (l:xs) = do
+      pretty l
+      newline
+      indentedBlock $ f xs
+      where
+        f (o:r:rems) = do
+          (pretty (InfixExpr o) >> space) |=> pretty r
+          unless (null rems) $ do
+            newline
+            f rems
+        f _ =
+          error "The number of the sum of operants and operators should be odd."
+    prettyOps _ = error "Too short list."
+    findFixity o =
+      fromMaybe GHC.defaultFixity $ lookup (GHC.varToStr o) fixities
+    allOperantsAndOperatorsLeftAssoc = reverse $ rhs : op : collect lhs
+      where
+        collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
+        collect (GHC.L _ (GHC.OpApp _ l o r))
+          | isSameAssoc o = r : o : collect l
+        collect x = [x]
+    allOperantsAndOperatorsRightAssoc = lhs : op : collect rhs
+      where
+        collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
+        collect (GHC.L _ (GHC.OpApp _ l o r))
+          | isSameAssoc o = l : o : collect r
+        collect x = [x]
+    isSameAssoc (findFixity -> GHC.Fixity _ lv d) = lv == level && d == dir
+    GHC.Fixity _ level dir = findFixity op
 #else
-instance Pretty InfixApp where
-  pretty' InfixApp {..} = horizontal <-|> vertical
-    where
-      horizontal = spaced [pretty lhs, pretty (InfixExpr op), pretty rhs]
-      vertical =
-        case findFixity op of
-          GHC.Fixity _ _ GHC.InfixL -> leftAssoc
-          GHC.Fixity _ _ GHC.InfixR -> rightAssoc
-          GHC.Fixity _ _ GHC.InfixN -> noAssoc
-      leftAssoc = prettyOps allOperantsAndOperatorsLeftAssoc
-      rightAssoc = prettyOps allOperantsAndOperatorsRightAssoc
-      noAssoc
-        | GHC.L _ (GHC.OpApp _ _ o _) <- lhs
-        , isSameAssoc o = leftAssoc
-        | otherwise = rightAssoc
-      prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Do]
-        newline
-        indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-      prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Mdo]
-        newline
-        indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-      prettyOps [l, o, r@(GHC.L _ GHC.HsLam {})] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty r]
-      prettyOps [l, o, r@(GHC.L _ GHC.HsLamCase {})] = do
-        spaced [pretty l, pretty $ InfixExpr o, pretty r]
-      prettyOps (l:xs) = do
-        pretty l
-        newline
-        indentedBlock $ f xs
-        where
-          f (o:r:rems) = do
-            (pretty (InfixExpr o) >> space) |=> pretty r
-            unless (null rems) $ do
-              newline
-              f rems
-          f _ =
-            error
-              "The number of the sum of operants and operators should be odd."
-      prettyOps _ = error "Too short list."
-      findFixity o =
-        fromMaybe GHC.defaultFixity $ lookup (GHC.varToStr o) fixities
-      allOperantsAndOperatorsLeftAssoc = reverse $ rhs : op : collect lhs
-        where
-          collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-          collect (GHC.L _ (GHC.OpApp _ l o r))
-            | isSameAssoc o = r : o : collect l
-          collect x = [x]
-      allOperantsAndOperatorsRightAssoc = lhs : op : collect rhs
-        where
-          collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-          collect (GHC.L _ (GHC.OpApp _ l o r))
-            | isSameAssoc o = l : o : collect r
-          collect x = [x]
-      isSameAssoc (findFixity -> GHC.Fixity _ lv d) = lv == level && d == dir
-      GHC.Fixity _ level dir = findFixity op
+prettyInfixApp InfixApp {..} = horizontal <-|> vertical
+  where
+    horizontal = spaced [pretty lhs, pretty (InfixExpr op), pretty rhs]
+    vertical =
+      case findFixity op of
+        GHC.Fixity _ _ GHC.InfixL -> leftAssoc
+        GHC.Fixity _ _ GHC.InfixR -> rightAssoc
+        GHC.Fixity _ _ GHC.InfixN -> noAssoc
+    leftAssoc = prettyOps allOperantsAndOperatorsLeftAssoc
+    rightAssoc = prettyOps allOperantsAndOperatorsRightAssoc
+    noAssoc
+      | GHC.L _ (GHC.OpApp _ _ o _) <- lhs
+      , isSameAssoc o = leftAssoc
+      | otherwise = rightAssoc
+    prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)] = do
+      spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Do]
+      newline
+      indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
+    prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)] = do
+      spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Mdo]
+      newline
+      indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
+    prettyOps [l, o, r@(GHC.L _ GHC.HsLam {})] = do
+      spaced [pretty l, pretty $ InfixExpr o, pretty r]
+    prettyOps [l, o, r@(GHC.L _ GHC.HsLamCase {})] = do
+      spaced [pretty l, pretty $ InfixExpr o, pretty r]
+    prettyOps (l:xs) = do
+      pretty l
+      newline
+      indentedBlock $ f xs
+      where
+        f (o:r:rems) = do
+          (pretty (InfixExpr o) >> space) |=> pretty r
+          unless (null rems) $ do
+            newline
+            f rems
+        f _ =
+          error "The number of the sum of operants and operators should be odd."
+    prettyOps _ = error "Too short list."
+    findFixity o =
+      fromMaybe GHC.defaultFixity $ lookup (GHC.varToStr o) fixities
+    allOperantsAndOperatorsLeftAssoc = reverse $ rhs : op : collect lhs
+      where
+        collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
+        collect (GHC.L _ (GHC.OpApp _ l o r))
+          | isSameAssoc o = r : o : collect l
+        collect x = [x]
+    allOperantsAndOperatorsRightAssoc = lhs : op : collect rhs
+      where
+        collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
+        collect (GHC.L _ (GHC.OpApp _ l o r))
+          | isSameAssoc o = l : o : collect r
+        collect x = [x]
+    isSameAssoc (findFixity -> GHC.Fixity _ lv d) = lv == level && d == dir
+    GHC.Fixity _ level dir = findFixity op
 #endif
 instance Pretty (GHC.FieldLabelStrings GHC.GhcPs) where
   pretty' (GHC.FieldLabelStrings xs) = hDotSep $ fmap pretty xs
-
+#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 instance Pretty (GHC.AmbiguousFieldOcc GHC.GhcPs) where
   pretty' (GHC.Unambiguous _ name) = pretty $ fmap mkPrefixName name
   pretty' (GHC.Ambiguous _ name) = pretty $ fmap mkPrefixName name
-
+#endif
 instance Pretty (GHC.DerivClauseTys GHC.GhcPs) where
   pretty' (GHC.DctSingle _ ty) = parens $ pretty ty
   pretty' (GHC.DctMulti _ ts) = hvTuple $ fmap pretty ts
@@ -1729,8 +1881,13 @@ prettyHsCmd (GHC.HsCmdArrApp _ f arg GHC.HsFirstOrderApp True) =
   spaced [pretty f, string "-<", pretty arg]
 prettyHsCmd (GHC.HsCmdArrApp _ f arg GHC.HsFirstOrderApp False) =
   spaced [pretty arg, string ">-", pretty f]
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyHsCmd (GHC.HsCmdArrForm _ f _ args) =
+  bananaBrackets $ spaced $ pretty f : fmap pretty args
+#else
 prettyHsCmd (GHC.HsCmdArrForm _ f _ _ args) =
   bananaBrackets $ spaced $ pretty f : fmap pretty args
+#endif
 prettyHsCmd (GHC.HsCmdApp _ f arg) = spaced [pretty f, pretty arg]
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 prettyHsCmd (GHC.HsCmdLam _ GHC.LamSingle x) = pretty x
@@ -1826,11 +1983,25 @@ instance Pretty LetIn where
     lined [string "let " |=> pretty letBinds, string " in " |=> pretty inExpr]
 
 instance Pretty GHC.HsSrcBang where
-  pretty' (GHC.HsSrcBang _ unpack strictness) = do
+  pretty' = prettyHsSrcBang
+
+prettyHsSrcBang :: GHC.HsSrcBang -> Printer ()
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyHsSrcBang (GHC.HsSrcBang _ bang) = pretty bang
+#else
+prettyHsSrcBang (GHC.HsSrcBang _ unpack strictness) = do
+  pretty unpack
+  unless (unpack == GHC.NoSrcUnpack) space
+  pretty strictness
+#endif
+
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+instance Pretty GHC.HsBang where
+  pretty' (GHC.HsBang unpack strictness) = do
     pretty unpack
     unless (unpack == GHC.NoSrcUnpack) space
     pretty strictness
-
+#endif
 instance Pretty GHC.SrcUnpackedness where
   pretty' GHC.SrcUnpack = string "{-# UNPACK #-}"
   pretty' GHC.SrcNoUnpack = string "{-# NOUNPACK #-}"

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ViewPatterns #-}
@@ -47,14 +48,38 @@ prettyWith WithComments {..} f = do
 
 -- | Prints comments that are before the given AST node.
 printCommentsBefore :: NodeComments -> Printer ()
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+printCommentsBefore p =
+  forM_ (commentsBefore p) $ \(GHC.L loc c) -> do
+    let col =
+          fromIntegral
+            $ GHC.srcSpanStartCol (GHC.epaLocationRealSrcSpan loc) - 1
+    indentedWithFixedLevel col $ pretty c
+    newline
+#else
 printCommentsBefore p =
   forM_ (commentsBefore p) $ \(GHC.L loc c) -> do
     let col = fromIntegral $ GHC.srcSpanStartCol (GHC.anchor loc) - 1
     indentedWithFixedLevel col $ pretty c
     newline
-
+#endif
 -- | Prints comments that are on the same line as the given AST node.
 printCommentOnSameLine :: NodeComments -> Printer ()
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+printCommentOnSameLine (commentsOnSameLine -> (c:cs)) = do
+  col <- gets psColumn
+  if col == 0
+    then indentedWithFixedLevel
+           (fromIntegral
+              $ GHC.srcSpanStartCol
+              $ GHC.epaLocationRealSrcSpan
+              $ GHC.getLoc c)
+           $ spaced
+           $ fmap pretty
+           $ c : cs
+    else spacePrefixed $ fmap pretty $ c : cs
+  eolCommentsArePrinted
+#else
 printCommentOnSameLine (commentsOnSameLine -> (c:cs)) = do
   col <- gets psColumn
   if col == 0
@@ -65,10 +90,25 @@ printCommentOnSameLine (commentsOnSameLine -> (c:cs)) = do
            $ c : cs
     else spacePrefixed $ fmap pretty $ c : cs
   eolCommentsArePrinted
+#endif
 printCommentOnSameLine _ = return ()
 
 -- | Prints comments that are after the given AST node.
 printCommentsAfter :: NodeComments -> Printer ()
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+printCommentsAfter p =
+  case commentsAfter p of
+    [] -> return ()
+    xs -> do
+      isThereCommentsOnSameLine <- gets psEolComment
+      unless isThereCommentsOnSameLine newline
+      forM_ xs $ \(GHC.L loc c) -> do
+        let col =
+              fromIntegral
+                $ GHC.srcSpanStartCol (GHC.epaLocationRealSrcSpan loc) - 1
+        indentedWithFixedLevel col $ pretty c
+        eolCommentsArePrinted
+#else
 printCommentsAfter p =
   case commentsAfter p of
     [] -> return ()
@@ -79,7 +119,7 @@ printCommentsAfter p =
         let col = fromIntegral $ GHC.srcSpanStartCol (GHC.anchor loc) - 1
         indentedWithFixedLevel col $ pretty c
         eolCommentsArePrinted
-
+#endif
 fromGenLocated :: (CommentExtraction l) => GHC.GenLocated l a -> WithComments a
 fromGenLocated (GHC.L l a) = WithComments (nodeComments l) a
 

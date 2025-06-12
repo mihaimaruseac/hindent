@@ -3,6 +3,7 @@
 module HIndent.Ast.Name.Prefix
   ( PrefixName
   , mkPrefixName
+  , fromString
   ) where
 
 import Data.Maybe
@@ -41,6 +42,9 @@ mkPrefixName (GHC.Orig {}) =
   error "This AST node should not appear in the parser output."
 mkPrefixName (GHC.Exact name) =
   PrefixName (showOutputable name) Nothing (parensNeeded $ GHC.occName name)
+
+fromString :: String -> PrefixName
+fromString name = PrefixName name Nothing False
 
 parensNeeded :: GHC.OccName -> Bool
 parensNeeded = GHC.isSymOcc

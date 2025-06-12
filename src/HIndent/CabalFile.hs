@@ -12,6 +12,9 @@ import Data.Traversable
 import Distribution.ModuleName
 import Distribution.PackageDescription
 import Distribution.PackageDescription.Configuration
+#if MIN_VERSION_Cabal(3, 14, 0)
+import Distribution.Utils.Path (interpretSymbolicPathCWD)
+#endif
 #if MIN_VERSION_Cabal(3, 6, 0)
 import Distribution.Utils.Path (getSymbolicPath)
 #endif
@@ -62,6 +65,36 @@ mkStanza bi mnames fpaths =
 #endif
 -- | Extract `Stanza`s from a package
 packageStanzas :: PackageDescription -> [Stanza]
+#if MIN_VERSION_Cabal(3, 14, 0)
+packageStanzas pd =
+  let libStanza :: Library -> Stanza
+      libStanza lib = mkStanza (libBuildInfo lib) (exposedModules lib) []
+      exeStanza :: Executable -> Stanza
+      exeStanza exe =
+        mkStanza (buildInfo exe) [] [interpretSymbolicPathCWD $ modulePath exe]
+      testStanza :: TestSuite -> Stanza
+      testStanza ts =
+        mkStanza
+          (testBuildInfo ts)
+          (case testInterface ts of
+             TestSuiteLibV09 _ mname -> [mname]
+             _ -> [])
+          (case testInterface ts of
+             TestSuiteExeV10 _ path -> [interpretSymbolicPathCWD path]
+             _ -> [])
+      benchStanza :: Benchmark -> Stanza
+      benchStanza bn =
+        mkStanza (benchmarkBuildInfo bn) []
+          $ case benchmarkInterface bn of
+              BenchmarkExeV10 _ path -> [interpretSymbolicPathCWD path]
+              _ -> []
+   in mconcat
+        [ maybeToList $ libStanza <$> library pd
+        , exeStanza <$> executables pd
+        , testStanza <$> testSuites pd
+        , benchStanza <$> benchmarks pd
+        ]
+#else
 packageStanzas pd =
   let libStanza :: Library -> Stanza
       libStanza lib = mkStanza (libBuildInfo lib) (exposedModules lib) []
@@ -89,7 +122,7 @@ packageStanzas pd =
         , testStanza <$> testSuites pd
         , benchStanza <$> benchmarks pd
         ]
-
+#endif
 -- | Find cabal files that are "above" the source path
 findCabalFiles :: FilePath -> FilePath -> IO (Maybe ([FilePath], FilePath))
 findCabalFiles dir rel = do

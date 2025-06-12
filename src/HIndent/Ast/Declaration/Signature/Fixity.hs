@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Signature.Fixity
@@ -24,5 +25,10 @@ instance Pretty Fixity where
   pretty' Fixity {..} = spaced [pretty associativity, string $ show level]
 
 mkFixity :: GHC.Fixity -> Fixity
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+mkFixity (GHC.Fixity level associativity) =
+  Fixity level (mkAssociativity associativity)
+#else
 mkFixity (GHC.Fixity _ level associativity) =
   Fixity level (mkAssociativity associativity)
+#endif

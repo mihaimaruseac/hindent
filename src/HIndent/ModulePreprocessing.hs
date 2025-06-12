@@ -18,6 +18,7 @@ import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)
 import HIndent.Fixity
 import HIndent.GhcLibParserWrapper.GHC.Hs
+import HIndent.GhcLibParserWrapper.GHC.Parser.Annotation
 import HIndent.ModulePreprocessing.CommentRelocation
 import Language.Haskell.GhclibParserEx.Fixity
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
@@ -57,10 +58,30 @@ fixFixities = applyFixities fixities
 -- | This function modifies the range of `HsDo` with `ListComp` so that it
 -- includes the whole list comprehension.
 --
--- This function is necessary for `ghc-lib-parser>=9.10.1` because `HsDo`
+-- This function is necessary for `ghc-lib-parser>=9.10.1<9.12.1` because `HsDo`
 -- no longer includes brackets of list comprehensions in its range.
 resetListCompRange :: HsModule' -> HsModule'
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+resetListCompRange = everywhere (mkT resetListCompRange')
+  where
+    resetListCompRange' :: HsExpr GhcPs -> HsExpr GhcPs
+    resetListCompRange' (HsDo al@AnnList {al_brackets = ListSquare (EpTok (EpaSpan (RealSrcSpan open _))) (EpTok (EpaSpan (RealSrcSpan close _)))} ListComp (L EpAnn {..} xs)) =
+      HsDo
+        al
+        ListComp
+        (L EpAnn
+             { entry =
+                 EpaSpan
+                   $ RealSrcSpan
+                       (mkRealSrcSpan
+                          (realSrcSpanStart open)
+                          (realSrcSpanEnd close))
+                       Strict.Nothing
+             , ..
+             }
+           xs)
+    resetListCompRange' x = x
+#elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
 resetListCompRange = everywhere (mkT resetListCompRange')
   where
     resetListCompRange' :: HsExpr GhcPs -> HsExpr GhcPs
@@ -278,15 +299,20 @@ resetLGRHSEndPosition ::
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 resetLGRHSEndPosition (L locAnn (GRHS ext@EpAnn {..} stmt body)) =
   let lastPosition =
-        maximum $ realSrcSpanEnd . anchor <$> listify collectAnchor body
-      newSpan = mkRealSrcSpan (realSrcSpanStart $ anchor entry) lastPosition
+        maximum
+          $ realSrcSpanEnd . epaLocationToRealSrcSpan
+              <$> listify collectEpaLocation' body
+      newSpan =
+        mkRealSrcSpan
+          (realSrcSpanStart $ epaLocationToRealSrcSpan entry)
+          lastPosition
       newLocAnn = locAnn {entry = realSpanAsAnchor newSpan}
       newAnn = ext {entry = realSpanAsAnchor newSpan}
    in L newLocAnn (GRHS newAnn stmt body)
   where
-    collectAnchor :: Anchor -> Bool
-    collectAnchor (EpaSpan RealSrcSpan {}) = True
-    collectAnchor _ = False
+    collectEpaLocation' :: EpaLocation -> Bool
+    collectEpaLocation' (EpaSpan RealSrcSpan {}) = True
+    collectEpaLocation' _ = False
 #elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
 resetLGRHSEndPosition (L (SrcSpanAnn locAnn@EpAnn {} sp) (GRHS ext@EpAnn {..} stmt body)) =
   let lastPosition =
