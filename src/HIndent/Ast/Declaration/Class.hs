@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Class
@@ -7,7 +8,6 @@ module HIndent.Ast.Declaration.Class
 
 import Control.Monad
 import Data.Maybe
-import qualified GHC.Data.Bag as GHC
 import HIndent.Applicative
 import HIndent.Ast.Context
 import HIndent.Ast.Declaration.Class.FunctionalDependency
@@ -19,7 +19,9 @@ import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 import HIndent.Pretty.SigBindFamily
-
+#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
+import qualified GHC.Data.Bag as GHC
+#endif
 data ClassDeclaration = ClassDeclaration
   { context :: Maybe (WithComments Context)
   , nameAndTypeVariables :: NameAndTypeVariables
@@ -55,6 +57,16 @@ instance Pretty ClassDeclaration where
           $ newline >> indentedBlock (string "where")
 
 mkClassDeclaration :: GHC.TyClDecl GHC.GhcPs -> Maybe ClassDeclaration
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+mkClassDeclaration x@GHC.ClassDecl {..}
+  | Just nameAndTypeVariables <- mkNameAndTypeVariables x =
+    Just ClassDeclaration {..}
+  where
+    context = fmap (fmap mkContext . fromGenLocated) tcdCtxt
+    functionalDependencies =
+      fmap (fmap mkFunctionalDependency . fromGenLocated) tcdFDs
+    associatedThings = mkSortedLSigBindFamilyList tcdSigs tcdMeths tcdATs [] []
+#else
 mkClassDeclaration x@GHC.ClassDecl {..}
   | Just nameAndTypeVariables <- mkNameAndTypeVariables x =
     Just ClassDeclaration {..}
@@ -64,4 +76,5 @@ mkClassDeclaration x@GHC.ClassDecl {..}
       fmap (fmap mkFunctionalDependency . fromGenLocated) tcdFDs
     associatedThings =
       mkSortedLSigBindFamilyList tcdSigs (GHC.bagToList tcdMeths) tcdATs [] []
+#endif
 mkClassDeclaration _ = Nothing

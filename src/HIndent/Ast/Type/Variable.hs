@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Type.Variable
@@ -7,6 +8,7 @@ module HIndent.Ast.Type.Variable
 
 import qualified GHC.Hs as GHC
 import HIndent.Ast.Name.Prefix
+import qualified HIndent.Ast.Name.Prefix as Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
@@ -28,6 +30,18 @@ instance Pretty TypeVariable where
   pretty' TypeVariable {kind = Nothing, ..} = pretty name
 
 mkTypeVariable :: GHC.HsTyVarBndr a GHC.GhcPs -> TypeVariable
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+mkTypeVariable GHC.HsTvb {..} = TypeVariable {..}
+  where
+    name =
+      case tvb_var of
+        GHC.HsBndrVar _ n -> fromGenLocated $ fmap mkPrefixName n
+        GHC.HsBndrWildCard _ -> mkWithComments (Prefix.fromString "_")
+    kind =
+      case tvb_kind of
+        GHC.HsBndrKind _ k -> Just $ mkType <$> fromGenLocated k
+        GHC.HsBndrNoKind _ -> Nothing
+#else
 mkTypeVariable (GHC.UserTyVar _ _ n) = TypeVariable {..}
   where
     name = fromGenLocated $ fmap mkPrefixName n
@@ -36,3 +50,4 @@ mkTypeVariable (GHC.KindedTyVar _ _ n k) = TypeVariable {..}
   where
     name = fromGenLocated $ fmap mkPrefixName n
     kind = Just $ mkType <$> fromGenLocated k
+#endif

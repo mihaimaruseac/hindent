@@ -1,33 +1,33 @@
 spec-version: 0.30.0
 
-name:         hindent
-version:      6.2.1
-synopsis:     Extensible Haskell pretty printer
-description:  |
+name: hindent
+version: 6.2.1
+synopsis: Extensible Haskell pretty printer
+description: |
   Extensible Haskell pretty printer. Both a library and an executable.
   See the GitHub page for usage \/ explanation: <https://github.com/mihaimaruseac/hindent>
-category:     Development
-stability:    Unstable
-homepage:     https://github.com/mihaimaruseac/hindent
-bug-reports:  https://github.com/mihaimaruseac/hindent/issues
-author:       Mihai Maruseac, Chris Done, Andrew Gibiansky, Tobias Pflug, Pierre Radermecker
-maintainer:   Mihai Maruseac
-copyright:    2014 Chris Done, 2015 Andrew Gibiansky, 2021 Mihai Maruseac
-license:      BSD3
+category: Development
+stability: Unstable
+homepage: https://github.com/mihaimaruseac/hindent
+bug-reports: https://github.com/mihaimaruseac/hindent/issues
+author: Mihai Maruseac, Chris Done, Andrew Gibiansky, Tobias Pflug, Pierre Radermecker
+maintainer: Mihai Maruseac
+copyright: 2014 Chris Done, 2015 Andrew Gibiansky, 2021 Mihai Maruseac
+license: BSD3
 license-file: LICENSE.md
-build-type:   Simple
+build-type: Simple
 extra-source-files:
   - README.md
   - CHANGELOG.md
   - BENCHMARKS.md
   - TESTS.md
-data-files:   elisp/hindent.el
-github:       mihaimaruseac/hindent
+data-files: elisp/hindent.el
+github: mihaimaruseac/hindent
 
 ghc-options: -Wall -O2 -threaded
 
 dependencies:
-  - Cabal < 3.12
+  - Cabal
   - async >= 2.2.5
   - base >= 4.7 && < 5
   - bytestring
@@ -35,7 +35,7 @@ dependencies:
   - directory
   - exceptions
   - filepath
-  - ghc-lib-parser >= 9.2 && < 9.11
+  - ghc-lib-parser >= 9.2 && < 9.13
   - ghc-lib-parser-ex
   - monad-loops
   - mtl

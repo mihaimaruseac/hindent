@@ -119,6 +119,7 @@ library
       HIndent.Fixity
       HIndent.GhcLibParserWrapper.GHC.Hs
       HIndent.GhcLibParserWrapper.GHC.Hs.ImpExp
+      HIndent.GhcLibParserWrapper.GHC.Parser.Annotation
       HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings
       HIndent.Language
       HIndent.LanguageExtension
@@ -152,7 +153,7 @@ library
       src
   ghc-options: -Wall -O2 -threaded
   build-depends:
-      Cabal <3.12
+      Cabal
     , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
@@ -160,7 +161,7 @@ library
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.11
+    , ghc-lib-parser >=9.2 && <9.13
     , ghc-lib-parser-ex
     , monad-loops
     , mtl
@@ -187,7 +188,7 @@ library hindent-internal
       internal
   ghc-options: -Wall -O2 -threaded
   build-depends:
-      Cabal <3.12
+      Cabal
     , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
@@ -196,7 +197,7 @@ library hindent-internal
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.11
+    , ghc-lib-parser >=9.2 && <9.13
     , ghc-lib-parser-ex
     , monad-loops
     , mtl
@@ -222,7 +223,7 @@ executable hindent
       app
   ghc-options: -Wall -O2 -threaded
   build-depends:
-      Cabal <3.12
+      Cabal
     , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
@@ -230,7 +231,7 @@ executable hindent
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.11
+    , ghc-lib-parser >=9.2 && <9.13
     , ghc-lib-parser-ex
     , hindent
     , monad-loops
@@ -258,7 +259,7 @@ test-suite hindent-test
       tests
   ghc-options: -Wall -O2 -threaded
   build-depends:
-      Cabal <3.12
+      Cabal
     , Diff
     , async >=2.2.5
     , base >=4.7 && <5
@@ -267,7 +268,7 @@ test-suite hindent-test
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.11
+    , ghc-lib-parser >=9.2 && <9.13
     , ghc-lib-parser-ex
     , hindent
     , hindent-internal
@@ -297,7 +298,7 @@ benchmark hindent-bench
       benchmarks
   ghc-options: -Wall -O2 -threaded
   build-depends:
-      Cabal <3.12
+      Cabal
     , async >=2.2.5
     , base >=4.7 && <5
     , bytestring
@@ -307,7 +308,7 @@ benchmark hindent-bench
     , directory
     , exceptions
     , filepath
-    , ghc-lib-parser >=9.2 && <9.11
+    , ghc-lib-parser >=9.2 && <9.13
     , ghc-lib-parser-ex
     , hindent
     , hindent-internal
