@@ -30,7 +30,7 @@ jobs:
 
       - name: Setup Haskell Compiler (stack)
         id: setup-haskell
-        uses: haskell-actions/setup@d9b5b3fcf7ca56b8fe585c9b77d3b0ce466affd2 # v2.7.10
+        uses: haskell-actions/setup@96f3dafd067155f32643c2a0757ab71d2910e2c2 # v2.8.0
         with:
           enable-stack: true
           stack-no-global: true
