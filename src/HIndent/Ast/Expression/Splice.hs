@@ -46,7 +46,10 @@ instance Pretty Splice where
       printers ps s (x:xs) = printers ps (x : s) xs
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 mkSplice :: GHC.HsUntypedSplice GHC.GhcPs -> Splice
-mkSplice (GHC.HsUntypedSpliceExpr _ x) = UntypedDollar x
+mkSplice (GHC.HsUntypedSpliceExpr anns x) =
+  if hasDollarToken anns
+    then UntypedDollar x
+    else UntypedBare x
 mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) = QuasiQuote (mkPrefixName l) r
 #else
 mkSplice :: GHC.HsSplice GHC.GhcPs -> Splice
@@ -55,4 +58,23 @@ mkSplice (GHC.HsUntypedSplice _ GHC.DollarSplice _ body) = UntypedDollar body
 mkSplice (GHC.HsUntypedSplice _ GHC.BareSplice _ body) = UntypedBare body
 mkSplice (GHC.HsQuasiQuote _ _ l _ r) = QuasiQuote (mkPrefixName l) r
 mkSplice GHC.HsSpliced {} = error "This AST node should never appear."
+#endif
+
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+hasDollarToken :: GHC.XUntypedSpliceExpr GHC.GhcPs -> Bool
+hasDollarToken (GHC.EpTok _) = True
+hasDollarToken GHC.NoEpTok = False
+#elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
+hasDollarToken :: GHC.XUntypedSpliceExpr GHC.GhcPs -> Bool
+hasDollarToken anns = any isDollarAnn anns
+  where
+    isDollarAnn (GHC.AddEpAnn GHC.AnnDollar _) = True
+    isDollarAnn _ = False
+#else
+hasDollarToken :: GHC.XUntypedSpliceExpr GHC.GhcPs -> Bool
+hasDollarToken (GHC.EpAnn _ anns _) = any isDollarAnn anns
+  where
+    isDollarAnn (GHC.AddEpAnn GHC.AnnDollar _) = True
+    isDollarAnn _ = False
+hasDollarToken GHC.EpAnnNotUsed = False
 #endif

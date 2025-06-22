@@ -3132,6 +3132,17 @@ Typed splice
 foo = $$bar
 ```
 
+Template Haskell function calls without arguments should not get '$' prepended
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/973
+{-# LANGUAGE TemplateHaskell #-}
+
+makeSem ''MyData
+
+deriveJSON
+```
+
 ## Comments
 
 Only comments
