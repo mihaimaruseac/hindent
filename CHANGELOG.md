@@ -10,6 +10,8 @@
 
 ### Fixed
 
+- Template Haskell functions no longer get unwanted '$' symbols prepended ([#1033])
+
 ### Removed
 
 ## [6.2.1] - 2024-11-28
@@ -402,6 +404,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#1033]: https://github.com/mihaimaruseac/hindent/pull/1033
 [#1000]: https://github.com/mihaimaruseac/hindent/pull/1000
 [#967]: https://github.com/mihaimaruseac/hindent/pull/967
 [#950]: https://github.com/mihaimaruseac/hindent/pull/950
