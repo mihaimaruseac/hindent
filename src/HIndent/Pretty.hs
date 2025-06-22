@@ -1735,9 +1735,6 @@ instance Pretty (GHC.HsFieldLabel GHC.GhcPs) where
   pretty' GHC.HsFieldLabel {..} =
     printCommentsAnd hflLabel (string . GHC.unpackFS)
 #endif
-instance Pretty GHC.OccName where
-  pretty' = output
-
 -- | 'Pretty' for 'LHsWcType'
 instance Pretty
            (GHC.HsWildCardBndrs
