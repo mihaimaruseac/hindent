@@ -237,9 +237,6 @@ instance CommentExtraction (IEWrappedName a) where
   nodeComments IEPattern {} = emptyNodeComments
   nodeComments IEType {} = emptyNodeComments
 
-instance CommentExtraction OccName where
-  nodeComments = const emptyNodeComments
-
 -- | 'Pretty' for 'LHsSigWcType GhcPs'.
 instance CommentExtraction
            (HsWildCardBndrs GhcPs (GenLocated SrcSpanAnnA (HsSigType GhcPs))) where
