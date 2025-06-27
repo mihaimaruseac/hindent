@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, LambdaCase #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -54,6 +54,7 @@ import HIndent.Pretty.SigBindFamily
 import Type.Reflection
 #if MIN_VERSION_GLASGOW_HASKELL(9, 6, 0, 0)
 import Control.Monad
+import Data.Maybe
 #endif
 -- | A wrapper type used in everywhereMEpAnnsBackwards' to collect all
 -- 'EpAnn's to apply a function with them in order their positions.
@@ -111,7 +112,12 @@ relocateCommentsBeforePragmas m@HsModule {hsmodExt = xmod@XModulePs {hsmodAnn = 
   | otherwise = pure m
   where
     startPosOfPragmas =
-      let loc = getLoc $ head $ priorComments $ comments ann
+      let loc =
+            fromMaybe (error "no comments")
+              $ fmap getLoc
+              $ listToMaybe
+              $ priorComments
+              $ comments ann
        in case loc of
             EpaSpan (RealSrcSpan sp _) -> sp
             _ -> undefined
@@ -875,13 +881,15 @@ everywhereMEpAnnsInOrder cmp f hm =
           -- This guard arm checks if 'a' is 'EpAnn b' ('b' can be any type).
           | App g g' <- typeRep @a
           , Just HRefl <- eqTypeRep g (typeRep @EpAnn) = do
-            i <- gets head
-            modify tail
-            case lookup i anns of
-              Just (Wrapper y)
-                | App _ h <- typeOf y
-                , Just HRefl <- eqTypeRep g' h -> pure y
-              _ -> error "Unmatches"
+            get >>= \case
+              [] -> error "empty list"
+              i:is -> do
+                put is
+                case lookup i anns of
+                  Just (Wrapper y)
+                    | App _ h <- typeOf y
+                    , Just HRefl <- eqTypeRep g' h -> pure y
+                  _ -> error "Unmatches"
           | otherwise = pure x
 
 -- | This function moves comments in `fun_id` of `FunBind` to
