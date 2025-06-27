@@ -7,7 +7,6 @@ module HIndent.Ast.Module.Warning
   ) where
 
 import qualified GHC.Types.SourceText as GHC
-import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Declaration.Warning.Kind
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
@@ -16,6 +15,9 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
+#if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
+import qualified GHC.Types.SrcLoc as GHC
+#endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 data ModuleWarning = ModuleWarning
   { messages :: [GHC.LocatedE

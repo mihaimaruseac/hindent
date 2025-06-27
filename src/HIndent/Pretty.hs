@@ -57,10 +57,9 @@ import HIndent.Pretty.Types
 import HIndent.Printer
 import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
 import Text.Show.Unicode
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import qualified GHC.Core.DataCon as GHC
-#endif
-#if !MIN_VERSION_ghc_lib_parser(9,6,1)
+#else
 import qualified GHC.Unit as GHC
 #endif
 -- | This function pretty-prints the given AST node with comments.
@@ -215,7 +214,6 @@ prettyHsExpr (GHC.HsApp _ l r) = horizontal <-|> vertical
          GHC.EpAnnComments -> GHC.LHsExpr GHC.GhcPs -> GHC.LHsExpr GHC.GhcPs
     insertComments cs (GHC.L s@GHC.EpAnn {comments = cs'} r') =
       GHC.L (s {GHC.comments = cs <> cs'}) r'
-    insertComments _ x = x
 #else
 prettyHsExpr (GHC.HsApp _ l r) = horizontal <-|> vertical
   where
@@ -496,9 +494,12 @@ prettyHsExpr (GHC.HsBracket _ inner) = pretty $ mkBracket inner
 prettyHsExpr GHC.HsRnBracketOut {} = notGeneratedByParser
 prettyHsExpr GHC.HsTcBracketOut {} = notGeneratedByParser
 #endif
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 prettyHsExpr (GHC.HsTypedSplice _ x) = string "$$" >> pretty x
 prettyHsExpr (GHC.HsUntypedSplice _ x) = pretty $ mkSplice x
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+prettyHsExpr GHC.HsEmbTy {} = notGeneratedByParser
 #endif
 instance Pretty LambdaCase where
   pretty' (LambdaCase matches caseOrCases) = do
@@ -985,23 +986,20 @@ instance Pretty
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance Pretty
            (GHC.HsMatchContext (GHC.GenLocated GHC.SrcSpanAnnN GHC.RdrName)) where
-  pretty' = prettyHsMatchContext
-
-prettyHsMatchContext ::
-     GHC.HsMatchContext (GHC.GenLocated GHC.SrcSpanAnnN GHC.RdrName)
-  -> Printer ()
-prettyHsMatchContext GHC.FunRhs {..} =
-  pretty mc_strictness >> pretty (fmap mkPrefixName mc_fun)
-prettyHsMatchContext GHC.CaseAlt = return ()
-prettyHsMatchContext GHC.IfAlt {} = notGeneratedByParser
-prettyHsMatchContext GHC.ArrowMatchCtxt {} = notGeneratedByParser
-prettyHsMatchContext GHC.PatBindRhs {} = notGeneratedByParser
-prettyHsMatchContext GHC.PatBindGuards {} = notGeneratedByParser
-prettyHsMatchContext GHC.RecUpd {} = notGeneratedByParser
-prettyHsMatchContext GHC.StmtCtxt {} = notGeneratedByParser
-prettyHsMatchContext GHC.ThPatSplice {} = notGeneratedByParser
-prettyHsMatchContext GHC.ThPatQuote {} = notGeneratedByParser
-prettyHsMatchContext GHC.PatSyn {} = notGeneratedByParser
+  pretty' GHC.FunRhs {..} =
+    pretty mc_strictness >> pretty (fmap mkPrefixName mc_fun)
+  pretty' GHC.CaseAlt = return ()
+  pretty' GHC.IfAlt {} = notGeneratedByParser
+  pretty' GHC.ArrowMatchCtxt {} = notGeneratedByParser
+  pretty' GHC.PatBindRhs {} = notGeneratedByParser
+  pretty' GHC.PatBindGuards {} = notGeneratedByParser
+  pretty' GHC.RecUpd {} = notGeneratedByParser
+  pretty' GHC.StmtCtxt {} = notGeneratedByParser
+  pretty' GHC.ThPatSplice {} = notGeneratedByParser
+  pretty' GHC.ThPatQuote {} = notGeneratedByParser
+  pretty' GHC.PatSyn {} = notGeneratedByParser
+  pretty' GHC.LamAlt {} = notGeneratedByParser
+  pretty' GHC.LazyPatCtx {} = notGeneratedByParser
 #else
 instance Pretty (GHC.HsMatchContext GHC.GhcPs) where
   pretty' = prettyHsMatchContext
@@ -1177,7 +1175,10 @@ prettyPat (GHC.NPat _ x _ _) = pretty x
 prettyPat (GHC.NPlusKPat _ n k _ _ _) =
   pretty (fmap mkPrefixName n) >> string "+" >> pretty k
 prettyPat (GHC.SigPat _ l r) = spaced [pretty l, string "::", pretty r]
-
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+prettyPat GHC.EmbTyPat {} = notGeneratedByParser
+prettyPat GHC.InvisPat {} = notGeneratedByParser
+#endif
 instance Pretty RecConPat where
   pretty' (RecConPat GHC.HsRecFields {..}) =
     case fieldPrinters of
@@ -2045,15 +2046,16 @@ notUsedInParsedStage :: HasCallStack => a
 notUsedInParsedStage =
   error
     "This AST should never appears in an AST. It only appears in the renaming or type checked stages."
-#if !MIN_VERSION_ghc_lib_parser(9,4,1)
+#if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
 -- | Marks an AST node as it is used only for Haskell Program Coverage.
 forHpc :: HasCallStack => a
 forHpc = error "This AST type is for the use of Haskell Program Coverage."
 #endif
-getAnc :: GHC.Anchor -> GHC.RealSrcSpan
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+getAnc :: GHC.EpaLocation' a -> GHC.RealSrcSpan
 getAnc (GHC.EpaSpan (GHC.RealSrcSpan x _)) = x
 getAnc _ = undefined
 #else
+getAnc :: GHC.Anchor -> GHC.RealSrcSpan
 getAnc = GHC.anchor
 #endif
