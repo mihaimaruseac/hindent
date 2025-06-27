@@ -17,7 +17,6 @@ import GHC.Stack
 import GHC.Types.Basic
 import GHC.Types.Fixity
 import GHC.Types.ForeignCall
-import GHC.Types.Name
 import GHC.Types.Name.Reader
 import GHC.Types.SourceText
 import GHC.Types.SrcLoc
@@ -25,7 +24,6 @@ import HIndent.Ast.NodeComments
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-import Distribution.Simple.GHC (writeGhcEnvironmentFile)
 import GHC.Core.DataCon
 #else
 import GHC.Unit
@@ -236,6 +234,7 @@ instance CommentExtraction (IEWrappedName a) where
   nodeComments IEName {} = emptyNodeComments
   nodeComments IEPattern {} = emptyNodeComments
   nodeComments IEType {} = emptyNodeComments
+  nodeComments XIEWrappedName {} = emptyNodeComments
 
 -- | 'Pretty' for 'LHsSigWcType GhcPs'.
 instance CommentExtraction

@@ -33,7 +33,6 @@ import qualified GHC.Hs as GHC
 import GHC.Stack
 import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.Fixity as GHC
-import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
@@ -2040,7 +2039,7 @@ notUsedInParsedStage =
 forHpc :: HasCallStack => a
 forHpc = error "This AST type is for the use of Haskell Program Coverage."
 #endif
-
+getAnc :: GHC.Anchor -> GHC.RealSrcSpan
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 getAnc (GHC.EpaSpan (GHC.RealSrcSpan x _)) = x
 getAnc _ = undefined

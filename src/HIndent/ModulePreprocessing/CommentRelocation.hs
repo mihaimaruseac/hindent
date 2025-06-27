@@ -44,7 +44,6 @@ import Control.Monad.State
 import Data.Foldable
 import Data.Function
 import Data.List
-import Data.Traversable
 import GHC.Data.Bag
 import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)
