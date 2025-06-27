@@ -180,12 +180,17 @@ instance CommentExtraction (DerivClauseTys GhcPs) where
   nodeComments DctMulti {} = emptyNodeComments
 
 instance CommentExtraction OverlapMode where
-  nodeComments NoOverlap {} = emptyNodeComments
-  nodeComments Overlappable {} = emptyNodeComments
-  nodeComments Overlapping {} = emptyNodeComments
-  nodeComments Overlaps {} = emptyNodeComments
-  nodeComments Incoherent {} = emptyNodeComments
+  nodeComments = nodeCommentsOverlapMode
 
+nodeCommentsOverlapMode :: OverlapMode -> NodeComments
+nodeCommentsOverlapMode NoOverlap {} = emptyNodeComments
+nodeCommentsOverlapMode Overlappable {} = emptyNodeComments
+nodeCommentsOverlapMode Overlapping {} = emptyNodeComments
+nodeCommentsOverlapMode Overlaps {} = emptyNodeComments
+nodeCommentsOverlapMode Incoherent {} = emptyNodeComments
+#if MIN_VERSION_ghc_lib_parser(9, 8, 1)
+nodeCommentsOverlapMode NonCanonical {} = emptyNodeComments
+#endif
 instance CommentExtraction StringLiteral where
   nodeComments StringLiteral {} = emptyNodeComments
 
@@ -312,20 +317,30 @@ instance CommentExtraction FractionalLit where
   nodeComments FL {} = emptyNodeComments
 
 instance CommentExtraction (HsLit GhcPs) where
-  nodeComments HsChar {} = emptyNodeComments
-  nodeComments HsCharPrim {} = emptyNodeComments
-  nodeComments HsString {} = emptyNodeComments
-  nodeComments HsStringPrim {} = emptyNodeComments
-  nodeComments HsInt {} = emptyNodeComments
-  nodeComments HsIntPrim {} = emptyNodeComments
-  nodeComments HsWordPrim {} = emptyNodeComments
-  nodeComments HsInt64Prim {} = emptyNodeComments
-  nodeComments HsWord64Prim {} = emptyNodeComments
-  nodeComments HsInteger {} = emptyNodeComments
-  nodeComments HsRat {} = emptyNodeComments
-  nodeComments HsFloatPrim {} = emptyNodeComments
-  nodeComments HsDoublePrim {} = emptyNodeComments
+  nodeComments = nodeCommentsHsLit
 
+nodeCommentsHsLit :: HsLit GhcPs -> NodeComments
+nodeCommentsHsLit HsChar {} = emptyNodeComments
+nodeCommentsHsLit HsCharPrim {} = emptyNodeComments
+nodeCommentsHsLit HsString {} = emptyNodeComments
+nodeCommentsHsLit HsStringPrim {} = emptyNodeComments
+nodeCommentsHsLit HsInt {} = emptyNodeComments
+nodeCommentsHsLit HsIntPrim {} = emptyNodeComments
+nodeCommentsHsLit HsWordPrim {} = emptyNodeComments
+nodeCommentsHsLit HsInt64Prim {} = emptyNodeComments
+nodeCommentsHsLit HsWord64Prim {} = emptyNodeComments
+nodeCommentsHsLit HsInteger {} = emptyNodeComments
+nodeCommentsHsLit HsRat {} = emptyNodeComments
+nodeCommentsHsLit HsFloatPrim {} = emptyNodeComments
+nodeCommentsHsLit HsDoublePrim {} = emptyNodeComments
+#if MIN_VERSION_ghc_lib_parser(9, 8, 1)
+nodeCommentsHsLit HsInt8Prim {} = emptyNodeComments
+nodeCommentsHsLit HsInt16Prim {} = emptyNodeComments
+nodeCommentsHsLit HsInt32Prim {} = emptyNodeComments
+nodeCommentsHsLit HsWord8Prim {} = emptyNodeComments
+nodeCommentsHsLit HsWord16Prim {} = emptyNodeComments
+nodeCommentsHsLit HsWord32Prim {} = emptyNodeComments
+#endif
 instance CommentExtraction HsIPName where
   nodeComments HsIPName {} = emptyNodeComments
 
@@ -732,6 +747,10 @@ nodeCommentsHsExpr (HsOverLit x _) = nodeComments x
 nodeCommentsHsExpr (HsIPVar x _) = nodeComments x
 nodeCommentsHsExpr (HsUnboundVar x _) = nodeComments x
 #endif
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+nodeCommentsHsExpr HsRecSel {} = emptyNodeComments
+nodeCommentsHsExpr HsEmbTy {} = emptyNodeComments
+#endif
 instance CommentExtraction (Match GhcPs a) where
   nodeComments = nodeCommentsMatch
 
@@ -840,7 +859,10 @@ nodeCommentsMatchContext StmtCtxt {} = emptyNodeComments
 nodeCommentsMatchContext ThPatSplice {} = emptyNodeComments
 nodeCommentsMatchContext ThPatQuote {} = emptyNodeComments
 nodeCommentsMatchContext PatSyn {} = emptyNodeComments
-#if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+nodeCommentsMatchContext LamAlt {} = emptyNodeComments
+nodeCommentsMatchContext LazyPatCtx = emptyNodeComments
+#else
 nodeCommentsMatchContext LambdaExpr {} = emptyNodeComments
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
@@ -899,6 +921,10 @@ nodeCommentsPat ConPat {..} = nodeComments pat_con_ext
 nodeCommentsPat (ViewPat x _ _) = nodeComments x
 nodeCommentsPat (NPat x _ _ _) = nodeComments x
 nodeCommentsPat (SigPat x _ _) = nodeComments x
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+nodeCommentsPat EmbTyPat {} = emptyNodeComments
+nodeCommentsPat InvisPat {} = emptyNodeComments
 #endif
 instance CommentExtraction (HsTupArg GhcPs) where
   nodeComments = nodeCommentsHsTupArg

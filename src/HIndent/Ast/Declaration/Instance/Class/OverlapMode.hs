@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module HIndent.Ast.Declaration.Instance.Class.OverlapMode
   ( OverlapMode
   , mkOverlapMode
@@ -34,3 +36,11 @@ mkOverlapMode GHC.Overlappable {} = Overlappable
 mkOverlapMode GHC.Overlapping {} = Overlapping
 mkOverlapMode GHC.Overlaps {} = Overlaps
 mkOverlapMode GHC.Incoherent {} = Incoherent
+#if MIN_VERSION_ghc_lib_parser(9, 8, 1)
+-- There is no pragma named `{-# NONCANONICAL #-}`. Instead, GHC internally
+-- treats `{-# INCOHERENT #-}` as enabling a noncanonical overlap mode
+-- if the `-fno-specialise-incoherents` flag is specified.
+-- For details, see:
+-- https://hackage-content.haskell.org/package/ghc-9.12.2/docs/src/GHC.Types.Basic.html#NonCanonical
+mkOverlapMode GHC.NonCanonical {} = Incoherent
+#endif

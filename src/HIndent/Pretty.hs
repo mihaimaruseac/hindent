@@ -1792,34 +1792,45 @@ instance Pretty GHC.FractionalLit where
   pretty' = output
 
 instance Pretty (GHC.HsLit GHC.GhcPs) where
-  pretty' x@(GHC.HsChar _ _) = output x
-  pretty' x@GHC.HsCharPrim {} = output x
-  pretty' GHC.HsInt {} = notUsedInParsedStage
-  pretty' (GHC.HsIntPrim _ x) = string $ show x ++ "#"
-  pretty' GHC.HsWordPrim {} = notUsedInParsedStage
-  pretty' GHC.HsInt64Prim {} = notUsedInParsedStage
-  pretty' GHC.HsWord64Prim {} = notUsedInParsedStage
-  pretty' GHC.HsInteger {} = notUsedInParsedStage
-  pretty' GHC.HsRat {} = notUsedInParsedStage
-  pretty' (GHC.HsFloatPrim _ x) = pretty x >> string "#"
-  pretty' GHC.HsDoublePrim {} = notUsedInParsedStage
-  pretty' x =
-    case x of
-      GHC.HsString {} -> prettyString
-      GHC.HsStringPrim {} -> prettyString
-    where
-      prettyString =
-        case lines $ showOutputable x of
-          [] -> pure ()
-          [l] -> string l
-          (s:ss) ->
-            string "" |=> do
-              string s
-              newline
-              indentedWithSpace (-1)
-                $ lined
-                $ fmap (string . dropWhile (/= '\\')) ss
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+  pretty' = prettyHsLit
+
+prettyHsLit :: GHC.HsLit GHC.GhcPs -> Printer ()
+prettyHsLit x@(GHC.HsChar _ _) = output x
+prettyHsLit x@GHC.HsCharPrim {} = output x
+prettyHsLit GHC.HsInt {} = notUsedInParsedStage
+prettyHsLit (GHC.HsIntPrim _ x) = string $ show x ++ "#"
+prettyHsLit GHC.HsWordPrim {} = notUsedInParsedStage
+prettyHsLit GHC.HsInt64Prim {} = notUsedInParsedStage
+prettyHsLit GHC.HsWord64Prim {} = notUsedInParsedStage
+prettyHsLit GHC.HsInteger {} = notUsedInParsedStage
+prettyHsLit GHC.HsRat {} = notUsedInParsedStage
+prettyHsLit (GHC.HsFloatPrim _ x) = pretty x >> string "#"
+prettyHsLit GHC.HsDoublePrim {} = notUsedInParsedStage
+#if MIN_VERSION_ghc_lib_parser(9, 8, 1)
+prettyHsLit GHC.HsInt8Prim {} = notUsedInParsedStage
+prettyHsLit GHC.HsInt16Prim {} = notUsedInParsedStage
+prettyHsLit GHC.HsInt32Prim {} = notUsedInParsedStage
+prettyHsLit GHC.HsWord8Prim {} = notUsedInParsedStage
+prettyHsLit GHC.HsWord16Prim {} = notUsedInParsedStage
+prettyHsLit GHC.HsWord32Prim {} = notUsedInParsedStage
+#endif
+prettyHsLit x =
+  case x of
+    GHC.HsString {} -> prettyString
+    GHC.HsStringPrim {} -> prettyString
+  where
+    prettyString =
+      case lines $ showOutputable x of
+        [] -> pure ()
+        [l] -> string l
+        (s:ss) ->
+          string "" |=> do
+            string s
+            newline
+            indentedWithSpace (-1)
+              $ lined
+              $ fmap (string . dropWhile (/= '\\')) ss
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 instance Pretty (GHC.HsPragE GHC.GhcPs) where
   pretty' (GHC.HsPragSCC _ x) =
     spaced [string "{-# SCC", pretty x, string "#-}"]
