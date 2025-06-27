@@ -894,11 +894,11 @@ moveCommentsFromFunIdToMcFun :: HsModule' -> WithComments HsModule'
 moveCommentsFromFunIdToMcFun = pure . everywhere (mkT f)
   where
     f :: HsBind GhcPs -> HsBind GhcPs
-    f fb@FunBind { fun_id = L EpAnn {comments = from, ..} fid
+    f fb@FunBind { fun_id = L fun_ann@EpAnn {comments = from} fid
                  , fun_matches = MG {mg_alts = L l alts, ..}
                  } =
       fb
-        { fun_id = L EpAnn {comments = EpaCommentsBalanced [] [], ..} fid
+        { fun_id = L fun_ann {comments = EpaCommentsBalanced [] []} fid
         , fun_matches = MG {mg_alts = L l alts', ..}
         }
       where
