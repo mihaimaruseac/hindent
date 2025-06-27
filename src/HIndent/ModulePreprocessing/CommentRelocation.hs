@@ -86,7 +86,7 @@ relocateComments = evalState . relocate
       cs <- get
       assert (null cs) (pure x)
 -- | This function locates pragmas to the module's EPA.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 relocatePragmas :: HsModule GhcPs -> WithComments (HsModule GhcPs)
 relocatePragmas m@HsModule {hsmodExt = xmod@XModulePs {hsmodAnn = epa@EpAnn {}}} = do
   newAnn <- insertComments (isPragma . ac_tok . unLoc) insertPriorComments epa
@@ -97,7 +97,9 @@ relocatePragmas m@HsModule {hsmodAnn = epa@EpAnn {}} = do
   newAnn <- insertComments (isPragma . ac_tok . unLoc) insertPriorComments epa
   return m {hsmodAnn = newAnn}
 #endif
+#if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 relocatePragmas m = pure m
+#endif
 -- | This function locates comments that are located before pragmas to the
 -- module's EPA.
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
@@ -490,7 +492,6 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
             epa' = epa {comments = insertPriorComments comments above}
         put notAbove
         pure $ L epa' x
-      | otherwise = undefined
     addCommentsBeforeEpAnn x = pure x
     partitionAboveNotAbove cs sp =
       fst
@@ -727,6 +728,21 @@ relocateCommentsBeforeEachElement ::
   -> (a -> b -> RealSrcSpan -> Bool) -- ^ The function to decide whether to locate comments
   -> HsModule'
   -> WithComments HsModule'
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+relocateCommentsBeforeEachElement elemGetter elemSetter annGetter annSetter cond =
+  everywhereM (mkM f)
+  where
+    f :: a -> WithComments a
+    f x = do
+      newElems <- mapM insertCommentsBeforeElement (elemGetter x)
+      pure $ elemSetter newElems x
+      where
+        insertCommentsBeforeElement element
+          | elemAnn@EpAnn {} <- annGetter element = do
+            newEpa <-
+              insertCommentsByPos (cond x element) insertPriorComments elemAnn
+            pure $ annSetter newEpa element
+#else
 relocateCommentsBeforeEachElement elemGetter elemSetter annGetter annSetter cond =
   everywhereM (mkM f)
   where
@@ -741,7 +757,7 @@ relocateCommentsBeforeEachElement elemGetter elemSetter annGetter annSetter cond
               insertCommentsByPos (cond x element) insertPriorComments elemAnn
             pure $ annSetter newEpa element
           | otherwise = pure element
-
+#endif
 -- | This function applies the given function to all 'EpAnn's.
 applyM ::
      forall a. Typeable a
