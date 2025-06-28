@@ -1178,7 +1178,10 @@ prettyPat (GHC.NPat _ x _ _) = pretty x
 prettyPat (GHC.NPlusKPat _ n k _ _ _) =
   pretty (fmap mkPrefixName n) >> string "+" >> pretty k
 prettyPat (GHC.SigPat _ l r) = spaced [pretty l, string "::", pretty r]
-
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyPat (GHC.OrPat _ pats) =
+  inter (string "; ") (fmap pretty $ NE.toList pats)
+#endif
 instance Pretty RecConPat where
   pretty' (RecConPat GHC.HsRecFields {..}) =
     case fieldPrinters of

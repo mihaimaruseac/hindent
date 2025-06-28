@@ -1374,6 +1374,15 @@ As pattern
 f all@(x:xs) = all
 ```
 
+Or patterns
+
+```haskell since 9.12.1
+{-# LANGUAGE OrPatterns #-}
+
+isLeftOrRight :: Either a b -> Bool
+isLeftOrRight (Left _; Right _) = True
+```
+
 ### Infix declarations
 
 infixl

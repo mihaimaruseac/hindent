@@ -884,6 +884,7 @@ nodeCommentsPat ConPat {pat_con_ext = (s, d)} =
 nodeCommentsPat (ViewPat x _ _) = nodeComments x
 nodeCommentsPat (NPat x _ _ _) = nodeComments x
 nodeCommentsPat (SigPat x _ _) = nodeComments x
+nodeCommentsPat OrPat {} = emptyNodeComments
 #elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsPat (LazyPat x _) = mconcat $ fmap nodeComments x
 nodeCommentsPat (BangPat x _) = mconcat $ fmap nodeComments x
