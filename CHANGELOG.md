@@ -11,7 +11,7 @@
 ### Fixed
 
 - Template Haskell functions no longer get unwanted '$' symbols prepended ([#1033])
-- Typo in an error message ([#1041])
+- Default method signatures with constraints are now properly indented ([#1042])
 
 ### Removed
 
@@ -405,7 +405,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
-[#1041]: https://github.com/mihaimaruseac/hindent/pull/1041
+[#1042]: https://github.com/mihaimaruseac/hindent/pull/1042
 [#1033]: https://github.com/mihaimaruseac/hindent/pull/1033
 [#1000]: https://github.com/mihaimaruseac/hindent/pull/1000
 [#967]: https://github.com/mihaimaruseac/hindent/pull/967
