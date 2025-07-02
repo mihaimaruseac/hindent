@@ -459,6 +459,25 @@ class Foo a where
   bar = mappend
 ```
 
+Default signatures with constraints
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/492
+class HasEnvExpr m =>
+      MonadRecordEnvExpr m
+  where
+  addEnvExpression :: EnvExpr m -> m HostExpr
+  default addEnvExpression ::
+       ( MonadTrans t
+       , Monad n
+       , MonadRecordEnvExpr n
+       , t n ~ m
+       , EnvExpr m ~ EnvExpr n
+       )
+    => EnvExpr m
+    -> m HostExpr
+```
+
 `TypeOperators` and `MultiParamTypeClasses`
 
 ```haskell

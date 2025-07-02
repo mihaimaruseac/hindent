@@ -53,7 +53,7 @@ instance FromJSON Config where
       convertExt x =
         case strToExt x of
           Just x' -> pure x'
-          Nothing -> error $ "Unknow extension: " ++ show x
+          Nothing -> error $ "Unknown extension: " ++ show x
   parseJSON _ = fail "Expected Object for Config value"
 
 -- | Default style configuration.
