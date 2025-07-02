@@ -103,13 +103,19 @@ instance Pretty Signature where
       , string "::"
       , pretty signature
       ]
-  pretty' DefaultClassMethod {..} =
-    spaced
-      [ string "default"
-      , hCommaSep $ fmap pretty names
-      , string "::"
-      , printCommentsAnd signature pretty
-      ]
+  pretty' DefaultClassMethod {..} = do
+    string "default "
+    hCommaSep $ fmap pretty names
+    string " ::"
+    hor <-|> ver
+    where
+      hor =
+        space >> printCommentsAnd signature (pretty . HsSigTypeInsideDeclSig)
+      ver = do
+        newline
+        indentedBlock
+          $ indentedWithSpace 3
+          $ printCommentsAnd signature (pretty . HsSigTypeInsideDeclSig)
   pretty' ClassMethod {..} = do
     hCommaSep $ fmap pretty names
     string " ::"
