@@ -5,6 +5,7 @@
 ### Added
 
 - Support for GHC 9.12 ([#1000])
+- Support for GHC2024 ([#1040])
 
 ### Changed
 
@@ -406,6 +407,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@toku-sa-n]: https://github.com/toku-sa-n
 
 [#1042]: https://github.com/mihaimaruseac/hindent/pull/1042
+[#1040]: https://github.com/mihaimaruseac/hindent/pull/1040
 [#1033]: https://github.com/mihaimaruseac/hindent/pull/1033
 [#1000]: https://github.com/mihaimaruseac/hindent/pull/1000
 [#967]: https://github.com/mihaimaruseac/hindent/pull/967
