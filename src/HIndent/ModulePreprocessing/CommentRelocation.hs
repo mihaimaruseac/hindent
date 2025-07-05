@@ -5,6 +5,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE LambdaCase #-}
 
 -- | Comment relocation for pretty-printing comments correctly.
 --
@@ -44,8 +45,6 @@ import Control.Monad.State
 import Data.Foldable
 import Data.Function
 import Data.List
-import Data.Traversable
-import GHC.Data.Bag
 import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)
 import HIndent.GhcLibParserWrapper.GHC.Hs
@@ -55,6 +54,12 @@ import HIndent.Pretty.SigBindFamily
 import Type.Reflection
 #if MIN_VERSION_GLASGOW_HASKELL(9, 6, 0, 0)
 import Control.Monad
+#endif
+#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
+import GHC.Data.Bag
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+import Data.Maybe
 #endif
 -- | A wrapper type used in everywhereMEpAnnsBackwards' to collect all
 -- 'EpAnn's to apply a function with them in order their positions.
@@ -87,7 +92,7 @@ relocateComments = evalState . relocate
       cs <- get
       assert (null cs) (pure x)
 -- | This function locates pragmas to the module's EPA.
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 relocatePragmas :: HsModule GhcPs -> WithComments (HsModule GhcPs)
 relocatePragmas m@HsModule {hsmodExt = xmod@XModulePs {hsmodAnn = epa@EpAnn {}}} = do
   newAnn <- insertComments (isPragma . ac_tok . unLoc) insertPriorComments epa
@@ -98,7 +103,9 @@ relocatePragmas m@HsModule {hsmodAnn = epa@EpAnn {}} = do
   newAnn <- insertComments (isPragma . ac_tok . unLoc) insertPriorComments epa
   return m {hsmodAnn = newAnn}
 #endif
+#if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 relocatePragmas m = pure m
+#endif
 -- | This function locates comments that are located before pragmas to the
 -- module's EPA.
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
@@ -110,7 +117,11 @@ relocateCommentsBeforePragmas m@HsModule {hsmodExt = xmod@XModulePs {hsmodAnn = 
   | otherwise = pure m
   where
     startPosOfPragmas =
-      let loc = getLoc $ head $ priorComments $ comments ann
+      let loc =
+            maybe (error "No prior comments") getLoc
+              $ listToMaybe
+              $ priorComments
+              $ comments ann
        in case loc of
             EpaSpan (RealSrcSpan sp _) -> sp
             _ -> undefined
@@ -122,7 +133,11 @@ relocateCommentsBeforePragmas m@HsModule {hsmodExt = xmod@XModulePs {hsmodAnn = 
     pure m {hsmodExt = xmod {hsmodAnn = newAnn}}
   | otherwise = pure m
   where
-    startPosOfPragmas = anchor $ getLoc $ head $ priorComments $ comments ann
+    startPosOfPragmas =
+      maybe (error "No prior comments.") (anchor . getLoc)
+        $ listToMaybe
+        $ priorComments
+        $ comments ann
 #else
 relocateCommentsBeforePragmas :: HsModule -> WithComments HsModule
 relocateCommentsBeforePragmas m@HsModule {hsmodAnn = ann}
@@ -293,15 +308,15 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       pure (filterLBind bindsSigs', filterLSig bindsSigs')
       where
         bindsSigs = mkSortedLSigBindFamilyList sigs binds [] [] []
-    addCommentsBeforeEpAnn (L epa@EpAnn {..} x)
-      | EpaSpan (RealSrcSpan anc _) <- entry = do
-        cs <- get
-        let (notAbove, above) =
-              partitionAboveNotAbove (sortCommentsByLocation cs) anc
-            epa' = epa {comments = insertPriorComments comments above}
-        put notAbove
-        pure $ L epa' x
-      | otherwise = undefined
+    addCommentsBeforeEpAnn (L epa@EpAnn { entry = EpaSpan (RealSrcSpan anc _)
+                                        , ..
+                                        } x) = do
+      cs <- get
+      let (notAbove, above) =
+            partitionAboveNotAbove (sortCommentsByLocation cs) anc
+          epa' = epa {comments = insertPriorComments comments above}
+      put notAbove
+      pure $ L epa' x
     addCommentsBeforeEpAnn x = pure x
     partitionAboveNotAbove cs sp =
       fst
@@ -492,7 +507,6 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
         put notAbove
         pure $ L epa' x
       | otherwise = undefined
-    addCommentsBeforeEpAnn x = pure x
     partitionAboveNotAbove cs sp =
       fst
         $ foldr'
@@ -728,6 +742,23 @@ relocateCommentsBeforeEachElement ::
   -> (a -> b -> RealSrcSpan -> Bool) -- ^ The function to decide whether to locate comments
   -> HsModule'
   -> WithComments HsModule'
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+relocateCommentsBeforeEachElement elemGetter elemSetter annGetter annSetter cond =
+  everywhereM (mkM f)
+  where
+    f :: a -> WithComments a
+    f x = do
+      newElems <- mapM insertCommentsBeforeElement (elemGetter x)
+      pure $ elemSetter newElems x
+      where
+        insertCommentsBeforeElement element = do
+          newEpa <-
+            insertCommentsByPos
+              (cond x element)
+              insertPriorComments
+              (annGetter element)
+          pure $ annSetter newEpa element
+#else
 relocateCommentsBeforeEachElement elemGetter elemSetter annGetter annSetter cond =
   everywhereM (mkM f)
   where
@@ -742,7 +773,7 @@ relocateCommentsBeforeEachElement elemGetter elemSetter annGetter annSetter cond
               insertCommentsByPos (cond x element) insertPriorComments elemAnn
             pure $ annSetter newEpa element
           | otherwise = pure element
-
+#endif
 -- | This function applies the given function to all 'EpAnn's.
 applyM ::
      forall a. Typeable a
@@ -860,13 +891,15 @@ everywhereMEpAnnsInOrder cmp f hm =
           -- This guard arm checks if 'a' is 'EpAnn b' ('b' can be any type).
           | App g g' <- typeRep @a
           , Just HRefl <- eqTypeRep g (typeRep @EpAnn) = do
-            i <- gets head
-            modify tail
-            case lookup i anns of
-              Just (Wrapper y)
-                | App _ h <- typeOf y
-                , Just HRefl <- eqTypeRep g' h -> pure y
-              _ -> error "Unmatches"
+            get >>= \case
+              [] -> error "No comments."
+              (i:is) -> do
+                put is
+                case lookup i anns of
+                  Just (Wrapper y)
+                    | App _ h <- typeOf y
+                    , Just HRefl <- eqTypeRep g' h -> pure y
+                  _ -> error "Unmatches"
           | otherwise = pure x
 
 -- | This function moves comments in `fun_id` of `FunBind` to
@@ -891,14 +924,12 @@ moveCommentsFromFunIdToMcFun = pure . everywhere (mkT f)
           fmap
             (\(L l' x) ->
                case x of
-                 Match {m_ctxt = FunRhs {mc_fun = L EpAnn {..} fun, ..}, ..} ->
+                 Match {m_ctxt = FunRhs {mc_fun = L funann@EpAnn {} fun, ..}} ->
                    L
                      l'
-                     Match
+                     x
                        { m_ctxt =
-                           FunRhs
-                             {mc_fun = L EpAnn {comments = from, ..} fun, ..}
-                       , ..
+                           FunRhs {mc_fun = L funann {comments = from} fun, ..}
                        }
                  x'' -> L l' x'')
             alts
