@@ -8,7 +8,6 @@ module HIndent.Pretty
   ) where
 
 import Data.Void
-import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
