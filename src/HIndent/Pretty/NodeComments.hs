@@ -181,13 +181,6 @@ instance CommentExtraction (DerivClauseTys GhcPs) where
   nodeComments DctSingle {} = emptyNodeComments
   nodeComments DctMulti {} = emptyNodeComments
 
-instance CommentExtraction OverlapMode where
-  nodeComments NoOverlap {} = emptyNodeComments
-  nodeComments Overlappable {} = emptyNodeComments
-  nodeComments Overlapping {} = emptyNodeComments
-  nodeComments Overlaps {} = emptyNodeComments
-  nodeComments Incoherent {} = emptyNodeComments
-
 instance CommentExtraction StringLiteral where
   nodeComments StringLiteral {} = emptyNodeComments
 
@@ -250,16 +243,6 @@ instance CommentExtraction
 instance CommentExtraction CExportSpec where
   nodeComments CExportStatic {} = emptyNodeComments
 
-instance CommentExtraction Safety where
-  nodeComments PlaySafe = emptyNodeComments
-  nodeComments PlayInterruptible = emptyNodeComments
-  nodeComments PlayRisky = emptyNodeComments
-
-instance CommentExtraction Role where
-  nodeComments Nominal = emptyNodeComments
-  nodeComments Representational = emptyNodeComments
-  nodeComments Phantom = emptyNodeComments
-
 instance CommentExtraction TopLevelTyFamInstDecl where
   nodeComments (TopLevelTyFamInstDecl x) = nodeComments x
 
@@ -284,11 +267,6 @@ instance CommentExtraction (FixitySig GhcPs) where
 
 instance CommentExtraction Fixity where
   nodeComments Fixity {} = emptyNodeComments
-
-instance CommentExtraction FixityDirection where
-  nodeComments InfixL {} = emptyNodeComments
-  nodeComments InfixR {} = emptyNodeComments
-  nodeComments InfixN {} = emptyNodeComments
 
 instance CommentExtraction InlinePragma where
   nodeComments InlinePragma {} = emptyNodeComments
@@ -350,9 +328,6 @@ instance CommentExtraction DoExpression where
 
 instance CommentExtraction LetIn where
   nodeComments LetIn {} = emptyNodeComments
-
-instance CommentExtraction CCallConv where
-  nodeComments = const emptyNodeComments
 
 instance CommentExtraction HsSrcBang where
   nodeComments HsSrcBang {} = emptyNodeComments
