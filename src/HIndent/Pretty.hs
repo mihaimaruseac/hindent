@@ -44,6 +44,7 @@ import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression.Bracket
 import HIndent.Ast.Expression.Splice
+import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
@@ -312,9 +313,10 @@ prettyHsExpr (GHC.HsIf _ cond t f) = do
     branch :: String -> GHC.LHsExpr GHC.GhcPs -> Printer ()
     branch str e =
       case e of
-        (GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)) -> doStmt (QualifiedDo m Do) xs
+        (GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)) ->
+          doStmt (QualifiedDo (fmap mkModuleName m) Do) xs
         (GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)) ->
-          doStmt (QualifiedDo m Mdo) xs
+          doStmt (QualifiedDo (fmap mkModuleName m) Mdo) xs
         _ -> string str |=> pretty e
       where
         doStmt qDo stmts = do
@@ -344,9 +346,9 @@ prettyHsExpr (GHC.HsDo _ GHC.MonadComp {} (GHC.L _ [_])) =
 prettyHsExpr (GHC.HsDo _ GHC.MonadComp {} (GHC.L l (lhs:rhs:rhss))) =
   pretty $ GHC.L l $ ListComprehension lhs (rhs :| rhss)
 prettyHsExpr (GHC.HsDo _ (GHC.DoExpr m) (GHC.L l xs)) =
-  pretty $ GHC.L l $ DoExpression xs (QualifiedDo m Do)
+  pretty $ GHC.L l $ DoExpression xs (QualifiedDo (fmap mkModuleName m) Do)
 prettyHsExpr (GHC.HsDo _ (GHC.MDoExpr m) (GHC.L l xs)) =
-  pretty $ GHC.L l $ DoExpression xs (QualifiedDo m Mdo)
+  pretty $ GHC.L l $ DoExpression xs (QualifiedDo (fmap mkModuleName m) Mdo)
 prettyHsExpr (GHC.HsDo _ GHC.GhciStmtCtxt {} _) =
   error "We're not using GHCi, are we?"
 prettyHsExpr (GHC.ExplicitList _ xs) = horizontal <-|> vertical
@@ -1044,9 +1046,13 @@ instance Pretty GRHSExpr where
     rhsSeparator grhsExprType
     case GHC.unLoc body of
       GHC.HsDo _ (GHC.DoExpr m) stmts ->
-        printCommentsAnd body (const (doExpr (QualifiedDo m Do) stmts))
+        printCommentsAnd
+          body
+          (const (doExpr (QualifiedDo (fmap mkModuleName m) Do) stmts))
       GHC.HsDo _ (GHC.MDoExpr m) stmts ->
-        printCommentsAnd body (const (doExpr (QualifiedDo m Mdo) stmts))
+        printCommentsAnd
+          body
+          (const (doExpr (QualifiedDo (fmap mkModuleName m) Mdo) stmts))
       GHC.OpApp _ (GHC.L _ (GHC.HsDo _ GHC.DoExpr {} _)) _ _ ->
         space >> pretty body
       GHC.OpApp _ (GHC.L _ (GHC.HsDo _ GHC.MDoExpr {} _)) _ _ ->
@@ -1070,8 +1076,10 @@ instance Pretty GRHSExpr where
       space
       rhsSeparator grhsExprType
       printCommentsAnd body $ \case
-        GHC.HsDo _ (GHC.DoExpr m) stmts -> doExpr (QualifiedDo m Do) stmts
-        GHC.HsDo _ (GHC.MDoExpr m) stmts -> doExpr (QualifiedDo m Mdo) stmts
+        GHC.HsDo _ (GHC.DoExpr m) stmts ->
+          doExpr (QualifiedDo (fmap mkModuleName m) Do) stmts
+        GHC.HsDo _ (GHC.MDoExpr m) stmts ->
+          doExpr (QualifiedDo (fmap mkModuleName m) Mdo) stmts
         x ->
           let hor = space >> pretty x
               ver = newline >> indentedBlock (pretty x)
@@ -1350,11 +1358,19 @@ prettyInfixApp InfixApp {..} = horizontal <-|> vertical
       , isSameAssoc o = leftAssoc
       | otherwise = rightAssoc
     prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)] = do
-      spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Do]
+      spaced
+        [ pretty l
+        , pretty $ InfixExpr o
+        , pretty $ QualifiedDo (fmap mkModuleName m) Do
+        ]
       newline
       indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
     prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)] = do
-      spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Mdo]
+      spaced
+        [ pretty l
+        , pretty $ InfixExpr o
+        , pretty $ QualifiedDo (fmap mkModuleName m) Mdo
+        ]
       newline
       indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
     prettyOps [l, o, r@(GHC.L _ GHC.HsLam {})] = do
@@ -1404,11 +1420,19 @@ prettyInfixApp InfixApp {..} = horizontal <-|> vertical
       , isSameAssoc o = leftAssoc
       | otherwise = rightAssoc
     prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)] = do
-      spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Do]
+      spaced
+        [ pretty l
+        , pretty $ InfixExpr o
+        , pretty $ QualifiedDo (fmap mkModuleName m) Do
+        ]
       newline
       indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
     prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)] = do
-      spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Mdo]
+      spaced
+        [ pretty l
+        , pretty $ InfixExpr o
+        , pretty $ QualifiedDo (fmap mkModuleName m) Mdo
+        ]
       newline
       indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
     prettyOps [l, o, r@(GHC.L _ GHC.HsLam {})] = do
@@ -1458,11 +1482,19 @@ prettyInfixApp InfixApp {..} = horizontal <-|> vertical
       , isSameAssoc o = leftAssoc
       | otherwise = rightAssoc
     prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)] = do
-      spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Do]
+      spaced
+        [ pretty l
+        , pretty $ InfixExpr o
+        , pretty $ QualifiedDo (fmap mkModuleName m) Do
+        ]
       newline
       indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
     prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)] = do
-      spaced [pretty l, pretty $ InfixExpr o, pretty $ QualifiedDo m Mdo]
+      spaced
+        [ pretty l
+        , pretty $ InfixExpr o
+        , pretty $ QualifiedDo (fmap mkModuleName m) Mdo
+        ]
       newline
       indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
     prettyOps [l, o, r@(GHC.L _ GHC.HsLam {})] = do
@@ -1578,13 +1610,6 @@ instance Pretty VerticalContext where
   pretty' (VerticalContext (Just xs)) =
     printCommentsAnd xs (vTuple . fmap pretty)
 #endif
--- Wrap a value of this type with 'ModulenameWithPrefix' to print it with
--- the "module " prefix.
-instance Pretty GHC.ModuleName where
-  pretty' = output
-
-instance Pretty ModuleNameWithPrefix where
-  pretty' (ModuleNameWithPrefix name) = spaced [string "module", pretty name]
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance Pretty (GHC.IE GHC.GhcPs) where
   pretty' (GHC.IEVar _ name _) = pretty name
@@ -1604,7 +1629,8 @@ instance Pretty (GHC.IE GHC.GhcPs) where
         string x'
         indentedWithFixedLevel 0 $ newlinePrefixed $ string <$> xs'
   pretty' (GHC.IEModuleContents _ name) =
-    pretty $ fmap ModuleNameWithPrefix name
+    printCommentsAnd name $ \n ->
+      spaced [string "module", pretty (mkModuleName n)]
   pretty' GHC.IEGroup {} = docNode
   pretty' GHC.IEDoc {} = docNode
   pretty' GHC.IEDocNamed {} = docNode
@@ -1627,7 +1653,8 @@ instance Pretty (GHC.IE GHC.GhcPs) where
         string x'
         indentedWithFixedLevel 0 $ newlinePrefixed $ string <$> xs'
   pretty' (GHC.IEModuleContents _ name) =
-    pretty $ fmap ModuleNameWithPrefix name
+    printCommentsAnd name $ \n ->
+      spaced [string "module", pretty (mkModuleName n)]
   pretty' GHC.IEGroup {} = docNode
   pretty' GHC.IEDoc {} = docNode
   pretty' GHC.IEDocNamed {} = docNode

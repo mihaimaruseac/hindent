@@ -7,6 +7,7 @@ module HIndent.Ast.Module.Export.Entry
 
 import GHC.Stack
 import qualified GHC.Unit as GHC
+import HIndent.Ast.Module.Name
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -20,7 +21,7 @@ data ExportEntry
       (WithComments (GHC.IEWrappedName GHC.GhcPs))
       [WithComments (GHC.IEWrappedName GHC.GhcPs)]
   | WithAllConstructors (WithComments (GHC.IEWrappedName GHC.GhcPs))
-  | ByModule (WithComments GHC.ModuleName)
+  | ByModule (WithComments ModuleName)
 #else
 data ExportEntry
   = SingleIdentifier (WithComments (GHC.IEWrappedName (GHC.IdP GHC.GhcPs)))
@@ -28,7 +29,7 @@ data ExportEntry
       (WithComments (GHC.IEWrappedName (GHC.IdP GHC.GhcPs)))
       [WithComments (GHC.IEWrappedName (GHC.IdP GHC.GhcPs))]
   | WithAllConstructors (WithComments (GHC.IEWrappedName (GHC.IdP GHC.GhcPs)))
-  | ByModule (WithComments GHC.ModuleName)
+  | ByModule (WithComments ModuleName)
 #endif
 instance CommentExtraction ExportEntry where
   nodeComments SingleIdentifier {} = NodeComments [] [] []
@@ -62,7 +63,8 @@ mkExportEntry (GHC.IEThingWith _ name _ constructors) =
     (fromGenLocated name)
     (fmap fromGenLocated constructors)
 #endif
-mkExportEntry (GHC.IEModuleContents _ name) = ByModule $ fromGenLocated name
+mkExportEntry (GHC.IEModuleContents _ name) =
+  ByModule $ mkModuleName <$> fromGenLocated name
 mkExportEntry GHC.IEGroup {} = neverAppears
 mkExportEntry GHC.IEDoc {} = neverAppears
 mkExportEntry GHC.IEDocNamed {} = neverAppears

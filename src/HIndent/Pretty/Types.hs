@@ -37,7 +37,6 @@ module HIndent.Pretty.Types
   , Context(..)
   , HorizontalContext(..)
   , VerticalContext(..)
-  , ModuleNameWithPrefix(..)
   , PatInsidePatDecl(..)
   , LambdaCase(..)
   , ListComprehension(..)
@@ -56,6 +55,7 @@ module HIndent.Pretty.Types
 import Data.List.NonEmpty
 import GHC.Hs
 import GHC.Types.Name.Reader
+import {-# SOURCE #-} qualified HIndent.Ast.Module.Name as HIndent
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
 import GHC.Unit
 #endif
@@ -233,16 +233,6 @@ newtype HorizontalContext =
 newtype VerticalContext =
   VerticalContext (Maybe (LHsContext GhcPs))
 #endif
--- | A wrapper type for pretty-printing a value of @ModuleName@ with the
--- @module @ prefix.
---
--- Pretty-printing it via @(string "module " >> pretty (name ::
--- ModuleName))@ locates comments before @name@ in the same line as @module
--- @ and the name will be in the next line. This type is to avoid the
--- problem.
-newtype ModuleNameWithPrefix =
-  ModuleNameWithPrefix ModuleName
-
 -- | A wrapper for 'LPat' inside a pattern declaration. Here, all infix
 -- patterns have extra spaces around the operators, like x : xs.
 newtype PatInsidePatDecl =
@@ -280,7 +270,7 @@ data DoOrMdo
 -- | Values indicating whether the `do` is qualified with a module name (and
 -- whether `do` or `mdo` is used)
 data QualifiedDo =
-  QualifiedDo (Maybe ModuleName) DoOrMdo
+  QualifiedDo (Maybe HIndent.ModuleName) DoOrMdo
 
 -- | Values indicating in which context a RHS is located.
 data GRHSExprType
