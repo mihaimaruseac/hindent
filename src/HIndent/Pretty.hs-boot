@@ -64,7 +64,6 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnN GHC.RdrName)
               [GHC.RecordPatSynField GHC.GhcPs])
 
-instance Pretty (GHC.HsPatSynDir GHC.GhcPs)
 
 instance Pretty PatInsidePatDecl
 

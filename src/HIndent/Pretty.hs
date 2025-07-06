@@ -1771,11 +1771,6 @@ instance Pretty
     error
       "Cannot handle here because `InfixCon` does not have the information of the constructor."
 
-instance Pretty (GHC.HsPatSynDir GHC.GhcPs) where
-  pretty' GHC.Unidirectional = string "<-"
-  pretty' GHC.ImplicitBidirectional = string "="
-  pretty' GHC.ExplicitBidirectional {} = string "<-"
-
 instance Pretty (GHC.HsOverLit GHC.GhcPs) where
   pretty' GHC.OverLit {..} = pretty ol_val
 
