@@ -221,14 +221,6 @@ instance CommentExtraction HorizontalContext where
 instance CommentExtraction VerticalContext where
   nodeComments VerticalContext {} = emptyNodeComments
 
--- Wrap a value of this type with 'ModulenameWithPrefix' to print it with
--- the "module " prefix.
-instance CommentExtraction ModuleName where
-  nodeComments = const emptyNodeComments
-
-instance CommentExtraction ModuleNameWithPrefix where
-  nodeComments ModuleNameWithPrefix {} = emptyNodeComments
-
 instance CommentExtraction FamEqn' where
   nodeComments FamEqn' {..} = nodeComments famEqn
 

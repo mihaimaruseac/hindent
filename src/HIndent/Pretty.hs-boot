@@ -94,4 +94,3 @@ instance Pretty (GHC.HsExpr GHC.GhcPs)
 instance Pretty (GHC.FieldOcc GHC.GhcPs)
 
 
-instance Pretty GHC.ModuleName

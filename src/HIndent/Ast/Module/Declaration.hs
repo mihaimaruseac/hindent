@@ -27,7 +27,9 @@ instance CommentExtraction ModuleDeclaration where
 
 instance Pretty ModuleDeclaration where
   pretty' ModuleDeclaration {..} = do
-    pretty name
+    prettyWith name $ \n -> do
+      string "module "
+      pretty n
     whenJust warning $ \x -> do
       space
       pretty x

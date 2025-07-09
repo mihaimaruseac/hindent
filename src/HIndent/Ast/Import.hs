@@ -14,6 +14,7 @@ import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Unit as GHC
 import HIndent.Applicative
 import HIndent.Ast.Import.Entry.Collection
+import HIndent.Ast.Module.Name (ModuleName, mkModuleName)
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -28,12 +29,12 @@ data QualificationPosition
   deriving (Eq)
 
 data Qualification = Qualification
-  { qualifiedAs :: Maybe (WithComments GHC.ModuleName)
+  { qualifiedAs :: Maybe (WithComments ModuleName)
   , position :: QualificationPosition
   } deriving (Eq)
 
 data Import = Import
-  { moduleName :: WithComments GHC.ModuleName
+  { moduleName :: WithComments ModuleName
   , isSafe :: Bool
   , isBoot :: Bool
   , qualification :: Maybe Qualification
@@ -62,7 +63,7 @@ instance Pretty Import where
 mkImport :: GHC.ImportDecl GHC.GhcPs -> Import
 mkImport decl@GHC.ImportDecl {..} = Import {..}
   where
-    moduleName = fromGenLocated ideclName
+    moduleName = mkModuleName <$> fromGenLocated ideclName
     isSafe = ideclSafe
     isBoot = ideclSource == GHC.IsBoot
     qualification =
@@ -75,11 +76,15 @@ mkImport decl@GHC.ImportDecl {..} = Import {..}
         (_, Just name, GHC.QualifiedPre) ->
           Just
             Qualification
-              {qualifiedAs = Just $ fromGenLocated name, position = Pre}
+              { qualifiedAs = Just $ mkModuleName <$> fromGenLocated name
+              , position = Pre
+              }
         (_, Just name, GHC.QualifiedPost) ->
           Just
             Qualification
-              {qualifiedAs = Just $ fromGenLocated name, position = Post}
+              { qualifiedAs = Just $ mkModuleName <$> fromGenLocated name
+              , position = Post
+              }
     packageName = GHC.getPackageName decl
     importEntries = mkImportEntryCollection decl
 
@@ -88,8 +93,7 @@ sortByName = fmap sortExplicitImportsInDecl . sortByModuleName
 
 -- | This function sorts import declarations by their module names.
 sortByModuleName :: [WithComments Import] -> [WithComments Import]
-sortByModuleName =
-  sortBy (compare `on` showOutputable . getNode . moduleName . getNode)
+sortByModuleName = sortBy (compare `on` getNode . moduleName . getNode)
 
 -- | This function sorts explicit imports in the given import declaration
 -- by their names.

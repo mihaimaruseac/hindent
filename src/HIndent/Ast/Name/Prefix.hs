@@ -10,6 +10,7 @@ import Data.Maybe
 import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import qualified GHC.Unit.Module as GHC
+import HIndent.Ast.Module.Name
 import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -17,7 +18,7 @@ import HIndent.Pretty.NodeComments
 
 data PrefixName = PrefixName
   { name :: String
-  , moduleName :: Maybe GHC.ModuleName
+  , moduleName :: Maybe ModuleName
   , parentheses :: Bool
   }
 
@@ -37,7 +38,10 @@ mkPrefixName :: GHC.RdrName -> PrefixName
 mkPrefixName (GHC.Unqual name) =
   PrefixName (showOutputable name) Nothing (parensNeeded name)
 mkPrefixName (GHC.Qual modName name) =
-  PrefixName (showOutputable name) (Just modName) (parensNeeded name)
+  PrefixName
+    (showOutputable name)
+    (Just $ mkModuleName modName)
+    (parensNeeded name)
 mkPrefixName (GHC.Orig {}) =
   error "This AST node should not appear in the parser output."
 mkPrefixName (GHC.Exact name) =
