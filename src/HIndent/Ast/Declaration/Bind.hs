@@ -31,7 +31,9 @@ data Bind
   | PatternSynonym
       { name :: GHC.LIdP GHC.GhcPs
       , parameters :: GHC.HsPatSynDetails GHC.GhcPs
-      , direction :: GHC.HsPatSynDir GHC.GhcPs
+      , isImplicitBidirectional :: Bool
+      , explicitMatches :: Maybe
+          (GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs))
       , definition :: GHC.LPat GHC.GhcPs
       }
 
@@ -54,12 +56,16 @@ instance Pretty Bind where
           ]
       GHC.PrefixCon _ [] -> pretty $ fmap mkPrefixName name
       _ -> spaced [pretty $ fmap mkPrefixName name, pretty parameters]
-    spacePrefixed [pretty direction, pretty $ fmap PatInsidePatDecl definition]
-    case direction of
-      GHC.ExplicitBidirectional matches -> do
+    let arrow =
+          if isImplicitBidirectional
+            then "="
+            else "<-"
+    spacePrefixed [string arrow, pretty $ fmap PatInsidePatDecl definition]
+    case explicitMatches of
+      Just matches -> do
         newline
         indentedBlock $ string "where " |=> pretty matches
-      _ -> pure ()
+      Nothing -> pure ()
 
 mkBind :: GHC.HsBind GHC.GhcPs -> Bind
 mkBind GHC.FunBind {..} = Function {..}
@@ -71,6 +77,10 @@ mkBind (GHC.PatSynBind _ GHC.PSB {..}) = PatternSynonym {..}
   where
     name = psb_id
     parameters = psb_args
-    direction = psb_dir
+    (isImplicitBidirectional, explicitMatches) =
+      case psb_dir of
+        GHC.Unidirectional -> (False, Nothing)
+        GHC.ImplicitBidirectional -> (True, Nothing)
+        GHC.ExplicitBidirectional matches -> (False, Just matches)
     definition = psb_def
 mkBind _ = error "This AST node should not appear."

@@ -263,11 +263,6 @@ instance CommentExtraction Fixity where
 instance CommentExtraction InlinePragma where
   nodeComments InlinePragma {} = emptyNodeComments
 
-instance CommentExtraction (HsPatSynDir GhcPs) where
-  nodeComments Unidirectional = emptyNodeComments
-  nodeComments ImplicitBidirectional = emptyNodeComments
-  nodeComments ExplicitBidirectional {} = emptyNodeComments
-
 instance CommentExtraction (HsOverLit GhcPs) where
   nodeComments OverLit {} = emptyNodeComments
 
