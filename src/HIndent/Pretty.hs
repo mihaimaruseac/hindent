@@ -27,13 +27,11 @@ import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe
 import Data.Void
-import qualified GHC.Data.Bag as GHC
 import qualified GHC.Data.FastString as GHC
 import qualified GHC.Hs as GHC
 import GHC.Stack
 import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.Fixity as GHC
-import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
@@ -59,10 +57,12 @@ import HIndent.Pretty.Types
 import HIndent.Printer
 import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
 import Text.Show.Unicode
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-import qualified GHC.Core.DataCon as GHC
+#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
+import qualified GHC.Data.Bag as GHC
 #endif
-#if !MIN_VERSION_ghc_lib_parser(9,6,1)
+#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+import qualified GHC.Core.DataCon as GHC
+#else
 import qualified GHC.Unit as GHC
 #endif
 -- | This function pretty-prints the given AST node with comments.
@@ -154,6 +154,14 @@ instance Pretty (GHC.HsExpr GHC.GhcPs) where
   pretty' = prettyHsExpr
 
 prettyHsExpr :: GHC.HsExpr GHC.GhcPs -> Printer ()
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+prettyHsExpr GHC.HsEmbTy {} = notGeneratedByParser
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyHsExpr GHC.HsForAll {} = notGeneratedByParser
+prettyHsExpr GHC.HsQual {} = notGeneratedByParser
+prettyHsExpr GHC.HsFunArr {} = notGeneratedByParser
+#endif
 prettyHsExpr (GHC.HsVar _ bind) = pretty $ fmap mkPrefixName bind
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 prettyHsExpr (GHC.HsUnboundVar _ x) = pretty $ mkPrefixName x
@@ -217,7 +225,6 @@ prettyHsExpr (GHC.HsApp _ l r) = horizontal <-|> vertical
          GHC.EpAnnComments -> GHC.LHsExpr GHC.GhcPs -> GHC.LHsExpr GHC.GhcPs
     insertComments cs (GHC.L s@GHC.EpAnn {comments = cs'} r') =
       GHC.L (s {GHC.comments = cs <> cs'}) r'
-    insertComments _ x = x
 #else
 prettyHsExpr (GHC.HsApp _ l r) = horizontal <-|> vertical
   where
@@ -996,6 +1003,8 @@ prettyHsMatchContext ::
 prettyHsMatchContext GHC.FunRhs {..} =
   pretty mc_strictness >> pretty (fmap mkPrefixName mc_fun)
 prettyHsMatchContext GHC.CaseAlt = return ()
+prettyHsMatchContext GHC.LamAlt {} = notGeneratedByParser
+prettyHsMatchContext GHC.LazyPatCtx = notGeneratedByParser
 prettyHsMatchContext GHC.IfAlt {} = notGeneratedByParser
 prettyHsMatchContext GHC.ArrowMatchCtxt {} = notGeneratedByParser
 prettyHsMatchContext GHC.PatBindRhs {} = notGeneratedByParser
@@ -1141,6 +1150,10 @@ instance Pretty PatInsidePatDecl where
 prettyPat :: GHC.Pat GHC.GhcPs -> Printer ()
 prettyPat GHC.WildPat {} = string "_"
 prettyPat (GHC.VarPat _ x) = pretty $ fmap mkPrefixName x
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+prettyPat GHC.EmbTyPat {} = notGeneratedByParser
+prettyPat GHC.InvisPat {} = notGeneratedByParser
+#endif
 prettyPat (GHC.LazyPat _ x) = string "~" >> pretty x
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 prettyPat (GHC.AsPat _ a _ b) =
@@ -1744,6 +1757,9 @@ instance Pretty (GHC.IEWrappedName GHC.GhcPs) where
     spaced [string "pattern", pretty $ fmap mkPrefixName name]
   pretty' (GHC.IEType _ name) =
     string "type " >> pretty (fmap mkPrefixName name)
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+  pretty' GHC.IEDefault {} = notGeneratedByParser
+#endif
 #else
 -- | 'Pretty' for 'LIEWrappedName (IdP GhcPs)'
 instance Pretty (GHC.IEWrappedName GHC.RdrName) where
@@ -1823,33 +1839,47 @@ instance Pretty GHC.FractionalLit where
   pretty' = output
 
 instance Pretty (GHC.HsLit GHC.GhcPs) where
-  pretty' x@(GHC.HsChar _ _) = output x
-  pretty' x@GHC.HsCharPrim {} = output x
-  pretty' GHC.HsInt {} = notUsedInParsedStage
-  pretty' (GHC.HsIntPrim _ x) = string $ show x ++ "#"
-  pretty' GHC.HsWordPrim {} = notUsedInParsedStage
-  pretty' GHC.HsInt64Prim {} = notUsedInParsedStage
-  pretty' GHC.HsWord64Prim {} = notUsedInParsedStage
-  pretty' GHC.HsInteger {} = notUsedInParsedStage
-  pretty' GHC.HsRat {} = notUsedInParsedStage
-  pretty' (GHC.HsFloatPrim _ x) = pretty x >> string "#"
-  pretty' GHC.HsDoublePrim {} = notUsedInParsedStage
-  pretty' x =
-    case x of
-      GHC.HsString {} -> prettyString
-      GHC.HsStringPrim {} -> prettyString
-    where
-      prettyString =
-        case lines $ showOutputable x of
-          [] -> pure ()
-          [l] -> string l
-          (s:ss) ->
-            string "" |=> do
-              string s
-              newline
-              indentedWithSpace (-1)
-                $ lined
-                $ fmap (string . dropWhile (/= '\\')) ss
+  pretty' = prettyHsLit
+
+prettyHsLit :: GHC.HsLit GHC.GhcPs -> Printer ()
+prettyHsLit x@(GHC.HsChar _ _) = output x
+prettyHsLit x@GHC.HsCharPrim {} = output x
+prettyHsLit GHC.HsInt {} = notUsedInParsedStage
+prettyHsLit (GHC.HsIntPrim _ x) = string $ show x ++ "#"
+prettyHsLit GHC.HsWordPrim {} = notUsedInParsedStage
+prettyHsLit GHC.HsInt64Prim {} = notUsedInParsedStage
+prettyHsLit GHC.HsWord64Prim {} = notUsedInParsedStage
+prettyHsLit GHC.HsInteger {} = notUsedInParsedStage
+prettyHsLit GHC.HsRat {} = notUsedInParsedStage
+prettyHsLit (GHC.HsFloatPrim _ x) = pretty x >> string "#"
+prettyHsLit GHC.HsDoublePrim {} = notUsedInParsedStage
+#if MIN_VERSION_ghc_lib_parser(9, 8, 1)
+prettyHsLit GHC.HsInt8Prim {} = notUsedInParsedStage
+prettyHsLit GHC.HsInt16Prim {} = notUsedInParsedStage
+prettyHsLit GHC.HsInt32Prim {} = notUsedInParsedStage
+prettyHsLit GHC.HsWord8Prim {} = notUsedInParsedStage
+prettyHsLit GHC.HsWord16Prim {} = notUsedInParsedStage
+prettyHsLit GHC.HsWord32Prim {} = notUsedInParsedStage
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+prettyHsLit GHC.HsMultilineString {} = notGeneratedByParser
+#endif
+prettyHsLit x =
+  case x of
+    GHC.HsString {} -> prettyString
+    GHC.HsStringPrim {} -> prettyString
+  where
+    prettyString =
+      case lines $ showOutputable x of
+        [] -> pure ()
+        [l] -> string l
+        (s:ss) ->
+          string "" |=> do
+            string s
+            newline
+            indentedWithSpace (-1)
+              $ lined
+              $ fmap (string . dropWhile (/= '\\')) ss
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (GHC.HsPragE GHC.GhcPs) where
   pretty' (GHC.HsPragSCC _ x) =
@@ -2072,8 +2102,10 @@ forHpc = error "This AST type is for the use of Haskell Program Coverage."
 #endif
 
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+getAnc :: GHC.EpaLocation' a -> GHC.RealSrcSpan
 getAnc (GHC.EpaSpan (GHC.RealSrcSpan x _)) = x
 getAnc _ = undefined
 #else
+getAnc :: GHC.Anchor -> GHC.RealSrcSpan
 getAnc = GHC.anchor
 #endif
