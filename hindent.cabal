@@ -74,6 +74,7 @@ library
       HIndent.Ast.Declaration.Rule
       HIndent.Ast.Declaration.Rule.Binder
       HIndent.Ast.Declaration.Rule.Collection
+      HIndent.Ast.Declaration.Rule.Name
       HIndent.Ast.Declaration.Signature
       HIndent.Ast.Declaration.Signature.BooleanFormula
       HIndent.Ast.Declaration.Signature.Fixity
