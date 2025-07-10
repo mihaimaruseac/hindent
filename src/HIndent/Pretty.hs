@@ -38,6 +38,7 @@ import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Data.Body
 import HIndent.Ast.Declaration.Data.Record.Field
+import HIndent.Ast.Declaration.Family.Data
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression.Bracket
@@ -1217,8 +1218,9 @@ instance Pretty RecConPat where
 instance Pretty SBF.SigBindFamily where
   pretty' (SBF.Sig x) = pretty $ mkSignature x
   pretty' (SBF.Bind x) = pretty $ mkBind x
-  pretty' (SBF.TypeFamily x)
+  pretty' (SBF.Family x)
     | Just fam <- mkTypeFamily x = pretty fam
+    | Just fam <- mkDataFamily x = pretty fam
     | otherwise = error "Unreachable"
   pretty' (SBF.TyFamInst x) = pretty x
   pretty' (SBF.DataFamInst x) = pretty $ DataFamInstDeclInsideClassInst x

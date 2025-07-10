@@ -117,7 +117,7 @@ instance CommentExtraction RecConPat where
 instance CommentExtraction SigBindFamily where
   nodeComments (Sig x) = nodeComments x
   nodeComments (Bind x) = nodeComments x
-  nodeComments (TypeFamily x) = nodeComments x
+  nodeComments (Family x) = nodeComments x
   nodeComments (TyFamInst x) = nodeComments x
   nodeComments (DataFamInst x) = nodeComments x
 
