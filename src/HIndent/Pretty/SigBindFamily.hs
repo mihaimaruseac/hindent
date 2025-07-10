@@ -19,11 +19,11 @@ import GHC.Hs
 import GHC.Types.SrcLoc
 
 -- | A sum type containing one of those: function signature, function
--- binding, type family, type family instance, and data family instance.
+-- binding, family declaration (type or data), type family instance, and data family instance.
 data SigBindFamily
   = Sig (Sig GhcPs)
   | Bind (HsBindLR GhcPs GhcPs)
-  | TypeFamily (FamilyDecl GhcPs)
+  | Family (FamilyDecl GhcPs)
   | TyFamInst (TyFamInstDecl GhcPs)
   | DataFamInst (DataFamInstDecl GhcPs)
 
@@ -54,7 +54,7 @@ mkLSigBindFamilyList ::
 mkLSigBindFamilyList sigs binds fams insts datafams =
   fmap (fmap Sig) sigs
     ++ fmap (fmap Bind) binds
-    ++ fmap (fmap TypeFamily) fams
+    ++ fmap (fmap Family) fams
     ++ fmap (fmap TyFamInst) insts
     ++ fmap (fmap DataFamInst) datafams
 
@@ -70,7 +70,7 @@ destructLSigBindFamilyList =
   (,,,,)
     <$> filterLSig
     <*> filterLBind
-    <*> filterLTypeFamily
+    <*> filterLFamily
     <*> filterLTyFamInst
     <*> filterLDataFamInst
 
@@ -90,12 +90,12 @@ filterLBind =
        (L l (Bind x)) -> Just $ L l x
        _ -> Nothing)
 
--- | Filters out 'TypeFamily's and extract the wrapped values.
-filterLTypeFamily :: [LSigBindFamily] -> [LFamilyDecl GhcPs]
-filterLTypeFamily =
+-- | Filters out 'Family's and extract the wrapped values.
+filterLFamily :: [LSigBindFamily] -> [LFamilyDecl GhcPs]
+filterLFamily =
   mapMaybe
     (\case
-       (L l (TypeFamily x)) -> Just $ L l x
+       (L l (Family x)) -> Just $ L l x
        _ -> Nothing)
 
 -- | Filters out 'TyFamInst's and extract the wrapped values.
