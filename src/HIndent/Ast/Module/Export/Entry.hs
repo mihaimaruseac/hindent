@@ -6,7 +6,6 @@ module HIndent.Ast.Module.Export.Entry
   ) where
 
 import GHC.Stack
-import qualified GHC.Unit as GHC
 import HIndent.Ast.Module.Name
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
