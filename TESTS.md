@@ -1393,6 +1393,20 @@ As pattern
 f all@(x:xs) = all
 ```
 
+Empty data declarations with kind signatures and deriving clauses
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/1049
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
+
+data Void :: Type
+
+data Unit :: Type where
+  MkUnit :: Unit
+  deriving (Show)
+```
+
 Or patterns
 
 ```haskell since 9.12.1
