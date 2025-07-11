@@ -14,6 +14,7 @@
 - Template Haskell functions no longer get unwanted '$' symbols prepended ([#1033])
 - Default method signatures with constraints are now properly indented ([#1042])
 - Fix formatting of associated data families in type classes ([#1051])
+- Kind signatures and deriving clauses in GADTs are now properly printed ([#1053])
 
 ### Removed
 
@@ -407,6 +408,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#1053]: https://github.com/mihaimaruseac/hindent/pull/1053
 [#1051]: https://github.com/mihaimaruseac/hindent/pull/1051
 [#1042]: https://github.com/mihaimaruseac/hindent/pull/1042
 [#1040]: https://github.com/mihaimaruseac/hindent/pull/1040

@@ -9,7 +9,7 @@ module HIndent.Ast.Declaration.Data.Body
 
 import Control.Monad
 import Data.Maybe
-import GHC.Hs (HsDataDefn(dd_derivs))
+import GHC.Hs (HsDataDefn(dd_derivs, dd_kindSig))
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Applicative
 import HIndent.Ast.Declaration.Data.Deriving.Clause
@@ -27,9 +27,11 @@ data DataBody
   = GADT
       { kind :: Maybe (WithComments Type)
       , constructors :: [WithComments GADTConstructor]
+      , derivings :: DerivingClause
       }
   | Haskell98
-      { constructorsH98 :: [WithComments Haskell98Constructor]
+      { kind :: Maybe (WithComments Type)
+      , constructorsH98 :: [WithComments Haskell98Constructor]
       , derivings :: DerivingClause
       }
 
@@ -41,8 +43,19 @@ instance Pretty DataBody where
   pretty' GADT {..} = do
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
-    indentedBlock $ newlinePrefixed $ fmap pretty constructors
+    case constructors of
+      [] ->
+        when (hasDerivings derivings) $ do
+          newline
+          indentedBlock $ pretty derivings
+      _ ->
+        indentedBlock $ do
+          newlinePrefixed $ fmap pretty constructors
+          when (hasDerivings derivings) $ do
+            newline
+            pretty derivings
   pretty' Haskell98 {..} = do
+    whenJust kind $ \x -> string " :: " >> pretty x
     case constructorsH98 of
       [] -> indentedBlock derivingsAfterNewline
       [x]
