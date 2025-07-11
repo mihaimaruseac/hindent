@@ -548,6 +548,14 @@ class C a where
   type F a = b | b -> a
 ```
 
+Associated data families in classes
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/1050
+class MyClass a where
+  data AssociatedData a
+```
+
 ### Class instance declarations
 
 Without methods

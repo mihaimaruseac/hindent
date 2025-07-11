@@ -6,9 +6,9 @@ module HIndent.Ast.Declaration.Rule
   , mkRuleDeclaration
   ) where
 
-import qualified GHC.Core as GHC
-import qualified GHC.Data.FastString as GHC
+import qualified GHC.Types.Basic as GHC
 import HIndent.Ast.Declaration.Rule.Binder
+import HIndent.Ast.Declaration.Rule.Name
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -17,7 +17,7 @@ import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 data RuleDeclaration = RuleDeclaration
-  { name :: WithComments GHC.RuleName
+  { name :: WithComments RuleName
   , binders :: [WithComments RuleBinder]
   , lhs :: WithComments (GHC.HsExpr GHC.GhcPs)
   , rhs :: WithComments (GHC.HsExpr GHC.GhcPs)
@@ -28,12 +28,7 @@ instance CommentExtraction RuleDeclaration where
 
 instance Pretty RuleDeclaration where
   pretty' (RuleDeclaration {..}) =
-    spaced
-      [ prettyWith name (doubleQuotes . string . GHC.unpackFS)
-      , prettyLhs
-      , string "="
-      , pretty rhs
-      ]
+    spaced [pretty name, prettyLhs, string "=", pretty rhs]
     where
       prettyLhs =
         if null binders
@@ -48,7 +43,7 @@ instance Pretty RuleDeclaration where
 mkRuleDeclaration :: GHC.RuleDecl GHC.GhcPs -> RuleDeclaration
 mkRuleDeclaration rule@GHC.HsRule {..} = RuleDeclaration {..}
   where
-    name = getName rule
+    name = mkRuleName <$> getName rule
     binders = fmap (fmap mkRuleBinder . fromGenLocated) rd_tmvs
     lhs = fromGenLocated rd_lhs
     rhs = fromGenLocated rd_rhs
