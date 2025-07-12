@@ -11,7 +11,6 @@ import Data.Void
 import qualified GHC.Types.Name.Reader as GHC
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
-import qualified GHC.Unit as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHc
 import HIndent.Pretty.NodeComments
@@ -63,7 +62,6 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnN GHC.RdrName)
               [GHC.RecordPatSynField GHC.GhcPs])
 
-
 instance Pretty PatInsidePatDecl
 
 instance Pretty GHC.StringLiteral
@@ -90,5 +88,3 @@ instance Pretty
 instance Pretty (GHC.HsExpr GHC.GhcPs)
 
 instance Pretty (GHC.FieldOcc GHC.GhcPs)
-
-

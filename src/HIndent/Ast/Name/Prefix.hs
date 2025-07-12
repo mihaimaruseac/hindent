@@ -9,7 +9,6 @@ module HIndent.Ast.Name.Prefix
 import Data.Maybe
 import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
-import qualified GHC.Unit.Module as GHC
 import HIndent.Ast.Module.Name
 import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Pretty
