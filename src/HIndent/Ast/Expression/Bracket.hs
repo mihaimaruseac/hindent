@@ -8,6 +8,7 @@ module HIndent.Ast.Expression.Bracket
 import HIndent.Ast.Declaration
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -36,7 +37,8 @@ instance Pretty Bracket where
   pretty' (Pattern x) = brackets $ string "p" >> wrapWithBars (pretty x)
   pretty' (Declaration decls) =
     brackets $ string "d| " |=> lined (fmap pretty decls) >> string " |"
-  pretty' (Type x) = brackets $ string "t" >> wrapWithBars (pretty x)
+  pretty' (Type x) =
+    brackets $ string "t" >> wrapWithBars (pretty $ fmap mkType x)
   pretty' (Variable True var) = string "'" >> pretty var
   pretty' (Variable False var) = string "''" >> pretty var
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)

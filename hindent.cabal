@@ -109,6 +109,10 @@ library
       HIndent.Ast.NodeComments
       HIndent.Ast.Role
       HIndent.Ast.Type
+      HIndent.Ast.Type.Bang
+      HIndent.Ast.Type.Literal
+      HIndent.Ast.Type.Strictness
+      HIndent.Ast.Type.Unpackedness
       HIndent.Ast.Type.Variable
       HIndent.Ast.WithComments
       HIndent.ByteString
