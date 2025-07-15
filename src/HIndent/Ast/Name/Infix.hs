@@ -3,6 +3,7 @@
 module HIndent.Ast.Name.Infix
   ( InfixName
   , mkInfixName
+  , getInfixName
   ) where
 
 import Data.Maybe
@@ -48,6 +49,9 @@ mkInfixName (GHC.Exact name) =
     (showOutputable $ GHC.occName name)
     Nothing
     (backticksNeeded $ GHC.occName name)
+
+getInfixName :: InfixName -> String
+getInfixName = name
 
 backticksNeeded :: GHC.OccName -> Bool
 backticksNeeded = not . GHC.isSymOcc

@@ -6,6 +6,7 @@ module HIndent.Ast.Declaration.Data.Record.Field
   ) where
 
 import HIndent.Ast.NodeComments
+import {-# SOURCE #-} HIndent.Ast.Type
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -21,7 +22,7 @@ instance CommentExtraction RecordField where
 
 instance Pretty RecordField where
   pretty' RecordField {..} =
-    spaced [hCommaSep $ fmap pretty names, string "::", pretty ty]
+    spaced [hCommaSep $ fmap pretty names, string "::", pretty $ fmap mkType ty]
 
 mkRecordField :: GHC.ConDeclField GHC.GhcPs -> RecordField
 mkRecordField GHC.ConDeclField {..} = RecordField {..}

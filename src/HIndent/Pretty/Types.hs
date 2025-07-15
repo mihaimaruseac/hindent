@@ -20,11 +20,6 @@ module HIndent.Pretty.Types
   , pattern HsSigTypeInsideInstDecl
   , pattern HsSigTypeInsideVerticalFuncSig
   , pattern HsSigTypeInsideDeclSig
-  , HsType'(..)
-  , pattern HsTypeInsideVerticalFuncSig
-  , pattern HsTypeInsideDeclSig
-  , pattern HsTypeInsideInstDecl
-  , pattern HsTypeWithVerticalAppTy
   , DataFamInstDecl'(..)
   , pattern DataFamInstDeclTopLevel
   , pattern DataFamInstDeclInsideClassInst
@@ -136,30 +131,6 @@ pattern HsSigTypeInsideVerticalFuncSig x = HsSigType' HsTypeForFuncSig HsTypeVer
 -- | `HsSigType'` for a top-level function signature.
 pattern HsSigTypeInsideDeclSig :: HsSigType GhcPs -> HsSigType'
 pattern HsSigTypeInsideDeclSig x = HsSigType' HsTypeForDeclSig HsTypeNoDir x
-
--- | A wrapper for `HsType`.
-data HsType' = HsType'
-  { hsTypeFor :: HsTypeFor -- ^ In which context a `HsType` is located in.
-  , hsTypeDir :: HsTypeDir -- ^ How a function signature is printed;
-                           -- either horizontally or vertically.
-  , hsType :: HsType GhcPs -- ^ The actual type.
-  }
-
--- | `HsType'` inside a function signature declaration; printed horizontally.
-pattern HsTypeInsideVerticalFuncSig :: HsType GhcPs -> HsType'
-pattern HsTypeInsideVerticalFuncSig x = HsType' HsTypeForFuncSig HsTypeVertical x
-
--- | `HsType'` inside a top-level function signature declaration.
-pattern HsTypeInsideDeclSig :: HsType GhcPs -> HsType'
-pattern HsTypeInsideDeclSig x = HsType' HsTypeForDeclSig HsTypeNoDir x
-
--- | `HsType'` inside a instance signature declaration.
-pattern HsTypeInsideInstDecl :: HsType GhcPs -> HsType'
-pattern HsTypeInsideInstDecl x = HsType' HsTypeForInstDecl HsTypeNoDir x
-
--- | `HsType'` to pretty-print a `HsAppTy` vertically.
-pattern HsTypeWithVerticalAppTy :: HsType GhcPs -> HsType'
-pattern HsTypeWithVerticalAppTy x = HsType' HsTypeForVerticalAppTy HsTypeVertical x
 
 -- | A wrapper of `DataFamInstDecl`.
 data DataFamInstDecl' = DataFamInstDecl'

@@ -7,6 +7,7 @@ module HIndent.Ast.Declaration.Instance.Family.Type
 
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -32,7 +33,7 @@ instance Pretty TypeFamilyInstance where
   pretty' TypeFamilyInstance {..} = do
     spaced $ string "type instance" : pretty name : fmap pretty types
     string " = "
-    pretty bind
+    pretty $ fmap mkType bind
 
 mkTypeFamilyInstance :: GHC.InstDecl GHC.GhcPs -> Maybe TypeFamilyInstance
 mkTypeFamilyInstance GHC.TyFamInstD {GHC.tfid_inst = GHC.TyFamInstDecl {GHC.tfid_eqn = GHC.FamEqn {..}}} =

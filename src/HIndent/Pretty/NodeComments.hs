@@ -68,9 +68,6 @@ instance CommentExtraction
            (HsRecFields GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
   nodeComments HsRecFields {} = emptyNodeComments
 
-instance CommentExtraction HsType' where
-  nodeComments HsType' {..} = nodeComments hsType
-
 instance CommentExtraction (GRHSs GhcPs a) where
   nodeComments GRHSs {..} = NodeComments {..}
     where
@@ -315,19 +312,6 @@ instance CommentExtraction DoExpression where
 
 instance CommentExtraction LetIn where
   nodeComments LetIn {} = emptyNodeComments
-
-instance CommentExtraction HsSrcBang where
-  nodeComments HsSrcBang {} = emptyNodeComments
-
-instance CommentExtraction SrcUnpackedness where
-  nodeComments SrcUnpack = emptyNodeComments
-  nodeComments SrcNoUnpack = emptyNodeComments
-  nodeComments NoSrcUnpack = emptyNodeComments
-
-instance CommentExtraction SrcStrictness where
-  nodeComments SrcLazy = emptyNodeComments
-  nodeComments SrcStrict = emptyNodeComments
-  nodeComments NoSrcStrict = emptyNodeComments
 
 instance CommentExtraction (HsOuterSigTyVarBndrs GhcPs) where
   nodeComments HsOuterImplicit {} = emptyNodeComments
@@ -726,58 +710,7 @@ nodeCommentsStmtLR TransStmt {..} = mconcat $ fmap nodeComments trS_ext
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 nodeCommentsStmtLR ApplicativeStmt {} = emptyNodeComments
 #endif
-instance CommentExtraction (HsType GhcPs) where
-  nodeComments = nodeCommentsHsType
 
-nodeCommentsHsType :: HsType GhcPs -> NodeComments
-nodeCommentsHsType HsForAllTy {} = emptyNodeComments
-nodeCommentsHsType HsQualTy {} = emptyNodeComments
-nodeCommentsHsType HsAppTy {} = emptyNodeComments
-nodeCommentsHsType HsAppKindTy {} = emptyNodeComments
-nodeCommentsHsType (HsListTy x _) = nodeComments x
-nodeCommentsHsType (HsTupleTy x _ _) = nodeComments x
-nodeCommentsHsType (HsSumTy x _) = nodeComments x
-nodeCommentsHsType HsOpTy {} = emptyNodeComments
-nodeCommentsHsType HsStarTy {} = emptyNodeComments
-nodeCommentsHsType HsSpliceTy {} = emptyNodeComments
-nodeCommentsHsType (HsRecTy x _) = nodeComments x
-nodeCommentsHsType HsTyLit {} = emptyNodeComments
-nodeCommentsHsType HsWildCardTy {} = emptyNodeComments
-nodeCommentsHsType XHsType {} = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-nodeCommentsHsType (HsParTy (a, b) _) = mconcat [nodeComments a, nodeComments b]
-nodeCommentsHsType HsFunTy {} = emptyNodeComments
-nodeCommentsHsType (HsTyVar x _ _) = nodeComments x
-nodeCommentsHsType (HsIParamTy x _ _) = nodeComments x
-nodeCommentsHsType (HsKindSig x _ _) = nodeComments x
-nodeCommentsHsType HsDocTy {} = emptyNodeComments
-nodeCommentsHsType (HsBangTy ((a, b, c), _) _ _) =
-  mconcat [nodeComments a, nodeComments b, nodeComments c]
-nodeCommentsHsType (HsExplicitListTy (a, b, c) _ _) =
-  mconcat [nodeComments a, nodeComments b, nodeComments c]
-nodeCommentsHsType (HsExplicitTupleTy (a, b, c) _ _) =
-  mconcat [nodeComments a, nodeComments b, nodeComments c]
-#elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsType (HsParTy x _) = nodeComments x
-nodeCommentsHsType HsFunTy {} = emptyNodeComments
-nodeCommentsHsType (HsTyVar x _ _) = mconcat $ fmap nodeComments x
-nodeCommentsHsType (HsIParamTy x _ _) = mconcat $ fmap nodeComments x
-nodeCommentsHsType (HsKindSig x _ _) = mconcat $ fmap nodeComments x
-nodeCommentsHsType (HsDocTy x _ _) = mconcat $ fmap nodeComments x
-nodeCommentsHsType (HsBangTy x _ _) = mconcat $ fmap nodeComments x
-nodeCommentsHsType (HsExplicitListTy x _ _) = mconcat $ fmap nodeComments x
-nodeCommentsHsType (HsExplicitTupleTy x _) = mconcat $ fmap nodeComments x
-#else
-nodeCommentsHsType (HsParTy x _) = nodeComments x
-nodeCommentsHsType (HsTyVar x _ _) = nodeComments x
-nodeCommentsHsType (HsFunTy x _ _ _) = nodeComments x
-nodeCommentsHsType (HsIParamTy x _ _) = nodeComments x
-nodeCommentsHsType (HsKindSig x _ _) = nodeComments x
-nodeCommentsHsType (HsDocTy x _ _) = nodeComments x
-nodeCommentsHsType (HsBangTy x _ _) = nodeComments x
-nodeCommentsHsType (HsExplicitListTy x _ _) = nodeComments x
-nodeCommentsHsType (HsExplicitTupleTy x _) = nodeComments x
-#endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance CommentExtraction (HsMatchContext (GenLocated SrcSpanAnnN RdrName)) where
   nodeComments = nodeCommentsMatchContext
@@ -1294,11 +1227,6 @@ instance CommentExtraction (ForeignImport GhcPs) where
 
 instance CommentExtraction (ForeignExport GhcPs) where
   nodeComments CExport {} = emptyNodeComments
-
-instance CommentExtraction (HsTyLit GhcPs) where
-  nodeComments HsNumTy {} = emptyNodeComments
-  nodeComments HsStrTy {} = emptyNodeComments
-  nodeComments HsCharTy {} = emptyNodeComments
 #else
 instance CommentExtraction (HsSplice GhcPs) where
   nodeComments (HsTypedSplice x _ _ _) = nodeComments x
@@ -1311,11 +1239,6 @@ instance CommentExtraction ForeignImport where
 
 instance CommentExtraction ForeignExport where
   nodeComments CExport {} = emptyNodeComments
-
-instance CommentExtraction HsTyLit where
-  nodeComments HsNumTy {} = emptyNodeComments
-  nodeComments HsStrTy {} = emptyNodeComments
-  nodeComments HsCharTy {} = emptyNodeComments
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 8, 1)
 instance CommentExtraction
@@ -1541,9 +1464,6 @@ instance CommentExtraction ActivationAnn where
       , maybe emptyNodeComments nodeComments aa_tilde
       , maybe emptyNodeComments nodeComments aa_val
       ]
-
-instance CommentExtraction HsBang where
-  nodeComments HsBang {} = emptyNodeComments
 #endif
 -- | Marks an AST node as never appearing in the AST.
 --

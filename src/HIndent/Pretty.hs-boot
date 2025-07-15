@@ -11,7 +11,6 @@ import Data.Void
 import qualified GHC.Types.Name.Reader as GHC
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
-import qualified GHC.Unit as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHc
 import HIndent.Pretty.NodeComments
@@ -34,7 +33,6 @@ instance (CommentExtraction l, Pretty e) => Pretty (GHC.GenLocated l e)
 
 instance Pretty GHC.EpaComment
 
-instance Pretty (GHC.HsType GHC.GhcPs)
 
 instance Pretty
            (GHC.FamEqn
@@ -72,9 +70,13 @@ instance Pretty (GHC.HsSigType GHC.GhcPs)
 
 instance Pretty Context
 
+instance Pretty (GHC.HsForAllTelescope GHC.GhcPs)
+
+instance Pretty GHC.HsIPName
+
 instance Pretty (GHC.DerivClauseTys GHC.GhcPs)
 
-instance Pretty a => Pretty (GHC.HsScaled GHC.GhcPs a)
+instance Pretty (GHC.HsScaled GHC.GhcPs (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
 #if MIN_VERSION_ghc_lib_parser(9, 8, 1)
 instance Pretty
            (GHC.HsArg

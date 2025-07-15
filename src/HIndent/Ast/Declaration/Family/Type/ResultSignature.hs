@@ -4,6 +4,7 @@ module HIndent.Ast.Declaration.Family.Type.ResultSignature
   ) where
 
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Type
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -23,7 +24,7 @@ instance CommentExtraction ResultSignature where
 
 instance Pretty ResultSignature where
   pretty' NoSig = return ()
-  pretty' (Kind x) = string " :: " >> pretty x
+  pretty' (Kind x) = string " :: " >> pretty (fmap mkType x)
   pretty' (TypeVariable x) = string " = " >> pretty x
 
 mkResultSignature :: GHC.FamilyResultSig GHC.GhcPs -> ResultSignature

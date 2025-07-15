@@ -9,7 +9,7 @@ module HIndent.Ast.Type.Variable
 import qualified GHC.Hs as GHC
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
-import HIndent.Ast.Type
+import {-# SOURCE #-} HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
