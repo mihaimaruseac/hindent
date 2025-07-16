@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE NoFieldSelectors #-}
 
 module HIndent.Ast.Type
   ( Type
@@ -32,27 +33,75 @@ import HIndent.Printer
 
 data Type
   = UniversalType
-      (WithComments (GHC.HsForAllTelescope GHC.GhcPs))
-      (WithComments Type)
-  | ConstrainedType (WithComments Context) (WithComments Type)
-  | Variable GHC.PromotionFlag (WithComments PrefixName)
-  | Application (WithComments Type) (WithComments Type)
-  | KindApplication (WithComments Type) (WithComments Type)
-  | Function (WithComments Type) (WithComments Type)
-  | List (WithComments Type)
-  | Tuple GHC.HsTupleSort [WithComments Type]
-  | Sum [WithComments Type]
-  | InfixType (WithComments Type) (WithComments InfixName) (WithComments Type)
-  | Parenthesized (WithComments Type)
-  | ImplicitParameter GHC.HsIPName (WithComments Type)
+      { telescope :: WithComments (GHC.HsForAllTelescope GHC.GhcPs)
+      , body :: WithComments Type
+      }
+  | ConstrainedType
+      { context :: WithComments Context
+      , body :: WithComments Type
+      }
+  | Variable
+      { promotionFlag :: GHC.PromotionFlag
+      , name :: WithComments PrefixName
+      }
+  | Application
+      { function :: WithComments Type
+      , argument :: WithComments Type
+      }
+  | KindApplication
+      { base :: WithComments Type
+      , kind :: WithComments Type
+      }
+  | Function
+      { from :: WithComments Type
+      , to :: WithComments Type
+      }
+  | List
+      { elementType :: WithComments Type
+      }
+  | Tuple
+      { tupleSort :: GHC.HsTupleSort
+      , elements :: [WithComments Type]
+      }
+  | Sum
+      { elements :: [WithComments Type]
+      }
+  | InfixType
+      { left :: WithComments Type
+      , operator :: WithComments InfixName
+      , right :: WithComments Type
+      }
+  | Parenthesized
+      { inner :: WithComments Type
+      }
+  | ImplicitParameter
+      { ipName :: GHC.HsIPName
+      , paramType :: WithComments Type
+      }
   | Star
-  | KindSig (WithComments Type) (WithComments Type)
-  | Splice Splice
-  | StrictType Bang (WithComments Type)
-  | RecordType [WithComments RecordField]
-  | PromotedList [WithComments Type]
-  | PromotedTuple [WithComments Type]
-  | Literal Literal
+  | KindSig
+      { annotated :: WithComments Type
+      , kind :: WithComments Type
+      }
+  | Splice
+      { splice :: Splice
+      }
+  | StrictType
+      { bang :: Bang
+      , baseType :: WithComments Type
+      }
+  | RecordType
+      { fields :: [WithComments RecordField]
+      }
+  | PromotedList
+      { elements :: [WithComments Type]
+      }
+  | PromotedTuple
+      { elements :: [WithComments Type]
+      }
+  | Literal
+      { literal :: Literal
+      }
   | Wildcard
 
 instance CommentExtraction Type where
@@ -82,116 +131,138 @@ instance CommentExtraction Type where
   nodeComments Wildcard = NodeComments [] [] []
 
 instance Pretty Type where
-  pretty' (UniversalType tele body) =
-    (pretty (getNode tele) >> space) |=> pretty body
-  pretty' (ConstrainedType ctxt body) = hor <-|> ver
+  pretty' UniversalType {..} =
+    (pretty (getNode telescope) >> space) |=> pretty body
+  pretty' ConstrainedType {..} = hor <-|> ver
     where
-      hor = spaced [pretty ctxt, string "=>", pretty body]
+      hor = spaced [pretty context, string "=>", pretty body]
       ver = do
-        pretty ctxt
+        pretty context
         lined [string " =>", indentedBlock $ pretty body]
-  pretty' (Variable GHC.NotPromoted x) = pretty x
-  pretty' (Variable GHC.IsPromoted x) = string "'" >> pretty x
-  pretty' (Application l r) = hor <-|> ver
+  pretty' Variable {promotionFlag = GHC.NotPromoted, ..} = pretty name
+  pretty' Variable {promotionFlag = GHC.IsPromoted, ..} =
+    string "'" >> pretty name
+  pretty' Application {..} = hor <-|> ver
     where
-      hor = spaced [pretty l, pretty r]
-      ver = verticalApp l r
+      hor = spaced [pretty function, pretty argument]
+      ver = verticalApp function argument
       verticalApp left right = do
         case getNode left of
-          Application l' r' ->
+          Application {function = l', argument = r'} ->
             verticalApp l' r' >> newline >> indentedBlock (pretty right)
           _ -> pretty left >> newline >> indentedBlock (pretty right)
-  pretty' (KindApplication l r) = pretty l >> string " @" >> pretty r
-  pretty' (Function a b) = (pretty a >> string " -> ") |=> pretty b
-  pretty' (List xs) = brackets $ pretty xs
-  pretty' (Tuple GHC.HsUnboxedTuple []) = string "(# #)"
-  pretty' (Tuple GHC.HsBoxedOrConstraintTuple []) = string "()"
-  pretty' (Tuple GHC.HsUnboxedTuple xs) = hvUnboxedTuple' $ fmap pretty xs
-  pretty' (Tuple GHC.HsBoxedOrConstraintTuple xs) = hvTuple' $ fmap pretty xs
-  pretty' (Sum xs) = hvUnboxedSum' $ fmap pretty xs
-  pretty' (InfixType l op r) = do
+  pretty' KindApplication {..} = pretty base >> string " @" >> pretty kind
+  pretty' Function {..} = (pretty from >> string " -> ") |=> pretty to
+  pretty' List {..} = brackets $ pretty elementType
+  pretty' Tuple {tupleSort = GHC.HsUnboxedTuple, elements = []} = string "(# #)"
+  pretty' Tuple {tupleSort = GHC.HsBoxedOrConstraintTuple, elements = []} =
+    string "()"
+  pretty' Tuple {tupleSort = GHC.HsUnboxedTuple, ..} =
+    hvUnboxedTuple' $ fmap pretty elements
+  pretty' Tuple {tupleSort = GHC.HsBoxedOrConstraintTuple, ..} =
+    hvTuple' $ fmap pretty elements
+  pretty' Sum {..} = hvUnboxedSum' $ fmap pretty elements
+  pretty' InfixType {..} = do
     lineBreak <- gets (configLineBreaks . psConfig)
-    if getInfixName (getNode op) `elem` lineBreak
+    if getInfixName (getNode operator) `elem` lineBreak
       then do
-        pretty l
+        pretty left
         newline
-        pretty op
+        pretty operator
         space
-        pretty r
-      else spaced [pretty l, pretty op, pretty r]
-  pretty' (Parenthesized inside) = parens $ pretty inside
-  pretty' (ImplicitParameter x ty) =
-    spaced [string "?" >> pretty x, string "::", pretty ty]
+        pretty right
+      else spaced [pretty left, pretty operator, pretty right]
+  pretty' Parenthesized {..} = parens $ pretty inner
+  pretty' ImplicitParameter {..} =
+    spaced [string "?" >> pretty ipName, string "::", pretty paramType]
   pretty' Star = string "*"
-  pretty' (KindSig t k) = spaced [pretty t, string "::", pretty k]
-  pretty' (Splice sp) = pretty sp
-  pretty' (StrictType pack x) = pretty pack >> pretty x
-  pretty' (RecordType xs) = hvFields $ fmap pretty xs
-  pretty' (PromotedList []) = string "'[]"
-  pretty' (PromotedList xs) = hvPromotedList $ fmap pretty xs
-  pretty' (PromotedTuple xs) = hPromotedTuple $ fmap pretty xs
-  pretty' (Literal x) = pretty x
+  pretty' KindSig {..} = spaced [pretty annotated, string "::", pretty kind]
+  pretty' Splice {..} = pretty splice
+  pretty' StrictType {..} = pretty bang >> pretty baseType
+  pretty' RecordType {..} = hvFields $ fmap pretty fields
+  pretty' PromotedList {elements = []} = string "'[]"
+  pretty' PromotedList {..} = hvPromotedList $ fmap pretty elements
+  pretty' PromotedTuple {..} = hPromotedTuple $ fmap pretty elements
+  pretty' Literal {..} = pretty literal
   pretty' Wildcard = string "_"
 
 mkType :: GHC.HsType GHC.GhcPs -> Type
 mkType (GHC.HsForAllTy _ tele body) =
-  UniversalType (mkWithComments tele) (mkType <$> fromGenLocated body)
+  UniversalType
+    {telescope = mkWithComments tele, body = mkType <$> fromGenLocated body}
 mkType GHC.HsQualTy {..} =
   ConstrainedType
-    (mkWithComments $ Context hst_ctxt)
-    (mkType <$> fromGenLocated hst_body)
+    { context = mkWithComments $ Context hst_ctxt
+    , body = mkType <$> fromGenLocated hst_body
+    }
 mkType (GHC.HsTyVar _ prom x) =
-  Variable prom (mkPrefixName <$> fromGenLocated x)
+  Variable {promotionFlag = prom, name = mkPrefixName <$> fromGenLocated x}
 mkType (GHC.HsAppTy _ l r) =
-  Application (mkType <$> fromGenLocated l) (mkType <$> fromGenLocated r)
+  Application
+    { function = mkType <$> fromGenLocated l
+    , argument = mkType <$> fromGenLocated r
+    }
 #if MIN_VERSION_ghc_lib_parser(9, 8, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkType (GHC.HsAppKindTy _ l _ r) =
-  KindApplication (mkType <$> fromGenLocated l) (mkType <$> fromGenLocated r)
+  KindApplication
+    {base = mkType <$> fromGenLocated l, kind = mkType <$> fromGenLocated r}
 #else
 mkType (GHC.HsAppKindTy _ l r) =
-  KindApplication (mkType <$> fromGenLocated l) (mkType <$> fromGenLocated r)
+  KindApplication
+    {base = mkType <$> fromGenLocated l, kind = mkType <$> fromGenLocated r}
 #endif
 mkType (GHC.HsFunTy _ _ a b) =
-  Function (mkType <$> fromGenLocated a) (mkType <$> fromGenLocated b)
-mkType (GHC.HsListTy _ xs) = List (mkType <$> fromGenLocated xs)
+  Function
+    {from = mkType <$> fromGenLocated a, to = mkType <$> fromGenLocated b}
+mkType (GHC.HsListTy _ xs) = List {elementType = mkType <$> fromGenLocated xs}
 mkType (GHC.HsTupleTy _ sort xs) =
-  Tuple sort (fmap (fmap mkType . fromGenLocated) xs)
-mkType (GHC.HsSumTy _ xs) = Sum (fmap (fmap mkType . fromGenLocated) xs)
+  Tuple {tupleSort = sort, elements = fmap (fmap mkType . fromGenLocated) xs}
+mkType (GHC.HsSumTy _ xs) =
+  Sum {elements = fmap (fmap mkType . fromGenLocated) xs}
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkType (GHC.HsOpTy _ _ l op r) =
   InfixType
-    (mkType <$> fromGenLocated l)
-    (mkInfixName <$> fromGenLocated op)
-    (mkType <$> fromGenLocated r)
+    { left = mkType <$> fromGenLocated l
+    , operator = mkInfixName <$> fromGenLocated op
+    , right = mkType <$> fromGenLocated r
+    }
 #else
 mkType (GHC.HsOpTy _ l op r) =
   InfixType
-    (mkType <$> fromGenLocated l)
-    (mkInfixName <$> fromGenLocated op)
-    (mkType <$> fromGenLocated r)
+    { left = mkType <$> fromGenLocated l
+    , operator = mkInfixName <$> fromGenLocated op
+    , right = mkType <$> fromGenLocated r
+    }
 #endif
-mkType (GHC.HsParTy _ inside) = Parenthesized (mkType <$> fromGenLocated inside)
+mkType (GHC.HsParTy _ inside) =
+  Parenthesized {inner = mkType <$> fromGenLocated inside}
 mkType (GHC.HsIParamTy _ x ty) =
-  ImplicitParameter (getNode $ fromGenLocated x) (mkType <$> fromGenLocated ty)
+  ImplicitParameter
+    { ipName = getNode $ fromGenLocated x
+    , paramType = mkType <$> fromGenLocated ty
+    }
 mkType GHC.HsStarTy {} = Star
 mkType (GHC.HsKindSig _ t k) =
-  KindSig (mkType <$> fromGenLocated t) (mkType <$> fromGenLocated k)
-mkType (GHC.HsSpliceTy _ sp) = Splice (mkSplice sp)
+  KindSig
+    { annotated = mkType <$> fromGenLocated t
+    , kind = mkType <$> fromGenLocated k
+    }
+mkType (GHC.HsSpliceTy _ sp) = Splice {splice = mkSplice sp}
 mkType GHC.HsDocTy {} = error "HsDocTy not supported"
 mkType (GHC.HsBangTy _ pack x) =
-  StrictType (mkBang pack) (mkType <$> fromGenLocated x)
+  StrictType {bang = mkBang pack, baseType = mkType <$> fromGenLocated x}
 mkType (GHC.HsRecTy _ xs) =
-  RecordType (fmap (fromGenLocated . fmap mkRecordField) xs)
+  RecordType {fields = fmap (fromGenLocated . fmap mkRecordField) xs}
 mkType (GHC.HsExplicitListTy _ _ xs) =
-  PromotedList (fmap (fmap mkType . fromGenLocated) xs)
+  PromotedList {elements = fmap (fmap mkType . fromGenLocated) xs}
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkType (GHC.HsExplicitTupleTy _ _ xs) =
-  PromotedTuple (fmap (fmap mkType . fromGenLocated) xs)
+  PromotedTuple {elements = fmap (fmap mkType . fromGenLocated) xs}
 #else
 mkType (GHC.HsExplicitTupleTy _ xs) =
-  PromotedTuple (fmap (fmap mkType . fromGenLocated) xs)
+  PromotedTuple {elements = fmap (fmap mkType . fromGenLocated) xs}
 #endif
-mkType (GHC.HsTyLit _ x) = Literal (mkLiteral x)
+mkType (GHC.HsTyLit _ x) = Literal {literal = mkLiteral x}
 mkType GHC.HsWildCardTy {} = Wildcard
 mkType GHC.XHsType {} = error "XHsType not generated by parser"
 
@@ -202,10 +273,10 @@ instance CommentExtraction VerticalFuncType where
   nodeComments (VerticalFuncType t) = nodeComments t
 
 instance Pretty VerticalFuncType where
-  pretty' (VerticalFuncType (Function a b)) = do
-    pretty $ fmap mkVerticalFuncType a
+  pretty' (VerticalFuncType Function {..}) = do
+    pretty $ fmap mkVerticalFuncType from
     newline
-    prefixed "-> " $ pretty $ fmap mkVerticalFuncType b
+    prefixed "-> " $ pretty $ fmap mkVerticalFuncType to
   pretty' (VerticalFuncType t) = pretty t
 
 mkVerticalFuncType :: Type -> VerticalFuncType
@@ -218,20 +289,20 @@ instance CommentExtraction DeclSigType where
   nodeComments (DeclSigType t) = nodeComments t
 
 instance Pretty DeclSigType where
-  pretty' (DeclSigType (ConstrainedType ctxt body)) = hor <-|> ver
+  pretty' (DeclSigType ConstrainedType {..}) = hor <-|> ver
     where
-      hor = spaced [pretty ctxt, string "=>", pretty body]
+      hor = spaced [pretty context, string "=>", pretty body]
       ver = do
-        pretty ctxt
+        pretty context
         newline
         prefixed "=> " $ pretty $ fmap mkVerticalFuncType body
-  pretty' (DeclSigType (Function a b)) = hor <-|> ver
+  pretty' (DeclSigType Function {..}) = hor <-|> ver
     where
-      hor = spaced [pretty a, string "->", pretty b]
+      hor = spaced [pretty from, string "->", pretty to]
       ver = do
-        pretty $ fmap mkVerticalFuncType a
+        pretty $ fmap mkVerticalFuncType from
         newline
-        prefixed "-> " $ pretty $ fmap mkVerticalFuncType b
+        prefixed "-> " $ pretty $ fmap mkVerticalFuncType to
   pretty' (DeclSigType t) = pretty t
 
 mkDeclSigType :: Type -> DeclSigType
@@ -244,11 +315,11 @@ instance CommentExtraction InstDeclType where
   nodeComments (InstDeclType t) = nodeComments t
 
 instance Pretty InstDeclType where
-  pretty' (InstDeclType (ConstrainedType ctxt body)) = hor <-|> ver
+  pretty' (InstDeclType ConstrainedType {..}) = hor <-|> ver
     where
-      hor = spaced [pretty ctxt, string "=>", pretty body]
+      hor = spaced [pretty context, string "=>", pretty body]
       ver = do
-        pretty ctxt >> string " =>"
+        pretty context >> string " =>"
         newline
         indentedWithFixedLevel 9 $ pretty body
   pretty' (InstDeclType t) = pretty t
