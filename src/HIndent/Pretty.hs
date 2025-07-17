@@ -41,6 +41,7 @@ import HIndent.Ast.Declaration.Family.Data
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression.Bracket
+import HIndent.Ast.Expression.RangeExpression (mkRangeExpression)
 import HIndent.Ast.Expression.Splice
 import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.Infix
@@ -469,7 +470,7 @@ prettyHsExpr (GHC.ExprWithTySig _ e sig) = do
   pretty e
   string " :: "
   pretty $ GHC.hswc_body sig
-prettyHsExpr (GHC.ArithSeq _ _ x) = pretty x
+prettyHsExpr (GHC.ArithSeq _ _ x) = pretty $ mkRangeExpression x
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
 prettyHsExpr (GHC.HsSpliceE _ x) = pretty $ mkSplice x
 #endif
@@ -1459,16 +1460,6 @@ instance Pretty GHC.StringLiteral where
 instance Pretty GHC.StringLiteral where
   pretty' = output
 #endif
-instance Pretty (GHC.ArithSeqInfo GHC.GhcPs) where
-  pretty' (GHC.From from) = brackets $ spaced [pretty from, string ".."]
-  pretty' (GHC.FromThen from next) =
-    brackets $ spaced [pretty from >> comma >> pretty next, string ".."]
-  pretty' (GHC.FromTo from to) =
-    brackets $ spaced [pretty from, string "..", pretty to]
-  pretty' (GHC.FromThenTo from next to) =
-    brackets
-      $ spaced [pretty from >> comma >> pretty next, string "..", pretty to]
-
 instance Pretty (GHC.HsForAllTelescope GHC.GhcPs) where
   pretty' GHC.HsForAllVis {..} = do
     string "forall "

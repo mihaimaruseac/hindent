@@ -186,12 +186,6 @@ instance CommentExtraction (FamilyResultSig GhcPs) where
   nodeComments KindSig {} = emptyNodeComments
   nodeComments TyVarSig {} = emptyNodeComments
 
-instance CommentExtraction (ArithSeqInfo GhcPs) where
-  nodeComments From {} = emptyNodeComments
-  nodeComments FromThen {} = emptyNodeComments
-  nodeComments FromTo {} = emptyNodeComments
-  nodeComments FromThenTo {} = emptyNodeComments
-
 instance CommentExtraction (HsForAllTelescope GhcPs) where
   nodeComments HsForAllVis {..} = nodeComments hsf_xvis
   nodeComments HsForAllInvis {..} = nodeComments hsf_xinvis
