@@ -21,6 +21,10 @@ import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type.Bang
+import HIndent.Ast.Type.ImplicitParameterName
+  ( ImplicitParameterName
+  , mkImplicitParameterName
+  )
 import HIndent.Ast.Type.Literal
 import HIndent.Ast.WithComments
 import HIndent.Config
@@ -75,7 +79,7 @@ data Type
       { inner :: WithComments Type
       }
   | ImplicitParameter
-      { ipName :: GHC.HsIPName
+      { ipName :: WithComments ImplicitParameterName
       , paramType :: WithComments Type
       }
   | Star
@@ -174,7 +178,7 @@ instance Pretty Type where
       else spaced [pretty left, pretty operator, pretty right]
   pretty' Parenthesized {..} = parens $ pretty inner
   pretty' ImplicitParameter {..} =
-    spaced [string "?" >> pretty ipName, string "::", pretty paramType]
+    spaced [pretty ipName, string "::", pretty paramType]
   pretty' Star = string "*"
   pretty' KindSig {..} = spaced [pretty annotated, string "::", pretty kind]
   pretty' Splice {..} = pretty splice
@@ -238,7 +242,7 @@ mkType (GHC.HsParTy _ inside) =
   Parenthesized {inner = mkType <$> fromGenLocated inside}
 mkType (GHC.HsIParamTy _ x ty) =
   ImplicitParameter
-    { ipName = getNode $ fromGenLocated x
+    { ipName = mkImplicitParameterName <$> fromGenLocated x
     , paramType = mkType <$> fromGenLocated ty
     }
 mkType GHC.HsStarTy {} = Star

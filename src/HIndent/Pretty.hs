@@ -47,6 +47,7 @@ import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type
+import HIndent.Ast.Type.ImplicitParameterName (mkImplicitParameterName)
 import HIndent.Ast.Type.Strictness
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
@@ -173,7 +174,7 @@ prettyHsExpr (GHC.HsOverLabel _ _ l) = string "#" >> string (GHC.unpackFS l)
 #else
 prettyHsExpr (GHC.HsOverLabel _ l) = string "#" >> string (GHC.unpackFS l)
 #endif
-prettyHsExpr (GHC.HsIPVar _ var) = string "?" >> pretty var
+prettyHsExpr (GHC.HsIPVar _ var) = pretty $ mkImplicitParameterName var
 prettyHsExpr (GHC.HsOverLit _ x) = pretty x
 prettyHsExpr (GHC.HsLit _ l) = pretty l
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
@@ -1783,9 +1784,6 @@ instance Pretty (GHC.HsPragE GHC.GhcPs) where
   pretty' (GHC.HsPragSCC _ _ x) =
     spaced [string "{-# SCC", pretty x, string "#-}"]
 #endif
-instance Pretty GHC.HsIPName where
-  pretty' (GHC.HsIPName x) = string $ GHC.unpackFS x
-
 instance Pretty (GHC.HsPatSigType GHC.GhcPs) where
   pretty' GHC.HsPS {..} = pretty $ mkType <$> hsps_body
 
@@ -1798,11 +1796,19 @@ instance Pretty (GHC.IPBind GHC.GhcPs) where
 prettyIPBind :: GHC.IPBind GHC.GhcPs -> Printer ()
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 prettyIPBind (GHC.IPBind _ l r) =
-  spaced [string "?" >> pretty l, string "=", pretty r]
+  spaced
+    [ pretty $ mkImplicitParameterName <$> fromGenLocated l
+    , string "="
+    , pretty r
+    ]
 #else
 prettyIPBind (GHC.IPBind _ (Right _) _) = notUsedInParsedStage
 prettyIPBind (GHC.IPBind _ (Left l) r) =
-  spaced [string "?" >> pretty l, string "=", pretty r]
+  spaced
+    [ pretty $ mkImplicitParameterName <$> fromGenLocated l
+    , string "="
+    , pretty r
+    ]
 #endif
 instance Pretty (GHC.RecordPatSynField GHC.GhcPs) where
   pretty' GHC.RecordPatSynField {..} = pretty recordPatSynField
