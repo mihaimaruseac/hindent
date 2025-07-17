@@ -111,6 +111,7 @@ library
       HIndent.Ast.Role
       HIndent.Ast.Type
       HIndent.Ast.Type.Bang
+      HIndent.Ast.Type.ImplicitParameterName
       HIndent.Ast.Type.Literal
       HIndent.Ast.Type.Strictness
       HIndent.Ast.Type.Unpackedness
