@@ -90,6 +90,7 @@ library
       HIndent.Ast.Declaration.Warning.Collection
       HIndent.Ast.Declaration.Warning.Kind
       HIndent.Ast.Expression.Bracket
+      HIndent.Ast.Expression.OverloadedLabel
       HIndent.Ast.Expression.RangeExpression
       HIndent.Ast.Expression.Splice
       HIndent.Ast.FileHeaderPragma

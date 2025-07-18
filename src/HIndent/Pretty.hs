@@ -41,6 +41,7 @@ import HIndent.Ast.Declaration.Family.Data
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression.Bracket
+import HIndent.Ast.Expression.OverloadedLabel
 import HIndent.Ast.Expression.RangeExpression (mkRangeExpression)
 import HIndent.Ast.Expression.Splice
 import HIndent.Ast.Module.Name (mkModuleName)
@@ -171,9 +172,9 @@ prettyHsExpr (GHC.HsUnboundVar _ x) = pretty $ mkPrefixName x
 prettyHsExpr (GHC.HsUnboundVar _ x) = pretty x
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1) && !MIN_VERSION_ghc_lib_parser(9, 12, 1)
-prettyHsExpr (GHC.HsOverLabel _ _ l) = string "#" >> string (GHC.unpackFS l)
+prettyHsExpr (GHC.HsOverLabel _ _ l) = pretty $ mkOverloadedLabel l
 #else
-prettyHsExpr (GHC.HsOverLabel _ l) = string "#" >> string (GHC.unpackFS l)
+prettyHsExpr (GHC.HsOverLabel _ l) = pretty $ mkOverloadedLabel l
 #endif
 prettyHsExpr (GHC.HsIPVar _ var) = pretty $ mkImplicitParameterName var
 prettyHsExpr (GHC.HsOverLit _ x) = pretty x
