@@ -1466,7 +1466,7 @@ instance Pretty (GHC.HsForAllTelescope GHC.GhcPs) where
   pretty' GHC.HsForAllVis {..} = do
     string "forall "
     spaced $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) hsf_vis_bndrs
-    dot
+    string " ->"
   pretty' GHC.HsForAllInvis {..} = do
     string "forall "
     spaced
