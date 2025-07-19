@@ -64,7 +64,7 @@ data Type
       { elementType :: WithComments Type
       }
   | Tuple
-      { tupleSort :: GHC.HsTupleSort
+      { isUnboxed :: Bool
       , elements :: [WithComments Type]
       }
   | Sum
@@ -158,13 +158,10 @@ instance Pretty Type where
   pretty' KindApplication {..} = pretty base >> string " @" >> pretty kind
   pretty' Function {..} = (pretty from >> string " -> ") |=> pretty to
   pretty' List {..} = brackets $ pretty elementType
-  pretty' Tuple {tupleSort = GHC.HsUnboxedTuple, elements = []} = string "(# #)"
-  pretty' Tuple {tupleSort = GHC.HsBoxedOrConstraintTuple, elements = []} =
-    string "()"
-  pretty' Tuple {tupleSort = GHC.HsUnboxedTuple, ..} =
-    hvUnboxedTuple' $ fmap pretty elements
-  pretty' Tuple {tupleSort = GHC.HsBoxedOrConstraintTuple, ..} =
-    hvTuple' $ fmap pretty elements
+  pretty' Tuple {isUnboxed = True, elements = []} = string "(# #)"
+  pretty' Tuple {isUnboxed = False, elements = []} = string "()"
+  pretty' Tuple {isUnboxed = True, ..} = hvUnboxedTuple' $ fmap pretty elements
+  pretty' Tuple {isUnboxed = False, ..} = hvTuple' $ fmap pretty elements
   pretty' Sum {..} = hvUnboxedSum' $ fmap pretty elements
   pretty' InfixType {..} = do
     lineBreak <- gets (configLineBreaks . psConfig)
@@ -220,7 +217,13 @@ mkType (GHC.HsFunTy _ _ a b) =
     {from = mkType <$> fromGenLocated a, to = mkType <$> fromGenLocated b}
 mkType (GHC.HsListTy _ xs) = List {elementType = mkType <$> fromGenLocated xs}
 mkType (GHC.HsTupleTy _ sort xs) =
-  Tuple {tupleSort = sort, elements = fmap (fmap mkType . fromGenLocated) xs}
+  Tuple
+    { isUnboxed =
+        case sort of
+          GHC.HsUnboxedTuple -> True
+          _ -> False
+    , elements = fmap (fmap mkType . fromGenLocated) xs
+    }
 mkType (GHC.HsSumTy _ xs) =
   Sum {elements = fmap (fmap mkType . fromGenLocated) xs}
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
