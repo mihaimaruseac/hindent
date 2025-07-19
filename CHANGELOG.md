@@ -15,6 +15,7 @@
 - Default method signatures with constraints are now properly indented ([#1042])
 - Fix formatting of associated data families in type classes ([#1051])
 - Kind signatures and deriving clauses in GADTs are now properly printed ([#1053])
+- Visible forall (`forall a ->`) is now correctly formatted instead of being converted to invisible forall ([#1060])
 
 ### Removed
 
@@ -408,6 +409,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#1060]: https://github.com/mihaimaruseac/hindent/pull/1060
 [#1053]: https://github.com/mihaimaruseac/hindent/pull/1053
 [#1051]: https://github.com/mihaimaruseac/hindent/pull/1051
 [#1042]: https://github.com/mihaimaruseac/hindent/pull/1042

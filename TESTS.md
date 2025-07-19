@@ -1777,11 +1777,37 @@ With a record
 url :: r {url :: String} => r -> Integer
 ```
 
-`forall` type
+#### Forall quantification
+
+Invisible forall
 
 ```haskell
 f :: (forall a. Data a => a -> a) -> (forall a b. Data a => a -> b)
 g :: forall a b. a -> b
+```
+
+Visible forall with single type variable
+
+```haskell
+idVis :: forall a -> a -> a
+```
+
+Visible forall with multiple type variables
+
+```haskell
+pairVis :: forall a -> forall b -> a -> b -> (a, b)
+```
+
+Visible forall with mixed visibility
+
+```haskell
+mixed :: forall a -> forall b. (a -> b) -> a -> b
+```
+
+Visible forall with kind annotation
+
+```haskell
+proxyVis :: forall (a :: Type) -> Proxy a
 ```
 
 An infix operator containing `#`
