@@ -4,17 +4,19 @@ module HIndent.Ast.Name.Infix
   ( InfixName
   , mkInfixName
   , getInfixName
+  , unlessSpecialOp
   ) where
 
+import Control.Monad
 import Data.Maybe
 import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
-import qualified GHC.Unit.Module as GHC
 import HIndent.Ast.Module.Name
 import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Pretty
-import HIndent.Pretty.Combinators
+import HIndent.Pretty.Combinators hiding (unlessSpecialOp)
 import HIndent.Pretty.NodeComments
+import HIndent.Printer
 
 data InfixName = InfixName
   { name :: String
@@ -52,6 +54,9 @@ mkInfixName (GHC.Exact name) =
 
 getInfixName :: InfixName -> String
 getInfixName = name
+
+unlessSpecialOp :: InfixName -> Printer () -> Printer ()
+unlessSpecialOp InfixName {..} = unless $ name `elem` ["()", "[]", "->", ":"]
 
 backticksNeeded :: GHC.OccName -> Bool
 backticksNeeded = not . GHC.isSymOcc

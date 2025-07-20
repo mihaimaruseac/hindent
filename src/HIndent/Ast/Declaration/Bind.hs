@@ -9,11 +9,12 @@ module HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Pattern
+import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-import HIndent.Pretty.Types
 
 -- The difference between `Function` and `Pattern` is the same as the difference
 -- between `FunBind` and `PatBind` in GHC AST. See
@@ -25,7 +26,7 @@ data Bind
       { fun_matches :: GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs)
       }
   | Pattern
-      { lhs :: GHC.LPat GHC.GhcPs
+      { lhs :: WithComments Pattern
       , rhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs)
       }
   | PatternSynonym
@@ -34,7 +35,7 @@ data Bind
       , isImplicitBidirectional :: Bool
       , explicitMatches :: Maybe
           (GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs))
-      , definition :: GHC.LPat GHC.GhcPs
+      , definition :: WithComments PatInsidePatDecl
       }
 
 instance CommentExtraction Bind where
@@ -60,7 +61,7 @@ instance Pretty Bind where
           if isImplicitBidirectional
             then "="
             else "<-"
-    spacePrefixed [string arrow, pretty $ fmap PatInsidePatDecl definition]
+    spacePrefixed [string arrow, pretty definition]
     case explicitMatches of
       Just matches -> do
         newline
@@ -71,7 +72,7 @@ mkBind :: GHC.HsBind GHC.GhcPs -> Bind
 mkBind GHC.FunBind {..} = Function {..}
 mkBind GHC.PatBind {..} = Pattern {..}
   where
-    lhs = pat_lhs
+    lhs = mkPattern <$> fromGenLocated pat_lhs
     rhs = pat_rhs
 mkBind (GHC.PatSynBind _ GHC.PSB {..}) = PatternSynonym {..}
   where
@@ -82,5 +83,5 @@ mkBind (GHC.PatSynBind _ GHC.PSB {..}) = PatternSynonym {..}
         GHC.Unidirectional -> (False, Nothing)
         GHC.ImplicitBidirectional -> (True, Nothing)
         GHC.ExplicitBidirectional matches -> (False, Just matches)
-    definition = psb_def
+    definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
 mkBind _ = error "This AST node should not appear."

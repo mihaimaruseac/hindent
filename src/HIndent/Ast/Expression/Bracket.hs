@@ -8,6 +8,7 @@ module HIndent.Ast.Expression.Bracket
 import HIndent.Ast.Declaration
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Pattern
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -18,7 +19,7 @@ import HIndent.Pretty.NodeComments
 data Bracket
   = TypedExpression (GHC.LHsExpr GHC.GhcPs)
   | UntypedExpression (GHC.LHsExpr GHC.GhcPs)
-  | Pattern (GHC.LPat GHC.GhcPs)
+  | Pattern (WithComments Pattern)
   | Declaration [WithComments Declaration]
   | Type (GHC.LHsType GHC.GhcPs)
   | Variable Bool (WithComments PrefixName)
@@ -47,7 +48,7 @@ mkBracket :: GHC.HsQuote GHC.GhcPs -> Bracket
 mkBracket :: GHC.HsBracket GHC.GhcPs -> Bracket
 #endif
 mkBracket (GHC.ExpBr _ x) = UntypedExpression x
-mkBracket (GHC.PatBr _ x) = Pattern x
+mkBracket (GHC.PatBr _ x) = Pattern $ mkPattern <$> fromGenLocated x
 mkBracket (GHC.DecBrL _ x) =
   Declaration $ fmap (fmap mkDeclaration . fromGenLocated) x
 mkBracket (GHC.TypBr _ x) = Type x

@@ -48,6 +48,7 @@ import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Pattern
 import HIndent.Ast.Type
 import HIndent.Ast.Type.ImplicitParameterName (mkImplicitParameterName)
 import HIndent.Ast.Type.Strictness
@@ -477,15 +478,23 @@ prettyHsExpr (GHC.ArithSeq _ _ x) = pretty $ mkRangeExpression x
 prettyHsExpr (GHC.HsSpliceE _ x) = pretty $ mkSplice x
 #endif
 prettyHsExpr (GHC.HsProc _ pat x@(GHC.L _ (GHC.HsCmdTop _ (GHC.L _ (GHC.HsCmdDo _ xs))))) = do
-  spaced [string "proc", pretty pat, string "-> do"]
+  spaced
+    [string "proc", pretty $ mkPattern <$> fromGenLocated pat, string "-> do"]
   newline
   indentedBlock
     $ printCommentsAnd x (const (printCommentsAnd xs (lined . fmap pretty)))
 prettyHsExpr (GHC.HsProc _ pat body) = hor <-|> ver
   where
-    hor = spaced [string "proc", pretty pat, string "->", pretty body]
+    hor =
+      spaced
+        [ string "proc"
+        , pretty $ mkPattern <$> fromGenLocated pat
+        , string "->"
+        , pretty body
+        ]
     ver = do
-      spaced [string "proc", pretty pat, string "->"]
+      spaced
+        [string "proc", pretty $ mkPattern <$> fromGenLocated pat, string "->"]
       newline
       indentedBlock (pretty body)
 prettyHsExpr (GHC.HsStatic _ x) = spaced [string "static", pretty x]
@@ -608,13 +617,16 @@ prettyMatchExpr GHC.Match {m_ctxt = GHC.LamAlt GHC.LamSingle, ..} = do
         GHC.BangPat {} -> space
         _ -> return ()
     _ -> return ()
-  prettyWith (fromGenLocated m_pats) (spaced . fmap pretty)
+  prettyWith (fromGenLocated m_pats)
+    $ spaced . fmap (pretty . fmap mkPattern . fromGenLocated)
   pretty $ GRHSsExpr GRHSExprLambda m_grhss
 prettyMatchExpr GHC.Match {m_ctxt = GHC.LamAlt GHC.LamCase, ..} = do
-  prettyWith (fromGenLocated m_pats) (spaced . fmap pretty)
+  prettyWith (fromGenLocated m_pats)
+    $ spaced . fmap (pretty . fmap mkPattern . fromGenLocated)
   pretty $ GRHSsExpr GRHSExprCase m_grhss
 prettyMatchExpr GHC.Match {m_ctxt = GHC.LamAlt GHC.LamCases, ..} = do
-  prettyWith (fromGenLocated m_pats) (spaced . fmap pretty)
+  prettyWith (fromGenLocated m_pats)
+    $ spaced . fmap (pretty . fmap mkPattern . fromGenLocated)
   pretty $ GRHSsExpr GRHSExprCase m_grhss
 #elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
 prettyMatchExpr GHC.Match {m_ctxt = GHC.LamAlt GHC.LamSingle, ..} = do
@@ -626,13 +638,13 @@ prettyMatchExpr GHC.Match {m_ctxt = GHC.LamAlt GHC.LamSingle, ..} = do
         GHC.BangPat {} -> space
         _ -> return ()
     _ -> return ()
-  spaced $ fmap pretty m_pats
+  spaced $ fmap (pretty . fmap mkPattern . fromGenLocated) m_pats
   pretty $ GRHSsExpr GRHSExprLambda m_grhss
 prettyMatchExpr GHC.Match {m_ctxt = GHC.LamAlt GHC.LamCase, ..} = do
-  spaced $ fmap pretty m_pats
+  spaced $ fmap (pretty . fmap mkPattern . fromGenLocated) m_pats
   pretty $ GRHSsExpr GRHSExprCase m_grhss
 prettyMatchExpr GHC.Match {m_ctxt = GHC.LamAlt GHC.LamCases, ..} = do
-  spaced $ fmap pretty m_pats
+  spaced $ fmap (pretty . fmap mkPattern . fromGenLocated) m_pats
   pretty $ GRHSsExpr GRHSExprCase m_grhss
 #else
 prettyMatchExpr GHC.Match {m_ctxt = GHC.LambdaExpr, ..} = do
@@ -644,21 +656,22 @@ prettyMatchExpr GHC.Match {m_ctxt = GHC.LambdaExpr, ..} = do
         GHC.BangPat {} -> space
         _ -> return ()
     _ -> return ()
-  spaced $ fmap pretty m_pats
+  spaced $ fmap (pretty . fmap mkPattern . fromGenLocated) m_pats
   pretty $ GRHSsExpr GRHSExprLambda m_grhss
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 prettyMatchExpr GHC.Match {m_ctxt = GHC.LamCaseAlt {}, ..} = do
-  spaced $ fmap pretty m_pats
+  spaced $ fmap (pretty . fmap mkPattern . fromGenLocated) m_pats
   pretty $ GRHSsExpr GRHSExprCase m_grhss
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 prettyMatchExpr GHC.Match {m_ctxt = GHC.CaseAlt, ..} = do
-  prettyWith (fromGenLocated m_pats) (mapM_ pretty)
+  prettyWith (fromGenLocated m_pats)
+    $ mapM_ (pretty . fmap mkPattern . fromGenLocated)
   pretty $ GRHSsExpr GRHSExprCase m_grhss
 #else
 prettyMatchExpr GHC.Match {m_ctxt = GHC.CaseAlt, ..} = do
-  mapM_ pretty m_pats
+  mapM_ (pretty . fmap mkPattern . fromGenLocated) m_pats
   pretty $ GRHSsExpr GRHSExprCase m_grhss
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
@@ -666,14 +679,18 @@ prettyMatchExpr GHC.Match {..} =
   case GHC.mc_fixity m_ctxt of
     GHC.Prefix -> do
       pretty m_ctxt
-      prettyWith (fromGenLocated m_pats) (spacePrefixed . fmap pretty)
+      prettyWith (fromGenLocated m_pats)
+        $ spacePrefixed . fmap (pretty . fmap mkPattern . fromGenLocated)
       pretty m_grhss
     GHC.Infix -> do
       case (GHC.unLoc m_pats, m_ctxt) of
         (l:r:xs, GHC.FunRhs {..}) -> do
           spaced
-            $ [pretty l, pretty $ fmap mkInfixName mc_fun, pretty r]
-                ++ fmap pretty xs
+            $ [ pretty $ fmap mkPattern $ fromGenLocated l
+              , pretty $ mkInfixName <$> mc_fun
+              , pretty $ fmap mkPattern $ fromGenLocated r
+              ]
+                ++ fmap (pretty . fmap mkPattern . fromGenLocated) xs
           pretty m_grhss
         _ -> error "Not enough parameters are passed."
 #else
@@ -681,14 +698,17 @@ prettyMatchExpr GHC.Match {..} =
   case GHC.mc_fixity m_ctxt of
     GHC.Prefix -> do
       pretty m_ctxt
-      spacePrefixed $ fmap pretty m_pats
+      spacePrefixed $ fmap (pretty . fmap mkPattern . fromGenLocated) m_pats
       pretty m_grhss
     GHC.Infix -> do
       case (m_pats, m_ctxt) of
         (l:r:xs, GHC.FunRhs {..}) -> do
           spaced
-            $ [pretty l, pretty $ fmap mkInfixName mc_fun, pretty r]
-                ++ fmap pretty xs
+            $ [ pretty $ mkPattern <$> fromGenLocated l
+              , pretty $ mkInfixName <$> mc_fun
+              , pretty $ mkPattern <$> fromGenLocated r
+              ]
+                ++ fmap (pretty . fmap mkPattern . fromGenLocated) xs
           pretty m_grhss
         _ -> error "Not enough parameters are passed."
 #endif
@@ -709,11 +729,23 @@ prettyMatchProc GHC.Match {m_ctxt = GHC.LamAlt GHC.LamSingle, ..} = do
         GHC.BangPat {} -> space
         _ -> return ()
     _ -> return ()
-  spaced [prettyWith (fromGenLocated m_pats) (mapM_ pretty), pretty m_grhss]
+  spaced
+    [ prettyWith (fromGenLocated m_pats)
+        $ mapM_ (pretty . fmap mkPattern . fromGenLocated)
+    , pretty m_grhss
+    ]
 prettyMatchProc GHC.Match {m_ctxt = GHC.LamAlt GHC.LamCase, ..} = do
-  spaced [prettyWith (fromGenLocated m_pats) (mapM_ pretty), pretty m_grhss]
+  spaced
+    [ prettyWith (fromGenLocated m_pats)
+        $ mapM_ (pretty . fmap mkPattern . fromGenLocated)
+    , pretty m_grhss
+    ]
 prettyMatchProc GHC.Match {m_ctxt = GHC.LamAlt GHC.LamCases, ..} = do
-  spaced [prettyWith (fromGenLocated m_pats) (mapM_ pretty), pretty m_grhss]
+  spaced
+    [ prettyWith (fromGenLocated m_pats)
+        $ mapM_ (pretty . fmap mkPattern . fromGenLocated)
+    , pretty m_grhss
+    ]
 #elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
 prettyMatchProc GHC.Match {m_ctxt = GHC.LamAlt GHC.LamSingle, ..} = do
   string "\\"
@@ -724,11 +756,14 @@ prettyMatchProc GHC.Match {m_ctxt = GHC.LamAlt GHC.LamSingle, ..} = do
         GHC.BangPat {} -> space
         _ -> return ()
     _ -> return ()
-  spaced $ fmap pretty m_pats ++ [pretty m_grhss]
+  spaced
+    $ fmap (pretty . fmap mkPattern . fromGenLocated) m_pats ++ [pretty m_grhss]
 prettyMatchProc GHC.Match {m_ctxt = GHC.LamAlt GHC.LamCase, ..} = do
-  spaced [mapM_ pretty m_pats, pretty m_grhss]
+  spaced
+    [mapM_ (pretty . fmap mkPattern . fromGenLocated) m_pats, pretty m_grhss]
 prettyMatchProc GHC.Match {m_ctxt = GHC.LamAlt GHC.LamCases, ..} = do
-  spaced [mapM_ pretty m_pats, pretty m_grhss]
+  spaced
+    [mapM_ (pretty . fmap mkPattern . fromGenLocated) m_pats, pretty m_grhss]
 #else
 prettyMatchProc GHC.Match {m_ctxt = GHC.LambdaExpr, ..} = do
   string "\\"
@@ -739,18 +774,25 @@ prettyMatchProc GHC.Match {m_ctxt = GHC.LambdaExpr, ..} = do
         GHC.BangPat {} -> space
         _ -> return ()
     _ -> return ()
-  spaced $ fmap pretty m_pats ++ [pretty m_grhss]
+  spaced
+    $ fmap (pretty . fmap mkPattern . fromGenLocated) m_pats ++ [pretty m_grhss]
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 prettyMatchProc GHC.Match {m_ctxt = GHC.CaseAlt, ..} =
-  spaced [prettyWith (fromGenLocated m_pats) (mapM_ pretty), pretty m_grhss]
+  spaced
+    [ prettyWith (fromGenLocated m_pats)
+        $ mapM_ (pretty . fmap mkPattern . fromGenLocated)
+    , pretty m_grhss
+    ]
 #else
 prettyMatchProc GHC.Match {m_ctxt = GHC.CaseAlt, ..} =
-  spaced [mapM_ pretty m_pats, pretty m_grhss]
+  spaced
+    [mapM_ (pretty . fmap mkPattern . fromGenLocated) m_pats, pretty m_grhss]
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 prettyMatchProc GHC.Match {m_ctxt = GHC.LamCaseAlt {}, ..} = do
-  spaced [mapM_ pretty m_pats, pretty m_grhss]
+  spaced
+    [mapM_ (pretty . fmap mkPattern . fromGenLocated) m_pats, pretty m_grhss]
 #endif
 prettyMatchProc _ = notGeneratedByParser
 
@@ -769,7 +811,7 @@ prettyStmtLRExpr ::
   -> Printer ()
 prettyStmtLRExpr (GHC.LastStmt _ x _ _) = pretty x
 prettyStmtLRExpr (GHC.BindStmt _ pat body) = do
-  pretty pat
+  pretty $ mkPattern <$> fromGenLocated pat
   string " <-"
   hor <-|> ver
   where
@@ -804,9 +846,11 @@ prettyStmtLRCmd ::
 prettyStmtLRCmd (GHC.LastStmt _ x _ _) = pretty x
 prettyStmtLRCmd (GHC.BindStmt _ pat body) = hor <-|> ver
   where
-    hor = spaced [pretty pat, string "<-", pretty body]
+    hor =
+      spaced
+        [pretty $ mkPattern <$> fromGenLocated pat, string "<-", pretty body]
     ver = do
-      pretty pat
+      pretty $ mkPattern <$> fromGenLocated pat
       string " <-"
       newline
       indentedBlock $ pretty body
@@ -1035,70 +1079,6 @@ instance Pretty GHC.EpaCommentTok where
         indentedWithFixedLevel 0 $ lined $ fmap string xs
   pretty' _ = docNode
 
-instance Pretty (GHC.Pat GHC.GhcPs) where
-  pretty' = prettyPat
-
-instance Pretty PatInsidePatDecl where
-  pretty' (PatInsidePatDecl (GHC.ConPat {pat_args = (GHC.InfixCon l r), ..})) =
-    spaced [pretty l, pretty $ fmap mkInfixName pat_con, pretty r]
-  pretty' (PatInsidePatDecl x) = pretty x
-
-prettyPat :: GHC.Pat GHC.GhcPs -> Printer ()
-prettyPat GHC.WildPat {} = string "_"
-prettyPat (GHC.VarPat _ x) = pretty $ fmap mkPrefixName x
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-prettyPat GHC.EmbTyPat {} = notGeneratedByParser
-prettyPat GHC.InvisPat {} = notGeneratedByParser
-#endif
-prettyPat (GHC.LazyPat _ x) = string "~" >> pretty x
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
-prettyPat (GHC.AsPat _ a _ b) =
-  pretty (fmap mkPrefixName a) >> string "@" >> pretty b
-#else
-prettyPat (GHC.AsPat _ a b) =
-  pretty (fmap mkPrefixName a) >> string "@" >> pretty b
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
-prettyPat (GHC.ParPat _ _ inner _) = parens $ pretty inner
-#else
-prettyPat (GHC.ParPat _ inner) = parens $ pretty inner
-#endif
-prettyPat (GHC.BangPat _ x) = string "!" >> pretty x
-prettyPat (GHC.ListPat _ xs) = hList $ fmap pretty xs
-prettyPat (GHC.TuplePat _ pats GHC.Boxed) = hTuple $ fmap pretty pats
-prettyPat (GHC.TuplePat _ pats GHC.Unboxed) = hUnboxedTuple $ fmap pretty pats
-prettyPat (GHC.SumPat _ x position numElem) = do
-  string "(#"
-  forM_ [1 .. numElem] $ \idx -> do
-    if idx == position
-      then string " " >> pretty x >> string " "
-      else string " "
-    when (idx < numElem) $ string "|"
-  string "#)"
-prettyPat GHC.ConPat {..} =
-  case pat_args of
-    GHC.PrefixCon _ as -> do
-      pretty $ fmap mkPrefixName pat_con
-      spacePrefixed $ fmap pretty as
-    GHC.RecCon rec ->
-      (pretty (fmap mkPrefixName pat_con) >> space) |=> pretty (RecConPat rec)
-    GHC.InfixCon a b -> do
-      pretty a
-      unlessSpecialOp (GHC.unLoc pat_con) space
-      pretty $ fmap mkInfixName pat_con
-      unlessSpecialOp (GHC.unLoc pat_con) space
-      pretty b
-prettyPat (GHC.ViewPat _ l r) = spaced [pretty l, string "->", pretty r]
-prettyPat (GHC.SplicePat _ x) = pretty $ mkSplice x
-prettyPat (GHC.LitPat _ x) = pretty x
-prettyPat (GHC.NPat _ x _ _) = pretty x
-prettyPat (GHC.NPlusKPat _ n k _ _ _) =
-  pretty (fmap mkPrefixName n) >> string "+" >> pretty k
-prettyPat (GHC.SigPat _ l r) = spaced [pretty l, string "::", pretty r]
-#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-prettyPat (GHC.OrPat _ pats) =
-  inter (string "; ") (fmap pretty $ NE.toList pats)
-#endif
 instance Pretty RecConPat where
   pretty' (RecConPat GHC.HsRecFields {..}) =
     case fieldPrinters of
@@ -1157,7 +1137,7 @@ instance Pretty RecConField where
     pretty hfbLHS
     unless hfbPun $ do
       string " = "
-      pretty hfbRHS
+      pretty $ mkPattern <$> fromGenLocated hfbRHS
 #else
 -- | For pattern matching against a record.
 instance Pretty
@@ -1165,7 +1145,8 @@ instance Pretty
               (GHC.FieldOcc GHC.GhcPs)
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.Pat GHC.GhcPs))) where
   pretty' GHC.HsRecField {..} =
-    (pretty hsRecFieldLbl >> string " = ") |=> pretty hsRecFieldArg
+    (pretty hsRecFieldLbl >> string " = ") |=> pretty
+      $ mkPattern <$> fromGenLocated hsRecFieldArg
 
 -- | For record updates.
 instance Pretty
@@ -1188,7 +1169,7 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.FieldOcc GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.Pat GHC.GhcPs))) where
   pretty' GHC.HsFieldBind {..} =
-    (pretty hfbLHS >> string " = ") |=> pretty hfbRHS
+    (pretty hfbLHS >> string " = ") |=> pretty (mkPattern <$> hfbRHS)
 
 -- | For record updates.
 instance Pretty
@@ -1210,7 +1191,8 @@ instance Pretty
               (GHC.GenLocated (GHC.SrcAnn GHC.NoEpAnns) (GHC.FieldOcc GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.Pat GHC.GhcPs))) where
   pretty' GHC.HsFieldBind {..} =
-    (pretty hfbLHS >> string " = ") |=> pretty hfbRHS
+    (pretty hfbLHS >> string " = ")
+      |=> (pretty $ mkPattern <$> fromGenLocated hfbRHS)
 
 -- | For record updates.
 instance Pretty
@@ -1248,7 +1230,7 @@ instance Pretty
 
 instance Pretty InfixExpr where
   pretty' (InfixExpr (GHC.L _ (GHC.HsVar _ bind))) =
-    pretty $ fmap mkInfixName bind
+    pretty $ mkInfixName <$> bind
   pretty' (InfixExpr x) = pretty' x
 
 instance Pretty InfixApp where
