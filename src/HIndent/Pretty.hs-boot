@@ -70,8 +70,6 @@ instance Pretty (GHC.HsSigType GHC.GhcPs)
 
 instance Pretty Context
 
-instance Pretty (GHC.HsForAllTelescope GHC.GhcPs)
-
 instance Pretty (GHC.DerivClauseTys GHC.GhcPs)
 
 instance Pretty (GHC.HsScaled GHC.GhcPs (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))

@@ -115,6 +115,7 @@ library
       HIndent.Ast.Type.ImplicitParameterName
       HIndent.Ast.Type.Literal
       HIndent.Ast.Type.Strictness
+      HIndent.Ast.Type.UniversalQuantifier
       HIndent.Ast.Type.Unpackedness
       HIndent.Ast.Type.Variable
       HIndent.Ast.WithComments
