@@ -1445,17 +1445,6 @@ instance Pretty GHC.StringLiteral where
 instance Pretty GHC.StringLiteral where
   pretty' = output
 #endif
-instance Pretty (GHC.HsForAllTelescope GHC.GhcPs) where
-  pretty' GHC.HsForAllVis {..} = do
-    string "forall "
-    spaced $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) hsf_vis_bndrs
-    string " ->"
-  pretty' GHC.HsForAllInvis {..} = do
-    string "forall "
-    spaced
-      $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) hsf_invis_bndrs
-    dot
-
 instance Pretty Context where
   pretty' (Context xs) =
     pretty (HorizontalContext xs) <-|> pretty (VerticalContext xs)

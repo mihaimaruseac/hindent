@@ -182,10 +182,6 @@ instance CommentExtraction (FamilyResultSig GhcPs) where
   nodeComments KindSig {} = emptyNodeComments
   nodeComments TyVarSig {} = emptyNodeComments
 
-instance CommentExtraction (HsForAllTelescope GhcPs) where
-  nodeComments HsForAllVis {..} = nodeComments hsf_xvis
-  nodeComments HsForAllInvis {..} = nodeComments hsf_xinvis
-
 instance CommentExtraction InfixOp where
   nodeComments (InfixOp x) = nodeComments x
 
