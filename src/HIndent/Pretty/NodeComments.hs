@@ -208,11 +208,6 @@ instance CommentExtraction VerticalContext where
 instance CommentExtraction FamEqn' where
   nodeComments FamEqn' {..} = nodeComments famEqn
 
-instance CommentExtraction (IEWrappedName a) where
-  nodeComments IEName {} = emptyNodeComments
-  nodeComments IEPattern {} = emptyNodeComments
-  nodeComments IEType {} = emptyNodeComments
-
 -- | 'Pretty' for 'LHsSigWcType GhcPs'.
 instance CommentExtraction
            (HsWildCardBndrs GhcPs (GenLocated SrcSpanAnnA (HsSigType GhcPs))) where

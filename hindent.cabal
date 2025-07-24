@@ -106,6 +106,7 @@ library
       HIndent.Ast.Module.Export.Entry
       HIndent.Ast.Module.Name
       HIndent.Ast.Module.Warning
+      HIndent.Ast.Name.ImportExport
       HIndent.Ast.Name.Infix
       HIndent.Ast.Name.Prefix
       HIndent.Ast.NodeComments
