@@ -45,6 +45,7 @@ import HIndent.Ast.Expression.OverloadedLabel
 import HIndent.Ast.Expression.RangeExpression (mkRangeExpression)
 import HIndent.Ast.Expression.Splice
 import HIndent.Ast.Module.Name (mkModuleName)
+import HIndent.Ast.Name.ImportExport
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
@@ -1499,10 +1500,10 @@ instance Pretty VerticalContext where
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance Pretty (GHC.IE GHC.GhcPs) where
-  pretty' (GHC.IEVar _ name _) = pretty name
-  pretty' (GHC.IEThingAbs _ name _) = pretty name
+  pretty' (GHC.IEVar _ name _) = pretty $ mkImportExportName <$> name
+  pretty' (GHC.IEThingAbs _ name _) = pretty $ mkImportExportName <$> name
   pretty' (GHC.IEThingAll _ name _) = do
-    pretty name
+    pretty $ mkImportExportName <$> name
     string "(..)"
   -- FIXME: Currently, pretty-printing a 'IEThingWith' uses
   -- 'ghc-lib-parser''s pretty-printer. However, we should avoid it because
@@ -1523,10 +1524,10 @@ instance Pretty (GHC.IE GHC.GhcPs) where
   pretty' GHC.IEDocNamed {} = docNode
 #else
 instance Pretty (GHC.IE GHC.GhcPs) where
-  pretty' (GHC.IEVar _ name) = pretty name
-  pretty' (GHC.IEThingAbs _ name) = pretty name
+  pretty' (GHC.IEVar _ name) = pretty $ mkImportExportName <$> name
+  pretty' (GHC.IEThingAbs _ name) = pretty $ mkImportExportName <$> name
   pretty' (GHC.IEThingAll _ name) = do
-    pretty name
+    pretty $ mkImportExportName <$> name
     string "(..)"
   -- FIXME: Currently, pretty-printing a 'IEThingWith' uses
   -- 'ghc-lib-parser''s pretty-printer. However, we should avoid it because
@@ -1623,26 +1624,6 @@ instance Pretty (GHC.WithHsDocIdentifiers GHC.StringLiteral GHC.GhcPs) where
   pretty' GHC.WithHsDocIdentifiers {..} = pretty hsDocString
 #endif
 
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
--- | 'Pretty' for 'LIEWrappedName (IdP GhcPs)'
-instance Pretty (GHC.IEWrappedName GHC.GhcPs) where
-  pretty' (GHC.IEName _ name) = pretty $ fmap mkPrefixName name
-  pretty' (GHC.IEPattern _ name) =
-    spaced [string "pattern", pretty $ fmap mkPrefixName name]
-  pretty' (GHC.IEType _ name) =
-    string "type " >> pretty (fmap mkPrefixName name)
-#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-  pretty' GHC.IEDefault {} = notGeneratedByParser
-#endif
-#else
--- | 'Pretty' for 'LIEWrappedName (IdP GhcPs)'
-instance Pretty (GHC.IEWrappedName GHC.RdrName) where
-  pretty' (GHC.IEName name) = pretty $ fmap mkPrefixName name
-  pretty' (GHC.IEPattern _ name) =
-    spaced [string "pattern", pretty $ fmap mkPrefixName name]
-  pretty' (GHC.IEType _ name) =
-    string "type " >> pretty (fmap mkPrefixName name)
-#endif
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty (GHC.DotFieldOcc GHC.GhcPs) where
   pretty' GHC.DotFieldOcc {..} = printCommentsAnd dfoLabel pretty

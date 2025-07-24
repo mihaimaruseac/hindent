@@ -6,31 +6,23 @@ module HIndent.Ast.Module.Export.Entry
   ) where
 
 import GHC.Stack
-import qualified GHC.Unit as GHC
 import HIndent.Ast.Module.Name
+import HIndent.Ast.Name.ImportExport
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+
 data ExportEntry
-  = SingleIdentifier (WithComments (GHC.IEWrappedName GHC.GhcPs))
+  = SingleIdentifier (WithComments ImportExportName)
   | WithSpecificConstructors
-      (WithComments (GHC.IEWrappedName GHC.GhcPs))
-      [WithComments (GHC.IEWrappedName GHC.GhcPs)]
-  | WithAllConstructors (WithComments (GHC.IEWrappedName GHC.GhcPs))
+      (WithComments ImportExportName)
+      [WithComments ImportExportName]
+  | WithAllConstructors (WithComments ImportExportName)
   | ByModule (WithComments ModuleName)
-#else
-data ExportEntry
-  = SingleIdentifier (WithComments (GHC.IEWrappedName (GHC.IdP GHC.GhcPs)))
-  | WithSpecificConstructors
-      (WithComments (GHC.IEWrappedName (GHC.IdP GHC.GhcPs)))
-      [WithComments (GHC.IEWrappedName (GHC.IdP GHC.GhcPs))]
-  | WithAllConstructors (WithComments (GHC.IEWrappedName (GHC.IdP GHC.GhcPs)))
-  | ByModule (WithComments ModuleName)
-#endif
+
 instance CommentExtraction ExportEntry where
   nodeComments SingleIdentifier {} = NodeComments [] [] []
   nodeComments WithSpecificConstructors {} = NodeComments [] [] []
@@ -45,23 +37,25 @@ instance Pretty ExportEntry where
 
 mkExportEntry :: GHC.IE GHC.GhcPs -> ExportEntry
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-mkExportEntry (GHC.IEVar _ name _) = SingleIdentifier $ fromGenLocated name
-mkExportEntry (GHC.IEThingAbs _ name _) = SingleIdentifier $ fromGenLocated name
+mkExportEntry (GHC.IEVar _ name _) =
+  SingleIdentifier $ mkImportExportName <$> fromGenLocated name
+mkExportEntry (GHC.IEThingAbs _ name _) =
+  SingleIdentifier $ mkImportExportName <$> fromGenLocated name
 mkExportEntry (GHC.IEThingAll _ name _) =
-  WithAllConstructors $ fromGenLocated name
+  WithAllConstructors $ mkImportExportName <$> fromGenLocated name
 mkExportEntry (GHC.IEThingWith _ name _ constructors _) =
-  WithSpecificConstructors
-    (fromGenLocated name)
-    (fmap fromGenLocated constructors)
+  WithSpecificConstructors (mkImportExportName <$> fromGenLocated name)
+    $ fmap mkImportExportName . fromGenLocated <$> constructors
 #else
-mkExportEntry (GHC.IEVar _ name) = SingleIdentifier $ fromGenLocated name
-mkExportEntry (GHC.IEThingAbs _ name) = SingleIdentifier $ fromGenLocated name
+mkExportEntry (GHC.IEVar _ name) =
+  SingleIdentifier $ mkImportExportName <$> fromGenLocated name
+mkExportEntry (GHC.IEThingAbs _ name) =
+  SingleIdentifier $ mkImportExportName <$> fromGenLocated name
 mkExportEntry (GHC.IEThingAll _ name) =
-  WithAllConstructors $ fromGenLocated name
+  WithAllConstructors $ mkImportExportName <$> fromGenLocated name
 mkExportEntry (GHC.IEThingWith _ name _ constructors) =
-  WithSpecificConstructors
-    (fromGenLocated name)
-    (fmap fromGenLocated constructors)
+  WithSpecificConstructors (mkImportExportName <$> fromGenLocated name)
+    $ fmap mkImportExportName . fromGenLocated <$> constructors
 #endif
 mkExportEntry (GHC.IEModuleContents _ name) =
   ByModule $ mkModuleName <$> fromGenLocated name
