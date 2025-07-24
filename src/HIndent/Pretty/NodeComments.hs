@@ -25,7 +25,6 @@ import HIndent.Ast.NodeComments
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-import Distribution.Simple.GHC (writeGhcEnvironmentFile)
 import GHC.Core.DataCon
 #else
 import GHC.Unit
@@ -104,9 +103,6 @@ instance CommentExtraction EpaCommentTok where
 
 instance CommentExtraction (SpliceDecl GhcPs) where
   nodeComments SpliceDecl {} = emptyNodeComments
-
-instance CommentExtraction PatInsidePatDecl where
-  nodeComments (PatInsidePatDecl x) = nodeComments x
 
 instance CommentExtraction RecConPat where
   nodeComments (RecConPat x) = nodeComments x
@@ -727,66 +723,14 @@ nodeCommentsMatchContext StmtCtxt {} = emptyNodeComments
 nodeCommentsMatchContext ThPatSplice {} = emptyNodeComments
 nodeCommentsMatchContext ThPatQuote {} = emptyNodeComments
 nodeCommentsMatchContext PatSyn {} = emptyNodeComments
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+nodeCommentsMatchContext LamAlt {} = emptyNodeComments
+#endif
 #if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsMatchContext LambdaExpr {} = emptyNodeComments
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsMatchContext LamCaseAlt {} = emptyNodeComments
-#endif
-instance CommentExtraction (Pat GhcPs) where
-  nodeComments = nodeCommentsPat
-
-nodeCommentsPat :: Pat GhcPs -> NodeComments
-nodeCommentsPat WildPat {} = emptyNodeComments
-nodeCommentsPat VarPat {} = emptyNodeComments
-nodeCommentsPat (ListPat x _) = nodeComments x
-nodeCommentsPat (SumPat x _ _ _) = nodeComments x
-nodeCommentsPat SplicePat {} = emptyNodeComments
-nodeCommentsPat LitPat {} = emptyNodeComments
-nodeCommentsPat (NPlusKPat x _ _ _ _ _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsPat ParPat {} = emptyNodeComments
-#elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
-nodeCommentsPat (ParPat x _ _ _) = nodeComments x
-#else
-nodeCommentsPat (ParPat x _) = nodeComments x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsPat AsPat {} = emptyNodeComments
-#elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
-nodeCommentsPat (AsPat x _ _ _) = nodeComments x
-#else
-nodeCommentsPat (AsPat x _ _) = nodeComments x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-nodeCommentsPat (LazyPat x _) = nodeComments x
-nodeCommentsPat (BangPat x _) = nodeComments x
-nodeCommentsPat (TuplePat (a, b) _ _) = mconcat [nodeComments a, nodeComments b]
-nodeCommentsPat ConPat {pat_con_ext = (s, d)} =
-  mconcat
-    [ maybe emptyNodeComments nodeComments s
-    , maybe emptyNodeComments nodeComments d
-    ]
-nodeCommentsPat (ViewPat x _ _) = nodeComments x
-nodeCommentsPat (NPat x _ _ _) = nodeComments x
-nodeCommentsPat (SigPat x _ _) = nodeComments x
-nodeCommentsPat OrPat {} = emptyNodeComments
-#elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsPat (LazyPat x _) = mconcat $ fmap nodeComments x
-nodeCommentsPat (BangPat x _) = mconcat $ fmap nodeComments x
-nodeCommentsPat (TuplePat x _ _) = mconcat $ fmap nodeComments x
-nodeCommentsPat ConPat {..} = mconcat $ fmap nodeComments pat_con_ext
-nodeCommentsPat (ViewPat x _ _) = mconcat $ fmap nodeComments x
-nodeCommentsPat (NPat x _ _ _) = mconcat $ fmap nodeComments x
-nodeCommentsPat (SigPat x _ _) = mconcat $ fmap nodeComments x
-#else
-nodeCommentsPat (LazyPat x _) = nodeComments x
-nodeCommentsPat (BangPat x _) = nodeComments x
-nodeCommentsPat (TuplePat x _ _) = nodeComments x
-nodeCommentsPat ConPat {..} = nodeComments pat_con_ext
-nodeCommentsPat (ViewPat x _ _) = nodeComments x
-nodeCommentsPat (NPat x _ _ _) = nodeComments x
-nodeCommentsPat (SigPat x _ _) = nodeComments x
 #endif
 instance CommentExtraction (HsTupArg GhcPs) where
   nodeComments = nodeCommentsHsTupArg

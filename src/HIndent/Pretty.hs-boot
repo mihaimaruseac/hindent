@@ -48,8 +48,6 @@ instance Pretty
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
 
-instance Pretty (GHC.Pat GHC.GhcPs)
-
 instance Pretty
            (GHc.GRHSs
               GHC.GhcPs
@@ -60,9 +58,6 @@ instance Pretty
               Void
               (GHC.GenLocated GHC.SrcSpanAnnN GHC.RdrName)
               [GHC.RecordPatSynField GHC.GhcPs])
-
-
-instance Pretty PatInsidePatDecl
 
 instance Pretty GHC.StringLiteral
 
@@ -90,5 +85,13 @@ instance Pretty
 instance Pretty (GHC.HsExpr GHC.GhcPs)
 
 instance Pretty (GHC.FieldOcc GHC.GhcPs)
+
+instance Pretty RecConPat
+
+instance Pretty (GHC.HsLit GHC.GhcPs)
+
+instance Pretty (GHC.HsOverLit GHC.GhcPs)
+
+instance Pretty (GHC.HsPatSigType GHC.GhcPs)
 
 

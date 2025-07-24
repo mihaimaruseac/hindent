@@ -32,7 +32,6 @@ module HIndent.Pretty.Types
   , Context(..)
   , HorizontalContext(..)
   , VerticalContext(..)
-  , PatInsidePatDecl(..)
   , LambdaCase(..)
   , ListComprehension(..)
   , DoExpression(..)
@@ -204,11 +203,6 @@ newtype HorizontalContext =
 newtype VerticalContext =
   VerticalContext (Maybe (LHsContext GhcPs))
 #endif
--- | A wrapper for 'LPat' inside a pattern declaration. Here, all infix
--- patterns have extra spaces around the operators, like x : xs.
-newtype PatInsidePatDecl =
-  PatInsidePatDecl (Pat GhcPs)
-
 -- | Lambda case.
 data LambdaCase = LambdaCase
   { lamCaseGroup :: MatchGroup GhcPs (LHsExpr GhcPs)
