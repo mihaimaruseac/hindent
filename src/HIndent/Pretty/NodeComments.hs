@@ -270,9 +270,6 @@ instance CommentExtraction (HsLit GhcPs) where
   nodeComments HsFloatPrim {} = emptyNodeComments
   nodeComments HsDoublePrim {} = emptyNodeComments
 
-instance CommentExtraction (HsPatSigType GhcPs) where
-  nodeComments HsPS {..} = nodeComments hsps_ext
-
 instance CommentExtraction (HsIPBinds GhcPs) where
   nodeComments IPBinds {} = emptyNodeComments
 

@@ -1726,9 +1726,6 @@ instance Pretty (GHC.HsPragE GHC.GhcPs) where
   pretty' (GHC.HsPragSCC _ _ x) =
     spaced [string "{-# SCC", pretty x, string "#-}"]
 #endif
-instance Pretty (GHC.HsPatSigType GHC.GhcPs) where
-  pretty' GHC.HsPS {..} = pretty $ mkType <$> hsps_body
-
 instance Pretty (GHC.HsIPBinds GHC.GhcPs) where
   pretty' (GHC.IPBinds _ xs) = lined $ fmap pretty xs
 

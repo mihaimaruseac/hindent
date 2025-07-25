@@ -18,12 +18,13 @@ import HIndent.Ast.Expression.Splice
 import HIndent.Ast.Name.Infix hiding (unlessSpecialOp)
 import qualified HIndent.Ast.Name.Infix as InfixName
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
+import HIndent.Ast.NodeComments hiding (fromEpAnn)
+import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
+import HIndent.Pretty.NodeComments (CommentExtraction(..))
 import HIndent.Pretty.Types (RecConPat(..))
 
 data Pattern
@@ -72,7 +73,7 @@ data Pattern
       }
   | Signature
       { pat :: WithComments Pattern
-      , sig :: GHC.HsPatSigType GHC.GhcPs
+      , sig :: WithComments Type
       }
   | Or (NonEmpty (WithComments Pattern))
 
@@ -176,7 +177,13 @@ mkPattern (GHC.NPat _ x _ _) = Overloaded $ GHC.unLoc x
 mkPattern (GHC.NPlusKPat _ n k _ _ _) =
   NPlusK {n = mkPrefixName <$> fromGenLocated n, k = GHC.unLoc k}
 mkPattern (GHC.SigPat _ l r) =
-  Signature {pat = mkPattern <$> fromGenLocated l, sig = r}
+  Signature
+    { pat = mkPattern <$> fromGenLocated l
+    , sig =
+        flattenComments
+          $ fmap mkType
+              <$> fromEpAnn (GHC.hsps_ext r) (fromGenLocated $ GHC.hsps_body r)
+    }
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkPattern (GHC.OrPat _ pats) = Or $ fmap (fmap mkPattern . fromGenLocated) pats
 #endif
