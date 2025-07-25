@@ -37,6 +37,7 @@ import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Data.Body
+import HIndent.Ast.Declaration.Data.Record.FieldName (mkFieldName)
 import HIndent.Ast.Declaration.Family.Data
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Signature
@@ -1132,10 +1133,10 @@ prettyHsValBindsLR GHC.XValBindsLR {} = notUsedInParsedStage
 instance Pretty (GHC.HsTupArg GHC.GhcPs) where
   pretty' (GHC.Present _ e) = pretty e
   pretty' GHC.Missing {} = pure () -- This appears in a tuple section.
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
+#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 instance Pretty RecConField where
   pretty' (RecConField GHC.HsFieldBind {..}) = do
-    pretty hfbLHS
+    pretty $ mkFieldName <$> hfbLHS
     unless hfbPun $ do
       string " = "
       pretty $ mkPattern <$> fromGenLocated hfbRHS
@@ -1146,8 +1147,8 @@ instance Pretty
               (GHC.FieldOcc GHC.GhcPs)
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.Pat GHC.GhcPs))) where
   pretty' GHC.HsRecField {..} =
-    (pretty hsRecFieldLbl >> string " = ") |=> pretty
-      $ mkPattern <$> fromGenLocated hsRecFieldArg
+    (pretty (mkFieldName <$> hsRecFieldLbl) >> string " = ")
+      |=> pretty (mkPattern <$> fromGenLocated hsRecFieldArg)
 
 -- | For record updates.
 instance Pretty
@@ -1155,7 +1156,7 @@ instance Pretty
               (GHC.FieldOcc GHC.GhcPs)
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
   pretty' GHC.HsRecField {..} = do
-    pretty hsRecFieldLbl
+    pretty $ mkFieldName <$> hsRecFieldLbl
     unless hsRecPun $ do
       string " ="
       horizontal <-|> vertical
@@ -1170,7 +1171,8 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.FieldOcc GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.Pat GHC.GhcPs))) where
   pretty' GHC.HsFieldBind {..} =
-    (pretty hfbLHS >> string " = ") |=> pretty (mkPattern <$> hfbRHS)
+    (pretty (mkFieldName <$> hfbLHS) >> string " = ")
+      |=> pretty (mkPattern <$> hfbRHS)
 
 -- | For record updates.
 instance Pretty
@@ -1178,7 +1180,7 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.FieldOcc GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
   pretty' GHC.HsFieldBind {..} = do
-    pretty hfbLHS
+    pretty $ mkFieldName <$> hfbLHS
     unless hfbPun $ do
       string " ="
       horizontal <-|> vertical
@@ -1192,7 +1194,7 @@ instance Pretty
               (GHC.GenLocated (GHC.SrcAnn GHC.NoEpAnns) (GHC.FieldOcc GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.Pat GHC.GhcPs))) where
   pretty' GHC.HsFieldBind {..} =
-    (pretty hfbLHS >> string " = ")
+    (pretty (mkFieldName <$> hfbLHS) >> string " = ")
       |=> (pretty $ mkPattern <$> fromGenLocated hfbRHS)
 
 -- | For record updates.
@@ -1201,7 +1203,7 @@ instance Pretty
               (GHC.GenLocated (GHC.SrcAnn GHC.NoEpAnns) (GHC.FieldOcc GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
   pretty' GHC.HsFieldBind {..} = do
-    pretty hfbLHS
+    pretty $ mkFieldName <$> hfbLHS
     unless hfbPun $ do
       string " ="
       horizontal <-|> vertical
@@ -1211,17 +1213,10 @@ instance Pretty
 #else
 instance Pretty RecConField where
   pretty' (RecConField GHC.HsRecField {..}) = do
-    pretty hsRecFieldLbl
+    pretty $ mkFieldName <$> hsRecFieldLbl
     unless hsRecPun $ do
       string " = "
       pretty hsRecFieldArg
-#endif
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
-instance Pretty (GHC.FieldOcc GHC.GhcPs) where
-  pretty' GHC.FieldOcc {..} = pretty $ fmap mkPrefixName foLabel
-#else
-instance Pretty (GHC.FieldOcc GHC.GhcPs) where
-  pretty' GHC.FieldOcc {..} = pretty $ fmap mkPrefixName rdrNameFieldOcc
 #endif
 instance Pretty
            (GHC.HsScaled
@@ -1429,6 +1424,9 @@ prettyInfixApp InfixApp {..} = horizontal <-|> vertical
 #endif
 instance Pretty (GHC.FieldLabelStrings GHC.GhcPs) where
   pretty' (GHC.FieldLabelStrings xs) = hDotSep $ fmap pretty xs
+
+instance Pretty (GHC.FieldOcc GHC.GhcPs) where
+  pretty' fieldOcc = pretty $ mkFieldName fieldOcc
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 instance Pretty (GHC.AmbiguousFieldOcc GHC.GhcPs) where
   pretty' (GHC.Unambiguous _ name) = pretty $ fmap mkPrefixName name
@@ -1752,7 +1750,7 @@ prettyIPBind (GHC.IPBind _ (Left l) r) =
     ]
 #endif
 instance Pretty (GHC.RecordPatSynField GHC.GhcPs) where
-  pretty' GHC.RecordPatSynField {..} = pretty recordPatSynField
+  pretty' GHC.RecordPatSynField {..} = pretty $ mkFieldName recordPatSynField
 
 instance Pretty (GHC.HsCmdTop GHC.GhcPs) where
   pretty' (GHC.HsCmdTop _ cmd) = pretty cmd
