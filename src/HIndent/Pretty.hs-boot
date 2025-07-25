@@ -90,6 +90,4 @@ instance Pretty (GHC.HsLit GHC.GhcPs)
 
 instance Pretty (GHC.HsOverLit GHC.GhcPs)
 
-instance Pretty (GHC.HsPatSigType GHC.GhcPs)
-
 

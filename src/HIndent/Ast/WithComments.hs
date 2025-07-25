@@ -10,6 +10,7 @@ module HIndent.Ast.WithComments
   , fromEpAnn
   , mkWithComments
   , getNode
+  , flattenComments
   ) where
 
 import Control.Monad
@@ -131,3 +132,7 @@ mkWithComments = WithComments mempty
 
 getNode :: WithComments a -> a
 getNode = node
+
+flattenComments :: WithComments (WithComments a) -> WithComments a
+flattenComments (WithComments outerComments (WithComments innerComments node)) =
+  WithComments (outerComments <> innerComments) node
