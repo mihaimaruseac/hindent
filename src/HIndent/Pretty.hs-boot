@@ -92,4 +92,3 @@ instance Pretty (GHC.HsOverLit GHC.GhcPs)
 
 instance Pretty (GHC.HsPatSigType GHC.GhcPs)
 
-
