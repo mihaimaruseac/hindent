@@ -59,6 +59,7 @@ library
       HIndent.Ast.Declaration.Data.Header
       HIndent.Ast.Declaration.Data.NewOrData
       HIndent.Ast.Declaration.Data.Record.Field
+      HIndent.Ast.Declaration.Data.Record.FieldName
       HIndent.Ast.Declaration.Default
       HIndent.Ast.Declaration.Family.Data
       HIndent.Ast.Declaration.Family.Type
