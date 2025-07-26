@@ -40,6 +40,9 @@ import HIndent.Ast.Declaration.Data.Body
 import HIndent.Ast.Declaration.Data.Record.FieldName (mkFieldName)
 import HIndent.Ast.Declaration.Family.Data
 import HIndent.Ast.Declaration.Family.Type
+import HIndent.Ast.Declaration.Instance.Family.Type.Associated
+  ( mkAssociatedType
+  )
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression.Bracket
 import HIndent.Ast.Expression.OverloadedLabel
@@ -1099,7 +1102,7 @@ instance Pretty SBF.SigBindFamily where
     | Just fam <- mkTypeFamily x = pretty fam
     | Just fam <- mkDataFamily x = pretty fam
     | otherwise = error "Unreachable"
-  pretty' (SBF.TyFamInst x) = pretty x
+  pretty' (SBF.TyFamInst x) = pretty $ mkAssociatedType x
   pretty' (SBF.DataFamInst x) = pretty $ DataFamInstDeclInsideClassInst x
 
 instance Pretty GHC.EpaComment where
@@ -1630,12 +1633,9 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
   pretty' GHC.HsWC {..} = pretty $ mkType <$> hswc_body
 
-instance Pretty (GHC.TyFamInstDecl GHC.GhcPs) where
-  pretty' GHC.TyFamInstDecl {..} = string "type " >> pretty tfid_eqn
-
 instance Pretty TopLevelTyFamInstDecl where
   pretty' (TopLevelTyFamInstDecl GHC.TyFamInstDecl {..}) =
-    string "type instance " >> pretty tfid_eqn
+    string "instance " >> pretty tfid_eqn
 
 instance Pretty (GHC.DataFamInstDecl GHC.GhcPs) where
   pretty' = pretty' . DataFamInstDeclTopLevel
