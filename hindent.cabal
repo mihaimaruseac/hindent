@@ -72,6 +72,7 @@ library
       HIndent.Ast.Declaration.Instance.Class.OverlapMode
       HIndent.Ast.Declaration.Instance.Family.Data
       HIndent.Ast.Declaration.Instance.Family.Type
+      HIndent.Ast.Declaration.Instance.Family.Type.Associated
       HIndent.Ast.Declaration.Rule
       HIndent.Ast.Declaration.Rule.Binder
       HIndent.Ast.Declaration.Rule.Collection
