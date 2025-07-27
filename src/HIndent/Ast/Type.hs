@@ -21,12 +21,12 @@ import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type.Bang
+import HIndent.Ast.Type.Forall
 import HIndent.Ast.Type.ImplicitParameterName
   ( ImplicitParameterName
   , mkImplicitParameterName
   )
 import HIndent.Ast.Type.Literal
-import HIndent.Ast.Type.UniversalQuantifier
 import HIndent.Ast.WithComments
 import HIndent.Config
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -38,7 +38,7 @@ import HIndent.Printer
 
 data Type
   = UniversalType
-      { telescope :: WithComments UniversalQuantifier
+      { telescope :: WithComments Forall
       , body :: WithComments Type
       }
   | ConstrainedType
@@ -191,9 +191,7 @@ instance Pretty Type where
 mkType :: GHC.HsType GHC.GhcPs -> Type
 mkType (GHC.HsForAllTy _ tele body) =
   UniversalType
-    { telescope = mkUniversalQuantifier tele
-    , body = mkType <$> fromGenLocated body
-    }
+    {telescope = mkForall tele, body = mkType <$> fromGenLocated body}
 mkType GHC.HsQualTy {..} =
   ConstrainedType
     { context = mkWithComments $ Context hst_ctxt
