@@ -1,8 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module HIndent.Ast.Type.UniversalQuantifier
-  ( UniversalQuantifier
-  , mkUniversalQuantifier
+module HIndent.Ast.Type.Forall
+  ( Forall
+  , mkForall
   ) where
 
 import HIndent.Ast.NodeComments hiding (fromEpAnn)
@@ -13,14 +13,14 @@ import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
-data UniversalQuantifier
+data Forall
   = Visible [WithComments TypeVariable] -- forall a b c ->
   | Invisible [WithComments TypeVariable] -- forall a b c.
 
-instance CommentExtraction UniversalQuantifier where
+instance CommentExtraction Forall where
   nodeComments _ = NodeComments [] [] []
 
-instance Pretty UniversalQuantifier where
+instance Pretty Forall where
   pretty' (Visible vars) = do
     string "forall "
     spaced $ fmap pretty vars
@@ -30,13 +30,12 @@ instance Pretty UniversalQuantifier where
     spaced $ fmap pretty vars
     dot
 
-mkUniversalQuantifier ::
-     GHC.HsForAllTelescope GHC.GhcPs -> WithComments UniversalQuantifier
-mkUniversalQuantifier GHC.HsForAllVis {..} =
+mkForall :: GHC.HsForAllTelescope GHC.GhcPs -> WithComments Forall
+mkForall GHC.HsForAllVis {..} =
   fromEpAnn hsf_xvis
     $ Visible
     $ fmap (fmap mkTypeVariable . fromGenLocated) hsf_vis_bndrs
-mkUniversalQuantifier GHC.HsForAllInvis {..} =
+mkForall GHC.HsForAllInvis {..} =
   fromEpAnn hsf_xinvis
     $ Invisible
     $ fmap (fmap mkTypeVariable . fromGenLocated) hsf_invis_bndrs
