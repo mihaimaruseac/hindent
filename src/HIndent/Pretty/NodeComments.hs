@@ -52,7 +52,7 @@ instance CommentExtraction (HsSigType GhcPs) where
   nodeComments HsSig {} = emptyNodeComments
 
 instance CommentExtraction HsSigType' where
-  nodeComments (HsSigType' _ _ HsSig {}) = emptyNodeComments
+  nodeComments (HsSigType' _ HsSig {}) = emptyNodeComments
 
 instance CommentExtraction StmtLRInsideVerticalList where
   nodeComments (StmtLRInsideVerticalList x) = nodeComments x

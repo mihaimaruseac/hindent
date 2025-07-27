@@ -18,7 +18,6 @@ module HIndent.Pretty.Types
   , RecConField(..)
   , HsSigType'(..)
   , pattern HsSigTypeInsideInstDecl
-  , pattern HsSigTypeInsideVerticalFuncSig
   , pattern HsSigTypeInsideDeclSig
   , DataFamInstDecl'(..)
   , pattern DataFamInstDeclTopLevel
@@ -41,7 +40,6 @@ module HIndent.Pretty.Types
   , GRHSExprType(..)
   , GRHSProcType(..)
   , HsTypeFor(..)
-  , HsTypeDir(..)
   , CaseOrCases(..)
   , DataFamInstDeclFor(..)
   ) where
@@ -114,22 +112,16 @@ newtype RecConField =
 -- | A wrapper for `HsSigType`.
 data HsSigType' = HsSigType'
   { hsSigTypeFor :: HsTypeFor -- ^ In which context a `HsSigType` is located in.
-  , hsSigTypeDir :: HsTypeDir -- ^ How a `HsSigType` should be printed;
-                                -- either horizontally or vertically.
   , hsSigType :: HsSigType GhcPs -- ^ The actual signature.
   }
 
 -- | `HsSigType'` for instance declarations.
 pattern HsSigTypeInsideInstDecl :: HsSigType GhcPs -> HsSigType'
-pattern HsSigTypeInsideInstDecl x = HsSigType' HsTypeForInstDecl HsTypeNoDir x
-
--- | `HsSigType'` for function declarations; printed horizontally.
-pattern HsSigTypeInsideVerticalFuncSig :: HsSigType GhcPs -> HsSigType'
-pattern HsSigTypeInsideVerticalFuncSig x = HsSigType' HsTypeForFuncSig HsTypeVertical x
+pattern HsSigTypeInsideInstDecl x = HsSigType' HsTypeForInstDecl x
 
 -- | `HsSigType'` for a top-level function signature.
 pattern HsSigTypeInsideDeclSig :: HsSigType GhcPs -> HsSigType'
-pattern HsSigTypeInsideDeclSig x = HsSigType' HsTypeForDeclSig HsTypeNoDir x
+pattern HsSigTypeInsideDeclSig x = HsSigType' HsTypeForDeclSig x
 
 -- | A wrapper of `DataFamInstDecl`.
 data DataFamInstDecl' = DataFamInstDecl'
@@ -254,15 +246,7 @@ data GRHSProcType
 data HsTypeFor
   = HsTypeForNormalDecl
   | HsTypeForInstDecl
-  | HsTypeForFuncSig
   | HsTypeForDeclSig
-  | HsTypeForVerticalAppTy
-
--- | Values indicating how a node should be printed; either horizontally or
--- vertically.
-data HsTypeDir
-  = HsTypeNoDir
-  | HsTypeVertical
 
 -- | Values indicating whether `case` or `cases` is used.
 data CaseOrCases

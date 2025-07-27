@@ -536,7 +536,7 @@ instance Pretty LambdaCase where
         indentedBlock $ pretty matches
 
 instance Pretty (GHC.HsSigType GHC.GhcPs) where
-  pretty' = pretty' . HsSigType' HsTypeForNormalDecl HsTypeNoDir
+  pretty' = pretty' . HsSigType' HsTypeForNormalDecl
 
 instance Pretty HsSigType' where
   pretty' (HsSigTypeInsideDeclSig GHC.HsSig {..}) =
@@ -573,21 +573,7 @@ instance Pretty HsSigType' where
       flatten :: GHC.LHsType GHC.GhcPs -> [GHC.LHsType GHC.GhcPs]
       flatten (GHC.L _ (GHC.HsFunTy _ _ l r)) = flatten l ++ flatten r
       flatten x = [x]
-  pretty' (HsSigTypeInsideVerticalFuncSig GHC.HsSig {..}) =
-    case sig_bndrs of
-      GHC.HsOuterExplicit _ xs -> do
-        string "forall "
-        spaced $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) xs
-        dot
-        printCommentsAnd sig_body $ \case
-          GHC.HsQualTy {..} -> do
-            (space >> pretty (HorizontalContext hst_ctxt))
-              <-|> (newline >> pretty (VerticalContext hst_ctxt))
-            newline
-            prefixed "=> " $ pretty $ mkType <$> hst_body
-          x -> pretty $ mkDeclSigType $ mkType x
-      _ -> pretty $ fmap (mkDeclSigType . mkType) sig_body
-  pretty' (HsSigType' for dir GHC.HsSig {..}) = do
+  pretty' (HsSigType' for GHC.HsSig {..}) = do
     case sig_bndrs of
       GHC.HsOuterExplicit _ xs -> do
         string "forall "
@@ -595,11 +581,8 @@ instance Pretty HsSigType' where
         dot
         space
       _ -> return ()
-    case (for, dir) of
-      (HsTypeForDeclSig, _) -> pretty $ fmap (mkDeclSigType . mkType) sig_body
-      (HsTypeForInstDecl, _) -> pretty $ fmap (mkInstDeclType . mkType) sig_body
-      (HsTypeForFuncSig, HsTypeVertical) ->
-        pretty $ fmap (mkVerticalFuncType . mkType) sig_body
+    case for of
+      HsTypeForInstDecl -> pretty $ fmap (mkInstDeclType . mkType) sig_body
       _ -> pretty $ fmap mkType sig_body
 
 instance Pretty
