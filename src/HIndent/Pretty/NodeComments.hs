@@ -2,7 +2,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RecordWildCards #-}
 
--- | Comment handling around an AST node
 module HIndent.Pretty.NodeComments
   ( CommentExtraction(..)
   , emptyNodeComments
@@ -10,14 +9,12 @@ module HIndent.Pretty.NodeComments
 
 import Data.Maybe
 import Data.Void
-import GHC.Core.Coercion
 import GHC.Data.BooleanFormula
 import GHC.Hs
 import GHC.Stack
 import GHC.Types.Basic
 import GHC.Types.Fixity
 import GHC.Types.ForeignCall
-import GHC.Types.Name
 import GHC.Types.Name.Reader
 import GHC.Types.SourceText
 import GHC.Types.SrcLoc
@@ -269,7 +266,17 @@ instance CommentExtraction (HsLit GhcPs) where
   nodeComments HsRat {} = emptyNodeComments
   nodeComments HsFloatPrim {} = emptyNodeComments
   nodeComments HsDoublePrim {} = emptyNodeComments
-
+#if MIN_VERSION_ghc_lib_parser(9, 8, 0)
+  nodeComments HsInt8Prim {} = emptyNodeComments
+  nodeComments HsInt16Prim {} = emptyNodeComments
+  nodeComments HsInt32Prim {} = emptyNodeComments
+  nodeComments HsWord8Prim {} = emptyNodeComments
+  nodeComments HsWord16Prim {} = emptyNodeComments
+  nodeComments HsWord32Prim {} = emptyNodeComments
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+  nodeComments HsMultilineString {} = emptyNodeComments
+#endif
 instance CommentExtraction (HsIPBinds GhcPs) where
   nodeComments IPBinds {} = emptyNodeComments
 
@@ -719,6 +726,9 @@ nodeCommentsMatchContext LambdaExpr {} = emptyNodeComments
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 nodeCommentsMatchContext LamCaseAlt {} = emptyNodeComments
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 10, 0)
+nodeCommentsMatchContext LazyPatCtx {} = emptyNodeComments
 #endif
 instance CommentExtraction (HsTupArg GhcPs) where
   nodeComments = nodeCommentsHsTupArg

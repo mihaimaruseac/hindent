@@ -18,11 +18,11 @@ import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)
 import HIndent.Fixity
 import HIndent.GhcLibParserWrapper.GHC.Hs
-import HIndent.GhcLibParserWrapper.GHC.Parser.Annotation
 import HIndent.ModulePreprocessing.CommentRelocation
 import Language.Haskell.GhclibParserEx.Fixity
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 import qualified GHC.Data.Strict as Strict
+import HIndent.GhcLibParserWrapper.GHC.Parser.Annotation
 #else
 import Control.Applicative
 import Data.Maybe
