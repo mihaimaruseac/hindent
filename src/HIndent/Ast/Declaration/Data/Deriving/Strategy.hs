@@ -5,6 +5,7 @@ module HIndent.Ast.Declaration.Data.Deriving.Strategy
   ) where
 
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Type (mkTypeFromHsSigType)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -26,7 +27,7 @@ instance Pretty DerivingStrategy where
   pretty' Stock = string "stock"
   pretty' Anyclass = string "anyclass"
   pretty' Newtype = string "newtype"
-  pretty' (Via x) = string "via " >> pretty x
+  pretty' (Via x) = string "via " >> pretty (mkTypeFromHsSigType <$> x)
 
 mkDerivingStrategy :: GHC.DerivStrategy GHC.GhcPs -> DerivingStrategy
 mkDerivingStrategy GHC.StockStrategy {} = Stock

@@ -9,6 +9,7 @@ import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Applicative
 import HIndent.Ast.Declaration.Data.Deriving.Strategy
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Type (Type, mkTypeFromHsSigType)
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -17,7 +18,7 @@ import HIndent.Pretty.NodeComments
 
 data Deriving = Deriving
   { strategy :: Maybe (WithComments DerivingStrategy)
-  , classes :: WithComments [GHC.LHsSigType GHC.GhcPs]
+  , classes :: WithComments [WithComments Type]
   }
 
 instance CommentExtraction Deriving where
@@ -41,7 +42,10 @@ mkDeriving GHC.HsDerivingClause {..} = Deriving {..}
   where
     strategy =
       fmap (fmap mkDerivingStrategy . fromGenLocated) deriv_clause_strategy
-    classes =
-      case deriv_clause_tys of
-        GHC.L ann (GHC.DctSingle _ ty) -> fromGenLocated (GHC.L ann [ty])
-        GHC.L ann (GHC.DctMulti _ tys) -> fromGenLocated (GHC.L ann tys)
+    classes = fromGenLocated $ fmap (const rawClasses) deriv_clause_tys
+    rawClasses =
+      case GHC.unLoc deriv_clause_tys of
+        GHC.DctSingle _ ty ->
+          [flattenComments $ mkTypeFromHsSigType <$> fromGenLocated ty]
+        GHC.DctMulti _ tys ->
+          flattenComments . fmap mkTypeFromHsSigType . fromGenLocated <$> tys

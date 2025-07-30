@@ -13,7 +13,7 @@ module HIndent.Pretty.SigBindFamily
   ) where
 
 import Data.Function
-import Data.List
+import Data.List (sortBy)
 import Data.Maybe
 import GHC.Hs
 import GHC.Types.SrcLoc

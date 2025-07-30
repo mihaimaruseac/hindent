@@ -12,7 +12,7 @@ module HIndent.ByteString
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
-import Data.List hiding (stripPrefix)
+import Data.List (intersperse)
 import Data.Maybe
 
 -- | Returns the prefix that all the given `ByteString`s except for the ones composed of `\n`s have.

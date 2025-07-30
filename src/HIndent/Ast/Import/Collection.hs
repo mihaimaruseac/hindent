@@ -9,7 +9,7 @@ module HIndent.Ast.Import.Collection
 
 import Control.Monad.RWS
 import Data.Function
-import Data.List
+import Data.List (sortBy)
 import qualified GHC.Hs as GHC
 import GHC.Stack
 import qualified GHC.Types.SrcLoc as GHC

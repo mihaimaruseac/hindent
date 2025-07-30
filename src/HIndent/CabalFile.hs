@@ -6,7 +6,7 @@ module HIndent.CabalFile
 
 import Control.Monad
 import qualified Data.ByteString as BS
-import Data.List
+import Data.List (isSuffixOf)
 import Data.Maybe
 import Data.Traversable
 import Distribution.ModuleName

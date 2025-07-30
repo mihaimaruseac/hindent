@@ -11,7 +11,7 @@ module HIndent.Pragma
 import Data.Bifunctor
 import Data.Char
 import Data.Generics
-import Data.List
+import Data.List (intercalate)
 import Data.List.Split
 import Data.Maybe
 import GHC.Hs

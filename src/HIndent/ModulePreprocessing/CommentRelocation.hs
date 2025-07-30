@@ -44,7 +44,7 @@ import Control.Exception
 import Control.Monad.State
 import Data.Foldable
 import Data.Function
-import Data.List
+import Data.List (partition, sortBy)
 import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)
 import HIndent.GhcLibParserWrapper.GHC.Hs

@@ -41,7 +41,6 @@ instance Pretty
 
 instance Pretty SigBindFamily
 
-instance Pretty HsSigType'
 
 instance Pretty
            (GHC.MatchGroup
@@ -61,7 +60,6 @@ instance Pretty
 
 instance Pretty GHC.StringLiteral
 
-instance Pretty (GHC.HsSigType GHC.GhcPs)
 
 instance Pretty Context
 

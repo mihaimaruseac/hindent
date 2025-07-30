@@ -16,10 +16,6 @@ module HIndent.Pretty.Types
   , GRHSProc(..)
   , RecConPat(..)
   , RecConField(..)
-  , HsSigType'(..)
-  , pattern HsSigTypeInsideInstDecl
-  , pattern HsSigTypeInsideVerticalFuncSig
-  , pattern HsSigTypeInsideDeclSig
   , DataFamInstDecl'(..)
   , pattern DataFamInstDeclTopLevel
   , pattern DataFamInstDeclInsideClassInst
@@ -40,8 +36,6 @@ module HIndent.Pretty.Types
   , LetIn(..)
   , GRHSExprType(..)
   , GRHSProcType(..)
-  , HsTypeFor(..)
-  , HsTypeDir(..)
   , CaseOrCases(..)
   , DataFamInstDeclFor(..)
   ) where
@@ -111,26 +105,6 @@ newtype RecConField =
 newtype RecConField =
   RecConField (HsRecField' (FieldOcc GhcPs) (LPat GhcPs))
 #endif
--- | A wrapper for `HsSigType`.
-data HsSigType' = HsSigType'
-  { hsSigTypeFor :: HsTypeFor -- ^ In which context a `HsSigType` is located in.
-  , hsSigTypeDir :: HsTypeDir -- ^ How a `HsSigType` should be printed;
-                                -- either horizontally or vertically.
-  , hsSigType :: HsSigType GhcPs -- ^ The actual signature.
-  }
-
--- | `HsSigType'` for instance declarations.
-pattern HsSigTypeInsideInstDecl :: HsSigType GhcPs -> HsSigType'
-pattern HsSigTypeInsideInstDecl x = HsSigType' HsTypeForInstDecl HsTypeNoDir x
-
--- | `HsSigType'` for function declarations; printed horizontally.
-pattern HsSigTypeInsideVerticalFuncSig :: HsSigType GhcPs -> HsSigType'
-pattern HsSigTypeInsideVerticalFuncSig x = HsSigType' HsTypeForFuncSig HsTypeVertical x
-
--- | `HsSigType'` for a top-level function signature.
-pattern HsSigTypeInsideDeclSig :: HsSigType GhcPs -> HsSigType'
-pattern HsSigTypeInsideDeclSig x = HsSigType' HsTypeForDeclSig HsTypeNoDir x
-
 -- | A wrapper of `DataFamInstDecl`.
 data DataFamInstDecl' = DataFamInstDecl'
   { dataFamInstDeclFor :: DataFamInstDeclFor -- ^ Where a data family instance is declared.
@@ -249,20 +223,6 @@ data GRHSExprType
 data GRHSProcType
   = GRHSProcCase
   | GRHSProcLambda
-
--- | Values indicating in which context a `HsType` is located.
-data HsTypeFor
-  = HsTypeForNormalDecl
-  | HsTypeForInstDecl
-  | HsTypeForFuncSig
-  | HsTypeForDeclSig
-  | HsTypeForVerticalAppTy
-
--- | Values indicating how a node should be printed; either horizontally or
--- vertically.
-data HsTypeDir
-  = HsTypeNoDir
-  | HsTypeVertical
 
 -- | Values indicating whether `case` or `cases` is used.
 data CaseOrCases

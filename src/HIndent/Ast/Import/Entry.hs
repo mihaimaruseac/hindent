@@ -8,7 +8,7 @@ module HIndent.Ast.Import.Entry
   ) where
 
 import Data.Function
-import Data.List
+import Data.List (sortBy)
 import qualified GHC.Hs as GHC
 import HIndent.Ast.Name.ImportExport
 import HIndent.Ast.NodeComments

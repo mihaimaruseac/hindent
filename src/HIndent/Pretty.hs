@@ -57,7 +57,6 @@ import HIndent.Ast.Pattern
 import HIndent.Ast.Type
 import HIndent.Ast.Type.ImplicitParameterName (mkImplicitParameterName)
 import HIndent.Ast.Type.Strictness
-import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import HIndent.Fixity
 import HIndent.Pretty.Combinators
@@ -477,7 +476,7 @@ prettyHsExpr GHC.HsProjection {..} =
 prettyHsExpr (GHC.ExprWithTySig _ e sig) = do
   pretty e
   string " :: "
-  pretty $ GHC.hswc_body sig
+  pretty $ mkTypeFromHsSigType <$> GHC.hswc_body sig
 prettyHsExpr (GHC.ArithSeq _ _ x) = pretty $ mkRangeExpression x
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
 prettyHsExpr (GHC.HsSpliceE _ x) = pretty $ mkSplice x
@@ -537,73 +536,6 @@ instance Pretty LambdaCase where
       else do
         newline
         indentedBlock $ pretty matches
-
-instance Pretty (GHC.HsSigType GHC.GhcPs) where
-  pretty' = pretty' . HsSigType' HsTypeForNormalDecl HsTypeNoDir
-
-instance Pretty HsSigType' where
-  pretty' (HsSigTypeInsideDeclSig GHC.HsSig {..}) =
-    case sig_bndrs of
-      GHC.HsOuterExplicit _ xs -> do
-        string "forall "
-        spaced $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) xs
-        dot
-        case GHC.unLoc sig_body of
-          GHC.HsQualTy {..} ->
-            printCommentsAnd sig_body $ \_ ->
-              let hor = do
-                    space
-                    pretty $ HorizontalContext hst_ctxt
-                  ver = do
-                    newline
-                    pretty $ VerticalContext hst_ctxt
-               in do
-                    hor <-|> ver
-                    newline
-                    prefixed "=> "
-                      $ prefixedLined "-> "
-                      $ fmap (pretty . fmap mkType) (flatten hst_body)
-          _ ->
-            let hor = space >> pretty (fmap (mkDeclSigType . mkType) sig_body)
-                ver =
-                  newline
-                    >> prefixedLined
-                         "-> "
-                         (fmap (pretty . fmap mkType) (flatten sig_body))
-             in hor <-|> ver
-      _ -> pretty $ fmap (mkDeclSigType . mkType) sig_body
-    where
-      flatten :: GHC.LHsType GHC.GhcPs -> [GHC.LHsType GHC.GhcPs]
-      flatten (GHC.L _ (GHC.HsFunTy _ _ l r)) = flatten l ++ flatten r
-      flatten x = [x]
-  pretty' (HsSigTypeInsideVerticalFuncSig GHC.HsSig {..}) =
-    case sig_bndrs of
-      GHC.HsOuterExplicit _ xs -> do
-        string "forall "
-        spaced $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) xs
-        dot
-        printCommentsAnd sig_body $ \case
-          GHC.HsQualTy {..} -> do
-            (space >> pretty (HorizontalContext hst_ctxt))
-              <-|> (newline >> pretty (VerticalContext hst_ctxt))
-            newline
-            prefixed "=> " $ pretty $ mkType <$> hst_body
-          x -> pretty $ mkDeclSigType $ mkType x
-      _ -> pretty $ fmap (mkDeclSigType . mkType) sig_body
-  pretty' (HsSigType' for dir GHC.HsSig {..}) = do
-    case sig_bndrs of
-      GHC.HsOuterExplicit _ xs -> do
-        string "forall "
-        spaced $ fmap (pretty . fmap mkTypeVariable . fromGenLocated) xs
-        dot
-        space
-      _ -> return ()
-    case (for, dir) of
-      (HsTypeForDeclSig, _) -> pretty $ fmap (mkDeclSigType . mkType) sig_body
-      (HsTypeForInstDecl, _) -> pretty $ fmap (mkInstDeclType . mkType) sig_body
-      (HsTypeForFuncSig, HsTypeVertical) ->
-        pretty $ fmap (mkVerticalFuncType . mkType) sig_body
-      _ -> pretty $ fmap mkType sig_body
 
 instance Pretty
            (GHC.Match
@@ -1436,8 +1368,9 @@ instance Pretty (GHC.AmbiguousFieldOcc GHC.GhcPs) where
   pretty' (GHC.Ambiguous _ name) = pretty $ fmap mkPrefixName name
 #endif
 instance Pretty (GHC.DerivClauseTys GHC.GhcPs) where
-  pretty' (GHC.DctSingle _ ty) = parens $ pretty ty
-  pretty' (GHC.DctMulti _ ts) = hvTuple $ fmap pretty ts
+  pretty' (GHC.DctSingle _ ty) = parens $ pretty $ mkTypeFromHsSigType <$> ty
+  pretty' (GHC.DctMulti _ ts) =
+    hvTuple $ pretty . fmap mkTypeFromHsSigType . fromGenLocated <$> ts
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance Pretty GHC.StringLiteral where
   pretty' GHC.StringLiteral {sl_st = GHC.SourceText s} = string $ GHC.unpackFS s

@@ -2,7 +2,8 @@
 
 module HIndent.Ast.Type.Forall
   ( Forall
-  , mkForall
+  , mkForallFromTelescope
+  , mkForallFromOuter
   ) where
 
 import HIndent.Ast.NodeComments hiding (fromEpAnn)
@@ -30,12 +31,21 @@ instance Pretty Forall where
     spaced $ fmap pretty vars
     dot
 
-mkForall :: GHC.HsForAllTelescope GHC.GhcPs -> WithComments Forall
-mkForall GHC.HsForAllVis {..} =
+mkForallFromTelescope :: GHC.HsForAllTelescope GHC.GhcPs -> WithComments Forall
+mkForallFromTelescope GHC.HsForAllVis {..} =
   fromEpAnn hsf_xvis
     $ Visible
     $ fmap (fmap mkTypeVariable . fromGenLocated) hsf_vis_bndrs
-mkForall GHC.HsForAllInvis {..} =
+mkForallFromTelescope GHC.HsForAllInvis {..} =
   fromEpAnn hsf_xinvis
     $ Invisible
     $ fmap (fmap mkTypeVariable . fromGenLocated) hsf_invis_bndrs
+
+mkForallFromOuter ::
+     GHC.HsOuterTyVarBndrs flag GHC.GhcPs -> Maybe (WithComments Forall)
+mkForallFromOuter (GHC.HsOuterExplicit ann xs) =
+  Just
+    $ fromEpAnn ann
+    $ Invisible
+    $ fmap (fmap mkTypeVariable . fromGenLocated) xs
+mkForallFromOuter GHC.HsOuterImplicit {} = Nothing

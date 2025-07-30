@@ -42,7 +42,7 @@ module HIndent.Pretty.Combinators.Lineup
   ) where
 
 import Control.Monad
-import Data.List
+import Data.List (intersperse)
 import HIndent.Pretty.Combinators.Indent
 import HIndent.Pretty.Combinators.String
 import HIndent.Pretty.Combinators.Switch
