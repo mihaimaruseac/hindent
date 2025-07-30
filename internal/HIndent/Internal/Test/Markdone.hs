@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -21,7 +20,6 @@ import Control.Monad.State.Strict (State, evalState, get, put)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as S8
 import Data.Char
-import Data.Typeable
 import GHC.Generics
 
 -- | A markdone token.
@@ -45,7 +43,7 @@ instance NFData Markdone
 data MarkdownError
   = NoFenceEnd
   | ExpectedSection
-  deriving (Typeable, Show)
+  deriving (Show)
 
 instance Exception MarkdownError
 
