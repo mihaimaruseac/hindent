@@ -48,9 +48,6 @@ instance CommentExtraction QualifiedDo where
 instance CommentExtraction (HsSigType GhcPs) where
   nodeComments HsSig {} = emptyNodeComments
 
-instance CommentExtraction HsSigType' where
-  nodeComments (HsSigType' _ _ HsSig {}) = emptyNodeComments
-
 instance CommentExtraction StmtLRInsideVerticalList where
   nodeComments (StmtLRInsideVerticalList x) = nodeComments x
 
@@ -563,6 +560,9 @@ nodeCommentsHsExpr (HsUntypedBracket x _) = mconcat $ fmap nodeComments x
 #endif
 nodeCommentsHsExpr HsLet {} = emptyNodeComments
 nodeCommentsHsExpr HsPar {} = emptyNodeComments
+#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
+nodeCommentsHsExpr HsRecSel {} = emptyNodeComments
+#endif
 #elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
 nodeCommentsHsExpr HsRecSel {} = emptyNodeComments
 nodeCommentsHsExpr (HsTypedBracket x _) = nodeComments x
@@ -660,6 +660,14 @@ nodeCommentsHsExpr (HsLit x _) = nodeComments x
 nodeCommentsHsExpr (HsOverLit x _) = nodeComments x
 nodeCommentsHsExpr (HsIPVar x _) = nodeComments x
 nodeCommentsHsExpr (HsUnboundVar x _) = nodeComments x
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 10, 2)
+nodeCommentsHsExpr HsEmbTy {} = emptyNodeComments
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 12, 2)
+nodeCommentsHsExpr HsForAll {} = emptyNodeComments
+nodeCommentsHsExpr HsQual {} = emptyNodeComments
+nodeCommentsHsExpr HsFunArr {} = emptyNodeComments
 #endif
 instance CommentExtraction (Match GhcPs a) where
   nodeComments = nodeCommentsMatch

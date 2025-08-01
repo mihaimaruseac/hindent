@@ -16,31 +16,31 @@ import HIndent.Ast.Declaration.Signature.Inline.Spec
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Type (DeclSigType, Type, mkDeclSigType, mkTypeFromHsSigType)
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-import HIndent.Pretty.Types
 
 -- We want to use the same name for `parameters` and `signature`, but GHC
 -- doesn't allow it.
 data Signature
   = Type
       { names :: [WithComments PrefixName]
-      , parameters :: GHC.LHsSigWcType GHC.GhcPs
+      , parameters :: WithComments DeclSigType
       }
   | Pattern
       { names :: [WithComments PrefixName]
-      , signature :: GHC.LHsSigType GHC.GhcPs
+      , signature :: WithComments Type
       }
   | DefaultClassMethod
       { names :: [WithComments PrefixName]
-      , signature :: GHC.LHsSigType GHC.GhcPs
+      , methodSig :: WithComments DeclSigType
       }
   | ClassMethod
       { names :: [WithComments PrefixName]
-      , signature :: GHC.LHsSigType GHC.GhcPs
+      , methodSig :: WithComments DeclSigType
       }
   | Fixity
       { opNames :: [WithComments InfixName] -- Using `names` causes a type conflict.
@@ -53,9 +53,9 @@ data Signature
       }
   | Specialise
       { name :: WithComments PrefixName
-      , sigs :: [GHC.LHsSigType GHC.GhcPs]
+      , sigs :: [WithComments Type]
       }
-  | SpecialiseInstance (GHC.LHsSigType GHC.GhcPs)
+  | SpecialiseInstance (WithComments Type)
   | Minimal (WithComments BooleanFormula)
   | Scc (WithComments PrefixName)
   | Complete (WithComments [WithComments PrefixName])
@@ -81,20 +81,15 @@ instance Pretty Signature where
     where
       horizontal = do
         space
-        pretty $ HsSigTypeInsideDeclSig <$> GHC.hswc_body parameters
+        pretty parameters
       vertical = do
         headLen <- printerLength printFunName
         indentSpaces <- getIndentSpaces
         if headLen < indentSpaces
-          then space
-                 |=> pretty
-                       (HsSigTypeInsideDeclSig <$> GHC.hswc_body parameters)
+          then space |=> pretty parameters
           else do
             newline
-            indentedBlock
-              $ indentedWithSpace 3
-              $ pretty
-              $ HsSigTypeInsideDeclSig <$> GHC.hswc_body parameters
+            indentedBlock $ indentedWithSpace 3 $ pretty parameters
       printFunName = hCommaSep $ fmap pretty names
   pretty' Pattern {..} =
     spaced
@@ -109,25 +104,19 @@ instance Pretty Signature where
     string " ::"
     hor <-|> ver
     where
-      hor =
-        space >> printCommentsAnd signature (pretty . HsSigTypeInsideDeclSig)
+      hor = space >> pretty methodSig
       ver = do
         newline
-        indentedBlock
-          $ indentedWithSpace 3
-          $ printCommentsAnd signature (pretty . HsSigTypeInsideDeclSig)
+        indentedBlock $ indentedWithSpace 3 $ pretty methodSig
   pretty' ClassMethod {..} = do
     hCommaSep $ fmap pretty names
     string " ::"
     hor <-|> ver
     where
-      hor =
-        space >> printCommentsAnd signature (pretty . HsSigTypeInsideDeclSig)
+      hor = space >> pretty methodSig
       ver = do
         newline
-        indentedBlock
-          $ indentedWithSpace 3
-          $ printCommentsAnd signature (pretty . HsSigTypeInsideDeclSig)
+        indentedBlock $ indentedWithSpace 3 $ pretty methodSig
   pretty' Fixity {..} = spaced [pretty fixity, hCommaSep $ fmap pretty opNames]
   pretty' Inline {..} = do
     string "{-# "
@@ -159,18 +148,24 @@ instance Pretty Signature where
       ]
 
 mkSignature :: GHC.Sig GHC.GhcPs -> Signature
-mkSignature (GHC.TypeSig _ ns parameters) = Type {..}
+mkSignature (GHC.TypeSig _ ns GHC.HsWC { hswc_ext = GHC.NoExtField
+                                       , GHC.hswc_body = params
+                                       }) = Type {..}
   where
     names = fmap (fromGenLocated . fmap mkPrefixName) ns
-mkSignature (GHC.PatSynSig _ ns signature) = Pattern {..}
+    parameters = flattenComments $ mkDeclSigType <$> fromGenLocated params
+mkSignature (GHC.PatSynSig _ ns s) = Pattern {..}
   where
     names = fmap (fromGenLocated . fmap mkPrefixName) ns
-mkSignature (GHC.ClassOpSig _ True ns signature) = DefaultClassMethod {..}
+    signature = flattenComments $ mkTypeFromHsSigType <$> fromGenLocated s
+mkSignature (GHC.ClassOpSig _ True ns s) = DefaultClassMethod {..}
   where
     names = fmap (fromGenLocated . fmap mkPrefixName) ns
-mkSignature (GHC.ClassOpSig _ False ns signature) = ClassMethod {..}
+    methodSig = flattenComments $ mkDeclSigType <$> fromGenLocated s
+mkSignature (GHC.ClassOpSig _ False ns s) = ClassMethod {..}
   where
     names = fmap (fromGenLocated . fmap mkPrefixName) ns
+    methodSig = flattenComments $ mkDeclSigType <$> fromGenLocated s
 mkSignature (GHC.FixSig _ (GHC.FixitySig _ ops fy)) = Fixity {..}
   where
     fixity = mkFixity fy
@@ -180,9 +175,10 @@ mkSignature (GHC.InlineSig _ n GHC.InlinePragma {..}) = Inline {..}
     name = fromGenLocated $ fmap mkPrefixName n
     spec = mkInlineSpec inl_inline
     phase = mkInlinePhase inl_act
-mkSignature (GHC.SpecSig _ n sigs _) = Specialise {..}
+mkSignature (GHC.SpecSig _ n s _) = Specialise {..}
   where
     name = fromGenLocated $ fmap mkPrefixName n
+    sigs = flattenComments . fmap mkTypeFromHsSigType . fromGenLocated <$> s
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkSignature (GHC.SCCFunSig _ n _) = Scc name
   where
@@ -213,7 +209,10 @@ mkSignature (GHC.CompleteMatchSig _ _ names _) =
     $ fmap (fmap (fromGenLocated . fmap mkPrefixName)) names
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
-mkSignature (GHC.SpecInstSig _ sig) = SpecialiseInstance sig
+mkSignature (GHC.SpecInstSig _ sig) =
+  SpecialiseInstance
+    $ flattenComments
+    $ mkTypeFromHsSigType <$> fromGenLocated sig
 mkSignature (GHC.MinimalSig _ xs) =
   Minimal $ mkBooleanFormula <$> fromGenLocated xs
 #else

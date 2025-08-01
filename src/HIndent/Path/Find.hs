@@ -8,7 +8,7 @@ module HIndent.Path.Find
 
 import Control.Monad.Catch
 import Control.Monad.IO.Class
-import Data.List
+import Data.List (find)
 import Path
 import Path.IO hiding (findFiles)
 

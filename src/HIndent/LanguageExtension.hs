@@ -11,7 +11,7 @@ module HIndent.LanguageExtension
   ) where
 
 import Data.Char
-import Data.List
+import Data.List (delete)
 import Data.List.Split
 import Data.Maybe
 import qualified GHC.Driver.Session as GLP

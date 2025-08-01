@@ -8,6 +8,7 @@ module HIndent.Ast.Declaration.StandAloneDeriving
 import HIndent.Applicative
 import HIndent.Ast.Declaration.Data.Deriving.Strategy
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Type (Type, mkTypeFromHsSigType)
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -16,7 +17,7 @@ import HIndent.Pretty.NodeComments
 
 data StandAloneDeriving = StandAloneDeriving
   { strategy :: Maybe (WithComments DerivingStrategy)
-  , className :: GHC.LHsSigType GHC.GhcPs
+  , className :: WithComments Type
   }
 
 instance CommentExtraction StandAloneDeriving where
@@ -42,4 +43,5 @@ mkStandAloneDeriving GHC.DerivDecl {deriv_type = GHC.HsWC {..}, ..} =
   StandAloneDeriving {..}
   where
     strategy = fmap (fmap mkDerivingStrategy . fromGenLocated) deriv_strategy
-    className = hswc_body
+    className =
+      flattenComments $ mkTypeFromHsSigType <$> fromGenLocated hswc_body

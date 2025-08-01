@@ -9,7 +9,7 @@ module HIndent.Ast.Import
 
 import Control.Monad
 import Data.Function
-import Data.List
+import Data.List (sortBy)
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Unit as GHC
 import HIndent.Applicative

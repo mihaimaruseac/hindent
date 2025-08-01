@@ -12,7 +12,7 @@ module HIndent.ModulePreprocessing
   ) where
 
 import Data.Function
-import Data.List
+import Data.List (sortBy)
 import GHC.Hs
 import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)

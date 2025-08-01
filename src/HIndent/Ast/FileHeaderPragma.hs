@@ -5,7 +5,7 @@ module HIndent.Ast.FileHeaderPragma
 
 import Data.Bifunctor
 import Data.Char
-import Data.List
+import Data.List (intercalate)
 import Data.List.Split
 import qualified GHC.Hs as GHC
 import HIndent.Ast.NodeComments
