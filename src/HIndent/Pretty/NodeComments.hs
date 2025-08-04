@@ -68,9 +68,6 @@ instance CommentExtraction (GRHSs GhcPs a) where
       commentsOnSameLine = []
       commentsAfter = getFollowingComments grhssExt
 
-instance CommentExtraction GRHSsExpr where
-  nodeComments (GRHSsExpr {..}) = nodeComments grhssExpr
-
 instance CommentExtraction (ParStmtBlock GhcPs GhcPs) where
   nodeComments ParStmtBlock {} = emptyNodeComments
 
@@ -82,15 +79,6 @@ instance CommentExtraction RdrName where
   nodeComments Qual {} = emptyNodeComments
   nodeComments Orig {} = emptyNodeComments
   nodeComments Exact {} = emptyNodeComments
-
-instance CommentExtraction (GRHS GhcPs (GenLocated SrcSpanAnnA (HsExpr GhcPs))) where
-  nodeComments = nodeComments . GRHSExpr GRHSExprNormal
-
-instance CommentExtraction GRHSExpr where
-  nodeComments (GRHSExpr {grhsExpr = (GRHS x _ _)}) = nodeComments x
-
-instance CommentExtraction GRHSProc where
-  nodeComments (GRHSProc (GRHS x _ _)) = nodeComments x
 
 instance CommentExtraction EpaCommentTok where
   nodeComments = const emptyNodeComments

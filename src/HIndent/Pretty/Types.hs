@@ -11,9 +11,6 @@ module HIndent.Pretty.Types
   , InfixOp(..)
   , PrefixOp(..)
   , InfixApp(..)
-  , GRHSsExpr(..)
-  , GRHSExpr(..)
-  , GRHSProc(..)
   , RecConPat(..)
   , RecConField(..)
   , DataFamInstDecl'(..)
@@ -34,8 +31,6 @@ module HIndent.Pretty.Types
   , DoOrMdo(..)
   , QualifiedDo(..)
   , LetIn(..)
-  , GRHSExprType(..)
-  , GRHSProcType(..)
   , CaseOrCases(..)
   , DataFamInstDeclFor(..)
   ) where
@@ -75,23 +70,6 @@ data InfixApp = InfixApp
   , op :: LHsExpr GhcPs
   , rhs :: LHsExpr GhcPs
   }
-
--- | `GRHSs` with a label indicating in which context the RHS is located
--- in.
-data GRHSsExpr = GRHSsExpr
-  { grhssExprType :: GRHSExprType
-  , grhssExpr :: GRHSs GhcPs (LHsExpr GhcPs)
-  }
-
--- | 'GRHS' for a normal binding.
-data GRHSExpr = GRHSExpr
-  { grhsExprType :: GRHSExprType
-  , grhsExpr :: GRHS GhcPs (LHsExpr GhcPs)
-  }
-
--- | 'GRHS' for a @proc@ binding.
-newtype GRHSProc =
-  GRHSProc (GRHS GhcPs (LHsCmd GhcPs))
 
 -- | A pattern match against a record.
 newtype RecConPat =
@@ -210,19 +188,6 @@ data DoOrMdo
 -- whether `do` or `mdo` is used)
 data QualifiedDo =
   QualifiedDo (Maybe HIndent.ModuleName) DoOrMdo
-
--- | Values indicating in which context a RHS is located.
-data GRHSExprType
-  = GRHSExprNormal
-  | GRHSExprCase
-  | GRHSExprMultiWayIf
-  | GRHSExprLambda
-  deriving (Eq)
-
--- | Values indicating in which context a RHS in a proc expression is located.
-data GRHSProcType
-  = GRHSProcCase
-  | GRHSProcLambda
 
 -- | Values indicating whether `case` or `cases` is used.
 data CaseOrCases
