@@ -6,6 +6,7 @@ module HIndent.Ast.Declaration.Bind
   , mkBind
   ) where
 
+import HIndent.Ast.Declaration.Bind.GuardedRhs
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
@@ -27,7 +28,7 @@ data Bind
       }
   | Pattern
       { lhs :: WithComments Pattern
-      , rhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs)
+      , rhs :: WithComments GuardedRhs
       }
   | PatternSynonym
       { name :: GHC.LIdP GHC.GhcPs
@@ -73,7 +74,7 @@ mkBind GHC.FunBind {..} = Function {..}
 mkBind GHC.PatBind {..} = Pattern {..}
   where
     lhs = mkPattern <$> fromGenLocated pat_lhs
-    rhs = pat_rhs
+    rhs = mkWithComments $ mkGuardedRhs pat_rhs
 mkBind (GHC.PatSynBind _ GHC.PSB {..}) = PatternSynonym {..}
   where
     name = psb_id

@@ -43,6 +43,7 @@ library
       HIndent.Ast.Declaration.Annotation.Provenance
       HIndent.Ast.Declaration.Annotation.Role
       HIndent.Ast.Declaration.Bind
+      HIndent.Ast.Declaration.Bind.GuardedRhs
       HIndent.Ast.Declaration.Class
       HIndent.Ast.Declaration.Class.FunctionalDependency
       HIndent.Ast.Declaration.Class.NameAndTypeVariables
@@ -97,6 +98,7 @@ library
       HIndent.Ast.Expression.Splice
       HIndent.Ast.FileHeaderPragma
       HIndent.Ast.FileHeaderPragma.Collection
+      HIndent.Ast.Guard
       HIndent.Ast.Import
       HIndent.Ast.Import.Collection
       HIndent.Ast.Import.Entry
@@ -151,7 +153,6 @@ library
       HIndent.Pretty.Combinators.Lineup
       HIndent.Pretty.Combinators.Op
       HIndent.Pretty.Combinators.Outputable
-      HIndent.Pretty.Combinators.RhsSeparator
       HIndent.Pretty.Combinators.String
       HIndent.Pretty.Combinators.Switch
       HIndent.Pretty.Combinators.Wrap
