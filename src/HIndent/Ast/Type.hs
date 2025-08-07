@@ -51,7 +51,7 @@ data Type
       , body :: WithComments Type
       }
   | Variable
-      { promotionFlag :: GHC.PromotionFlag
+      { isPromoted :: Bool
       , name :: WithComments PrefixName
       }
   | Application
@@ -148,9 +148,8 @@ instance Pretty Type where
       ver = do
         pretty context
         lined [string " =>", indentedBlock $ pretty body]
-  pretty' Variable {promotionFlag = GHC.NotPromoted, ..} = pretty name
-  pretty' Variable {promotionFlag = GHC.IsPromoted, ..} =
-    string "'" >> pretty name
+  pretty' Variable {isPromoted = False, ..} = pretty name
+  pretty' Variable {isPromoted = True, ..} = string "'" >> pretty name
   pretty' Application {..} = hor <-|> ver
     where
       hor = spaced [pretty function, pretty argument]
@@ -203,8 +202,10 @@ mkType GHC.HsQualTy {..} =
     { context = mkWithComments $ Context hst_ctxt
     , body = mkType <$> fromGenLocated hst_body
     }
-mkType (GHC.HsTyVar _ prom x) =
-  Variable {promotionFlag = prom, name = mkPrefixName <$> fromGenLocated x}
+mkType (GHC.HsTyVar _ GHC.IsPromoted x) =
+  Variable {isPromoted = True, name = mkPrefixName <$> fromGenLocated x}
+mkType (GHC.HsTyVar _ GHC.NotPromoted x) =
+  Variable {isPromoted = False, name = mkPrefixName <$> fromGenLocated x}
 mkType (GHC.HsAppTy _ l r) =
   Application
     { function = mkType <$> fromGenLocated l
