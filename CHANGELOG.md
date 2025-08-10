@@ -6,6 +6,7 @@
 
 - Support for GHC 9.12 ([#1000])
 - Support for GHC2024 ([#1040])
+- Support for linear types ([#1077])
 
 ### Changed
 
@@ -409,6 +410,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#1077]: https://github.com/mihaimaruseac/hindent/pull/1077
 [#1060]: https://github.com/mihaimaruseac/hindent/pull/1060
 [#1053]: https://github.com/mihaimaruseac/hindent/pull/1053
 [#1051]: https://github.com/mihaimaruseac/hindent/pull/1051

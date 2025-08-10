@@ -2006,6 +2006,26 @@ f :: (# Looooooooooooooooooooooooooooooooooooooooooooong
       , Looooooooooooooooooooooooooooooooooooooooooooong #)
 ```
 
+### Linear types
+
+Linear function arrow (%1 ->)
+
+```haskell
+{-# LANGUAGE LinearTypes #-}
+
+f :: a %1 -> b
+```
+
+Linear types in GADT constructors
+
+```haskell
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE LinearTypes #-}
+
+data T where
+  C :: a %1 -> T
+```
+
 ### Type synonym declarations
 
 Short
