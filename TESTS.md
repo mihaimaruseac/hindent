@@ -2006,6 +2006,16 @@ f :: (# Looooooooooooooooooooooooooooooooooooooooooooong
       , Looooooooooooooooooooooooooooooooooooooooooooong #)
 ```
 
+### Linear types
+
+Linear function arrow (%1 ->)
+
+```haskell
+{-# LANGUAGE LinearTypes #-}
+
+f :: a %1 -> b
+```
+
 ### Type synonym declarations
 
 Short
