@@ -19,30 +19,26 @@ import HIndent.Pretty.NodeComments
 import HIndent.Printer
 
 data ConstructorSignature
-  = ByArrows
-      { parameters :: [WithComments Type]
-      , result :: WithComments Type
-      }
+  = ByArrows (WithComments Type)
   | Record
       { fields :: WithComments [WithComments RecordField]
       , result :: WithComments Type
       }
 
 instance CommentExtraction ConstructorSignature where
-  nodeComments ByArrows {} = NodeComments [] [] []
+  nodeComments (ByArrows _) = NodeComments [] [] []
   nodeComments Record {} = NodeComments [] [] []
 
 prettyHorizontally :: ConstructorSignature -> Printer ()
-prettyHorizontally ByArrows {..} =
-  inter (string " -> ") $ fmap pretty parameters ++ [pretty result]
+prettyHorizontally (ByArrows signature) = pretty signature
 prettyHorizontally Record {..} =
   inter
     (string " -> ")
     [prettyWith fields (vFields' . fmap pretty), pretty result]
 
 prettyVertically :: ConstructorSignature -> Printer ()
-prettyVertically ByArrows {..} =
-  prefixedLined "-> " $ fmap pretty parameters ++ [pretty result]
+prettyVertically (ByArrows signature) =
+  pretty $ fmap mkVerticalFuncType signature
 prettyVertically Record {..} =
   prefixedLined
     "-> "
@@ -51,20 +47,10 @@ prettyVertically Record {..} =
 mkConstructorSignature :: GHC.ConDecl GHC.GhcPs -> Maybe ConstructorSignature
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.PrefixConGADT _ xs, ..} =
-  Just
-    $ ByArrows
-        { parameters =
-            fmap (fmap mkType . fromGenLocated . GHC.hsScaledThing) xs
-        , result = mkType <$> fromGenLocated con_res_ty
-        }
+  Just $ ByArrows (buildFunctionType xs con_res_ty)
 #else
 mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.PrefixConGADT xs, ..} =
-  Just
-    $ ByArrows
-        { parameters =
-            fmap (fmap mkType . fromGenLocated . GHC.hsScaledThing) xs
-        , result = mkType <$> fromGenLocated con_res_ty
-        }
+  Just $ ByArrows (buildFunctionType xs con_res_ty)
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.RecConGADT _ xs, ..} =
@@ -95,3 +81,25 @@ mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.RecConGADT xs, ..} =
         }
 #endif
 mkConstructorSignature GHC.ConDeclH98 {} = Nothing
+
+buildFunctionType ::
+     [GHC.HsScaled GHC.GhcPs (GHC.LHsType GHC.GhcPs)]
+  -> GHC.LHsType GHC.GhcPs
+  -> WithComments Type
+buildFunctionType scaledTypes resultTy =
+  mkType <$> fromGenLocated (foldr mkFun resultTy scaledTypes)
+
+mkFun ::
+     GHC.HsScaled GHC.GhcPs (GHC.LHsType GHC.GhcPs)
+  -> GHC.LHsType GHC.GhcPs
+  -> GHC.LHsType GHC.GhcPs
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+mkFun (GHC.HsScaled mult paramTy) accTy =
+  GHC.noLocA (GHC.HsFunTy GHC.noExtField mult paramTy accTy)
+#elif MIN_VERSION_ghc_lib_parser(9, 4, 0)
+mkFun (GHC.HsScaled mult paramTy) accTy =
+  GHC.noLocA (GHC.HsFunTy GHC.noAnn mult paramTy accTy)
+#else
+mkFun (GHC.HsScaled mult paramTy) accTy =
+  GHC.noLocA (GHC.HsFunTy GHC.NoExtField mult paramTy accTy)
+#endif

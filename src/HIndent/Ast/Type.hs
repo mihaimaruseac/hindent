@@ -32,6 +32,7 @@ import HIndent.Ast.Type.ImplicitParameterName
   , mkImplicitParameterName
   )
 import HIndent.Ast.Type.Literal
+import HIndent.Ast.Type.Multiplicity
 import HIndent.Ast.WithComments
 import HIndent.Config
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -63,7 +64,8 @@ data Type
       , kind :: WithComments Type
       }
   | Function
-      { from :: WithComments Type
+      { multiplicity :: Multiplicity
+      , from :: WithComments Type
       , to :: WithComments Type
       }
   | List
@@ -160,7 +162,12 @@ instance Pretty Type where
             verticalApp l' r' >> newline >> indentedBlock (pretty right)
           _ -> pretty left >> newline >> indentedBlock (pretty right)
   pretty' KindApplication {..} = pretty base >> string " @" >> pretty kind
-  pretty' Function {..} = (pretty from >> string " -> ") |=> pretty to
+  pretty' Function {..} =
+    (pretty from
+       >> if isUnrestricted multiplicity
+            then string " -> "
+            else space >> pretty multiplicity >> string " -> ")
+      |=> pretty to
   pretty' List {..} = brackets $ pretty elementType
   pretty' Tuple {isUnboxed = True, elements = []} = string "(# #)"
   pretty' Tuple {isUnboxed = False, elements = []} = string "()"
@@ -220,9 +227,12 @@ mkType (GHC.HsAppKindTy _ l r) =
   KindApplication
     {base = mkType <$> fromGenLocated l, kind = mkType <$> fromGenLocated r}
 #endif
-mkType (GHC.HsFunTy _ _ a b) =
+mkType (GHC.HsFunTy _ arr a b) =
   Function
-    {from = mkType <$> fromGenLocated a, to = mkType <$> fromGenLocated b}
+    { multiplicity = mkMultiplicity arr
+    , from = mkType <$> fromGenLocated a
+    , to = mkType <$> fromGenLocated b
+    }
 mkType (GHC.HsListTy _ xs) = List {elementType = mkType <$> fromGenLocated xs}
 mkType (GHC.HsTupleTy _ sort xs) =
   Tuple
@@ -300,7 +310,12 @@ instance Pretty VerticalFuncType where
   pretty' (VerticalFuncType Function {..}) = do
     pretty $ fmap mkVerticalFuncType from
     newline
-    prefixed "-> " $ pretty $ fmap mkVerticalFuncType to
+    if isUnrestricted multiplicity
+      then prefixed "-> " $ pretty $ fmap mkVerticalFuncType to
+      else do
+        pretty multiplicity
+        string " -> "
+        pretty $ fmap mkVerticalFuncType to
   pretty' (VerticalFuncType t) = pretty t
 
 mkVerticalFuncType :: Type -> VerticalFuncType
@@ -336,11 +351,21 @@ instance Pretty DeclSigType where
         prefixed "=> " $ pretty $ fmap mkVerticalFuncType body
   pretty' (DeclSigType Function {..}) = hor <-|> ver
     where
-      hor = spaced [pretty from, string "->", pretty to]
+      hor = do
+        pretty from
+        if isUnrestricted multiplicity
+          then string " -> "
+          else space >> pretty multiplicity >> string " -> "
+        pretty to
       ver = do
         pretty $ fmap mkVerticalFuncType from
         newline
-        prefixed "-> " $ pretty $ mkVerticalFuncType <$> to
+        if isUnrestricted multiplicity
+          then prefixed "-> " $ pretty $ mkVerticalFuncType <$> to
+          else do
+            pretty multiplicity
+            string " -> "
+            pretty $ mkVerticalFuncType <$> to
   pretty' (DeclSigType t) = pretty t
 
 mkDeclSigType :: GHC.HsSigType GHC.GhcPs -> WithComments DeclSigType
