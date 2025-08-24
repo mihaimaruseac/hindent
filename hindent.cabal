@@ -44,6 +44,7 @@ library
       HIndent.Ast.Declaration.Annotation.Role
       HIndent.Ast.Declaration.Bind
       HIndent.Ast.Declaration.Bind.GuardedRhs
+      HIndent.Ast.Comment
       HIndent.Ast.Declaration.Class
       HIndent.Ast.Declaration.Class.FunctionalDependency
       HIndent.Ast.Declaration.Class.NameAndTypeVariables
