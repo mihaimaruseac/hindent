@@ -39,7 +39,7 @@ data Pattern
   | Bang (WithComments Pattern)
   | List [WithComments Pattern]
   | Tuple
-      { boxity :: GHC.Boxity
+      { boxed :: Bool
       , patterns :: [WithComments Pattern]
       }
   | Sum
@@ -88,8 +88,8 @@ instance Pretty Pattern where
   pretty' (Parenthesized pat) = parens $ pretty pat
   pretty' (Bang pat) = string "!" >> pretty pat
   pretty' (List pats) = hList $ pretty <$> pats
-  pretty' Tuple {boxity = GHC.Boxed, ..} = hTuple $ pretty <$> patterns
-  pretty' Tuple {boxity = GHC.Unboxed, ..} = hUnboxedTuple $ pretty <$> patterns
+  pretty' Tuple {boxed = True, ..} = hTuple $ pretty <$> patterns
+  pretty' Tuple {boxed = False, ..} = hUnboxedTuple $ pretty <$> patterns
   pretty' Sum {..} = do
     string "(#"
     forM_ [1 .. arity] $ \idx -> do
@@ -147,9 +147,10 @@ mkPattern (GHC.ParPat _ inner) =
 #endif
 mkPattern (GHC.BangPat _ x) = Bang $ mkPattern <$> fromGenLocated x
 mkPattern (GHC.ListPat _ xs) = List $ fmap (fmap mkPattern . fromGenLocated) xs
-mkPattern (GHC.TuplePat _ pats boxity) =
-  Tuple
-    {boxity = boxity, patterns = fmap (fmap mkPattern . fromGenLocated) pats}
+mkPattern (GHC.TuplePat _ pats GHC.Boxed) =
+  Tuple {boxed = True, patterns = fmap (fmap mkPattern . fromGenLocated) pats}
+mkPattern (GHC.TuplePat _ pats GHC.Unboxed) =
+  Tuple {boxed = False, patterns = fmap (fmap mkPattern . fromGenLocated) pats}
 mkPattern (GHC.SumPat _ x position numElem) =
   Sum
     {pat = mkPattern <$> fromGenLocated x, position = position, arity = numElem}
