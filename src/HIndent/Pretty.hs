@@ -34,6 +34,7 @@ import qualified GHC.Types.Fixity as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
+import HIndent.Ast.Comment (mkComment)
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Bind.GuardedRhs
   ( mkCaseCmdGuardedRhs
@@ -901,20 +902,6 @@ instance Pretty ParStmtBlockInsideVerticalList where
   pretty' (ParStmtBlockInsideVerticalList (GHC.ParStmtBlock _ xs _ _)) =
     vCommaSep $ fmap pretty xs
 
-instance Pretty GHC.EpaCommentTok where
-  pretty' (GHC.EpaLineComment c) = string c
-  pretty' (GHC.EpaBlockComment c) =
-    case lines c of
-      [] -> pure ()
-      [x] -> string x
-      (x:xs) -> do
-        string x
-        newline
-        -- 'indentedWithFixedLevel 0' is used because an 'EpaBlockComment'
-        -- contains indent spaces for all lines except the first one.
-        indentedWithFixedLevel 0 $ lined $ fmap string xs
-  pretty' _ = docNode
-
 instance Pretty RecConPat where
   pretty' (RecConPat GHC.HsRecFields {..}) =
     case fieldPrinters of
@@ -937,7 +924,7 @@ instance Pretty SBF.SigBindFamily where
   pretty' (SBF.DataFamInst x) = pretty $ DataFamInstDeclInsideClassInst x
 
 instance Pretty GHC.EpaComment where
-  pretty' GHC.EpaComment {..} = pretty ac_tok
+  pretty' GHC.EpaComment {..} = pretty $ mkComment ac_tok
 
 instance Pretty (GHC.HsLocalBindsLR GHC.GhcPs GHC.GhcPs) where
   pretty' (GHC.HsValBinds _ lr) = pretty lr
