@@ -46,7 +46,6 @@ dependencies:
   - split
   - syb
   - transformers
-  - unicode-show
   - utf8-string
   - yaml
 

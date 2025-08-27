@@ -1,6 +1,6 @@
 cabal-version: 2.0
 
--- This file has been generated from package.yaml by hpack version 0.38.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -186,7 +186,6 @@ library
     , split
     , syb
     , transformers
-    , unicode-show
     , utf8-string
     , yaml
   default-language: Haskell2010
@@ -222,7 +221,6 @@ library hindent-internal
     , split
     , syb
     , transformers
-    , unicode-show
     , utf8-string
     , yaml
   default-language: Haskell2010
@@ -257,7 +255,6 @@ executable hindent
     , split
     , syb
     , transformers
-    , unicode-show
     , utf8-string
     , yaml
   default-language: Haskell2010
@@ -296,7 +293,6 @@ test-suite hindent-test
     , split
     , syb
     , transformers
-    , unicode-show
     , utf8-string
     , yaml
   default-language: Haskell2010
@@ -335,7 +331,6 @@ benchmark hindent-bench
     , split
     , syb
     , transformers
-    , unicode-show
     , utf8-string
     , yaml
   default-language: Haskell2010

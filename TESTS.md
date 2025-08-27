@@ -2064,6 +2064,14 @@ Type with a string
 type Y = X "abc\n\n\ndef"
 ```
 
+Type-level Unicode string literals
+
+```haskell
+{-# LANGUAGE DataKinds #-}
+
+type AllChars = "Hello 世界! 123 @#$ Ω ∀ ✓ 😀 \n\t\"\\slash ∀x∈ℝ"
+```
+
 `TypeOperators`
 
 ```haskell
