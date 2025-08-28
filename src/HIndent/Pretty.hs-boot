@@ -7,8 +7,6 @@ module HIndent.Pretty
   , printCommentsAnd
   ) where
 
-import Data.Void
-import qualified GHC.Types.Name.Reader as GHC
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -44,11 +42,6 @@ instance Pretty
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
 
-instance Pretty
-           (GHC.HsConDetails
-              Void
-              (GHC.GenLocated GHC.SrcSpanAnnN GHC.RdrName)
-              [GHC.RecordPatSynField GHC.GhcPs])
 
 instance Pretty GHC.StringLiteral
 

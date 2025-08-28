@@ -37,6 +37,7 @@ library
   other-modules:
       HIndent.Applicative
       HIndent.Ast
+      HIndent.Ast.Comment
       HIndent.Ast.Context
       HIndent.Ast.Declaration
       HIndent.Ast.Declaration.Annotation
@@ -44,7 +45,6 @@ library
       HIndent.Ast.Declaration.Annotation.Role
       HIndent.Ast.Declaration.Bind
       HIndent.Ast.Declaration.Bind.GuardedRhs
-      HIndent.Ast.Comment
       HIndent.Ast.Declaration.Class
       HIndent.Ast.Declaration.Class.FunctionalDependency
       HIndent.Ast.Declaration.Class.NameAndTypeVariables
@@ -75,6 +75,7 @@ library
       HIndent.Ast.Declaration.Instance.Family.Data
       HIndent.Ast.Declaration.Instance.Family.Type
       HIndent.Ast.Declaration.Instance.Family.Type.Associated
+      HIndent.Ast.Declaration.PatternSynonym
       HIndent.Ast.Declaration.Rule
       HIndent.Ast.Declaration.Rule.Binder
       HIndent.Ast.Declaration.Rule.Collection
