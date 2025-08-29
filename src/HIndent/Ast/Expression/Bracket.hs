@@ -21,7 +21,7 @@ data Bracket
   | UntypedExpression (GHC.LHsExpr GHC.GhcPs)
   | Pattern (WithComments Pattern)
   | Declaration [WithComments Declaration]
-  | Type (GHC.LHsType GHC.GhcPs)
+  | Type (WithComments Type)
   | Variable Bool (WithComments PrefixName)
 
 instance CommentExtraction Bracket where
@@ -38,8 +38,7 @@ instance Pretty Bracket where
   pretty' (Pattern x) = brackets $ string "p" >> wrapWithBars (pretty x)
   pretty' (Declaration decls) =
     brackets $ string "d| " |=> lined (fmap pretty decls) >> string " |"
-  pretty' (Type x) =
-    brackets $ string "t" >> wrapWithBars (pretty $ fmap mkType x)
+  pretty' (Type x) = brackets $ string "t" >> wrapWithBars (pretty x)
   pretty' (Variable True var) = string "'" >> pretty var
   pretty' (Variable False var) = string "''" >> pretty var
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
@@ -51,7 +50,7 @@ mkBracket (GHC.ExpBr _ x) = UntypedExpression x
 mkBracket (GHC.PatBr _ x) = Pattern $ mkPattern <$> fromGenLocated x
 mkBracket (GHC.DecBrL _ x) =
   Declaration $ fmap (fmap mkDeclaration . fromGenLocated) x
-mkBracket (GHC.TypBr _ x) = Type x
+mkBracket (GHC.TypBr _ x) = Type $ mkType <$> fromGenLocated x
 mkBracket (GHC.VarBr _ b x) = Variable b $ fromGenLocated $ fmap mkPrefixName x
 mkBracket (GHC.DecBrG {}) = error "This AST node should never appear."
 #if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
