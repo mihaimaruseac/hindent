@@ -204,16 +204,6 @@ instance CommentExtraction (DataFamInstDecl GhcPs) where
 instance CommentExtraction DataFamInstDecl' where
   nodeComments DataFamInstDecl' {..} = nodeComments dataFamInstDecl
 
--- | 'Pretty' for 'HsPatSynDetails'.
-instance CommentExtraction
-           (HsConDetails
-              Void
-              (GenLocated SrcSpanAnnN RdrName)
-              [RecordPatSynField GhcPs]) where
-  nodeComments PrefixCon {} = emptyNodeComments
-  nodeComments RecCon {} = emptyNodeComments
-  nodeComments InfixCon {} = emptyNodeComments
-
 instance CommentExtraction (FixitySig GhcPs) where
   nodeComments FixitySig {} = emptyNodeComments
 
@@ -264,9 +254,6 @@ instance CommentExtraction (HsLit GhcPs) where
 #endif
 instance CommentExtraction (HsIPBinds GhcPs) where
   nodeComments IPBinds {} = emptyNodeComments
-
-instance CommentExtraction (RecordPatSynField GhcPs) where
-  nodeComments RecordPatSynField {} = emptyNodeComments
 
 instance CommentExtraction (HsCmdTop GhcPs) where
   nodeComments HsCmdTop {} = emptyNodeComments

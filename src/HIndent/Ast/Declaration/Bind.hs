@@ -7,14 +7,11 @@ module HIndent.Ast.Declaration.Bind
   ) where
 
 import HIndent.Ast.Declaration.Bind.GuardedRhs
-import HIndent.Ast.Name.Infix
-import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
+import HIndent.Ast.Declaration.PatternSynonym
 import HIndent.Ast.Pattern
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
-import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 -- The difference between `Function` and `Pattern` is the same as the difference
@@ -30,44 +27,17 @@ data Bind
       { lhs :: WithComments Pattern
       , rhs :: WithComments GuardedRhs
       }
-  | PatternSynonym
-      { name :: GHC.LIdP GHC.GhcPs
-      , parameters :: GHC.HsPatSynDetails GHC.GhcPs
-      , isImplicitBidirectional :: Bool
-      , explicitMatches :: Maybe
-          (GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs))
-      , definition :: WithComments PatInsidePatDecl
-      }
+  | PatternSynonym (WithComments PatternSynonym)
 
 instance CommentExtraction Bind where
-  nodeComments Function {} = NodeComments [] [] []
-  nodeComments Pattern {} = NodeComments [] [] []
-  nodeComments PatternSynonym {} = NodeComments [] [] []
+  nodeComments Function {} = emptyNodeComments
+  nodeComments Pattern {} = emptyNodeComments
+  nodeComments PatternSynonym {} = emptyNodeComments
 
 instance Pretty Bind where
   pretty' Function {..} = pretty fun_matches
   pretty' Pattern {..} = pretty lhs >> pretty rhs
-  pretty' PatternSynonym {..} = do
-    string "pattern "
-    case parameters of
-      GHC.InfixCon l r ->
-        spaced
-          [ pretty $ fmap mkPrefixName l
-          , pretty $ fmap mkInfixName name
-          , pretty $ fmap mkPrefixName r
-          ]
-      GHC.PrefixCon _ [] -> pretty $ fmap mkPrefixName name
-      _ -> spaced [pretty $ fmap mkPrefixName name, pretty parameters]
-    let arrow =
-          if isImplicitBidirectional
-            then "="
-            else "<-"
-    spacePrefixed [string arrow, pretty definition]
-    case explicitMatches of
-      Just matches -> do
-        newline
-        indentedBlock $ string "where " |=> pretty matches
-      Nothing -> pure ()
+  pretty' (PatternSynonym ps) = pretty ps
 
 mkBind :: GHC.HsBind GHC.GhcPs -> Bind
 mkBind GHC.FunBind {..} = Function {..}
@@ -75,14 +45,6 @@ mkBind GHC.PatBind {..} = Pattern {..}
   where
     lhs = mkPattern <$> fromGenLocated pat_lhs
     rhs = mkWithComments $ mkGuardedRhs pat_rhs
-mkBind (GHC.PatSynBind _ GHC.PSB {..}) = PatternSynonym {..}
-  where
-    name = psb_id
-    parameters = psb_args
-    (isImplicitBidirectional, explicitMatches) =
-      case psb_dir of
-        GHC.Unidirectional -> (False, Nothing)
-        GHC.ImplicitBidirectional -> (True, Nothing)
-        GHC.ExplicitBidirectional matches -> (False, Just matches)
-    definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
+mkBind (GHC.PatSynBind _ psb) =
+  PatternSynonym $ mkWithComments $ mkPatternSynonym psb
 mkBind _ = error "This AST node should not appear."

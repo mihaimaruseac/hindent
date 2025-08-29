@@ -25,13 +25,11 @@ import Control.Monad.RWS
 import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe
-import Data.Void
 import qualified GHC.Data.FastString as GHC
 import qualified GHC.Hs as GHC
 import GHC.Stack
 import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.Fixity as GHC
-import qualified GHC.Types.Name.Reader as GHC
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Comment (mkComment)
@@ -75,6 +73,9 @@ import HIndent.Printer
 import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified GHC.Data.Bag as GHC
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+import qualified GHC.Types.Name.Reader as GHC
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import qualified GHC.Core.DataCon as GHC
@@ -1463,18 +1464,6 @@ instance Pretty DataFamInstDecl' where
   pretty' DataFamInstDecl' {dataFamInstDecl = GHC.DataFamInstDecl {..}, ..} =
     pretty $ FamEqn' dataFamInstDeclFor dfid_eqn
 
--- | 'Pretty' for 'HsPatSynDetails'.
-instance Pretty
-           (GHC.HsConDetails
-              Void
-              (GHC.GenLocated GHC.SrcSpanAnnN GHC.RdrName)
-              [GHC.RecordPatSynField GHC.GhcPs]) where
-  pretty' (GHC.PrefixCon _ xs) = spaced $ fmap (pretty . fmap mkPrefixName) xs
-  pretty' (GHC.RecCon rec) = hFields $ fmap pretty rec
-  pretty' GHC.InfixCon {} =
-    error
-      "Cannot handle here because `InfixCon` does not have the information of the constructor."
-
 instance Pretty (GHC.HsOverLit GHC.GhcPs) where
   pretty' GHC.OverLit {..} = pretty ol_val
 
@@ -1568,9 +1557,6 @@ prettyIPBind (GHC.IPBind _ (Left l) r) =
     , pretty r
     ]
 #endif
-instance Pretty (GHC.RecordPatSynField GHC.GhcPs) where
-  pretty' GHC.RecordPatSynField {..} = pretty $ mkFieldName recordPatSynField
-
 instance Pretty (GHC.HsCmdTop GHC.GhcPs) where
   pretty' (GHC.HsCmdTop _ cmd) = pretty cmd
 
