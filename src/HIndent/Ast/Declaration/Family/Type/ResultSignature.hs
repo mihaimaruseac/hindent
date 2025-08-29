@@ -14,7 +14,7 @@ import HIndent.Pretty.NodeComments
 
 data ResultSignature
   = NoSig
-  | Kind (GHC.LHsKind GHC.GhcPs)
+  | Kind (WithComments Type)
   | TypeVariable (WithComments TypeVariable)
 
 instance CommentExtraction ResultSignature where
@@ -24,12 +24,12 @@ instance CommentExtraction ResultSignature where
 
 instance Pretty ResultSignature where
   pretty' NoSig = return ()
-  pretty' (Kind x) = string " :: " >> pretty (fmap mkType x)
+  pretty' (Kind x) = string " :: " >> pretty x
   pretty' (TypeVariable x) = string " = " >> pretty x
 
 mkResultSignature :: GHC.FamilyResultSig GHC.GhcPs -> ResultSignature
 mkResultSignature (GHC.NoSig _) = NoSig
-mkResultSignature (GHC.KindSig _ x) = Kind x
+mkResultSignature (GHC.KindSig _ x) = Kind $ mkType <$> fromGenLocated x
 mkResultSignature (GHC.TyVarSig _ x) = TypeVariable var
   where
     var = mkTypeVariable <$> fromGenLocated x
