@@ -17,13 +17,13 @@ import HIndent.Pretty.NodeComments
 data TypeFamilyInstance = TypeFamilyInstance
   { name :: WithComments PrefixName
   , types :: GHC.HsFamEqnPats GHC.GhcPs
-  , bind :: GHC.LHsType GHC.GhcPs
+  , bind :: WithComments Type
   }
 #else
 data TypeFamilyInstance = TypeFamilyInstance
   { name :: WithComments PrefixName
   , types :: GHC.HsTyPats GHC.GhcPs
-  , bind :: GHC.LHsType GHC.GhcPs
+  , bind :: WithComments Type
   }
 #endif
 instance CommentExtraction TypeFamilyInstance where
@@ -33,7 +33,7 @@ instance Pretty TypeFamilyInstance where
   pretty' TypeFamilyInstance {..} = do
     spaced $ string "type instance" : pretty name : fmap pretty types
     string " = "
-    pretty $ fmap mkType bind
+    pretty bind
 
 mkTypeFamilyInstance :: GHC.InstDecl GHC.GhcPs -> Maybe TypeFamilyInstance
 mkTypeFamilyInstance GHC.TyFamInstD {GHC.tfid_inst = GHC.TyFamInstDecl {GHC.tfid_eqn = GHC.FamEqn {..}}} =
@@ -41,5 +41,5 @@ mkTypeFamilyInstance GHC.TyFamInstD {GHC.tfid_inst = GHC.TyFamInstDecl {GHC.tfid
   where
     name = fromGenLocated $ fmap mkPrefixName feqn_tycon
     types = feqn_pats
-    bind = feqn_rhs
+    bind = mkType <$> fromGenLocated feqn_rhs
 mkTypeFamilyInstance _ = Nothing
