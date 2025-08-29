@@ -16,7 +16,7 @@ import HIndent.Pretty.NodeComments
 
 data RecordField = RecordField
   { names :: [WithComments FieldName]
-  , ty :: GHC.LBangType GHC.GhcPs
+  , ty :: WithComments Type
   }
 
 instance CommentExtraction RecordField where
@@ -24,10 +24,10 @@ instance CommentExtraction RecordField where
 
 instance Pretty RecordField where
   pretty' RecordField {..} =
-    spaced [hCommaSep $ fmap pretty names, string "::", pretty $ fmap mkType ty]
+    spaced [hCommaSep $ fmap pretty names, string "::", pretty ty]
 
 mkRecordField :: GHC.ConDeclField GHC.GhcPs -> RecordField
 mkRecordField GHC.ConDeclField {..} = RecordField {..}
   where
     names = fmap mkFieldName . fromGenLocated <$> cd_fld_names
-    ty = cd_fld_type
+    ty = mkType <$> fromGenLocated cd_fld_type
