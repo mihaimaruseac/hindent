@@ -69,8 +69,6 @@ instance Pretty (GHC.HsExpr GHC.GhcPs)
 
 instance Pretty (GHC.FieldOcc GHC.GhcPs)
 
-instance Pretty RecConPat
-
 instance Pretty (GHC.HsLit GHC.GhcPs)
 
 instance Pretty (GHC.HsOverLit GHC.GhcPs)

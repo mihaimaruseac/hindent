@@ -86,9 +86,6 @@ instance CommentExtraction EpaCommentTok where
 instance CommentExtraction (SpliceDecl GhcPs) where
   nodeComments SpliceDecl {} = emptyNodeComments
 
-instance CommentExtraction RecConPat where
-  nodeComments (RecConPat x) = nodeComments x
-
 instance CommentExtraction SigBindFamily where
   nodeComments (Sig x) = nodeComments x
   nodeComments (Bind x) = nodeComments x
@@ -1114,14 +1111,8 @@ nodeCommentsHsFieldBind HsFieldBind {..} = nodeComments hfbAnn
 #else
 instance CommentExtraction (HsFieldLabel GhcPs) where
   nodeComments HsFieldLabel {..} = nodeComments hflExt
-
-instance CommentExtraction RecConField where
-  nodeComments (RecConField x) = nodeComments x
 #endif
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
-instance CommentExtraction RecConField where
-  nodeComments (RecConField x) = nodeComments x
-#else
+#if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
 instance CommentExtraction (HsBracket GhcPs) where
   nodeComments ExpBr {} = emptyNodeComments
   nodeComments PatBr {} = emptyNodeComments

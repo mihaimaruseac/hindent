@@ -903,17 +903,6 @@ instance Pretty ParStmtBlockInsideVerticalList where
   pretty' (ParStmtBlockInsideVerticalList (GHC.ParStmtBlock _ xs _ _)) =
     vCommaSep $ fmap pretty xs
 
-instance Pretty RecConPat where
-  pretty' (RecConPat GHC.HsRecFields {..}) =
-    case fieldPrinters of
-      [] -> string "{}"
-      [x] -> braces x
-      xs -> hvFields xs
-    where
-      fieldPrinters =
-        fmap (pretty . fmap RecConField) rec_flds
-          ++ maybeToList (fmap (const (string "..")) rec_dotdot)
-
 instance Pretty SBF.SigBindFamily where
   pretty' (SBF.Sig x) = pretty $ mkSignature x
   pretty' (SBF.Bind x) = pretty $ mkBind x
@@ -955,14 +944,7 @@ prettyHsValBindsLR GHC.XValBindsLR {} = notUsedInParsedStage
 instance Pretty (GHC.HsTupArg GHC.GhcPs) where
   pretty' (GHC.Present _ e) = pretty e
   pretty' GHC.Missing {} = pure () -- This appears in a tuple section.
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
-instance Pretty RecConField where
-  pretty' (RecConField GHC.HsFieldBind {..}) = do
-    pretty $ mkFieldName <$> hfbLHS
-    unless hfbPun $ do
-      string " = "
-      pretty $ mkPattern <$> fromGenLocated hfbRHS
-#else
+#if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
 -- | For pattern matching against a record.
 instance Pretty
            (GHC.HsRecField'
@@ -1032,13 +1014,6 @@ instance Pretty
     where
       horizontal = space >> pretty hfbRHS
       vertical = newline >> indentedBlock (pretty hfbRHS)
-#else
-instance Pretty RecConField where
-  pretty' (RecConField GHC.HsRecField {..}) = do
-    pretty $ mkFieldName <$> hsRecFieldLbl
-    unless hsRecPun $ do
-      string " = "
-      pretty hsRecFieldArg
 #endif
 instance Pretty
            (GHC.HsScaled

@@ -19,13 +19,13 @@ import HIndent.Ast.Name.Infix hiding (unlessSpecialOp)
 import qualified HIndent.Ast.Name.Infix as InfixName
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments hiding (fromEpAnn)
+import HIndent.Ast.Pattern.RecordFields
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments (CommentExtraction(..))
-import HIndent.Pretty.Types (RecConPat(..))
 
 data Pattern
   = WildCard
@@ -58,7 +58,7 @@ data Pattern
       }
   | RecordConstructor
       { name :: WithComments PrefixName
-      , fields :: GHC.HsRecFields GHC.GhcPs (GHC.LPat GHC.GhcPs)
+      , fields :: RecordFieldsPat
       }
   | View
       { expression :: GHC.LHsExpr GHC.GhcPs
@@ -107,8 +107,7 @@ instance Pretty Pattern where
     pretty operator
     InfixName.unlessSpecialOp (getNode operator) space
     pretty right
-  pretty' RecordConstructor {..} =
-    (pretty name >> space) |=> pretty (RecConPat fields)
+  pretty' RecordConstructor {..} = (pretty name >> space) |=> pretty fields
   pretty' View {..} = spaced [pretty expression, string "->", pretty pat]
   pretty' (Splice splice) = pretty splice
   pretty' (Literal lit) = pretty lit
@@ -163,7 +162,9 @@ mkPattern GHC.ConPat {..} =
         }
     GHC.RecCon rec ->
       RecordConstructor
-        {name = mkPrefixName <$> fromGenLocated pat_con, fields = rec}
+        { name = mkPrefixName <$> fromGenLocated pat_con
+        , fields = mkRecordFieldsPat rec
+        }
     GHC.InfixCon a b ->
       InfixConstructor
         { left = mkPattern <$> fromGenLocated a
