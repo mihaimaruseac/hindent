@@ -11,8 +11,6 @@ module HIndent.Pretty.Types
   , InfixOp(..)
   , PrefixOp(..)
   , InfixApp(..)
-  , RecConPat(..)
-  , RecConField(..)
   , DataFamInstDecl'(..)
   , pattern DataFamInstDeclTopLevel
   , pattern DataFamInstDeclInsideClassInst
@@ -71,18 +69,6 @@ data InfixApp = InfixApp
   , rhs :: LHsExpr GhcPs
   }
 
--- | A pattern match against a record.
-newtype RecConPat =
-  RecConPat (HsRecFields GhcPs (LPat GhcPs))
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
--- | A record field in a pattern match.
-newtype RecConField =
-  RecConField (HsFieldBind (LFieldOcc GhcPs) (LPat GhcPs))
-#else
--- | A record field in a pattern match.
-newtype RecConField =
-  RecConField (HsRecField' (FieldOcc GhcPs) (LPat GhcPs))
-#endif
 -- | A wrapper of `DataFamInstDecl`.
 data DataFamInstDecl' = DataFamInstDecl'
   { dataFamInstDeclFor :: DataFamInstDeclFor -- ^ Where a data family instance is declared.
