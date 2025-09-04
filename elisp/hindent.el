@@ -3,7 +3,7 @@
 ;; Copyright (c) 2014 Chris Done. All rights reserved.
 
 ;; Author: Chris Done <chrisdone@gmail.com>
-;; URL: https://github.com/chrisdone/hindent
+;; URL: https://github.com/mihaimaruseac/hindent
 ;; Package-Requires: ((emacs "27.1"))
 
 ;; This file is free software; you can redistribute it and/or modify
