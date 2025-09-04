@@ -63,8 +63,9 @@ For hindent versions lower than 5, you must set this to a non-nil string."
 (defcustom hindent-extra-args nil
   "Extra arguments to give to hindent"
   :group 'hindent
-  :type 'sexp
-  :safe #'listp)
+  :type '(choice
+          (repeat string)
+          (function :tag "Function with no arguments returning a list of strings")))
 
 (defcustom hindent-reformat-buffer-on-save nil
   "Set to t to run `hindent-reformat-buffer' when a buffer in
@@ -301,7 +302,9 @@ work."
    (when hindent-style
      (list "--style" hindent-style))
    (when hindent-extra-args
-     hindent-extra-args)))
+     (if (functionp hindent-extra-args)
+         (funcall hindent-extra-args)
+       hindent-extra-args))))
 
 (provide 'hindent)
 
