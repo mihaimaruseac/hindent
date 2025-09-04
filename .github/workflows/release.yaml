@@ -83,7 +83,6 @@ jobs:
         id: hash_execs
         run: |
           set -euo pipefail
-          ls -l .execs/*
           echo "hash_execs=$(sha256sum .execs/* | base64 -w0)" >> "${GITHUB_OUTPUT}"
 
       # When uploading executables we push them all to the same archive and
