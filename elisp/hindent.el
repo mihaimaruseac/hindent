@@ -196,7 +196,28 @@ the file."
                                           nil)
                                     (hindent-extra-arguments)))))
             (cond
-             ((= ret 1)
+             ((= ret 0)
+              (let* ((last-decl (= end (point-max)))
+                     (new-str (with-current-buffer temp
+                                (when (and drop-newline (not last-decl))
+                                  (goto-char (point-max))
+                                  (when (looking-back "\n" (1- (point)))
+                                    (delete-char -1)))
+                                (delete-trailing-whitespace)
+                                (buffer-string))))
+                (if (not (string= new-str orig-str))
+                    (progn
+                      (if (fboundp 'replace-region-contents)
+                          (replace-region-contents
+                           beg end (lambda () temp))
+                        (let ((line (line-number-at-pos))
+                              (col (current-column)))
+                          (delete-region beg
+                                         end)
+                          (insert new-str)))
+                      (message "Formatted."))
+                  (message "Already formatted."))))
+             (t
               (let ((error-string
                      (with-current-buffer temp
                        (let ((string (progn (goto-char (point-min))
@@ -206,27 +227,7 @@ the file."
                 (if (string= error-string "hindent: Parse error: EOF")
                     (message "language pragma")
                   (error error-string))))
-             ((= ret 0)
-              (let* ((last-decl (= end (point-max)))
-                     (new-str (with-current-buffer temp
-                                (when (and drop-newline (not last-decl))
-                                  (goto-char (point-max))
-                                  (when (looking-back "\n" (1- (point)))
-                                    (delete-char -1)))
-				(delete-trailing-whitespace)
-                                (buffer-string))))
-                (if (not (string= new-str orig-str))
-		    (progn
-		      (if (fboundp 'replace-region-contents)
-			  (replace-region-contents
-			   beg end (lambda () temp))
-			(let ((line (line-number-at-pos))
-			      (col (current-column)))
-			  (delete-region beg
-					 end)
-			  (insert new-str)))
-		      (message "Formatted."))
-                  (message "Already formatted.")))))))))))
+             )))))))
 
 (defun hindent-decl-points ()
   "Get the start and end position of the current declaration.
