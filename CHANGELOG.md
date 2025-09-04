@@ -10,6 +10,8 @@
 
 ### Changed
 
+- `hindent-mode`: Show an error string on any return code that's not 0 ([#1096])
+
 ### Fixed
 
 - Template Haskell functions no longer get unwanted '$' symbols prepended ([#1033])
@@ -410,6 +412,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#1096]: https://github.com/mihaimaruseac/hindent/pull/1096
 [#1077]: https://github.com/mihaimaruseac/hindent/pull/1077
 [#1060]: https://github.com/mihaimaruseac/hindent/pull/1060
 [#1053]: https://github.com/mihaimaruseac/hindent/pull/1053
