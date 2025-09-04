@@ -1,10 +1,10 @@
-;;; hindent.el --- Indent haskell code using the "hindent" program
+;;; hindent.el --- Indent haskell code using the "hindent" program -*- lexical-binding: t -*-
 
 ;; Copyright (c) 2014 Chris Done. All rights reserved.
 
 ;; Author: Chris Done <chrisdone@gmail.com>
 ;; URL: https://github.com/chrisdone/hindent
-;; Package-Requires: ((cl-lib "0.5"))
+;; Package-Requires: ((emacs "27.1"))
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@
 
 ;;; Code:
 
-(require 'cl-lib)
+(eval-when-compile (require 'cl-lib))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Customization properties
@@ -67,7 +67,8 @@ For hindent versions lower than 5, you must set this to a non-nil string."
   :safe #'listp)
 
 (defcustom hindent-reformat-buffer-on-save nil
-  "Set to t to run `hindent-reformat-buffer' when a buffer in `hindent-mode' is saved."
+  "Set to t to run `hindent-reformat-buffer' when a buffer in
+`hindent-mode' is saved."
   :group 'hindent
   :type 'boolean
   :safe #'booleanp)
@@ -207,14 +208,7 @@ the file."
                                 (buffer-string))))
                 (if (not (string= new-str orig-str))
                     (progn
-                      (if (fboundp 'replace-region-contents)
-                          (replace-region-contents
-                           beg end (lambda () temp))
-                        (let ((line (line-number-at-pos))
-                              (col (current-column)))
-                          (delete-region beg
-                                         end)
-                          (insert new-str)))
+                      (replace-region-contents beg end (lambda () temp))
                       (message "Formatted."))
                   (message "Already formatted."))))
              (t
@@ -254,35 +248,33 @@ work."
    (t
     (save-excursion
       (let ((start
-             (or (cl-letf
-                     (((symbol-function 'jump)
-                       #'(lambda ()
-                           (search-backward-regexp "^[^ \n]" nil t 1)
-                           (cond
-                            ((save-excursion (goto-char (line-beginning-position))
-                                             (looking-at "|]"))
-                             (jump))
-                            (t (unless (or (looking-at "^-}$")
-                                           (looking-at "^{-$"))
-                                 (point)))))))
+             (or (cl-labels
+                     ((jump ()
+                        (search-backward-regexp "^[^ \n]" nil t 1)
+                        (cond
+                         ((save-excursion (goto-char (line-beginning-position))
+                                          (looking-at "|]"))
+                          (jump))
+                         (t (unless (or (looking-at "^-}$")
+                                        (looking-at "^{-$"))
+                              (point))))))
                    (goto-char (line-end-position))
                    (jump))
                  0))
             (end
              (progn
                (goto-char (1+ (point)))
-               (or (cl-letf
-                       (((symbol-function 'jump)
-                         #'(lambda ()
-                             (when (search-forward-regexp "[\n]+[^ \n]" nil t 1)
-                               (cond
-                                ((save-excursion (goto-char (line-beginning-position))
-                                                 (looking-at "|]"))
-                                 (jump))
-                                (t (forward-char -1)
-                                   (search-backward-regexp "[^\n ]" nil t)
-                                   (forward-char)
-                                   (point)))))))
+               (or (cl-labels
+                       ((jump ()
+                          (when (search-forward-regexp "[\n]+[^ \n]" nil t 1)
+                            (cond
+                             ((save-excursion (goto-char (line-beginning-position))
+                                              (looking-at "|]"))
+                              (jump))
+                             (t (forward-char -1)
+                                (search-backward-regexp "[^\n ]" nil t)
+                                (forward-char)
+                                (point))))))
                      (jump))
                    (point-max)))))
         (cons start end))))))
