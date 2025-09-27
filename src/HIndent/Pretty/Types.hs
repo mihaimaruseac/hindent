@@ -7,10 +7,8 @@
 -- functions to print comments easily using the 'Pretty' implementation of
 -- 'GenLocated'.
 module HIndent.Pretty.Types
-  ( InfixExpr(..)
-  , InfixOp(..)
+  ( InfixOp(..)
   , PrefixOp(..)
-  , InfixApp(..)
   , DataFamInstDecl'(..)
   , pattern DataFamInstDeclTopLevel
   , pattern DataFamInstDeclInsideClassInst
@@ -23,13 +21,11 @@ module HIndent.Pretty.Types
   , Context(..)
   , HorizontalContext(..)
   , VerticalContext(..)
-  , LambdaCase(..)
   , ListComprehension(..)
   , DoExpression(..)
   , DoOrMdo(..)
   , QualifiedDo(..)
   , LetIn(..)
-  , CaseOrCases(..)
   , DataFamInstDeclFor(..)
   ) where
 
@@ -40,10 +36,6 @@ import {-# SOURCE #-} qualified HIndent.Ast.Module.Name as HIndent
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
 import GHC.Unit
 #endif
--- | `LHsExpr` used as a infix operator
-newtype InfixExpr =
-  InfixExpr (LHsExpr GhcPs)
-
 newtype InfixOp =
   InfixOp RdrName
 
@@ -60,15 +52,6 @@ newtype PrefixOp =
 -- keyword. It needs an extra indent in such cases because
 --
 -- > do a
--- > * b
---
--- is not a valid Haskell code.
-data InfixApp = InfixApp
-  { lhs :: LHsExpr GhcPs
-  , op :: LHsExpr GhcPs
-  , rhs :: LHsExpr GhcPs
-  }
-
 -- | A wrapper of `DataFamInstDecl`.
 data DataFamInstDecl' = DataFamInstDecl'
   { dataFamInstDeclFor :: DataFamInstDeclFor -- ^ Where a data family instance is declared.
@@ -141,12 +124,6 @@ newtype HorizontalContext =
 newtype VerticalContext =
   VerticalContext (Maybe (LHsContext GhcPs))
 #endif
--- | Lambda case.
-data LambdaCase = LambdaCase
-  { lamCaseGroup :: MatchGroup GhcPs (LHsExpr GhcPs)
-  , caseOrCases :: CaseOrCases
-  }
-
 -- | Use this type to pretty-print a list comprehension.
 data ListComprehension = ListComprehension
   { listCompLhs :: ExprLStmt GhcPs -- ^ @f x@ of @[f x| x <- xs]@.
@@ -174,11 +151,6 @@ data DoOrMdo
 -- whether `do` or `mdo` is used)
 data QualifiedDo =
   QualifiedDo (Maybe HIndent.ModuleName) DoOrMdo
-
--- | Values indicating whether `case` or `cases` is used.
-data CaseOrCases
-  = Case
-  | Cases
 
 -- | Values indicating where a data family instance is declared.
 data DataFamInstDeclFor

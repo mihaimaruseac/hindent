@@ -5,7 +5,7 @@ module HIndent.Ast.Declaration.Rule.Collection
   , mkRuleCollection
   ) where
 
-import HIndent.Ast.Declaration.Rule
+import {-# SOURCE #-} HIndent.Ast.Declaration.Rule
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
