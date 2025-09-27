@@ -36,9 +36,6 @@ instance CommentExtraction l => CommentExtraction (GenLocated l e) where
 instance CommentExtraction (MatchGroup GhcPs a) where
   nodeComments MG {} = emptyNodeComments
 
-instance CommentExtraction LambdaCase where
-  nodeComments (LambdaCase x _) = nodeComments x
-
 instance CommentExtraction DoOrMdo where
   nodeComments = const emptyNodeComments
 
@@ -126,12 +123,6 @@ instance CommentExtraction
 
 instance CommentExtraction (HsScaled GhcPs a) where
   nodeComments HsScaled {} = emptyNodeComments
-
-instance CommentExtraction InfixExpr where
-  nodeComments (InfixExpr x) = nodeComments x
-
-instance CommentExtraction InfixApp where
-  nodeComments InfixApp {} = emptyNodeComments
 
 instance CommentExtraction (BooleanFormula a) where
   nodeComments Var {} = emptyNodeComments

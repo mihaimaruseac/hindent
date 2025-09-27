@@ -57,7 +57,7 @@ mkRecordField ::
   -> RecordField
 mkRecordField GHC.HsFieldBind {..} =
   RecordField
-    { fieldName = fmap mkFieldName $ fromGenLocated hfbLHS
+    { fieldName = mkFieldName <$> fromGenLocated hfbLHS
     , fieldValue = hfbRHS
     , isPun = hfbPun
     }
@@ -67,7 +67,7 @@ mkRecordField ::
   -> RecordField
 mkRecordField GHC.HsRecField {..} =
   RecordField
-    { fieldName = fmap mkFieldName $ fromGenLocated hsRecFieldLbl
+    { fieldName = mkFieldName <$> fromGenLocated hsRecFieldLbl
     , fieldValue = hsRecFieldArg
     , isPun = hsRecPun
     }
