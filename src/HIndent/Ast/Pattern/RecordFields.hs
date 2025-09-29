@@ -9,7 +9,7 @@ module HIndent.Ast.Pattern.RecordFields
 import Control.Monad (unless)
 import Data.Maybe (maybeToList)
 import qualified GHC.Types.SrcLoc as GHC
-import HIndent.Ast.Declaration.Data.Record.FieldName (FieldName, mkFieldName)
+import HIndent.Ast.Name.RecordField (FieldName, mkFieldNameFromFieldOcc)
 import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Ast.Pattern (mkPattern)
 import HIndent.Ast.WithComments
@@ -57,7 +57,7 @@ mkRecordField ::
   -> RecordField
 mkRecordField GHC.HsFieldBind {..} =
   RecordField
-    { fieldName = fmap mkFieldName $ fromGenLocated hfbLHS
+    { fieldName = fmap mkFieldNameFromFieldOcc $ fromGenLocated hfbLHS
     , fieldValue = hfbRHS
     , isPun = hfbPun
     }
@@ -67,7 +67,7 @@ mkRecordField ::
   -> RecordField
 mkRecordField GHC.HsRecField {..} =
   RecordField
-    { fieldName = fmap mkFieldName $ fromGenLocated hsRecFieldLbl
+    { fieldName = fmap mkFieldNameFromFieldOcc $ fromGenLocated hsRecFieldLbl
     , fieldValue = hsRecFieldArg
     , isPun = hsRecPun
     }

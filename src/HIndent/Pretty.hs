@@ -42,7 +42,6 @@ import HIndent.Ast.Declaration.Bind.GuardedRhs
   , mkLambdaGuardedRhs
   )
 import HIndent.Ast.Declaration.Data.Body
-import HIndent.Ast.Declaration.Data.Record.FieldName (mkFieldName)
 import HIndent.Ast.Declaration.Family.Data
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Instance.Family.Type.Associated
@@ -58,6 +57,11 @@ import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.ImportExport
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
+import HIndent.Ast.Name.RecordField
+  ( mkFieldNameFromAmbiguousFieldOcc
+  , mkFieldNameFromFieldLabelStrings
+  , mkFieldNameFromFieldOcc
+  )
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Pattern
 import HIndent.Ast.Type
@@ -395,80 +399,96 @@ prettyHsExpr (GHC.RecordUpd _ name fields) = hor <-|> ver
       newline
       indentedBlock $ printHorFields fields <-|> printVerFields fields
     printHorFields GHC.RegularRecUpdFields {..} =
-      hFields $ fmap (`printCommentsAnd` horField) recUpdFields
+      hFields $ printHorField mkFieldNameFromAmbiguousFieldOcc <$> recUpdFields
     printHorFields GHC.OverloadedRecUpdFields {..} =
-      hFields $ fmap (`printCommentsAnd` horField) olRecUpdFields
+      hFields
+        $ printHorField mkFieldNameFromFieldLabelStrings <$> olRecUpdFields
     printVerFields GHC.RegularRecUpdFields {..} =
-      vFields $ fmap printField recUpdFields
+      vFields $ printField mkFieldNameFromAmbiguousFieldOcc <$> recUpdFields
     printVerFields GHC.OverloadedRecUpdFields {..} =
-      vFields $ fmap printField olRecUpdFields
-    printField x = printCommentsAnd x $ (<-|>) <$> horField <*> verField
-    horField GHC.HsFieldBind {..} = do
-      pretty hfbLHS
+      vFields $ printField mkFieldNameFromFieldLabelStrings <$> olRecUpdFields
+    printHorField convert x = printCommentsAnd x (horField convert)
+    printField convert x =
+      printCommentsAnd x ((<-|>) <$> horField convert <*> verField convert)
+    horField convert GHC.HsFieldBind {..} = do
+      pretty $ convert <$> fromGenLocated hfbLHS
       string " = "
       pretty hfbRHS
-    verField GHC.HsFieldBind {..} = do
-      pretty hfbLHS
+    verField convert GHC.HsFieldBind {..} = do
+      pretty $ convert <$> fromGenLocated hfbLHS
       string " ="
       newline
       indentedBlock $ pretty hfbRHS
 #elif MIN_VERSION_ghc_lib_parser(9,4,1)
 prettyHsExpr (GHC.RecordUpd _ name fields) = hor <-|> ver
   where
-    hor = spaced [pretty name, either printHorFields printHorFields fields]
+    hor =
+      spaced
+        [ pretty name
+        , either
+            (printHorFields mkFieldNameFromAmbiguousFieldOcc)
+            (printHorFields mkFieldNameFromFieldLabelStrings)
+            fields
+        ]
     ver = do
       pretty name
       newline
       indentedBlock
-        $ either printHorFields printHorFields fields
-            <-|> either printVerFields printVerFields fields
-    printHorFields ::
-         (Pretty a, Pretty b, CommentExtraction l)
-      => [GHC.GenLocated l (GHC.HsFieldBind a b)]
-      -> Printer ()
-    printHorFields = hFields . fmap (`printCommentsAnd` horField)
-    printVerFields ::
-         (Pretty a, Pretty b, CommentExtraction l)
-      => [GHC.GenLocated l (GHC.HsFieldBind a b)]
-      -> Printer ()
-    printVerFields = vFields . fmap printField
-    printField x = printCommentsAnd x $ (<-|>) <$> horField <*> verField
-    horField GHC.HsFieldBind {..} = do
-      pretty hfbLHS
+        $ either
+            (printHorFields mkFieldNameFromAmbiguousFieldOcc)
+            (printHorFields mkFieldNameFromFieldLabelStrings)
+            <-|> either
+                   (printVerFields mkFieldNameFromAmbiguousFieldOcc)
+                   (printVerFields mkFieldNameFromFieldLabelStrings)
+                   fields
+    printHorFields convert = hFields . fmap (printHorField convert)
+    printVerFields convert = vFields . fmap (printField convert)
+    printHorField convert x = printCommentsAnd x (horField convert)
+    printField convert x =
+      printCommentsAnd x ((<-|>) <$> horField convert <*> verField convert)
+    horField convert GHC.HsFieldBind {..} = do
+      pretty $ convert <$> fromGenLocated hfbLHS
       string " = "
       pretty hfbRHS
-    verField GHC.HsFieldBind {..} = do
-      pretty hfbLHS
+    verField convert GHC.HsFieldBind {..} = do
+      pretty $ convert <$> fromGenLocated hfbLHS
       string " ="
       newline
       indentedBlock $ pretty hfbRHS
 #else
 prettyHsExpr (GHC.RecordUpd _ name fields) = hor <-|> ver
   where
-    hor = spaced [pretty name, either printHorFields printHorFields fields]
+    hor =
+      spaced
+        [ pretty name
+        , either
+            (printHorFields mkFieldNameFromFieldOcc)
+            (printHorFields mkFieldNameFromFieldOcc)
+            fields
+        ]
     ver = do
       pretty name
       newline
       indentedBlock
-        $ either printHorFields printHorFields fields
-            <-|> either printVerFields printVerFields fields
-    printHorFields ::
-         (Pretty a, Pretty b, CommentExtraction l)
-      => [GHC.GenLocated l (GHC.HsRecField' a b)]
-      -> Printer ()
-    printHorFields = hFields . fmap (`printCommentsAnd` horField)
-    printVerFields ::
-         (Pretty a, Pretty b, CommentExtraction l)
-      => [GHC.GenLocated l (GHC.HsRecField' a b)]
-      -> Printer ()
-    printVerFields = vFields . fmap printField
-    printField x = printCommentsAnd x $ (<-|>) <$> horField <*> verField
-    horField GHC.HsRecField {..} = do
-      pretty hsRecFieldLbl
+        $ either
+            (printHorFields mkFieldNameFromFieldOcc)
+            (printHorFields mkFieldNameFromFieldOcc)
+            fields
+            <-|> either
+                   (printVerFields mkFieldNameFromFieldOcc)
+                   (printVerFields mkFieldNameFromFieldOcc)
+                   fields
+    printHorFields convert = hFields . fmap (printHorField convert)
+    printVerFields convert = vFields . fmap (printField convert)
+    printHorField convert x = printCommentsAnd x (horField convert)
+    printField convert x =
+      printCommentsAnd x ((<-|>) <$> horField convert <*> verField convert)
+    horField convert GHC.HsRecField {..} = do
+      pretty $ convert <$> fromGenLocated hsRecFieldLbl
       string " = "
       pretty hsRecFieldArg
-    verField GHC.HsRecField {..} = do
-      pretty hsRecFieldLbl
+    verField convert GHC.HsRecField {..} = do
+      pretty $ convert <$> fromGenLocated hsRecFieldLbl
       string " ="
       newline
       indentedBlock $ pretty hsRecFieldArg
@@ -951,7 +971,7 @@ instance Pretty
               (GHC.FieldOcc GHC.GhcPs)
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.Pat GHC.GhcPs))) where
   pretty' GHC.HsRecField {..} =
-    (pretty (mkFieldName <$> hsRecFieldLbl) >> string " = ")
+    (pretty (mkFieldNameFromFieldOcc <$> hsRecFieldLbl) >> string " = ")
       |=> pretty (mkPattern <$> fromGenLocated hsRecFieldArg)
 
 -- | For record updates.
@@ -960,7 +980,7 @@ instance Pretty
               (GHC.FieldOcc GHC.GhcPs)
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
   pretty' GHC.HsRecField {..} = do
-    pretty $ mkFieldName <$> hsRecFieldLbl
+    pretty $ mkFieldNameFromFieldOcc <$> hsRecFieldLbl
     unless hsRecPun $ do
       string " ="
       horizontal <-|> vertical
@@ -975,7 +995,7 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.FieldOcc GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.Pat GHC.GhcPs))) where
   pretty' GHC.HsFieldBind {..} =
-    (pretty (mkFieldName <$> hfbLHS) >> string " = ")
+    (pretty (mkFieldNameFromFieldOcc <$> hfbLHS) >> string " = ")
       |=> pretty (mkPattern <$> hfbRHS)
 
 -- | For record updates.
@@ -984,7 +1004,7 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.FieldOcc GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
   pretty' GHC.HsFieldBind {..} = do
-    pretty $ mkFieldName <$> hfbLHS
+    pretty $ mkFieldNameFromFieldOcc <$> hfbLHS
     unless hfbPun $ do
       string " ="
       horizontal <-|> vertical
@@ -998,7 +1018,7 @@ instance Pretty
               (GHC.GenLocated (GHC.SrcAnn GHC.NoEpAnns) (GHC.FieldOcc GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.Pat GHC.GhcPs))) where
   pretty' GHC.HsFieldBind {..} =
-    (pretty (mkFieldName <$> hfbLHS) >> string " = ")
+    (pretty (mkFieldNameFromFieldOcc <$> hfbLHS) >> string " = ")
       |=> (pretty $ mkPattern <$> fromGenLocated hfbRHS)
 
 -- | For record updates.
@@ -1007,7 +1027,7 @@ instance Pretty
               (GHC.GenLocated (GHC.SrcAnn GHC.NoEpAnns) (GHC.FieldOcc GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
   pretty' GHC.HsFieldBind {..} = do
-    pretty $ mkFieldName <$> hfbLHS
+    pretty $ mkFieldNameFromFieldOcc <$> hfbLHS
     unless hfbPun $ do
       string " ="
       horizontal <-|> vertical
@@ -1218,16 +1238,6 @@ prettyInfixApp InfixApp {..} = horizontal <-|> vertical
         collect x = [x]
     isSameAssoc (findFixity -> GHC.Fixity _ lv d) = lv == level && d == dir
     GHC.Fixity _ level dir = findFixity op
-#endif
-instance Pretty (GHC.FieldLabelStrings GHC.GhcPs) where
-  pretty' (GHC.FieldLabelStrings xs) = hDotSep $ fmap pretty xs
-
-instance Pretty (GHC.FieldOcc GHC.GhcPs) where
-  pretty' fieldOcc = pretty $ mkFieldName fieldOcc
-#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
-instance Pretty (GHC.AmbiguousFieldOcc GHC.GhcPs) where
-  pretty' (GHC.Unambiguous _ name) = pretty $ fmap mkPrefixName name
-  pretty' (GHC.Ambiguous _ name) = pretty $ fmap mkPrefixName name
 #endif
 instance Pretty (GHC.DerivClauseTys GHC.GhcPs) where
   pretty' (GHC.DctSingle _ ty) = parens $ pretty $ mkTypeFromHsSigType <$> ty
