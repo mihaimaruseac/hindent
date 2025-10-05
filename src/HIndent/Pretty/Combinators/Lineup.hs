@@ -42,6 +42,7 @@ module HIndent.Pretty.Combinators.Lineup
   ) where
 
 import Control.Monad
+import Data.Foldable (toList)
 import Data.List (intersperse)
 import HIndent.Pretty.Combinators.Indent
 import HIndent.Pretty.Combinators.String
@@ -50,15 +51,15 @@ import HIndent.Pretty.Combinators.Wrap
 import HIndent.Printer
 
 -- | Applies 'hTuple' if the result fits in a line or 'vTuple' otherwise.
-hvTuple :: [Printer ()] -> Printer ()
+hvTuple :: Foldable f => f (Printer ()) -> Printer ()
 hvTuple = (<-|>) <$> hTuple <*> vTuple
 
 -- | Applies 'hTuple'' if the result fits in a line or 'vTuple'' otherwise.
-hvTuple' :: [Printer ()] -> Printer ()
+hvTuple' :: Foldable f => f (Printer ()) -> Printer ()
 hvTuple' = (<-|>) <$> hTuple <*> vTuple'
 
 -- | Runs printers to construct a tuple in a line.
-hTuple :: [Printer ()] -> Printer ()
+hTuple :: Foldable f => f (Printer ()) -> Printer ()
 hTuple = parens . hCommaSep
 
 -- | Runs printers to construct a tuple in a line, but inserts newlines if
@@ -67,35 +68,35 @@ hTuple = parens . hCommaSep
 -- The difference between this function and 'vTuple' is that the number of elements
 -- in a row in this function is not limited to 1 while the number of elements in
 -- a row in 'vTuple' is limited to 1.
-hFillingTuple :: [Printer ()] -> Printer ()
+hFillingTuple :: Foldable f => f (Printer ()) -> Printer ()
 hFillingTuple = parens . inter (comma >> (space <-|> newline))
 
 -- | Runs printers to construct a tuple where elements are aligned
 -- vertically.
-vTuple :: [Printer ()] -> Printer ()
+vTuple :: Foldable f => f (Printer ()) -> Printer ()
 vTuple = vCommaSepWrapped ("(", ")")
 
 -- | Similar to 'vTuple', but the closing parenthesis is in the last
 -- element.
-vTuple' :: [Printer ()] -> Printer ()
+vTuple' :: Foldable f => f (Printer ()) -> Printer ()
 vTuple' = vCommaSepWrapped' ("(", ")")
 
 -- | Runs printers to construct a promoted tuple in a line.
-hPromotedTuple :: [Printer ()] -> Printer ()
+hPromotedTuple :: Foldable f => f (Printer ()) -> Printer ()
 hPromotedTuple = promotedTupleParens . hCommaSep
 
 -- | Runs printers to construct an unboxed tuple. The elements are aligned
 -- either in a line or vertically.
-hvUnboxedTuple' :: [Printer ()] -> Printer ()
+hvUnboxedTuple' :: Foldable f => f (Printer ()) -> Printer ()
 hvUnboxedTuple' = (<-|>) <$> hUnboxedTuple <*> vUnboxedTuple'
 
 -- | Runs printers to construct an unboxed tuple in a line.
-hUnboxedTuple :: [Printer ()] -> Printer ()
+hUnboxedTuple :: Foldable f => f (Printer ()) -> Printer ()
 hUnboxedTuple = unboxedParens . hCommaSep
 
 -- | Runs printers to construct an unboxed tuple where the elements are
 -- aligned vertically.
-vUnboxedTuple' :: [Printer ()] -> Printer ()
+vUnboxedTuple' :: Foldable f => f (Printer ()) -> Printer ()
 vUnboxedTuple' = vCommaSepWrapped' ("(#", " #)")
 
 -- | Runs printers to construct an unboxed sum. The elements are aligned
@@ -103,11 +104,11 @@ vUnboxedTuple' = vCommaSepWrapped' ("(#", " #)")
 --
 -- The enclosing parenthesis will be printed on the same line as the last
 -- element.
-hvUnboxedSum' :: [Printer ()] -> Printer ()
+hvUnboxedSum' :: Foldable f => f (Printer ()) -> Printer ()
 hvUnboxedSum' = (<-|>) <$> hUnboxedSum <*> vUnboxedSum'
 
 -- | Runs printers to construct an unboxed sum in a line.
-hUnboxedSum :: [Printer ()] -> Printer ()
+hUnboxedSum :: Foldable f => f (Printer ()) -> Printer ()
 hUnboxedSum = unboxedParens . hBarSep
 
 -- | Runs printers to construct an unboxed sum where the elements are
@@ -115,123 +116,128 @@ hUnboxedSum = unboxedParens . hBarSep
 --
 -- The enclosing parenthesis will be printed on the same line as the last
 -- element.
-vUnboxedSum' :: [Printer ()] -> Printer ()
+vUnboxedSum' :: Foldable f => f (Printer ()) -> Printer ()
 vUnboxedSum' = vWrappedLineup' '|' ("(#", " #)")
 
 -- | Applies 'hFields' if the result fits in a line or 'vFields' otherwise.
-hvFields :: [Printer ()] -> Printer ()
+hvFields :: Foldable f => f (Printer ()) -> Printer ()
 hvFields = (<-|>) <$> hFields <*> vFields
 
 -- | Runs printers to construct a record in a line.
-hFields :: [Printer ()] -> Printer ()
+hFields :: Foldable f => f (Printer ()) -> Printer ()
 hFields = braces . hCommaSep
 
 -- | Runs printers to construct a record where elements are aligned
 -- vertically.
-vFields :: [Printer ()] -> Printer ()
+vFields :: Foldable f => f (Printer ()) -> Printer ()
 vFields = vCommaSepWrapped ("{", "}")
 
 -- | Similar to 'vFields', but the closing brace is in the same line as the
 -- last element.
-vFields' :: [Printer ()] -> Printer ()
+vFields' :: Foldable f => f (Printer ()) -> Printer ()
 vFields' = vCommaSepWrapped' ("{", "}")
 
 -- | Runs printers to construct a list in a line.
-hList :: [Printer ()] -> Printer ()
+hList :: Foldable f => f (Printer ()) -> Printer ()
 hList = brackets . hCommaSep
 
 -- | Runs printers to construct a list where elements are aligned
 -- vertically.
-vList :: [Printer ()] -> Printer ()
+vList :: Foldable f => f (Printer ()) -> Printer ()
 vList = vCommaSepWrapped ("[", "]")
 
 -- | Runs printers to construct a promoted list where elements are aligned
 -- in a line or vertically.
-hvPromotedList :: [Printer ()] -> Printer ()
+hvPromotedList :: Foldable f => f (Printer ()) -> Printer ()
 hvPromotedList = (<-|>) <$> hPromotedList <*> vPromotedList
 
 -- | Runs printers to construct a promoted list in a line.
-hPromotedList :: [Printer ()] -> Printer ()
+hPromotedList :: Foldable f => f (Printer ()) -> Printer ()
 hPromotedList = promotedListBrackets . hCommaSep
 
 -- | Runs printers to construct a promoted list where elements are aligned
 -- vertically.
-vPromotedList :: [Printer ()] -> Printer ()
+vPromotedList :: Foldable f => f (Printer ()) -> Printer ()
 vPromotedList = vCommaSepWrapped ("'[", " ]")
 
 -- | Runs printers in a line with a space as the separator.
-spaced :: [Printer ()] -> Printer ()
+spaced :: Foldable f => f (Printer ()) -> Printer ()
 spaced = inter space
 
 -- | Runs printers line by line.
-lined :: [Printer ()] -> Printer ()
+lined :: Foldable f => f (Printer ()) -> Printer ()
 lined = inter newline
 
 -- | Runs printers with a blank line as the separator.
-blanklined :: [Printer ()] -> Printer ()
+blanklined :: Foldable f => f (Printer ()) -> Printer ()
 blanklined = inter blankline
 
 -- | Applies 'hBarSep' if the result fits in a line or 'vBarSep' otherwise.
-hvBarSep :: [Printer ()] -> Printer ()
+hvBarSep :: Foldable f => f (Printer ()) -> Printer ()
 hvBarSep = (<-|>) <$> hBarSep <*> vBarSep
 
 -- | Runs printers in a line with a bar as the separator.
-hBarSep :: [Printer ()] -> Printer ()
+hBarSep :: Foldable f => f (Printer ()) -> Printer ()
 hBarSep = inter (string " | ")
 
 -- | Runs printers where each line except the first one has @| @ as
 -- a prefix.
-vBarSep :: [Printer ()] -> Printer ()
+vBarSep :: Foldable f => f (Printer ()) -> Printer ()
 vBarSep = prefixedLined "| "
 
 -- | Applies 'hCommaSep' if the result fits in a line or 'vCommaSep'
 -- otherwise.
-hvCommaSep :: [Printer ()] -> Printer ()
+hvCommaSep :: Foldable f => f (Printer ()) -> Printer ()
 hvCommaSep = (<-|>) <$> hCommaSep <*> vCommaSep
 
 -- | Runs printers in a line with a comma as the separator.
-hCommaSep :: [Printer ()] -> Printer ()
+hCommaSep :: Foldable f => f (Printer ()) -> Printer ()
 hCommaSep = inter (string ", ")
 
 -- | Runs printers with each line except the first one has @, @ as
 -- a prefix.
-vCommaSep :: [Printer ()] -> Printer ()
+vCommaSep :: Foldable f => f (Printer ()) -> Printer ()
 vCommaSep = prefixedLined ", "
 
 -- | Prints elements separated by comma  in vertical with the given prefix
 -- and suffix.
-vCommaSepWrapped :: (String, String) -> [Printer ()] -> Printer ()
+vCommaSepWrapped ::
+     Foldable f => (String, String) -> f (Printer ()) -> Printer ()
 vCommaSepWrapped = vWrappedLineup ','
 
 -- | Similar to 'vCommaSepWrapped' but the suffix is in the same line as the last
 -- element.
-vCommaSepWrapped' :: (String, String) -> [Printer ()] -> Printer ()
+vCommaSepWrapped' ::
+     Foldable f => (String, String) -> f (Printer ()) -> Printer ()
 vCommaSepWrapped' = vWrappedLineup' ','
 
 -- | Runs printers with a dot as the separator.
-hDotSep :: [Printer ()] -> Printer ()
+hDotSep :: Foldable f => f (Printer ()) -> Printer ()
 hDotSep = inter (string ".")
 
 -- | Prints each element after a space like.
-spacePrefixed :: [Printer ()] -> Printer ()
+spacePrefixed :: Foldable f => f (Printer ()) -> Printer ()
 spacePrefixed = mapM_ (space >>)
 
 -- | Prints each element after a new line.
-newlinePrefixed :: [Printer ()] -> Printer ()
+newlinePrefixed :: Foldable f => f (Printer ()) -> Printer ()
 newlinePrefixed = mapM_ (newline >>)
 
 -- | Runs printers with a prefix. The prefix is printed before the indent.
-prefixedLined :: String -> [Printer ()] -> Printer ()
-prefixedLined _ [] = return ()
-prefixedLined pref (x:xs) = do
-  x
-  forM_ xs $ \p -> do
-    newline
-    prefixed pref p
+prefixedLined :: Foldable f => String -> f (Printer ()) -> Printer ()
+prefixedLined pref printers =
+  case toList printers of
+    [] -> return ()
+    x:xs -> do
+      x
+      forM_ xs $ \p -> do
+        newline
+        prefixed pref p
 
 -- | Prints elements in vertical with the given prefix, suffix, and
 -- separator.
-vWrappedLineup :: Char -> (String, String) -> [Printer ()] -> Printer ()
+vWrappedLineup ::
+     Foldable f => Char -> (String, String) -> f (Printer ()) -> Printer ()
 vWrappedLineup sep (prefix, suffix) ps =
   string prefix
     >> space |=> do
@@ -241,16 +247,18 @@ vWrappedLineup sep (prefix, suffix) ps =
 
 -- | Similar to 'vWrappedLineup' but the suffix is in the same line as the
 -- last element.
-vWrappedLineup' :: Char -> (String, String) -> [Printer ()] -> Printer ()
-vWrappedLineup' _ (prefix, suffix) [x] =
-  spaced [string prefix, x, string suffix]
-vWrappedLineup' sep (prefix, suffix) ps =
-  string prefix
-    >> space |=> do
-         prefixedLined [sep, ' '] ps
-         string suffix
+vWrappedLineup' ::
+     Foldable f => Char -> (String, String) -> f (Printer ()) -> Printer ()
+vWrappedLineup' sep (prefix, suffix) printers =
+  case toList printers of
+    [x] -> spaced [string prefix, x, string suffix]
+    ps ->
+      string prefix
+        >> space |=> do
+             prefixedLined [sep, ' '] ps
+             string suffix
 
 -- Inserts the first printer between each element of the list passed as the
 -- second argument and runs them.
-inter :: Printer () -> [Printer ()] -> Printer ()
-inter separator = sequence_ . intersperse separator
+inter :: Foldable f => Printer () -> f (Printer ()) -> Printer ()
+inter separator = sequence_ . intersperse separator . toList
