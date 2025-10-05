@@ -5,7 +5,7 @@ module HIndent.Ast.Declaration.Data.Record.Field
   , mkRecordField
   ) where
 
-import HIndent.Ast.Declaration.Data.Record.FieldName
+import HIndent.Ast.Name.RecordField (FieldName, mkFieldNameFromFieldOcc)
 import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Ast.Type
 import HIndent.Ast.WithComments
@@ -29,5 +29,5 @@ instance Pretty RecordField where
 mkRecordField :: GHC.ConDeclField GHC.GhcPs -> RecordField
 mkRecordField GHC.ConDeclField {..} = RecordField {..}
   where
-    names = fmap mkFieldName . fromGenLocated <$> cd_fld_names
+    names = fmap mkFieldNameFromFieldOcc . fromGenLocated <$> cd_fld_names
     ty = mkType <$> fromGenLocated cd_fld_type

@@ -6,9 +6,9 @@ module HIndent.Ast.Declaration.PatternSynonym
   ) where
 
 import HIndent.Applicative
-import HIndent.Ast.Declaration.Data.Record.FieldName
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
+import HIndent.Ast.Name.RecordField (FieldName, mkFieldNameFromFieldOcc)
 import HIndent.Ast.Pattern
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -76,7 +76,11 @@ mkParameters (GHC.InfixCon l r) =
     }
 mkParameters (GHC.RecCon fields) =
   Record
-    {fields = map (mkWithComments . mkFieldName . GHC.recordPatSynField) fields}
+    { fields =
+        map
+          (mkWithComments . mkFieldNameFromFieldOcc . GHC.recordPatSynField)
+          fields
+    }
 
 mkPatternSynonym :: GHC.PatSynBind GHC.GhcPs GHC.GhcPs -> PatternSynonym
 mkPatternSynonym GHC.PSB {..} = PatternSynonym {..}

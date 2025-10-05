@@ -109,9 +109,6 @@ instance CommentExtraction (HsValBindsLR GhcPs GhcPs) where
   nodeComments ValBinds {} = emptyNodeComments
   nodeComments XValBindsLR {} = notUsedInParsedStage
 
-instance CommentExtraction (FieldOcc GhcPs) where
-  nodeComments FieldOcc {} = emptyNodeComments
-
 -- HsConDeclH98Details
 instance CommentExtraction
            (HsConDetails
@@ -139,13 +136,6 @@ instance CommentExtraction (BooleanFormula a) where
   nodeComments Or {} = emptyNodeComments
   nodeComments Parens {} = emptyNodeComments
 
-instance CommentExtraction (FieldLabelStrings GhcPs) where
-  nodeComments FieldLabelStrings {} = emptyNodeComments
-#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
-instance CommentExtraction (AmbiguousFieldOcc GhcPs) where
-  nodeComments Unambiguous {} = emptyNodeComments
-  nodeComments Ambiguous {} = emptyNodeComments
-#endif
 instance CommentExtraction (ImportDecl GhcPs) where
   nodeComments ImportDecl {..} = nodeComments ideclExt
 
