@@ -3,11 +3,14 @@
 module HIndent.Ast.Expression.Splice
   ( Splice
   , mkSplice
+  , mkTypedSplice
   ) where
 
 import qualified GHC.Data.FastString as GHC
+import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments (WithComments, fromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -16,15 +19,15 @@ import HIndent.Pretty.NodeComments
 import qualified GHC.Types.SrcLoc as GHC
 #endif
 data Splice
-  = Typed (GHC.LHsExpr GHC.GhcPs)
-  | UntypedDollar (GHC.LHsExpr GHC.GhcPs)
-  | UntypedBare (GHC.LHsExpr GHC.GhcPs)
+  = Typed (WithComments Expression)
+  | UntypedDollar (WithComments Expression)
+  | UntypedBare (WithComments Expression)
   | QuasiQuote PrefixName GHC.FastString
 
 instance CommentExtraction Splice where
-  nodeComments Typed {} = NodeComments [] [] []
-  nodeComments UntypedDollar {} = NodeComments [] [] []
-  nodeComments UntypedBare {} = NodeComments [] [] []
+  nodeComments (Typed expr) = nodeComments expr
+  nodeComments (UntypedDollar expr) = nodeComments expr
+  nodeComments (UntypedBare expr) = nodeComments expr
   nodeComments QuasiQuote {} = NodeComments [] [] []
 
 instance Pretty Splice where
@@ -46,16 +49,18 @@ instance Pretty Splice where
       printers ps s (x:xs) = printers ps (x : s) xs
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 mkSplice :: GHC.HsUntypedSplice GHC.GhcPs -> Splice
-mkSplice (GHC.HsUntypedSpliceExpr anns x) =
-  if hasDollarToken anns
-    then UntypedDollar x
-    else UntypedBare x
+mkSplice (GHC.HsUntypedSpliceExpr anns x)
+  | hasDollarToken anns = UntypedDollar $ mkExpression <$> fromGenLocated x
+  | otherwise = UntypedBare $ mkExpression <$> fromGenLocated x
 mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) = QuasiQuote (mkPrefixName l) r
 #else
 mkSplice :: GHC.HsSplice GHC.GhcPs -> Splice
-mkSplice (GHC.HsTypedSplice _ _ _ body) = Typed body
-mkSplice (GHC.HsUntypedSplice _ GHC.DollarSplice _ body) = UntypedDollar body
-mkSplice (GHC.HsUntypedSplice _ GHC.BareSplice _ body) = UntypedBare body
+mkSplice (GHC.HsTypedSplice _ _ _ body) =
+  Typed $ mkExpression <$> fromGenLocated body
+mkSplice (GHC.HsUntypedSplice _ GHC.DollarSplice _ body) =
+  UntypedDollar $ mkExpression <$> fromGenLocated body
+mkSplice (GHC.HsUntypedSplice _ GHC.BareSplice _ body) =
+  UntypedBare $ mkExpression <$> fromGenLocated body
 mkSplice (GHC.HsQuasiQuote _ _ l _ r) = QuasiQuote (mkPrefixName l) r
 mkSplice GHC.HsSpliced {} = error "This AST node should never appear."
 #endif
@@ -78,3 +83,5 @@ hasDollarToken (GHC.EpAnn _ anns _) = any isDollarAnn anns
     isDollarAnn _ = False
 hasDollarToken GHC.EpAnnNotUsed = False
 #endif
+mkTypedSplice :: GHC.LHsExpr GHC.GhcPs -> Splice
+mkTypedSplice = Typed . fmap mkExpression . fromGenLocated

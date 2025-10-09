@@ -93,9 +93,12 @@ library
       HIndent.Ast.Declaration.Warning
       HIndent.Ast.Declaration.Warning.Collection
       HIndent.Ast.Declaration.Warning.Kind
+      HIndent.Ast.Expression
       HIndent.Ast.Expression.Bracket
+      HIndent.Ast.Expression.ListComprehension
       HIndent.Ast.Expression.OverloadedLabel
       HIndent.Ast.Expression.RangeExpression
+      HIndent.Ast.Expression.RecordUpdateField
       HIndent.Ast.Expression.Splice
       HIndent.Ast.FileHeaderPragma
       HIndent.Ast.FileHeaderPragma.Collection

@@ -7,68 +7,26 @@
 -- functions to print comments easily using the 'Pretty' implementation of
 -- 'GenLocated'.
 module HIndent.Pretty.Types
-  ( InfixExpr(..)
-  , InfixOp(..)
-  , PrefixOp(..)
-  , InfixApp(..)
-  , DataFamInstDecl'(..)
+  ( DataFamInstDecl'(..)
   , pattern DataFamInstDeclTopLevel
   , pattern DataFamInstDeclInsideClassInst
   , FamEqn'(..)
   , pattern FamEqnTopLevel
   , pattern FamEqnInsideClassInst
-  , StmtLRInsideVerticalList(..)
-  , ParStmtBlockInsideVerticalList(..)
   , TopLevelTyFamInstDecl(..)
   , Context(..)
   , HorizontalContext(..)
   , VerticalContext(..)
-  , LambdaCase(..)
-  , ListComprehension(..)
-  , DoExpression(..)
   , DoOrMdo(..)
   , QualifiedDo(..)
-  , LetIn(..)
-  , CaseOrCases(..)
   , DataFamInstDeclFor(..)
   ) where
 
-import Data.List.NonEmpty
 import GHC.Hs
-import GHC.Types.Name.Reader
 import {-# SOURCE #-} qualified HIndent.Ast.Module.Name as HIndent
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
 import GHC.Unit
 #endif
--- | `LHsExpr` used as a infix operator
-newtype InfixExpr =
-  InfixExpr (LHsExpr GhcPs)
-
-newtype InfixOp =
-  InfixOp RdrName
-
--- | A wrapper type for printing an identifier as a prefix operator.
---
--- Printing a `PrefixOp` value containing a symbol operator wraps it with
--- parentheses.
-newtype PrefixOp =
-  PrefixOp RdrName
-
--- | An infix operator application.
---
--- `immediatelyAfterDo` is `True` if an application is next to a `do`
--- keyword. It needs an extra indent in such cases because
---
--- > do a
--- > * b
---
--- is not a valid Haskell code.
-data InfixApp = InfixApp
-  { lhs :: LHsExpr GhcPs
-  , op :: LHsExpr GhcPs
-  , rhs :: LHsExpr GhcPs
-  }
-
 -- | A wrapper of `DataFamInstDecl`.
 data DataFamInstDecl' = DataFamInstDecl'
   { dataFamInstDeclFor :: DataFamInstDeclFor -- ^ Where a data family instance is declared.
@@ -100,14 +58,6 @@ pattern FamEqnTopLevel x = FamEqn' DataFamInstDeclForTopLevel x
 -- inside a class instance.
 pattern FamEqnInsideClassInst :: FamEqn GhcPs (HsDataDefn GhcPs) -> FamEqn'
 pattern FamEqnInsideClassInst x = FamEqn' DataFamInstDeclForInsideClassInst x
-
--- | `StmtLR` inside a vertically printed list.
-newtype StmtLRInsideVerticalList =
-  StmtLRInsideVerticalList (StmtLR GhcPs GhcPs (LHsExpr GhcPs))
-
--- | `ParStmtBlock` inside a vertically printed list.
-newtype ParStmtBlockInsideVerticalList =
-  ParStmtBlockInsideVerticalList (ParStmtBlock GhcPs GhcPs)
 
 -- | A top-level type family instance declaration.
 newtype TopLevelTyFamInstDecl =
@@ -141,30 +91,6 @@ newtype HorizontalContext =
 newtype VerticalContext =
   VerticalContext (Maybe (LHsContext GhcPs))
 #endif
--- | Lambda case.
-data LambdaCase = LambdaCase
-  { lamCaseGroup :: MatchGroup GhcPs (LHsExpr GhcPs)
-  , caseOrCases :: CaseOrCases
-  }
-
--- | Use this type to pretty-print a list comprehension.
-data ListComprehension = ListComprehension
-  { listCompLhs :: ExprLStmt GhcPs -- ^ @f x@ of @[f x| x <- xs]@.
-  , listCompRhs :: NonEmpty (ExprLStmt GhcPs) -- ^ @x <- xs@ of @[f x| x <- xs]@.
-  }
-
--- | Use this type to pretty-print a do expression.
-data DoExpression = DoExpression
-  { doStmts :: [ExprLStmt GhcPs]
-  , qualifiedDo :: QualifiedDo
-  }
-
--- | Use this type to pretty-print a @let ... in ...@ expression.
-data LetIn = LetIn
-  { letBinds :: HsLocalBinds GhcPs
-  , inExpr :: LHsExpr GhcPs
-  }
-
 -- | Values indicating whether `do` or `mdo` is used.
 data DoOrMdo
   = Do
@@ -174,11 +100,6 @@ data DoOrMdo
 -- whether `do` or `mdo` is used)
 data QualifiedDo =
   QualifiedDo (Maybe HIndent.ModuleName) DoOrMdo
-
--- | Values indicating whether `case` or `cases` is used.
-data CaseOrCases
-  = Case
-  | Cases
 
 -- | Values indicating where a data family instance is declared.
 data DataFamInstDeclFor

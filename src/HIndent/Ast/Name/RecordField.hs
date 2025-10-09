@@ -53,10 +53,9 @@ mkFieldNameFromAmbiguousFieldOcc (GHC.Ambiguous GHC.NoExtField name) =
 #endif
 mkFieldNameFromFieldLabelStrings :: GHC.FieldLabelStrings GHC.GhcPs -> FieldName
 mkFieldNameFromFieldLabelStrings (GHC.FieldLabelStrings labels) =
-  maybe
-    (error "FieldLabelStrings: expected non-empty label path")
-    FieldName
-    (NonEmpty.nonEmpty $ fmap toSegment labels)
+  maybe (error "FieldLabelStrings: expected non-empty label path") FieldName
+    $ NonEmpty.nonEmpty
+    $ fmap toSegment labels
   where
     toSegment =
       flattenComments

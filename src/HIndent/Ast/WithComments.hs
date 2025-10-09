@@ -10,6 +10,8 @@ module HIndent.Ast.WithComments
   , fromEpAnn
   , mkWithComments
   , getNode
+  , getComments
+  , addComments
   , flattenComments
   ) where
 
@@ -133,6 +135,13 @@ mkWithComments = WithComments mempty
 getNode :: WithComments a -> a
 getNode = node
 
+getComments :: WithComments a -> NodeComments
+getComments = comments
+
 flattenComments :: WithComments (WithComments a) -> WithComments a
 flattenComments (WithComments outerComments (WithComments innerComments node)) =
   WithComments (outerComments <> innerComments) node
+
+addComments :: NodeComments -> WithComments a -> WithComments a
+addComments extra (WithComments current node) =
+  WithComments (extra <> current) node

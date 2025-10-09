@@ -65,8 +65,6 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
 #endif
-instance Pretty (GHC.HsExpr GHC.GhcPs)
-
 instance Pretty (GHC.HsLit GHC.GhcPs)
 
 instance Pretty (GHC.HsOverLit GHC.GhcPs)
@@ -90,3 +88,19 @@ instance Pretty
               GHC.GhcPs
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsCmd GHC.GhcPs)))
+
+instance Pretty
+           (GHC.HsWildCardBndrs
+              GHC.GhcPs
+              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
+
+instance Pretty
+           (GHC.HsRecFields
+              GHC.GhcPs
+              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
+
+instance Pretty (GHC.DotFieldOcc GHC.GhcPs)
+
+instance Pretty (GHC.HsCmdTop GHC.GhcPs)
+
+instance Pretty (GHC.HsPragE GHC.GhcPs)

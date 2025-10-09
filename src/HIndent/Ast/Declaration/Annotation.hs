@@ -7,7 +7,9 @@ module HIndent.Ast.Declaration.Annotation
   ) where
 
 import HIndent.Ast.Declaration.Annotation.Provenance
+import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -15,7 +17,7 @@ import HIndent.Pretty.NodeComments
 
 data Annotation = Annotation
   { provenance :: Provenance
-  , expr :: GHC.LHsExpr GHC.GhcPs
+  , expr :: WithComments Expression
   }
 
 instance CommentExtraction Annotation where
@@ -27,9 +29,13 @@ instance Pretty Annotation where
 
 mkAnnotation :: GHC.AnnDecl GHC.GhcPs -> Annotation
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-mkAnnotation (GHC.HsAnnotation _ prov expr) =
-  Annotation {provenance = mkProvenance prov, ..}
+mkAnnotation (GHC.HsAnnotation _ prov expression) = Annotation {..}
+  where
+    provenance = mkProvenance prov
+    expr = mkExpression <$> fromGenLocated expression
 #else
-mkAnnotation (GHC.HsAnnotation _ _ prov expr) =
-  Annotation {provenance = mkProvenance prov, ..}
+mkAnnotation (GHC.HsAnnotation _ _ prov expression) = Annotation {..}
+  where
+    provenance = mkProvenance prov
+    expr = mkExpression <$> fromGenLocated expression
 #endif
