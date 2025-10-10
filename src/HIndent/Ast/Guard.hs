@@ -14,15 +14,17 @@ module HIndent.Ast.Guard
   ) where
 
 import Control.Monad (unless)
-import qualified GHC.Types.SrcLoc as GHC
-import HIndent.Ast.Module.Name (mkModuleName)
+import {-# SOURCE #-} HIndent.Ast.Expression
+  ( GuardExpression
+  , mkExpression
+  , mkGuardExpression
+  )
 import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments (WithComments, fromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-import HIndent.Pretty.Types (DoOrMdo(..), QualifiedDo(..))
-import HIndent.Printer ()
 
 data GuardContext
   = PlainGuard
@@ -35,7 +37,7 @@ data Guard
   = ExprGuard
       { guardContext :: GuardContext
       , conditions :: [GHC.GuardLStmt GHC.GhcPs]
-      , expr :: GHC.LHsExpr GHC.GhcPs
+      , expr :: WithComments GuardExpression
       }
   | CmdGuard
       { guardContext :: GuardContext
@@ -51,27 +53,7 @@ instance Pretty Guard where
     | null conditions = do
       space
       string (contextSeparator guardContext)
-      case GHC.unLoc expr of
-        GHC.HsDo _ (GHC.DoExpr m) stmts ->
-          printCommentsAnd expr $ \_ -> do
-            space
-            pretty (QualifiedDo (fmap mkModuleName m) Do)
-            newline
-            indentedBlock $ printCommentsAnd stmts (lined . fmap pretty)
-        GHC.HsDo _ (GHC.MDoExpr m) stmts ->
-          printCommentsAnd expr $ \_ -> do
-            space
-            pretty (QualifiedDo (fmap mkModuleName m) Mdo)
-            newline
-            indentedBlock $ printCommentsAnd stmts (lined . fmap pretty)
-        GHC.OpApp _ (GHC.L _ (GHC.HsDo _ GHC.DoExpr {} _)) _ _ ->
-          space >> pretty expr
-        GHC.OpApp _ (GHC.L _ (GHC.HsDo _ GHC.MDoExpr {} _)) _ _ ->
-          space >> pretty expr
-        _ ->
-          let hor = space >> pretty expr
-              ver = newline >> indentedBlock (pretty expr)
-           in hor <-|> ver
+      pretty expr
     | otherwise = do
       unless (guardContext == MultiWayIfGuard) newline
       (if guardContext == MultiWayIfGuard
@@ -80,21 +62,7 @@ instance Pretty Guard where
         string "| " |=> vCommaSep (fmap pretty conditions)
         space
         string (contextSeparator guardContext)
-        printCommentsAnd expr $ \case
-          GHC.HsDo _ (GHC.DoExpr m) stmts -> do
-            space
-            pretty (QualifiedDo (fmap mkModuleName m) Do)
-            newline
-            indentedBlock (printCommentsAnd stmts (lined . fmap pretty))
-          GHC.HsDo _ (GHC.MDoExpr m) stmts -> do
-            space
-            pretty (QualifiedDo (fmap mkModuleName m) Mdo)
-            newline
-            indentedBlock (printCommentsAnd stmts (lined . fmap pretty))
-          x ->
-            let hor = space >> pretty x
-                ver = newline >> indentedBlock (pretty x)
-             in hor <-|> ver
+        pretty expr
   pretty' CmdGuard {..}
     | null conditions = do
       string (contextSeparator guardContext)
@@ -136,20 +104,36 @@ contextSeparator LambdaGuard = "->"
 contextSeparator MultiWayIfGuard = "->"
 
 mkExprGuard :: GHC.GRHS GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Guard
-mkExprGuard (GHC.GRHS _ conditions expr) =
-  ExprGuard {guardContext = PlainGuard, ..}
+mkExprGuard (GHC.GRHS _ conditions resultExpr) =
+  ExprGuard
+    { guardContext = PlainGuard
+    , expr = mkGuardExpression . mkExpression <$> fromGenLocated resultExpr
+    , ..
+    }
 
 mkCaseExprGuard :: GHC.GRHS GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Guard
-mkCaseExprGuard (GHC.GRHS _ conditions expr) =
-  ExprGuard {guardContext = CaseGuard, ..}
+mkCaseExprGuard (GHC.GRHS _ conditions resultExpr) =
+  ExprGuard
+    { guardContext = CaseGuard
+    , expr = mkGuardExpression . mkExpression <$> fromGenLocated resultExpr
+    , ..
+    }
 
 mkLambdaExprGuard :: GHC.GRHS GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Guard
-mkLambdaExprGuard (GHC.GRHS _ conditions expr) =
-  ExprGuard {guardContext = LambdaGuard, ..}
+mkLambdaExprGuard (GHC.GRHS _ conditions resultExpr) =
+  ExprGuard
+    { guardContext = LambdaGuard
+    , expr = mkGuardExpression . mkExpression <$> fromGenLocated resultExpr
+    , ..
+    }
 
 mkMultiWayIfExprGuard :: GHC.GRHS GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Guard
-mkMultiWayIfExprGuard (GHC.GRHS _ conditions expr) =
-  ExprGuard {guardContext = MultiWayIfGuard, ..}
+mkMultiWayIfExprGuard (GHC.GRHS _ conditions resultExpr) =
+  ExprGuard
+    { guardContext = MultiWayIfGuard
+    , expr = mkGuardExpression . mkExpression <$> fromGenLocated resultExpr
+    , ..
+    }
 
 mkCaseCmdGuard :: GHC.GRHS GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> Guard
 mkCaseCmdGuard (GHC.GRHS _ conditions cmd) =

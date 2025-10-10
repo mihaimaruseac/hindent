@@ -4,7 +4,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ViewPatterns #-}
 
 -- | Pretty printing.
@@ -22,13 +21,10 @@ module HIndent.Pretty
 
 import Control.Monad
 import Control.Monad.RWS
-import Data.List.NonEmpty (NonEmpty(..))
-import qualified Data.List.NonEmpty as NE
 import Data.Maybe
 import qualified GHC.Data.FastString as GHC
 import qualified GHC.Hs as GHC
 import GHC.Stack
-import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.Fixity as GHC
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
@@ -48,33 +44,23 @@ import HIndent.Ast.Declaration.Instance.Family.Type.Associated
   ( mkAssociatedType
   )
 import HIndent.Ast.Declaration.Signature
-import HIndent.Ast.Expression.Bracket
-import HIndent.Ast.Expression.OverloadedLabel
-import HIndent.Ast.Expression.RangeExpression (mkRangeExpression)
-import HIndent.Ast.Expression.Splice
-import HIndent.Ast.Guard (mkMultiWayIfExprGuard)
+import HIndent.Ast.Expression (mkExpression)
 import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.ImportExport
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.Name.RecordField
-  ( mkFieldNameFromAmbiguousFieldOcc
-  , mkFieldNameFromFieldLabelStrings
-  , mkFieldNameFromFieldOcc
-  )
+import HIndent.Ast.Name.RecordField (mkFieldNameFromFieldOcc)
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Pattern
 import HIndent.Ast.Type
 import HIndent.Ast.Type.ImplicitParameterName (mkImplicitParameterName)
 import HIndent.Ast.Type.Strictness
 import HIndent.Ast.WithComments
-import HIndent.Fixity
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 import qualified HIndent.Pretty.SigBindFamily as SBF
 import HIndent.Pretty.Types
 import HIndent.Printer
-import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified GHC.Data.Bag as GHC
 #endif
@@ -170,402 +156,6 @@ instance Pretty
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsCmd GHC.GhcPs))) where
   pretty' GHC.MG {..} = printCommentsAnd mg_alts (lined . fmap pretty)
-
-instance Pretty (GHC.HsExpr GHC.GhcPs) where
-  pretty' = prettyHsExpr
-
-prettyHsExpr :: GHC.HsExpr GHC.GhcPs -> Printer ()
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-prettyHsExpr GHC.HsEmbTy {} = notGeneratedByParser
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-prettyHsExpr GHC.HsForAll {} = notGeneratedByParser
-prettyHsExpr GHC.HsQual {} = notGeneratedByParser
-prettyHsExpr GHC.HsFunArr {} = notGeneratedByParser
-#endif
-prettyHsExpr (GHC.HsVar _ bind) = pretty $ fmap mkPrefixName bind
-#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
-prettyHsExpr (GHC.HsUnboundVar _ x) = pretty $ mkPrefixName x
-#else
-prettyHsExpr (GHC.HsUnboundVar _ x) = pretty x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1) && !MIN_VERSION_ghc_lib_parser(9, 12, 1)
-prettyHsExpr (GHC.HsOverLabel _ _ l) = pretty $ mkOverloadedLabel l
-#else
-prettyHsExpr (GHC.HsOverLabel _ l) = pretty $ mkOverloadedLabel l
-#endif
-prettyHsExpr (GHC.HsIPVar _ var) = pretty $ mkImplicitParameterName var
-prettyHsExpr (GHC.HsOverLit _ x) = pretty x
-prettyHsExpr (GHC.HsLit _ l) = pretty l
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-prettyHsExpr (GHC.HsLam _ GHC.LamSingle body) = pretty body
-prettyHsExpr (GHC.HsLam _ GHC.LamCase body) = pretty $ LambdaCase body Case
-prettyHsExpr (GHC.HsLam _ GHC.LamCases body) = pretty $ LambdaCase body Cases
-#else
-prettyHsExpr (GHC.HsLam _ body) = pretty body
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
--- No `HsLamCase` since 9.10.1.
-#elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
-prettyHsExpr (GHC.HsLamCase _ GHC.LamCase matches) =
-  pretty $ LambdaCase matches Case
-prettyHsExpr (GHC.HsLamCase _ GHC.LamCases matches) =
-  pretty $ LambdaCase matches Cases
-#else
-prettyHsExpr (GHC.HsLamCase _ matches) = pretty $ LambdaCase matches Case
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-prettyHsExpr (GHC.HsApp _ l r) = horizontal <-|> vertical
-  where
-    horizontal = spaced [pretty l, pretty r]
-    vertical = do
-      let (f, args) =
-            case flatten l ++ [r] of
-              [] -> error "Invalid function application."
-              (f':args') -> (f', args')
-      col <- gets psColumn
-      spaces <- getIndentSpaces
-      pretty f
-      col' <- gets psColumn
-      let diff =
-            col'
-              - col
-              - if col == 0
-                  then spaces
-                  else 0
-      if diff + 1 <= spaces
-        then space
-        else newline
-      spaces' <- getIndentSpaces
-      indentedWithSpace spaces' $ lined $ fmap pretty args
-    flatten :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-    flatten (GHC.L (GHC.EpAnn _ _ cs) (GHC.HsApp _ l' r')) =
-      flatten l' ++ [insertComments cs r']
-    flatten x = [x]
-    insertComments ::
-         GHC.EpAnnComments -> GHC.LHsExpr GHC.GhcPs -> GHC.LHsExpr GHC.GhcPs
-    insertComments cs (GHC.L s@GHC.EpAnn {comments = cs'} r') =
-      GHC.L (s {GHC.comments = cs <> cs'}) r'
-#else
-prettyHsExpr (GHC.HsApp _ l r) = horizontal <-|> vertical
-  where
-    horizontal = spaced [pretty l, pretty r]
-    vertical = do
-      let (f, args) =
-            case flatten l ++ [r] of
-              [] -> error "Invalid function application."
-              (f':args') -> (f', args')
-      col <- gets psColumn
-      spaces <- getIndentSpaces
-      pretty f
-      col' <- gets psColumn
-      let diff =
-            col'
-              - col
-              - if col == 0
-                  then spaces
-                  else 0
-      if diff + 1 <= spaces
-        then space
-        else newline
-      spaces' <- getIndentSpaces
-      indentedWithSpace spaces' $ lined $ fmap pretty args
-    flatten :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-    flatten (GHC.L (GHC.SrcSpanAnn (GHC.EpAnn _ _ cs) _) (GHC.HsApp _ l' r')) =
-      flatten l' ++ [insertComments cs r']
-    flatten x = [x]
-    insertComments ::
-         GHC.EpAnnComments -> GHC.LHsExpr GHC.GhcPs -> GHC.LHsExpr GHC.GhcPs
-    insertComments cs (GHC.L s@GHC.SrcSpanAnn {GHC.ann = e@GHC.EpAnn {comments = cs'}} r') =
-      GHC.L (s {GHC.ann = e {GHC.comments = cs <> cs'}}) r'
-    insertComments _ x = x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
-prettyHsExpr (GHC.HsAppType _ l _ r) = do
-  pretty l
-  string " @"
-  pretty r
-#else
-prettyHsExpr (GHC.HsAppType _ l r) = do
-  pretty l
-  string " @"
-  pretty r
-#endif
-prettyHsExpr (GHC.OpApp _ l o r) = pretty (InfixApp l o r)
-prettyHsExpr (GHC.NegApp _ x _) = string "-" >> pretty x
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
-prettyHsExpr (GHC.HsPar _ _ expr _) = parens $ pretty expr
-#else
-prettyHsExpr (GHC.HsPar _ expr) = parens $ pretty expr
-#endif
-prettyHsExpr (GHC.SectionL _ l o) = spaced [pretty l, pretty (InfixExpr o)]
-prettyHsExpr (GHC.SectionR _ o r) = (pretty (InfixExpr o) >> space) |=> pretty r
-prettyHsExpr (GHC.ExplicitTuple _ full boxity) = horizontal <-|> vertical
-  where
-    horizontal = parH $ fmap pretty full
-    vertical =
-      parV
-        $ prefixedLined ","
-        $ fmap (\e -> unless (isMissing e) (space |=> pretty e)) full
-    isMissing GHC.Missing {} = True
-    isMissing _ = False
-    parH =
-      case boxity of
-        GHC.Boxed -> hTuple
-        GHC.Unboxed -> hUnboxedTuple
-    parV =
-      case boxity of
-        GHC.Boxed -> parens
-        GHC.Unboxed -> unboxedParens
-prettyHsExpr (GHC.ExplicitSum _ position numElem expr) = do
-  string "(#"
-  forM_ [1 .. numElem] $ \idx -> do
-    if idx == position
-      then string " " >> pretty expr >> string " "
-      else string " "
-    when (idx < numElem) $ string "|"
-  string "#)"
-prettyHsExpr (GHC.HsCase _ cond arms) = do
-  string "case " |=> do
-    pretty cond
-    string " of"
-  if null $ GHC.unLoc $ GHC.mg_alts arms
-    then string " {}"
-    else do
-      newline
-      indentedBlock $ pretty arms
-prettyHsExpr (GHC.HsIf _ cond t f) = do
-  string "if " |=> pretty cond
-  indentedBlock $ newlinePrefixed [branch "then " t, branch "else " f]
-  where
-    branch :: String -> GHC.LHsExpr GHC.GhcPs -> Printer ()
-    branch str e =
-      case e of
-        (GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)) ->
-          doStmt (QualifiedDo (fmap mkModuleName m) Do) xs
-        (GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)) ->
-          doStmt (QualifiedDo (fmap mkModuleName m) Mdo) xs
-        _ -> string str |=> pretty e
-      where
-        doStmt qDo stmts = do
-          string str
-          pretty qDo
-          newline
-          indentedBlock $ printCommentsAnd stmts (lined . fmap pretty)
-prettyHsExpr (GHC.HsMultiIf _ guards) =
-  string "if "
-    |=> lined
-          (fmap (pretty . fmap mkMultiWayIfExprGuard . fromGenLocated) guards)
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
-prettyHsExpr (GHC.HsLet _ _ binds _ exprs) = pretty $ LetIn binds exprs
-#else
-prettyHsExpr (GHC.HsLet _ binds exprs) = pretty $ LetIn binds exprs
-#endif
-prettyHsExpr (GHC.HsDo _ GHC.ListComp {} (GHC.L _ [])) =
-  error "Not enough arguments are passed to pretty-print a list comprehension."
-prettyHsExpr (GHC.HsDo _ GHC.ListComp {} (GHC.L _ [_])) =
-  error "Not enough arguments are passed to pretty-print a list comprehension."
-prettyHsExpr (GHC.HsDo _ GHC.ListComp {} (GHC.L l (lhs:rhs:rhss))) =
-  pretty $ GHC.L l $ ListComprehension lhs (rhs :| rhss)
--- While the name contains 'Monad', 'MonadComp' is for list comprehensions.
-prettyHsExpr (GHC.HsDo _ GHC.MonadComp {} (GHC.L _ [])) =
-  error "Not enough arguments are passed to pretty-print a list comprehension."
-prettyHsExpr (GHC.HsDo _ GHC.MonadComp {} (GHC.L _ [_])) =
-  error "Not enough arguments are passed to pretty-print a list comprehension."
-prettyHsExpr (GHC.HsDo _ GHC.MonadComp {} (GHC.L l (lhs:rhs:rhss))) =
-  pretty $ GHC.L l $ ListComprehension lhs (rhs :| rhss)
-prettyHsExpr (GHC.HsDo _ (GHC.DoExpr m) (GHC.L l xs)) =
-  pretty $ GHC.L l $ DoExpression xs (QualifiedDo (fmap mkModuleName m) Do)
-prettyHsExpr (GHC.HsDo _ (GHC.MDoExpr m) (GHC.L l xs)) =
-  pretty $ GHC.L l $ DoExpression xs (QualifiedDo (fmap mkModuleName m) Mdo)
-prettyHsExpr (GHC.HsDo _ GHC.GhciStmtCtxt {} _) =
-  error "We're not using GHCi, are we?"
-prettyHsExpr (GHC.ExplicitList _ xs) = horizontal <-|> vertical
-  where
-    horizontal = brackets $ hCommaSep $ fmap pretty xs
-    vertical = vList $ fmap pretty xs
-prettyHsExpr (GHC.RecordCon _ name fields) = horizontal <-|> vertical
-  where
-    horizontal = spaced [pretty $ fmap mkPrefixName name, pretty fields]
-    vertical = do
-      pretty $ fmap mkPrefixName name
-      (space >> pretty fields) <-|> (newline >> indentedBlock (pretty fields))
-#if MIN_VERSION_ghc_lib_parser(9,8,1)
-prettyHsExpr (GHC.RecordUpd _ name fields) = hor <-|> ver
-  where
-    hor = spaced [pretty name, printHorFields fields]
-    ver = do
-      pretty name
-      newline
-      indentedBlock $ printHorFields fields <-|> printVerFields fields
-    printHorFields GHC.RegularRecUpdFields {..} =
-      hFields $ printHorField mkFieldNameFromAmbiguousFieldOcc <$> recUpdFields
-    printHorFields GHC.OverloadedRecUpdFields {..} =
-      hFields
-        $ printHorField mkFieldNameFromFieldLabelStrings <$> olRecUpdFields
-    printVerFields GHC.RegularRecUpdFields {..} =
-      vFields $ printField mkFieldNameFromAmbiguousFieldOcc <$> recUpdFields
-    printVerFields GHC.OverloadedRecUpdFields {..} =
-      vFields $ printField mkFieldNameFromFieldLabelStrings <$> olRecUpdFields
-    printHorField convert x = printCommentsAnd x (horField convert)
-    printField convert x =
-      printCommentsAnd x ((<-|>) <$> horField convert <*> verField convert)
-    horField convert GHC.HsFieldBind {..} = do
-      pretty $ convert <$> fromGenLocated hfbLHS
-      string " = "
-      pretty hfbRHS
-    verField convert GHC.HsFieldBind {..} = do
-      pretty $ convert <$> fromGenLocated hfbLHS
-      string " ="
-      newline
-      indentedBlock $ pretty hfbRHS
-#elif MIN_VERSION_ghc_lib_parser(9,4,1)
-prettyHsExpr (GHC.RecordUpd _ name fields) = hor <-|> ver
-  where
-    hor =
-      spaced
-        [ pretty name
-        , either
-            (printHorFields mkFieldNameFromAmbiguousFieldOcc)
-            (printHorFields mkFieldNameFromFieldLabelStrings)
-            fields
-        ]
-    ver = do
-      pretty name
-      newline
-      indentedBlock
-        $ either
-            (printHorFields mkFieldNameFromAmbiguousFieldOcc)
-            (printHorFields mkFieldNameFromFieldLabelStrings)
-            <-|> either
-                   (printVerFields mkFieldNameFromAmbiguousFieldOcc)
-                   (printVerFields mkFieldNameFromFieldLabelStrings)
-                   fields
-    printHorFields convert = hFields . fmap (printHorField convert)
-    printVerFields convert = vFields . fmap (printField convert)
-    printHorField convert x = printCommentsAnd x (horField convert)
-    printField convert x =
-      printCommentsAnd x ((<-|>) <$> horField convert <*> verField convert)
-    horField convert GHC.HsFieldBind {..} = do
-      pretty $ convert <$> fromGenLocated hfbLHS
-      string " = "
-      pretty hfbRHS
-    verField convert GHC.HsFieldBind {..} = do
-      pretty $ convert <$> fromGenLocated hfbLHS
-      string " ="
-      newline
-      indentedBlock $ pretty hfbRHS
-#else
-prettyHsExpr (GHC.RecordUpd _ name fields) = hor <-|> ver
-  where
-    hor =
-      spaced
-        [ pretty name
-        , either
-            (printHorFields mkFieldNameFromFieldOcc)
-            (printHorFields mkFieldNameFromFieldOcc)
-            fields
-        ]
-    ver = do
-      pretty name
-      newline
-      indentedBlock
-        $ either
-            (printHorFields mkFieldNameFromFieldOcc)
-            (printHorFields mkFieldNameFromFieldOcc)
-            fields
-            <-|> either
-                   (printVerFields mkFieldNameFromFieldOcc)
-                   (printVerFields mkFieldNameFromFieldOcc)
-                   fields
-    printHorFields convert = hFields . fmap (printHorField convert)
-    printVerFields convert = vFields . fmap (printField convert)
-    printHorField convert x = printCommentsAnd x (horField convert)
-    printField convert x =
-      printCommentsAnd x ((<-|>) <$> horField convert <*> verField convert)
-    horField convert GHC.HsRecField {..} = do
-      pretty $ convert <$> fromGenLocated hsRecFieldLbl
-      string " = "
-      pretty hsRecFieldArg
-    verField convert GHC.HsRecField {..} = do
-      pretty $ convert <$> fromGenLocated hsRecFieldLbl
-      string " ="
-      newline
-      indentedBlock $ pretty hsRecFieldArg
-#endif
-prettyHsExpr (GHC.HsGetField _ e f) = do
-  pretty e
-  dot
-  pretty f
-prettyHsExpr GHC.HsProjection {..} =
-  parens
-    $ forM_ proj_flds
-    $ \x -> do
-        string "."
-        pretty x
-prettyHsExpr (GHC.ExprWithTySig _ e sig) = do
-  pretty e
-  string " :: "
-  pretty $ mkTypeFromHsSigType <$> GHC.hswc_body sig
-prettyHsExpr (GHC.ArithSeq _ _ x) = pretty $ mkRangeExpression x
-#if !MIN_VERSION_ghc_lib_parser(9,6,1)
-prettyHsExpr (GHC.HsSpliceE _ x) = pretty $ mkSplice x
-#endif
-prettyHsExpr (GHC.HsProc _ pat x@(GHC.L _ (GHC.HsCmdTop _ (GHC.L _ (GHC.HsCmdDo _ xs))))) = do
-  spaced
-    [string "proc", pretty $ mkPattern <$> fromGenLocated pat, string "-> do"]
-  newline
-  indentedBlock
-    $ printCommentsAnd x (const (printCommentsAnd xs (lined . fmap pretty)))
-prettyHsExpr (GHC.HsProc _ pat body) = hor <-|> ver
-  where
-    hor =
-      spaced
-        [ string "proc"
-        , pretty $ mkPattern <$> fromGenLocated pat
-        , string "->"
-        , pretty body
-        ]
-    ver = do
-      spaced
-        [string "proc", pretty $ mkPattern <$> fromGenLocated pat, string "->"]
-      newline
-      indentedBlock (pretty body)
-prettyHsExpr (GHC.HsStatic _ x) = spaced [string "static", pretty x]
-prettyHsExpr (GHC.HsPragE _ p x) = spaced [pretty p, pretty x]
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 12, 1)
-prettyHsExpr GHC.HsRecSel {} = notGeneratedByParser
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
-prettyHsExpr (GHC.HsTypedBracket _ inner) = typedBrackets $ pretty inner
-prettyHsExpr (GHC.HsUntypedBracket _ inner) = pretty $ mkBracket inner
-#else
-prettyHsExpr GHC.HsConLikeOut {} = notGeneratedByParser
-prettyHsExpr GHC.HsRecFld {} = notGeneratedByParser
-prettyHsExpr (GHC.HsDo _ GHC.ArrowExpr {} _) = notGeneratedByParser
-prettyHsExpr (GHC.HsDo _ GHC.PatGuard {} _) = notGeneratedByParser
-prettyHsExpr (GHC.HsDo _ GHC.ParStmtCtxt {} _) = notGeneratedByParser
-prettyHsExpr (GHC.HsDo _ GHC.TransStmtCtxt {} _) = notGeneratedByParser
-prettyHsExpr GHC.HsTick {} = forHpc
-prettyHsExpr GHC.HsBinTick {} = forHpc
-prettyHsExpr (GHC.HsBracket _ inner) = pretty $ mkBracket inner
-prettyHsExpr GHC.HsRnBracketOut {} = notGeneratedByParser
-prettyHsExpr GHC.HsTcBracketOut {} = notGeneratedByParser
-#endif
-#if MIN_VERSION_ghc_lib_parser(9,6,1)
-prettyHsExpr (GHC.HsTypedSplice _ x) = string "$$" >> pretty x
-prettyHsExpr (GHC.HsUntypedSplice _ x) = pretty $ mkSplice x
-#endif
-instance Pretty LambdaCase where
-  pretty' (LambdaCase matches caseOrCases) = do
-    case caseOrCases of
-      Case -> string "\\case"
-      Cases -> string "\\cases"
-    if null $ GHC.unLoc $ GHC.mg_alts matches
-      then string " {}"
-      else do
-        newline
-        indentedBlock $ pretty matches
 
 instance Pretty
            (GHC.Match
@@ -786,24 +376,32 @@ prettyStmtLRExpr ::
        GHC.GhcPs
        (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))
   -> Printer ()
-prettyStmtLRExpr (GHC.LastStmt _ x _ _) = pretty x
+prettyStmtLRExpr (GHC.LastStmt _ x _ _) =
+  pretty $ mkExpression <$> fromGenLocated x
 prettyStmtLRExpr (GHC.BindStmt _ pat body) = do
   pretty $ mkPattern <$> fromGenLocated pat
   string " <-"
   hor <-|> ver
   where
-    hor = space >> pretty body
-    ver = newline >> indentedBlock (pretty body)
+    hor = do
+      space
+      pretty $ mkExpression <$> fromGenLocated body
+    ver = do
+      newline
+      indentedBlock $ pretty $ mkExpression <$> fromGenLocated body
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 prettyStmtLRExpr GHC.ApplicativeStmt {} = notGeneratedByParser
 #endif
-prettyStmtLRExpr (GHC.BodyStmt _ (GHC.L loc (GHC.OpApp _ l o r)) _ _) =
-  pretty (GHC.L loc (InfixApp l o r))
-prettyStmtLRExpr (GHC.BodyStmt _ body _ _) = pretty body
+prettyStmtLRExpr (GHC.BodyStmt _ body _ _) =
+  pretty $ mkExpression <$> fromGenLocated body
 prettyStmtLRExpr (GHC.LetStmt _ l) = string "let " |=> pretty l
 prettyStmtLRExpr (GHC.ParStmt _ xs _ _) = hvBarSep $ fmap pretty xs
 prettyStmtLRExpr GHC.TransStmt {..} =
-  vCommaSep $ fmap pretty trS_stmts ++ [string "then " >> pretty trS_using]
+  vCommaSep
+    $ fmap pretty trS_stmts
+        ++ [ string "then "
+               >> pretty (mkExpression <$> fromGenLocated trS_using)
+           ]
 prettyStmtLRExpr GHC.RecStmt {..} =
   string "rec " |=> printCommentsAnd recS_stmts (lined . fmap pretty)
 
@@ -838,14 +436,13 @@ prettyStmtLRCmd (GHC.BodyStmt _ body _ _) = pretty body
 prettyStmtLRCmd (GHC.LetStmt _ l) = string "let " |=> pretty l
 prettyStmtLRCmd (GHC.ParStmt _ xs _ _) = hvBarSep $ fmap pretty xs
 prettyStmtLRCmd GHC.TransStmt {..} =
-  vCommaSep $ fmap pretty trS_stmts ++ [string "then " >> pretty trS_using]
+  vCommaSep
+    $ fmap pretty trS_stmts
+        ++ [ string "then "
+               >> pretty (mkExpression <$> fromGenLocated trS_using)
+           ]
 prettyStmtLRCmd GHC.RecStmt {..} =
   string "rec " |=> printCommentsAnd recS_stmts (lined . fmap pretty)
-
-instance Pretty StmtLRInsideVerticalList where
-  pretty' (StmtLRInsideVerticalList (GHC.ParStmt _ xs _ _)) =
-    vBarSep $ fmap (pretty . ParStmtBlockInsideVerticalList) xs
-  pretty' (StmtLRInsideVerticalList x) = pretty x
 
 -- | For pattern matching.
 instance Pretty
@@ -919,10 +516,6 @@ prettyHsMatchContext GHC.LamCaseAlt {} = notUsedInParsedStage
 instance Pretty (GHC.ParStmtBlock GHC.GhcPs GHC.GhcPs) where
   pretty' (GHC.ParStmtBlock _ xs _ _) = hvCommaSep $ fmap pretty xs
 
-instance Pretty ParStmtBlockInsideVerticalList where
-  pretty' (ParStmtBlockInsideVerticalList (GHC.ParStmtBlock _ xs _ _)) =
-    vCommaSep $ fmap pretty xs
-
 instance Pretty SBF.SigBindFamily where
   pretty' (SBF.Sig x) = pretty $ mkSignature x
   pretty' (SBF.Bind x) = pretty $ mkBind x
@@ -961,9 +554,6 @@ prettyHsValBindsLR (GHC.ValBinds _ methods sigs) =
       SBF.mkSortedLSigBindFamilyList sigs (GHC.bagToList methods) [] [] []
 prettyHsValBindsLR GHC.XValBindsLR {} = notUsedInParsedStage
 #endif
-instance Pretty (GHC.HsTupArg GHC.GhcPs) where
-  pretty' (GHC.Present _ e) = pretty e
-  pretty' GHC.Missing {} = pure () -- This appears in a tuple section.
 #if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
 -- | For pattern matching against a record.
 instance Pretty
@@ -1009,8 +599,8 @@ instance Pretty
       string " ="
       horizontal <-|> vertical
     where
-      horizontal = space >> pretty hfbRHS
-      vertical = newline >> indentedBlock (pretty hfbRHS)
+      horizontal = space >> pretty (mkExpression <$> hfbRHS)
+      vertical = newline >> indentedBlock (pretty $ mkExpression <$> hfbRHS)
 #elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
 -- | For pattern matchings against records.
 instance Pretty
@@ -1032,8 +622,8 @@ instance Pretty
       string " ="
       horizontal <-|> vertical
     where
-      horizontal = space >> pretty hfbRHS
-      vertical = newline >> indentedBlock (pretty hfbRHS)
+      horizontal = space >> pretty (mkExpression <$> hfbRHS)
+      vertical = newline >> indentedBlock (pretty $ mkExpression <$> hfbRHS)
 #endif
 instance Pretty
            (GHC.HsScaled
@@ -1041,204 +631,6 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
   pretty' (GHC.HsScaled _ ty) = pretty $ fmap mkType ty
 
-instance Pretty InfixExpr where
-  pretty' (InfixExpr (GHC.L _ (GHC.HsVar _ bind))) =
-    pretty $ mkInfixName <$> bind
-  pretty' (InfixExpr x) = pretty' x
-
-instance Pretty InfixApp where
-  pretty' = prettyInfixApp
-
-prettyInfixApp :: InfixApp -> Printer ()
-#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-prettyInfixApp InfixApp {..} = horizontal <-|> vertical
-  where
-    horizontal = spaced [pretty lhs, pretty (InfixExpr op), pretty rhs]
-    vertical =
-      case findFixity op of
-        GHC.Fixity _ GHC.InfixL -> leftAssoc
-        GHC.Fixity _ GHC.InfixR -> rightAssoc
-        GHC.Fixity _ GHC.InfixN -> noAssoc
-    leftAssoc = prettyOps allOperantsAndOperatorsLeftAssoc
-    rightAssoc = prettyOps allOperantsAndOperatorsRightAssoc
-    noAssoc
-      | GHC.L _ (GHC.OpApp _ _ o _) <- lhs
-      , isSameAssoc o = leftAssoc
-      | otherwise = rightAssoc
-    prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)] = do
-      spaced
-        [ pretty l
-        , pretty $ InfixExpr o
-        , pretty $ QualifiedDo (fmap mkModuleName m) Do
-        ]
-      newline
-      indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-    prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)] = do
-      spaced
-        [ pretty l
-        , pretty $ InfixExpr o
-        , pretty $ QualifiedDo (fmap mkModuleName m) Mdo
-        ]
-      newline
-      indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-    prettyOps [l, o, r@(GHC.L _ GHC.HsLam {})] = do
-      spaced [pretty l, pretty $ InfixExpr o, pretty r]
-    prettyOps (l:xs) = do
-      pretty l
-      newline
-      indentedBlock $ f xs
-      where
-        f (o:r:rems) = do
-          (pretty (InfixExpr o) >> space) |=> pretty r
-          unless (null rems) $ do
-            newline
-            f rems
-        f _ =
-          error "The number of the sum of operants and operators should be odd."
-    prettyOps _ = error "Too short list."
-    findFixity o =
-      fromMaybe GHC.defaultFixity $ lookup (GHC.varToStr o) fixities
-    allOperantsAndOperatorsLeftAssoc = reverse $ rhs : op : collect lhs
-      where
-        collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-        collect (GHC.L _ (GHC.OpApp _ l o r))
-          | isSameAssoc o = r : o : collect l
-        collect x = [x]
-    allOperantsAndOperatorsRightAssoc = lhs : op : collect rhs
-      where
-        collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-        collect (GHC.L _ (GHC.OpApp _ l o r))
-          | isSameAssoc o = l : o : collect r
-        collect x = [x]
-    isSameAssoc (findFixity -> GHC.Fixity lv d) = lv == level && d == dir
-    GHC.Fixity level dir = findFixity op
-#elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
-prettyInfixApp InfixApp {..} = horizontal <-|> vertical
-  where
-    horizontal = spaced [pretty lhs, pretty (InfixExpr op), pretty rhs]
-    vertical =
-      case findFixity op of
-        GHC.Fixity _ _ GHC.InfixL -> leftAssoc
-        GHC.Fixity _ _ GHC.InfixR -> rightAssoc
-        GHC.Fixity _ _ GHC.InfixN -> noAssoc
-    leftAssoc = prettyOps allOperantsAndOperatorsLeftAssoc
-    rightAssoc = prettyOps allOperantsAndOperatorsRightAssoc
-    noAssoc
-      | GHC.L _ (GHC.OpApp _ _ o _) <- lhs
-      , isSameAssoc o = leftAssoc
-      | otherwise = rightAssoc
-    prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)] = do
-      spaced
-        [ pretty l
-        , pretty $ InfixExpr o
-        , pretty $ QualifiedDo (fmap mkModuleName m) Do
-        ]
-      newline
-      indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-    prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)] = do
-      spaced
-        [ pretty l
-        , pretty $ InfixExpr o
-        , pretty $ QualifiedDo (fmap mkModuleName m) Mdo
-        ]
-      newline
-      indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-    prettyOps [l, o, r@(GHC.L _ GHC.HsLam {})] = do
-      spaced [pretty l, pretty $ InfixExpr o, pretty r]
-    prettyOps (l:xs) = do
-      pretty l
-      newline
-      indentedBlock $ f xs
-      where
-        f (o:r:rems) = do
-          (pretty (InfixExpr o) >> space) |=> pretty r
-          unless (null rems) $ do
-            newline
-            f rems
-        f _ =
-          error "The number of the sum of operants and operators should be odd."
-    prettyOps _ = error "Too short list."
-    findFixity o =
-      fromMaybe GHC.defaultFixity $ lookup (GHC.varToStr o) fixities
-    allOperantsAndOperatorsLeftAssoc = reverse $ rhs : op : collect lhs
-      where
-        collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-        collect (GHC.L _ (GHC.OpApp _ l o r))
-          | isSameAssoc o = r : o : collect l
-        collect x = [x]
-    allOperantsAndOperatorsRightAssoc = lhs : op : collect rhs
-      where
-        collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-        collect (GHC.L _ (GHC.OpApp _ l o r))
-          | isSameAssoc o = l : o : collect r
-        collect x = [x]
-    isSameAssoc (findFixity -> GHC.Fixity _ lv d) = lv == level && d == dir
-    GHC.Fixity _ level dir = findFixity op
-#else
-prettyInfixApp InfixApp {..} = horizontal <-|> vertical
-  where
-    horizontal = spaced [pretty lhs, pretty (InfixExpr op), pretty rhs]
-    vertical =
-      case findFixity op of
-        GHC.Fixity _ _ GHC.InfixL -> leftAssoc
-        GHC.Fixity _ _ GHC.InfixR -> rightAssoc
-        GHC.Fixity _ _ GHC.InfixN -> noAssoc
-    leftAssoc = prettyOps allOperantsAndOperatorsLeftAssoc
-    rightAssoc = prettyOps allOperantsAndOperatorsRightAssoc
-    noAssoc
-      | GHC.L _ (GHC.OpApp _ _ o _) <- lhs
-      , isSameAssoc o = leftAssoc
-      | otherwise = rightAssoc
-    prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.DoExpr m) xs)] = do
-      spaced
-        [ pretty l
-        , pretty $ InfixExpr o
-        , pretty $ QualifiedDo (fmap mkModuleName m) Do
-        ]
-      newline
-      indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-    prettyOps [l, o, GHC.L _ (GHC.HsDo _ (GHC.MDoExpr m) xs)] = do
-      spaced
-        [ pretty l
-        , pretty $ InfixExpr o
-        , pretty $ QualifiedDo (fmap mkModuleName m) Mdo
-        ]
-      newline
-      indentedBlock $ printCommentsAnd xs (lined . fmap pretty)
-    prettyOps [l, o, r@(GHC.L _ GHC.HsLam {})] = do
-      spaced [pretty l, pretty $ InfixExpr o, pretty r]
-    prettyOps [l, o, r@(GHC.L _ GHC.HsLamCase {})] = do
-      spaced [pretty l, pretty $ InfixExpr o, pretty r]
-    prettyOps (l:xs) = do
-      pretty l
-      newline
-      indentedBlock $ f xs
-      where
-        f (o:r:rems) = do
-          (pretty (InfixExpr o) >> space) |=> pretty r
-          unless (null rems) $ do
-            newline
-            f rems
-        f _ =
-          error "The number of the sum of operants and operators should be odd."
-    prettyOps _ = error "Too short list."
-    findFixity o =
-      fromMaybe GHC.defaultFixity $ lookup (GHC.varToStr o) fixities
-    allOperantsAndOperatorsLeftAssoc = reverse $ rhs : op : collect lhs
-      where
-        collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-        collect (GHC.L _ (GHC.OpApp _ l o r))
-          | isSameAssoc o = r : o : collect l
-        collect x = [x]
-    allOperantsAndOperatorsRightAssoc = lhs : op : collect rhs
-      where
-        collect :: GHC.LHsExpr GHC.GhcPs -> [GHC.LHsExpr GHC.GhcPs]
-        collect (GHC.L _ (GHC.OpApp _ l o r))
-          | isSameAssoc o = l : o : collect r
-        collect x = [x]
-    isSameAssoc (findFixity -> GHC.Fixity _ lv d) = lv == level && d == dir
-    GHC.Fixity _ level dir = findFixity op
-#endif
 instance Pretty (GHC.DerivClauseTys GHC.GhcPs) where
   pretty' (GHC.DctSingle _ ty) = parens $ pretty $ mkTypeFromHsSigType <$> ty
   pretty' (GHC.DctMulti _ ts) =
@@ -1531,7 +923,7 @@ prettyIPBind (GHC.IPBind _ l r) =
   spaced
     [ pretty $ mkImplicitParameterName <$> fromGenLocated l
     , string "="
-    , pretty r
+    , pretty $ mkExpression <$> fromGenLocated r
     ]
 #else
 prettyIPBind (GHC.IPBind _ (Right _) _) = notUsedInParsedStage
@@ -1539,7 +931,7 @@ prettyIPBind (GHC.IPBind _ (Left l) r) =
   spaced
     [ pretty $ mkImplicitParameterName <$> fromGenLocated l
     , string "="
-    , pretty r
+    , pretty $ mkExpression <$> fromGenLocated r
     ]
 #endif
 instance Pretty (GHC.HsCmdTop GHC.GhcPs) where
@@ -1550,21 +942,42 @@ instance Pretty (GHC.HsCmd GHC.GhcPs) where
 
 prettyHsCmd :: GHC.HsCmd GHC.GhcPs -> Printer ()
 prettyHsCmd (GHC.HsCmdArrApp _ f arg GHC.HsHigherOrderApp True) =
-  spaced [pretty f, string "-<<", pretty arg]
+  spaced
+    [ pretty $ mkExpression <$> fromGenLocated f
+    , string "-<<"
+    , pretty $ mkExpression <$> fromGenLocated arg
+    ]
 prettyHsCmd (GHC.HsCmdArrApp _ f arg GHC.HsHigherOrderApp False) =
-  spaced [pretty arg, string ">>-", pretty f]
+  spaced
+    [ pretty $ mkExpression <$> fromGenLocated arg
+    , string ">>-"
+    , pretty $ mkExpression <$> fromGenLocated f
+    ]
 prettyHsCmd (GHC.HsCmdArrApp _ f arg GHC.HsFirstOrderApp True) =
-  spaced [pretty f, string "-<", pretty arg]
+  spaced
+    [ pretty $ mkExpression <$> fromGenLocated f
+    , string "-<"
+    , pretty $ mkExpression <$> fromGenLocated arg
+    ]
 prettyHsCmd (GHC.HsCmdArrApp _ f arg GHC.HsFirstOrderApp False) =
-  spaced [pretty arg, string ">-", pretty f]
+  spaced
+    [ pretty $ mkExpression <$> fromGenLocated arg
+    , string ">-"
+    , pretty $ mkExpression <$> fromGenLocated f
+    ]
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 prettyHsCmd (GHC.HsCmdArrForm _ f _ args) =
-  bananaBrackets $ spaced $ pretty f : fmap pretty args
+  bananaBrackets
+    $ spaced
+    $ pretty (mkExpression <$> fromGenLocated f) : fmap pretty args
 #else
 prettyHsCmd (GHC.HsCmdArrForm _ f _ _ args) =
-  bananaBrackets $ spaced $ pretty f : fmap pretty args
+  bananaBrackets
+    $ spaced
+    $ pretty (mkExpression <$> fromGenLocated f) : fmap pretty args
 #endif
-prettyHsCmd (GHC.HsCmdApp _ f arg) = spaced [pretty f, pretty arg]
+prettyHsCmd (GHC.HsCmdApp _ f arg) =
+  spaced [pretty f, pretty $ mkExpression <$> fromGenLocated arg]
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 prettyHsCmd (GHC.HsCmdLam _ GHC.LamSingle x) = pretty x
 prettyHsCmd (GHC.HsCmdLam _ GHC.LamCase arms) = do
@@ -1584,7 +997,8 @@ prettyHsCmd (GHC.HsCmdPar _ _ x _) = parens $ pretty x
 prettyHsCmd (GHC.HsCmdPar _ x) = parens $ pretty x
 #endif
 prettyHsCmd (GHC.HsCmdCase _ cond arms) = do
-  spaced [string "case", pretty cond, string "of"]
+  spaced
+    [string "case", pretty $ mkExpression <$> fromGenLocated cond, string "of"]
   newline
   indentedBlock $ pretty arms
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
@@ -1602,7 +1016,7 @@ prettyHsCmd (GHC.HsCmdLamCase _ arms) = do
 #endif
 prettyHsCmd (GHC.HsCmdIf _ _ cond t f) = do
   string "if "
-  pretty cond
+  pretty $ mkExpression <$> fromGenLocated cond
   newline
   indentedBlock $ lined [string "then " >> pretty t, string "else " >> pretty f]
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
@@ -1617,32 +1031,6 @@ prettyHsCmd (GHC.HsCmdDo _ stmts) = do
   newline
   indentedBlock $ printCommentsAnd stmts (lined . fmap pretty)
 
-instance Pretty ListComprehension where
-  pretty' ListComprehension {..} = horizontal <-|> vertical
-    where
-      horizontal =
-        brackets
-          $ spaced
-              [ pretty listCompLhs
-              , string "|"
-              , hCommaSep $ NE.toList $ NE.map pretty listCompRhs
-              ]
-      vertical = do
-        string "[ "
-        pretty $ fmap StmtLRInsideVerticalList listCompLhs
-        newline
-        forM_ (stmtsAndPrefixes listCompRhs) $ \(p, x) -> do
-          string p |=> pretty (fmap StmtLRInsideVerticalList x)
-          newline
-        string "]"
-      stmtsAndPrefixes (s :| ss) = ("| ", s) : fmap (", ", ) ss
-
-instance Pretty DoExpression where
-  pretty' DoExpression {..} = do
-    pretty qualifiedDo
-    newline
-    indentedBlock $ lined $ fmap pretty doStmts
-
 instance Pretty DoOrMdo where
   pretty' Do = string "do"
   pretty' Mdo = string "mdo"
@@ -1653,10 +1041,6 @@ instance Pretty QualifiedDo where
     string "."
     pretty d
   pretty' (QualifiedDo Nothing d) = pretty d
-
-instance Pretty LetIn where
-  pretty' LetIn {..} =
-    lined [string "let " |=> pretty letBinds, string " in " |=> pretty inExpr]
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty GHC.FieldLabelString where
   pretty' = output

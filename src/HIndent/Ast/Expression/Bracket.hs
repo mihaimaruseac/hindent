@@ -6,6 +6,7 @@ module HIndent.Ast.Expression.Bracket
   ) where
 
 import HIndent.Ast.Declaration
+import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Pattern
@@ -17,16 +18,16 @@ import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 data Bracket
-  = TypedExpression (GHC.LHsExpr GHC.GhcPs)
-  | UntypedExpression (GHC.LHsExpr GHC.GhcPs)
+  = TypedExpression (WithComments Expression)
+  | UntypedExpression (WithComments Expression)
   | Pattern (WithComments Pattern)
   | Declaration [WithComments Declaration]
   | Type (WithComments Type)
   | Variable Bool (WithComments PrefixName)
 
 instance CommentExtraction Bracket where
-  nodeComments TypedExpression {} = NodeComments [] [] []
-  nodeComments UntypedExpression {} = NodeComments [] [] []
+  nodeComments (TypedExpression expr) = nodeComments expr
+  nodeComments (UntypedExpression expr) = nodeComments expr
   nodeComments Pattern {} = NodeComments [] [] []
   nodeComments Declaration {} = NodeComments [] [] []
   nodeComments Type {} = NodeComments [] [] []
@@ -46,7 +47,8 @@ mkBracket :: GHC.HsQuote GHC.GhcPs -> Bracket
 #else
 mkBracket :: GHC.HsBracket GHC.GhcPs -> Bracket
 #endif
-mkBracket (GHC.ExpBr _ x) = UntypedExpression x
+mkBracket (GHC.ExpBr _ x) =
+  UntypedExpression $ mkExpression <$> fromGenLocated x
 mkBracket (GHC.PatBr _ x) = Pattern $ mkPattern <$> fromGenLocated x
 mkBracket (GHC.DecBrL _ x) =
   Declaration $ fmap (fmap mkDeclaration . fromGenLocated) x
@@ -54,5 +56,5 @@ mkBracket (GHC.TypBr _ x) = Type $ mkType <$> fromGenLocated x
 mkBracket (GHC.VarBr _ b x) = Variable b $ fromGenLocated $ fmap mkPrefixName x
 mkBracket (GHC.DecBrG {}) = error "This AST node should never appear."
 #if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
-mkBracket (GHC.TExpBr _ x) = TypedExpression x
+mkBracket (GHC.TExpBr _ x) = TypedExpression $ mkExpression <$> fromGenLocated x
 #endif

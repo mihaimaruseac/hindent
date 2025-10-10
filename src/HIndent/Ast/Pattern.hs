@@ -14,6 +14,7 @@ import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NE
 import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.SrcLoc as GHC
+import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.Expression.Splice
 import HIndent.Ast.Name.Infix hiding (unlessSpecialOp)
 import qualified HIndent.Ast.Name.Infix as InfixName
@@ -61,7 +62,7 @@ data Pattern
       , fields :: RecordFieldsPat
       }
   | View
-      { expression :: GHC.LHsExpr GHC.GhcPs
+      { expression :: WithComments Expression
       , pat :: WithComments Pattern
       }
   | Splice (WithComments Splice)
@@ -172,7 +173,10 @@ mkPattern GHC.ConPat {..} =
         , right = mkPattern <$> fromGenLocated b
         }
 mkPattern (GHC.ViewPat _ l r) =
-  View {expression = l, pat = mkPattern <$> fromGenLocated r}
+  View
+    { expression = mkExpression <$> fromGenLocated l
+    , pat = mkPattern <$> fromGenLocated r
+    }
 mkPattern (GHC.SplicePat _ x) = Splice $ mkWithComments $ mkSplice x
 mkPattern (GHC.LitPat _ x) = Literal x
 mkPattern (GHC.NPat _ x _ _) = Overloaded $ GHC.unLoc x

@@ -36,9 +36,6 @@ instance CommentExtraction l => CommentExtraction (GenLocated l e) where
 instance CommentExtraction (MatchGroup GhcPs a) where
   nodeComments MG {} = emptyNodeComments
 
-instance CommentExtraction LambdaCase where
-  nodeComments (LambdaCase x _) = nodeComments x
-
 instance CommentExtraction DoOrMdo where
   nodeComments = const emptyNodeComments
 
@@ -47,9 +44,6 @@ instance CommentExtraction QualifiedDo where
 
 instance CommentExtraction (HsSigType GhcPs) where
   nodeComments HsSig {} = emptyNodeComments
-
-instance CommentExtraction StmtLRInsideVerticalList where
-  nodeComments (StmtLRInsideVerticalList x) = nodeComments x
 
 -- | For pattern matching.
 instance CommentExtraction
@@ -70,9 +64,6 @@ instance CommentExtraction (GRHSs GhcPs a) where
 
 instance CommentExtraction (ParStmtBlock GhcPs GhcPs) where
   nodeComments ParStmtBlock {} = emptyNodeComments
-
-instance CommentExtraction ParStmtBlockInsideVerticalList where
-  nodeComments (ParStmtBlockInsideVerticalList x) = nodeComments x
 
 instance CommentExtraction RdrName where
   nodeComments Unqual {} = emptyNodeComments
@@ -124,12 +115,6 @@ instance CommentExtraction
 instance CommentExtraction (HsScaled GhcPs a) where
   nodeComments HsScaled {} = emptyNodeComments
 
-instance CommentExtraction InfixExpr where
-  nodeComments (InfixExpr x) = nodeComments x
-
-instance CommentExtraction InfixApp where
-  nodeComments InfixApp {} = emptyNodeComments
-
 instance CommentExtraction (BooleanFormula a) where
   nodeComments Var {} = emptyNodeComments
   nodeComments And {} = emptyNodeComments
@@ -150,12 +135,6 @@ instance CommentExtraction (FamilyResultSig GhcPs) where
   nodeComments NoSig {} = emptyNodeComments
   nodeComments KindSig {} = emptyNodeComments
   nodeComments TyVarSig {} = emptyNodeComments
-
-instance CommentExtraction InfixOp where
-  nodeComments (InfixOp x) = nodeComments x
-
-instance CommentExtraction PrefixOp where
-  nodeComments (PrefixOp x) = nodeComments x
 
 instance CommentExtraction Context where
   nodeComments Context {} = emptyNodeComments
@@ -244,15 +223,6 @@ instance CommentExtraction (HsIPBinds GhcPs) where
 
 instance CommentExtraction (HsCmdTop GhcPs) where
   nodeComments HsCmdTop {} = emptyNodeComments
-
-instance CommentExtraction ListComprehension where
-  nodeComments ListComprehension {} = emptyNodeComments
-
-instance CommentExtraction DoExpression where
-  nodeComments DoExpression {} = emptyNodeComments
-
-instance CommentExtraction LetIn where
-  nodeComments LetIn {} = emptyNodeComments
 
 instance CommentExtraction (HsOuterSigTyVarBndrs GhcPs) where
   nodeComments HsOuterImplicit {} = emptyNodeComments
@@ -700,17 +670,6 @@ nodeCommentsMatchContext LamCaseAlt {} = emptyNodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 10, 0)
 nodeCommentsMatchContext LazyPatCtx {} = emptyNodeComments
 #endif
-instance CommentExtraction (HsTupArg GhcPs) where
-  nodeComments = nodeCommentsHsTupArg
-
-nodeCommentsHsTupArg :: HsTupArg GhcPs -> NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsTupArg Present {} = emptyNodeComments
-#else
-nodeCommentsHsTupArg (Present x _) = nodeComments x
-#endif
-nodeCommentsHsTupArg (Missing x) = nodeComments x
-
 instance CommentExtraction (ConDeclField GhcPs) where
   nodeComments = nodeCommentsConDeclField
 
