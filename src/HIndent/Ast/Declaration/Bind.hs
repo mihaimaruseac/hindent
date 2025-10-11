@@ -22,7 +22,7 @@ import HIndent.Pretty.NodeComments
 -- TODO: Merge them.
 data Bind
   = Function
-      { fun_matches :: MatchGroup
+      { matches :: MatchGroup
       }
   | Pattern
       { lhs :: WithComments Pattern
@@ -36,13 +36,13 @@ instance CommentExtraction Bind where
   nodeComments PatternSynonym {} = emptyNodeComments
 
 instance Pretty Bind where
-  pretty' Function {..} = pretty fun_matches
+  pretty' Function {..} = pretty matches
   pretty' Pattern {..} = pretty lhs >> pretty rhs
   pretty' (PatternSynonym ps) = pretty ps
 
 mkBind :: GHC.HsBind GHC.GhcPs -> Bind
-mkBind GHC.FunBind {fun_matches = matches} =
-  Function {fun_matches = mkExprMatchGroup matches}
+mkBind GHC.FunBind {fun_matches = ghcMatches} =
+  Function {matches = mkExprMatchGroup ghcMatches}
 mkBind GHC.PatBind {..} = Pattern {..}
   where
     lhs = mkPattern <$> fromGenLocated pat_lhs
