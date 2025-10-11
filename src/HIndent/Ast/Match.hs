@@ -14,7 +14,7 @@ module HIndent.Ast.Match
 import Control.Monad (unless, when)
 import qualified GHC.Hs as GHC
 import qualified GHC.Types.Fixity as Fixity
-import qualified GHC.Types.SrcLoc as SrcLoc
+import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Declaration.Bind.GuardedRhs
   ( GuardedRhs
   , mkCaseCmdGuardedRhs
@@ -425,14 +425,14 @@ mkFunctionMatch _ = error "`ghc-lib-parser` never generates this AST node."
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 extractPatList ::
      GHC.XRec GHC.GhcPs [GHC.LPat GHC.GhcPs] -> [GHC.LPat GHC.GhcPs]
-extractPatList = SrcLoc.unLoc
+extractPatList = GHC.unLoc
 #else
 extractPatList :: [GHC.LPat GHC.GhcPs] -> [GHC.LPat GHC.GhcPs]
 extractPatList = id
 #endif
 lambdaNeedsSpace :: [GHC.LPat GHC.GhcPs] -> Bool
 lambdaNeedsSpace (pat:_) =
-  case SrcLoc.unLoc pat of
+  case GHC.unLoc pat of
     GHC.LazyPat {} -> True
     GHC.BangPat {} -> True
     _ -> False
