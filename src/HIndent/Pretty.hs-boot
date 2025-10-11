@@ -37,12 +37,6 @@ instance Pretty
 
 instance Pretty SigBindFamily
 
-instance Pretty
-           (GHC.MatchGroup
-              GHC.GhcPs
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
-
-
 instance Pretty GHC.StringLiteral
 
 instance Pretty Context
