@@ -11,9 +11,9 @@ module HIndent.Ast.MatchGroup
 
 import qualified GHC.Hs as GHC
 import qualified GHC.Types.SrcLoc as SrcLoc
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty, printCommentsAnd)
+import HIndent.Pretty.Combinators (lined)
 import HIndent.Pretty.NodeComments (CommentExtraction(..), emptyNodeComments)
-import HIndent.Printer (Printer)
 
 type LHsExprPs = SrcLoc.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)
 
@@ -26,17 +26,13 @@ newtype MatchGroup body = MatchGroup
 instance CommentExtraction (MatchGroup body) where
   nodeComments _ = emptyNodeComments
 
-class MatchGroupPrintable body where
-  prettyMatchGroup :: GHC.MatchGroup GHC.GhcPs body -> Printer ()
+instance Pretty (MatchGroup LHsExprPs) where
+  pretty' (MatchGroup GHC.MG {..}) =
+    printCommentsAnd mg_alts (lined . fmap pretty)
 
-instance MatchGroupPrintable LHsExprPs where
-  prettyMatchGroup = pretty
-
-instance MatchGroupPrintable LHsCmdPs where
-  prettyMatchGroup = pretty
-
-instance MatchGroupPrintable body => Pretty (MatchGroup body) where
-  pretty' (MatchGroup mg) = prettyMatchGroup mg
+instance Pretty (MatchGroup LHsCmdPs) where
+  pretty' (MatchGroup GHC.MG {..}) =
+    printCommentsAnd mg_alts (lined . fmap pretty)
 
 mkMatchGroup :: GHC.MatchGroup GHC.GhcPs body -> MatchGroup body
 mkMatchGroup = MatchGroup

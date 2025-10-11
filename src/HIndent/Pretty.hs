@@ -46,7 +46,7 @@ import HIndent.Ast.Declaration.Instance.Family.Type.Associated
   )
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression (mkExpression)
-import HIndent.Ast.MatchGroup (MatchGroup(..), mkMatchGroup)
+import HIndent.Ast.MatchGroup (mkMatchGroup)
 import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.ImportExport
 import HIndent.Ast.Name.Infix
@@ -146,18 +146,6 @@ class CommentExtraction a =>
 -- https://github.com/mihaimaruseac/hindent/issues/586#issuecomment-1374992624.
 instance (CommentExtraction l, Pretty e) => Pretty (GHC.GenLocated l e) where
   pretty' (GHC.L _ e) = pretty e
-
-instance Pretty
-           (GHC.MatchGroup
-              GHC.GhcPs
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
-  pretty' GHC.MG {..} = printCommentsAnd mg_alts (lined . fmap pretty)
-
-instance Pretty
-           (GHC.MatchGroup
-              GHC.GhcPs
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsCmd GHC.GhcPs))) where
-  pretty' GHC.MG {..} = printCommentsAnd mg_alts (lined . fmap pretty)
 
 instance Pretty
            (GHC.Match
