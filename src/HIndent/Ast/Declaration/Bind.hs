@@ -8,6 +8,7 @@ module HIndent.Ast.Declaration.Bind
 
 import HIndent.Ast.Declaration.Bind.GuardedRhs
 import HIndent.Ast.Declaration.PatternSynonym
+import HIndent.Ast.MatchGroup (MatchGroup, mkMatchGroup)
 import HIndent.Ast.Pattern
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -21,7 +22,7 @@ import HIndent.Pretty.NodeComments
 -- TODO: Merge them.
 data Bind
   = Function
-      { fun_matches :: GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs)
+      { fun_matches :: MatchGroup (GHC.LHsExpr GHC.GhcPs)
       }
   | Pattern
       { lhs :: WithComments Pattern
@@ -40,7 +41,8 @@ instance Pretty Bind where
   pretty' (PatternSynonym ps) = pretty ps
 
 mkBind :: GHC.HsBind GHC.GhcPs -> Bind
-mkBind GHC.FunBind {..} = Function {..}
+mkBind GHC.FunBind {fun_matches = matches} =
+  Function {fun_matches = mkMatchGroup matches}
 mkBind GHC.PatBind {..} = Pattern {..}
   where
     lhs = mkPattern <$> fromGenLocated pat_lhs

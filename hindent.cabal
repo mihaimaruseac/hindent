@@ -113,6 +113,7 @@ library
       HIndent.Ast.Module.Export.Collection
       HIndent.Ast.Module.Export.Entry
       HIndent.Ast.Module.Name
+      HIndent.Ast.MatchGroup
       HIndent.Ast.Module.Warning
       HIndent.Ast.Name.ImportExport
       HIndent.Ast.Name.Infix

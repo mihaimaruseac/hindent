@@ -2,6 +2,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns #-}
@@ -45,6 +46,7 @@ import HIndent.Ast.Declaration.Instance.Family.Type.Associated
   )
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression (mkExpression)
+import HIndent.Ast.MatchGroup (MatchGroup(..), mkMatchGroup)
 import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.ImportExport
 import HIndent.Ast.Name.Infix
@@ -146,16 +148,14 @@ instance (CommentExtraction l, Pretty e) => Pretty (GHC.GenLocated l e) where
   pretty' (GHC.L _ e) = pretty e
 
 instance Pretty
-           (GHC.MatchGroup
-              GHC.GhcPs
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
-  pretty' GHC.MG {..} = printCommentsAnd mg_alts (lined . fmap pretty)
+           (MatchGroup (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
+  pretty' (MatchGroup GHC.MG {..}) =
+    printCommentsAnd mg_alts (lined . fmap pretty)
 
 instance Pretty
-           (GHC.MatchGroup
-              GHC.GhcPs
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsCmd GHC.GhcPs))) where
-  pretty' GHC.MG {..} = printCommentsAnd mg_alts (lined . fmap pretty)
+           (MatchGroup (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsCmd GHC.GhcPs))) where
+  pretty' (MatchGroup GHC.MG {..}) =
+    printCommentsAnd mg_alts (lined . fmap pretty)
 
 instance Pretty
            (GHC.Match
@@ -979,17 +979,17 @@ prettyHsCmd (GHC.HsCmdArrForm _ f _ _ args) =
 prettyHsCmd (GHC.HsCmdApp _ f arg) =
   spaced [pretty f, pretty $ mkExpression <$> fromGenLocated arg]
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-prettyHsCmd (GHC.HsCmdLam _ GHC.LamSingle x) = pretty x
+prettyHsCmd (GHC.HsCmdLam _ GHC.LamSingle x) = pretty $ mkMatchGroup x
 prettyHsCmd (GHC.HsCmdLam _ GHC.LamCase arms) = do
   string "\\case"
   newline
-  indentedBlock $ pretty arms
+  indentedBlock $ pretty $ mkMatchGroup arms
 prettyHsCmd (GHC.HsCmdLam _ GHC.LamCases arms) = do
   string "\\cases"
   newline
-  indentedBlock $ pretty arms
+  indentedBlock $ pretty $ mkMatchGroup arms
 #else
-prettyHsCmd (GHC.HsCmdLam _ x) = pretty x
+prettyHsCmd (GHC.HsCmdLam _ x) = pretty $ mkMatchGroup x
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 prettyHsCmd (GHC.HsCmdPar _ _ x _) = parens $ pretty x
@@ -1000,19 +1000,19 @@ prettyHsCmd (GHC.HsCmdCase _ cond arms) = do
   spaced
     [string "case", pretty $ mkExpression <$> fromGenLocated cond, string "of"]
   newline
-  indentedBlock $ pretty arms
+  indentedBlock $ pretty $ mkMatchGroup arms
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 -- No `HsCmdLamCase` since 9.10.1
 #elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
 prettyHsCmd (GHC.HsCmdLamCase _ _ arms) = do
   string "\\case"
   newline
-  indentedBlock $ pretty arms
+  indentedBlock $ pretty $ mkMatchGroup arms
 #else
 prettyHsCmd (GHC.HsCmdLamCase _ arms) = do
   string "\\case"
   newline
-  indentedBlock $ pretty arms
+  indentedBlock $ pretty $ mkMatchGroup arms
 #endif
 prettyHsCmd (GHC.HsCmdIf _ _ cond t f) = do
   string "if "

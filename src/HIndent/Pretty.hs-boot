@@ -10,6 +10,7 @@ module HIndent.Pretty
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Ast.MatchGroup (MatchGroup)
 import HIndent.Pretty.NodeComments
 import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
@@ -28,6 +29,14 @@ printCommentsAnd ::
   -> Printer ()
 instance (CommentExtraction l, Pretty e) => Pretty (GHC.GenLocated l e)
 
+instance Pretty
+           (MatchGroup
+              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
+
+instance Pretty
+           (MatchGroup
+              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsCmd GHC.GhcPs)))
+
 instance Pretty GHC.EpaComment
 
 instance Pretty
@@ -36,12 +45,6 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
 
 instance Pretty SigBindFamily
-
-instance Pretty
-           (GHC.MatchGroup
-              GHC.GhcPs
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
-
 
 instance Pretty GHC.StringLiteral
 
