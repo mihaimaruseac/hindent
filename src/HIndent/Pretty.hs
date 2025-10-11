@@ -148,14 +148,16 @@ instance (CommentExtraction l, Pretty e) => Pretty (GHC.GenLocated l e) where
   pretty' (GHC.L _ e) = pretty e
 
 instance Pretty
-           (MatchGroup (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
-  pretty' (MatchGroup GHC.MG {..}) =
-    printCommentsAnd mg_alts (lined . fmap pretty)
+           (GHC.MatchGroup
+              GHC.GhcPs
+              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
+  pretty' GHC.MG {..} = printCommentsAnd mg_alts (lined . fmap pretty)
 
 instance Pretty
-           (MatchGroup (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsCmd GHC.GhcPs))) where
-  pretty' (MatchGroup GHC.MG {..}) =
-    printCommentsAnd mg_alts (lined . fmap pretty)
+           (GHC.MatchGroup
+              GHC.GhcPs
+              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsCmd GHC.GhcPs))) where
+  pretty' GHC.MG {..} = printCommentsAnd mg_alts (lined . fmap pretty)
 
 instance Pretty
            (GHC.Match
