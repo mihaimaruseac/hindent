@@ -22,7 +22,7 @@ import HIndent.Pretty.NodeComments
 -- TODO: Merge them.
 data Bind
   = Function
-      { fun_matches :: MatchGroup (GHC.LHsExpr GHC.GhcPs)
+      { fun_matches :: MatchGroup
       }
   | Pattern
       { lhs :: WithComments Pattern

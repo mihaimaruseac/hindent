@@ -70,10 +70,10 @@ data Expression
   | ImplicitParameter ImplicitParameterName
   | OverloadedLiteral (GHC.HsOverLit GHC.GhcPs)
   | Literal (GHC.HsLit GHC.GhcPs)
-  | Lambda (MatchGroup (GHC.LHsExpr GHC.GhcPs))
+  | Lambda MatchGroup
   | LambdaCase
       { usesCases :: Bool
-      , matches :: MatchGroup (GHC.LHsExpr GHC.GhcPs)
+      , matches :: MatchGroup
       }
   | Application (NonEmpty (WithComments Expression))
   | TypeApplication
@@ -106,7 +106,7 @@ data Expression
       }
   | CaseExpression
       { scrutinee :: WithComments Expression
-      , matches :: MatchGroup (GHC.LHsExpr GHC.GhcPs)
+      , matches :: MatchGroup
       }
   | IfExpression
       { predicate :: WithComments Expression

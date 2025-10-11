@@ -33,7 +33,7 @@ data PatternSynonym = PatternSynonym
   { name :: GHC.LIdP GHC.GhcPs
   , parameters :: WithComments Parameters
   , isImplicitBidirectional :: Bool
-  , explicitMatches :: Maybe (MatchGroup (GHC.LHsExpr GHC.GhcPs))
+  , explicitMatches :: Maybe MatchGroup
   , definition :: WithComments PatInsidePatDecl
   }
 

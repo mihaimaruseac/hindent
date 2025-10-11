@@ -20,7 +20,7 @@ class CommentExtraction a =>
   where
   pretty' :: a -> Printer ()
 
-data MatchGroup body
+data MatchGroup
 
 pretty :: Pretty a => a -> Printer ()
 printCommentsAnd ::
@@ -38,16 +38,6 @@ instance Pretty
               (SrcLoc.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
 
 instance Pretty SigBindFamily
-
-instance Pretty
-           (GHC.Match
-              GHC.GhcPs
-              (SrcLoc.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
-
-instance Pretty
-           (GHC.Match
-              GHC.GhcPs
-              (SrcLoc.GenLocated GHC.SrcSpanAnnA (GHC.HsCmd GHC.GhcPs)))
 
 instance Pretty GHC.StringLiteral
 
