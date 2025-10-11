@@ -46,7 +46,7 @@ import HIndent.Ast.Declaration.Instance.Family.Type.Associated
   )
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression (mkExpression)
-import HIndent.Ast.MatchGroup (mkMatchGroup)
+import HIndent.Ast.MatchGroup (mkCmdMatchGroup)
 import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.ImportExport
 import HIndent.Ast.Name.Infix
@@ -969,17 +969,17 @@ prettyHsCmd (GHC.HsCmdArrForm _ f _ _ args) =
 prettyHsCmd (GHC.HsCmdApp _ f arg) =
   spaced [pretty f, pretty $ mkExpression <$> fromGenLocated arg]
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-prettyHsCmd (GHC.HsCmdLam _ GHC.LamSingle x) = pretty $ mkMatchGroup x
+prettyHsCmd (GHC.HsCmdLam _ GHC.LamSingle x) = pretty $ mkCmdMatchGroup x
 prettyHsCmd (GHC.HsCmdLam _ GHC.LamCase arms) = do
   string "\\case"
   newline
-  indentedBlock $ pretty $ mkMatchGroup arms
+  indentedBlock $ pretty $ mkCmdMatchGroup arms
 prettyHsCmd (GHC.HsCmdLam _ GHC.LamCases arms) = do
   string "\\cases"
   newline
-  indentedBlock $ pretty $ mkMatchGroup arms
+  indentedBlock $ pretty $ mkCmdMatchGroup arms
 #else
-prettyHsCmd (GHC.HsCmdLam _ x) = pretty $ mkMatchGroup x
+prettyHsCmd (GHC.HsCmdLam _ x) = pretty $ mkCmdMatchGroup x
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 prettyHsCmd (GHC.HsCmdPar _ _ x _) = parens $ pretty x
@@ -990,19 +990,19 @@ prettyHsCmd (GHC.HsCmdCase _ cond arms) = do
   spaced
     [string "case", pretty $ mkExpression <$> fromGenLocated cond, string "of"]
   newline
-  indentedBlock $ pretty $ mkMatchGroup arms
+  indentedBlock $ pretty $ mkCmdMatchGroup arms
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 -- No `HsCmdLamCase` since 9.10.1
 #elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
 prettyHsCmd (GHC.HsCmdLamCase _ _ arms) = do
   string "\\case"
   newline
-  indentedBlock $ pretty $ mkMatchGroup arms
+  indentedBlock $ pretty $ mkCmdMatchGroup arms
 #else
 prettyHsCmd (GHC.HsCmdLamCase _ arms) = do
   string "\\case"
   newline
-  indentedBlock $ pretty $ mkMatchGroup arms
+  indentedBlock $ pretty $ mkCmdMatchGroup arms
 #endif
 prettyHsCmd (GHC.HsCmdIf _ _ cond t f) = do
   string "if "

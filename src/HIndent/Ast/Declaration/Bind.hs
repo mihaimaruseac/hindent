@@ -8,7 +8,7 @@ module HIndent.Ast.Declaration.Bind
 
 import HIndent.Ast.Declaration.Bind.GuardedRhs
 import HIndent.Ast.Declaration.PatternSynonym
-import HIndent.Ast.MatchGroup (MatchGroup, mkMatchGroup)
+import HIndent.Ast.MatchGroup (MatchGroup, mkExprMatchGroup)
 import HIndent.Ast.Pattern
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -42,7 +42,7 @@ instance Pretty Bind where
 
 mkBind :: GHC.HsBind GHC.GhcPs -> Bind
 mkBind GHC.FunBind {fun_matches = matches} =
-  Function {fun_matches = mkMatchGroup matches}
+  Function {fun_matches = mkExprMatchGroup matches}
 mkBind GHC.PatBind {..} = Pattern {..}
   where
     lhs = mkPattern <$> fromGenLocated pat_lhs

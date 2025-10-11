@@ -6,7 +6,7 @@ module HIndent.Ast.Declaration.PatternSynonym
   ) where
 
 import HIndent.Applicative
-import HIndent.Ast.MatchGroup (MatchGroup, mkMatchGroup)
+import HIndent.Ast.MatchGroup (MatchGroup, mkExprMatchGroup)
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.Name.RecordField (FieldName, mkFieldNameFromFieldOcc)
@@ -93,5 +93,5 @@ mkPatternSynonym GHC.PSB {..} = PatternSynonym {..}
         GHC.Unidirectional -> (False, Nothing)
         GHC.ImplicitBidirectional -> (True, Nothing)
         GHC.ExplicitBidirectional matches ->
-          (False, Just $ mkMatchGroup matches)
+          (False, Just $ mkExprMatchGroup matches)
     definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
