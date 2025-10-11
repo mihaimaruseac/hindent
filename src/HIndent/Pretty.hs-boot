@@ -20,8 +20,6 @@ class CommentExtraction a =>
   where
   pretty' :: a -> Printer ()
 
-data MatchGroup
-
 pretty :: Pretty a => a -> Printer ()
 printCommentsAnd ::
      (CommentExtraction l)
