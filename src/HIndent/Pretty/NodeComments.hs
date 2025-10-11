@@ -91,15 +91,6 @@ instance CommentExtraction SrcSpan where
   nodeComments RealSrcSpan {} = emptyNodeComments
   nodeComments UnhelpfulSpan {} = emptyNodeComments
 
-instance CommentExtraction a => CommentExtraction [a] where
-  nodeComments = mconcat . fmap nodeComments
-
-instance CommentExtraction AnnListItem where
-  nodeComments _ = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction NoEpAnns where
-  nodeComments _ = emptyNodeComments
-#endif
 instance CommentExtraction (HsLocalBindsLR GhcPs GhcPs) where
   nodeComments (HsValBinds x _) = nodeComments x
   nodeComments (HsIPBinds x _) = nodeComments x
