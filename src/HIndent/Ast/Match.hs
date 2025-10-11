@@ -44,7 +44,6 @@ import HIndent.Pretty.NodeComments (CommentExtraction(..))
 data LambdaKind
   = Single
   | Case
-  | Cases
 
 data FunctionMatch
   = Prefix
@@ -80,10 +79,6 @@ instance Pretty Match where
     when isCommand space
     pretty rhs
   pretty' Match {context = LambdaContext Case, ..} = do
-    prettyWith patterns $ spaced . fmap pretty
-    when isCommand space
-    pretty rhs
-  pretty' Match {context = LambdaContext Cases, ..} = do
     prettyWith patterns $ spaced . fmap pretty
     when isCommand space
     pretty rhs
@@ -150,7 +145,7 @@ mkExprMatch match =
         }
     toLambdaKind GHC.LamSingle = Single
     toLambdaKind GHC.LamCase = Case
-    toLambdaKind GHC.LamCases = Cases
+    toLambdaKind GHC.LamCases = Case
 #elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkExprMatch :: GHC.Match GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Match
 mkExprMatch match =
@@ -160,7 +155,7 @@ mkExprMatch match =
     GHC.LamAlt GHC.LamCase ->
       mkLambda Case (mkCaseGuardedRhs $ GHC.m_grhss match)
     GHC.LamAlt GHC.LamCases ->
-      mkLambda Cases (mkCaseGuardedRhs $ GHC.m_grhss match)
+      mkLambda Case (mkCaseGuardedRhs $ GHC.m_grhss match)
     GHC.CaseAlt -> mkCase (mkCaseGuardedRhs $ GHC.m_grhss match)
     ctxt@GHC.FunRhs {} -> mkFun ctxt (mkGuardedRhs $ GHC.m_grhss match)
     _ -> error "`ghc-lib-parser` never generates this AST node."
@@ -305,7 +300,7 @@ mkCmdMatch match =
     patterns = mkMatchPatterns (GHC.m_pats match)
     toLambdaKind GHC.LamSingle = Single
     toLambdaKind GHC.LamCase = Case
-    toLambdaKind GHC.LamCases = Cases
+    toLambdaKind GHC.LamCases = Case
 #elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkCmdMatch :: GHC.Match GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> Match
 mkCmdMatch match =
@@ -315,7 +310,7 @@ mkCmdMatch match =
     GHC.LamAlt GHC.LamCase ->
       mkLambda Case (mkCaseCmdGuardedRhs $ GHC.m_grhss match)
     GHC.LamAlt GHC.LamCases ->
-      mkLambda Cases (mkCaseCmdGuardedRhs $ GHC.m_grhss match)
+      mkLambda Case (mkCaseCmdGuardedRhs $ GHC.m_grhss match)
     GHC.CaseAlt ->
       Match
         { context = CaseContext
