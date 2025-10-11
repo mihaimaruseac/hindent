@@ -5,7 +5,6 @@
 module HIndent.Ast.Match
   ( Match
   , MatchContext
-  , LambdaKind
   , FunctionMatch
   , mkExprMatch
   , mkCmdMatch
@@ -41,10 +40,6 @@ import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments (CommentExtraction(..))
 
-data LambdaKind
-  = Single
-  | Case
-
 data FunctionMatch
   = Prefix
       { strictness :: Maybe Strictness
@@ -56,7 +51,8 @@ data FunctionMatch
       }
 
 data MatchContext
-  = LambdaContext LambdaKind
+  = LambdaSingle
+  | LambdaCase
   | CaseContext
   | FunctionContext FunctionMatch
 
@@ -72,13 +68,13 @@ instance CommentExtraction Match where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty Match where
-  pretty' Match {context = LambdaContext Single, ..} = do
+  pretty' Match {context = LambdaSingle, ..} = do
     string "\\"
     when needsSpaceAfterLambda space
     prettyWith patterns $ spaced . fmap pretty
     when isCommand space
     pretty rhs
-  pretty' Match {context = LambdaContext Case, ..} = do
+  pretty' Match {context = LambdaCase, ..} = do
     prettyWith patterns $ spaced . fmap pretty
     when isCommand space
     pretty rhs
@@ -115,7 +111,7 @@ mkExprMatch match =
     patterns = mkMatchPatterns (GHC.m_pats match)
     mkLambda lamKind grhss =
       Match
-        { context = LambdaContext $ toLambdaKind lamKind
+        { context = toLambdaContext lamKind
         , patterns = patterns
         , rhs =
             case lamKind of
@@ -143,33 +139,32 @@ mkExprMatch match =
         , needsSpaceAfterLambda = False
         , isCommand = False
         }
-    toLambdaKind GHC.LamSingle = Single
-    toLambdaKind GHC.LamCase = Case
-    toLambdaKind GHC.LamCases = Case
+    toLambdaContext GHC.LamSingle = LambdaSingle
+    toLambdaContext _ = LambdaCase
 #elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkExprMatch :: GHC.Match GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Match
 mkExprMatch match =
   case GHC.m_ctxt match of
     GHC.LamAlt GHC.LamSingle ->
-      mkLambda Single (mkLambdaGuardedRhs $ GHC.m_grhss match)
+      mkLambda LambdaSingle (mkLambdaGuardedRhs $ GHC.m_grhss match)
     GHC.LamAlt GHC.LamCase ->
-      mkLambda Case (mkCaseGuardedRhs $ GHC.m_grhss match)
+      mkLambda LambdaCase (mkCaseGuardedRhs $ GHC.m_grhss match)
     GHC.LamAlt GHC.LamCases ->
-      mkLambda Case (mkCaseGuardedRhs $ GHC.m_grhss match)
+      mkLambda LambdaCase (mkCaseGuardedRhs $ GHC.m_grhss match)
     GHC.CaseAlt -> mkCase (mkCaseGuardedRhs $ GHC.m_grhss match)
     ctxt@GHC.FunRhs {} -> mkFun ctxt (mkGuardedRhs $ GHC.m_grhss match)
     _ -> error "`ghc-lib-parser` never generates this AST node."
   where
     rawPatterns = extractPatList (GHC.m_pats match)
     patterns = mkMatchPatterns (GHC.m_pats match)
-    mkLambda kind rhs =
+    mkLambda ctx rhs =
       Match
-        { context = LambdaContext kind
+        { context = ctx
         , patterns = patterns
         , rhs = rhs
         , needsSpaceAfterLambda =
-            case kind of
-              Single -> lambdaNeedsSpace rawPatterns
+            case ctx of
+              LambdaSingle -> lambdaNeedsSpace rawPatterns
               _ -> False
         , isCommand = False
         }
@@ -193,22 +188,24 @@ mkExprMatch match =
 mkExprMatch :: GHC.Match GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Match
 mkExprMatch match =
   case GHC.m_ctxt match of
-    GHC.LambdaExpr -> mkLambda Single (mkLambdaGuardedRhs $ GHC.m_grhss match)
-    GHC.LamCaseAlt {} -> mkLambda Case (mkCaseGuardedRhs $ GHC.m_grhss match)
+    GHC.LambdaExpr ->
+      mkLambda LambdaSingle (mkLambdaGuardedRhs $ GHC.m_grhss match)
+    GHC.LamCaseAlt {} ->
+      mkLambda LambdaCase (mkCaseGuardedRhs $ GHC.m_grhss match)
     GHC.CaseAlt -> mkCase (mkCaseGuardedRhs $ GHC.m_grhss match)
     ctxt@GHC.FunRhs {} -> mkFun ctxt (mkGuardedRhs $ GHC.m_grhss match)
     _ -> error "`ghc-lib-parser` never generates this AST node."
   where
     rawPatterns = extractPatList (GHC.m_pats match)
     patterns = mkMatchPatterns (GHC.m_pats match)
-    mkLambda kind rhs =
+    mkLambda ctx rhs =
       Match
-        { context = LambdaContext kind
+        { context = ctx
         , patterns = patterns
         , rhs = rhs
         , needsSpaceAfterLambda =
-            case kind of
-              Single -> lambdaNeedsSpace rawPatterns
+            case ctx of
+              LambdaSingle -> lambdaNeedsSpace rawPatterns
               _ -> False
         , isCommand = False
         }
@@ -232,21 +229,22 @@ mkExprMatch match =
 mkExprMatch :: GHC.Match GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Match
 mkExprMatch match =
   case GHC.m_ctxt match of
-    GHC.LambdaExpr -> mkLambda Single (mkLambdaGuardedRhs $ GHC.m_grhss match)
+    GHC.LambdaExpr ->
+      mkLambda LambdaSingle (mkLambdaGuardedRhs $ GHC.m_grhss match)
     GHC.CaseAlt -> mkCase (mkCaseGuardedRhs $ GHC.m_grhss match)
     ctxt@GHC.FunRhs {} -> mkFun ctxt (mkGuardedRhs $ GHC.m_grhss match)
     _ -> error "`ghc-lib-parser` never generates this AST node."
   where
     rawPatterns = extractPatList (GHC.m_pats match)
     patterns = mkMatchPatterns (GHC.m_pats match)
-    mkLambda kind rhs =
+    mkLambda ctx rhs =
       Match
-        { context = LambdaContext kind
+        { context = ctx
         , patterns = patterns
         , rhs = rhs
         , needsSpaceAfterLambda =
-            case kind of
-              Single -> lambdaNeedsSpace rawPatterns
+            case ctx of
+              LambdaSingle -> lambdaNeedsSpace rawPatterns
               _ -> False
         , isCommand = False
         }
@@ -274,7 +272,7 @@ mkCmdMatch match =
   case GHC.m_ctxt match of
     GHC.LamAlt lamKind ->
       Match
-        { context = LambdaContext $ toLambdaKind lamKind
+        { context = toLambdaContext lamKind
         , patterns = patterns
         , rhs =
             case lamKind of
@@ -298,19 +296,18 @@ mkCmdMatch match =
   where
     rawPatterns = extractPatList (GHC.m_pats match)
     patterns = mkMatchPatterns (GHC.m_pats match)
-    toLambdaKind GHC.LamSingle = Single
-    toLambdaKind GHC.LamCase = Case
-    toLambdaKind GHC.LamCases = Case
+    toLambdaContext GHC.LamSingle = LambdaSingle
+    toLambdaContext _ = LambdaCase
 #elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkCmdMatch :: GHC.Match GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> Match
 mkCmdMatch match =
   case GHC.m_ctxt match of
     GHC.LamAlt GHC.LamSingle ->
-      mkLambda Single (mkLambdaCmdGuardedRhs $ GHC.m_grhss match)
+      mkLambda LambdaSingle (mkLambdaCmdGuardedRhs $ GHC.m_grhss match)
     GHC.LamAlt GHC.LamCase ->
-      mkLambda Case (mkCaseCmdGuardedRhs $ GHC.m_grhss match)
+      mkLambda LambdaCase (mkCaseCmdGuardedRhs $ GHC.m_grhss match)
     GHC.LamAlt GHC.LamCases ->
-      mkLambda Case (mkCaseCmdGuardedRhs $ GHC.m_grhss match)
+      mkLambda LambdaCase (mkCaseCmdGuardedRhs $ GHC.m_grhss match)
     GHC.CaseAlt ->
       Match
         { context = CaseContext
@@ -323,14 +320,14 @@ mkCmdMatch match =
   where
     rawPatterns = extractPatList (GHC.m_pats match)
     patterns = mkMatchPatterns (GHC.m_pats match)
-    mkLambda kind rhs =
+    mkLambda ctx rhs =
       Match
-        { context = LambdaContext kind
+        { context = ctx
         , patterns = patterns
         , rhs = rhs
         , needsSpaceAfterLambda =
-            case kind of
-              Single -> lambdaNeedsSpace rawPatterns
+            case ctx of
+              LambdaSingle -> lambdaNeedsSpace rawPatterns
               _ -> False
         , isCommand = True
         }
@@ -340,7 +337,7 @@ mkCmdMatch match =
   case GHC.m_ctxt match of
     GHC.LambdaExpr ->
       Match
-        { context = LambdaContext Single
+        { context = LambdaSingle
         , patterns = patterns
         , rhs = mkLambdaCmdGuardedRhs $ GHC.m_grhss match
         , needsSpaceAfterLambda = lambdaNeedsSpace rawPatterns
@@ -348,7 +345,7 @@ mkCmdMatch match =
         }
     GHC.LamCaseAlt {} ->
       Match
-        { context = LambdaContext Case
+        { context = LambdaCase
         , patterns = patterns
         , rhs = mkCaseCmdGuardedRhs $ GHC.m_grhss match
         , needsSpaceAfterLambda = False
@@ -372,7 +369,7 @@ mkCmdMatch match =
   case GHC.m_ctxt match of
     GHC.LambdaExpr ->
       Match
-        { context = LambdaContext Single
+        { context = LambdaSingle
         , patterns = patterns
         , rhs = mkLambdaCmdGuardedRhs $ GHC.m_grhss match
         , needsSpaceAfterLambda = lambdaNeedsSpace rawPatterns
