@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
 
 module HIndent.Ast.Match
   ( Match(..)
@@ -13,7 +14,6 @@ module HIndent.Ast.Match
 import Control.Monad (unless, when)
 import qualified GHC.Hs as GHC
 import qualified GHC.Types.Fixity as Fixity
-import qualified GHC.Types.Name.Reader as NameReader
 import qualified GHC.Types.SrcLoc as SrcLoc
 import HIndent.Ast.Declaration.Bind.GuardedRhs
   ( GuardedRhs
@@ -30,13 +30,13 @@ import HIndent.Ast.Pattern (Pattern, mkPattern)
 import HIndent.Ast.Type.Strictness (Strictness, mkStrictness)
 import HIndent.Ast.WithComments
   ( WithComments
-  , addComments
   , fromGenLocated
-  , getComments
-  , getNode
   , mkWithComments
   , prettyWith
   )
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+import HIndent.Ast.WithComments (addComments, getComments, getNode)
+#endif
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments (CommentExtraction(..))
@@ -104,7 +104,7 @@ instance Pretty Match where
             (l:r:rest) ->
               spaced
                 $ [pretty l, pretty functionOperator, pretty r]
-                  ++ fmap pretty rest
+                    ++ fmap pretty rest
             _ -> error "Not enough parameters are passed."
     prettyWith matchPatterns render
     when matchIsCommand space
@@ -414,11 +414,6 @@ mkMatchPatterns input =
 mkMatchPatterns :: [GHC.LPat GHC.GhcPs] -> WithComments [WithComments Pattern]
 mkMatchPatterns = mkWithComments . fmap (fmap mkPattern . fromGenLocated)
 #endif
-
-mkFunctionMatch ::
-     CommentExtraction l
-  => GHC.HsMatchContext (SrcLoc.GenLocated l NameReader.RdrName)
-  -> FunctionMatch
 mkFunctionMatch ctx@GHC.FunRhs {..} =
   case GHC.mc_fixity ctx of
     Fixity.Prefix ->
