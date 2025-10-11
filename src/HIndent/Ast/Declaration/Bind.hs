@@ -29,7 +29,7 @@ data Bind
   | PatternSynonym (WithComments PatternSynonym)
 
 instance CommentExtraction Bind where
-  nodeComments (Function _) = emptyNodeComments
+  nodeComments Function {} = emptyNodeComments
   nodeComments Pattern {} = emptyNodeComments
   nodeComments PatternSynonym {} = emptyNodeComments
 
