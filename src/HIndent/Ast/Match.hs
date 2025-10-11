@@ -3,10 +3,10 @@
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 
 module HIndent.Ast.Match
-  ( Match(..)
-  , MatchContext(..)
-  , LambdaKind(..)
-  , FunctionMatch(..)
+  ( Match
+  , MatchContext
+  , LambdaKind
+  , FunctionMatch
   , mkExprMatch
   , mkCmdMatch
   ) where
