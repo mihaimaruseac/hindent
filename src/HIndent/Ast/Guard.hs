@@ -65,6 +65,7 @@ instance Pretty Guard where
         pretty expr
   pretty' CmdGuard {..}
     | null conditions = do
+      space
       string (contextSeparator guardContext)
       printCommentsAnd cmd $ \case
         GHC.HsCmdDo _ stmts ->

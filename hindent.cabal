@@ -108,6 +108,8 @@ library
       HIndent.Ast.Import.Entry
       HIndent.Ast.Import.Entry.Collection
       HIndent.Ast.Import.ImportingOrHiding
+      HIndent.Ast.Match
+      HIndent.Ast.MatchGroup
       HIndent.Ast.Module
       HIndent.Ast.Module.Declaration
       HIndent.Ast.Module.Export.Collection

@@ -36,6 +36,7 @@ import HIndent.Ast.Expression.RangeExpression
   )
 import HIndent.Ast.Expression.RecordUpdateField (mkRecordUpdateFields)
 import HIndent.Ast.Guard (Guard, mkMultiWayIfExprGuard)
+import HIndent.Ast.MatchGroup (MatchGroup, hasMatches, mkExprMatchGroup)
 import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments (NodeComments(..))
@@ -69,10 +70,10 @@ data Expression
   | ImplicitParameter ImplicitParameterName
   | OverloadedLiteral (GHC.HsOverLit GHC.GhcPs)
   | Literal (GHC.HsLit GHC.GhcPs)
-  | Lambda (GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs))
+  | Lambda MatchGroup
   | LambdaCase
       { usesCases :: Bool
-      , matches :: GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs)
+      , matches :: MatchGroup
       }
   | Application (NonEmpty (WithComments Expression))
   | TypeApplication
@@ -105,7 +106,7 @@ data Expression
       }
   | CaseExpression
       { scrutinee :: WithComments Expression
-      , matches :: GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs)
+      , matches :: MatchGroup
       }
   | IfExpression
       { predicate :: WithComments Expression
@@ -170,7 +171,7 @@ instance Pretty Expression where
       $ if usesCases
           then "\\cases"
           else "\\case"
-    if null $ GHC.unLoc $ GHC.mg_alts matches
+    if not $ hasMatches matches
       then string " {}"
       else do
         newline
@@ -249,7 +250,7 @@ instance Pretty Expression where
     string "case " |=> do
       pretty scrutinee
       string " of"
-    if null $ GHC.unLoc $ GHC.mg_alts matches
+    if not $ hasMatches matches
       then string " {}"
       else do
         newline
@@ -350,20 +351,22 @@ mkExpression (GHC.HsEmbTy _ _) =
   error "`ghc-lib-parser` never generates this AST node."
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-mkExpression (GHC.HsLam _ GHC.LamSingle matches) = Lambda matches
+mkExpression (GHC.HsLam _ GHC.LamSingle matches) =
+  Lambda $ mkExprMatchGroup matches
 mkExpression (GHC.HsLam _ GHC.LamCases matches) =
-  LambdaCase {usesCases = True, ..}
+  LambdaCase {usesCases = True, matches = mkExprMatchGroup matches}
 mkExpression (GHC.HsLam _ GHC.LamCase matches) =
-  LambdaCase {usesCases = False, ..}
+  LambdaCase {usesCases = False, matches = mkExprMatchGroup matches}
 #else
-mkExpression (GHC.HsLam _ matches) = Lambda matches
+mkExpression (GHC.HsLam _ matches) = Lambda $ mkExprMatchGroup matches
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkExpression (GHC.HsLamCase _ GHC.LamCases matches) =
-  LambdaCase {usesCases = True, ..}
+  LambdaCase {usesCases = True, matches = mkExprMatchGroup matches}
 mkExpression (GHC.HsLamCase _ GHC.LamCase matches) =
-  LambdaCase {usesCases = False, ..}
+  LambdaCase {usesCases = False, matches = mkExprMatchGroup matches}
 #else
-mkExpression (GHC.HsLamCase _ _ matches) = LambdaCase {usesCases = False, ..}
+mkExpression (GHC.HsLamCase _ _ matches) =
+  LambdaCase {usesCases = False, matches = mkExprMatchGroup matches}
 #endif
 #endif
 mkExpression (GHC.HsApp _ function argument) =
@@ -488,7 +491,9 @@ mkExpression (GHC.ExplicitSum _ position arity expr) =
   Sum {expression = mkExpression <$> fromGenLocated expr, ..}
 mkExpression (GHC.HsCase _ scrut matches) =
   CaseExpression
-    {scrutinee = mkExpression <$> fromGenLocated scrut, matches = matches}
+    { scrutinee = mkExpression <$> fromGenLocated scrut
+    , matches = mkExprMatchGroup matches
+    }
 mkExpression (GHC.HsIf _ predicateExpr thenExpr elseExpr) =
   IfExpression
     { predicate = mkExpression <$> fromGenLocated predicateExpr
