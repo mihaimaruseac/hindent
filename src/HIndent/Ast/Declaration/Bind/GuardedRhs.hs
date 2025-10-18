@@ -3,7 +3,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Bind.GuardedRhs
-  ( GuardedRhs(..)
+  ( GuardedRhs
   , mkGuardedRhs
   , mkCaseGuardedRhs
   , mkLambdaGuardedRhs
