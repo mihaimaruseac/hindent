@@ -63,10 +63,6 @@ instance Pretty (GHC.HsLit GHC.GhcPs)
 
 instance Pretty (GHC.HsOverLit GHC.GhcPs)
 
-instance Pretty (GHC.HsLocalBindsLR GHC.GhcPs GHC.GhcPs)
-
-instance Pretty (GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs)
-
 instance Pretty QualifiedDo
 
 instance Pretty (GHC.HsCmd GHC.GhcPs)
