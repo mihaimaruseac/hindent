@@ -7,7 +7,6 @@ module HIndent.Ast.Declaration.Bind.GuardedRhs
   , mkGuardedRhs
   , mkCaseGuardedRhs
   , mkLambdaGuardedRhs
-  , mkMultiWayIfGuardedRhs
   , mkCaseCmdGuardedRhs
   , mkLambdaCmdGuardedRhs
   ) where
@@ -20,7 +19,6 @@ import HIndent.Ast.Guard
   , mkExprGuard
   , mkLambdaCmdGuard
   , mkLambdaExprGuard
-  , mkMultiWayIfExprGuard
   )
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
@@ -32,8 +30,6 @@ import HIndent.Pretty.NodeComments
 data Context
   = Plain
   | Case
-  | Lambda
-  | MultiWayIf
   deriving (Eq)
 
 data GuardedRhs = GuardedRhs
@@ -80,17 +76,8 @@ mkCaseGuardedRhs GHC.GRHSs {..} =
 mkLambdaGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkLambdaGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
-    { context = Lambda
+    { context = Plain
     , guards = map (fmap mkLambdaExprGuard . fromGenLocated) grhssGRHSs
-    , localBinds = grhssLocalBinds
-    }
-
-mkMultiWayIfGuardedRhs ::
-     GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
-mkMultiWayIfGuardedRhs GHC.GRHSs {..} =
-  GuardedRhs
-    { context = MultiWayIf
-    , guards = map (fmap mkMultiWayIfExprGuard . fromGenLocated) grhssGRHSs
     , localBinds = grhssLocalBinds
     }
 
@@ -106,7 +93,7 @@ mkLambdaCmdGuardedRhs ::
      GHC.GRHSs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> GuardedRhs
 mkLambdaCmdGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
-    { context = Lambda
+    { context = Plain
     , guards = map (fmap mkLambdaCmdGuard . fromGenLocated) grhssGRHSs
     , localBinds = grhssLocalBinds
     }
