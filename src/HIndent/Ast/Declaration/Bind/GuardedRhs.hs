@@ -3,7 +3,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Bind.GuardedRhs
-  ( GuardedRhs
+  ( GuardedRhs(..)
   , mkGuardedRhs
   , mkCaseGuardedRhs
   , mkLambdaGuardedRhs
@@ -27,16 +27,15 @@ import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
-data Context
-  = Plain
-  | Case
-  deriving (Eq)
-
-data GuardedRhs = GuardedRhs
-  { context :: Context
-  , guards :: [WithComments Guard]
-  , localBinds :: GHC.HsLocalBinds GHC.GhcPs
-  }
+data GuardedRhs
+  = GuardedRhs
+      { guards :: [WithComments Guard]
+      , localBinds :: GHC.HsLocalBinds GHC.GhcPs
+      }
+  | CaseGuardedRhs
+      { guards :: [WithComments Guard]
+      , localBinds :: GHC.HsLocalBinds GHC.GhcPs
+      }
 
 instance CommentExtraction GuardedRhs where
   nodeComments _ = NodeComments [] [] []
@@ -44,48 +43,48 @@ instance CommentExtraction GuardedRhs where
 instance Pretty GuardedRhs where
   pretty' GuardedRhs {..} = do
     mapM_ pretty guards
-    case (localBinds, context) of
-      (GHC.HsValBinds {}, Case) ->
-        indentedBlock $ do
-          newline
-          string "where " |=> pretty localBinds
-      (GHC.HsValBinds epa lr, _) ->
+    case localBinds of
+      GHC.HsValBinds epa lr ->
         indentedWithSpace 2
           $ newlinePrefixed
               [ string "where"
               , printCommentsAnd (GHC.L epa lr) (indentedWithSpace 2 . pretty)
               ]
       _ -> return ()
+  pretty' CaseGuardedRhs {..} = do
+    mapM_ pretty guards
+    case localBinds of
+      GHC.HsValBinds {} ->
+        indentedBlock $ do
+          newline
+          string "where " |=> pretty localBinds
+      _ -> return ()
 
 mkGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
-    { context = Plain
-    , guards = map (fmap mkExprGuard . fromGenLocated) grhssGRHSs
+    { guards = map (fmap mkExprGuard . fromGenLocated) grhssGRHSs
     , localBinds = grhssLocalBinds
     }
 
 mkCaseGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkCaseGuardedRhs GHC.GRHSs {..} =
-  GuardedRhs
-    { context = Case
-    , guards = map (fmap mkCaseExprGuard . fromGenLocated) grhssGRHSs
+  CaseGuardedRhs
+    { guards = map (fmap mkCaseExprGuard . fromGenLocated) grhssGRHSs
     , localBinds = grhssLocalBinds
     }
 
 mkLambdaGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkLambdaGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
-    { context = Plain
-    , guards = map (fmap mkLambdaExprGuard . fromGenLocated) grhssGRHSs
+    { guards = map (fmap mkLambdaExprGuard . fromGenLocated) grhssGRHSs
     , localBinds = grhssLocalBinds
     }
 
 mkCaseCmdGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> GuardedRhs
 mkCaseCmdGuardedRhs GHC.GRHSs {..} =
-  GuardedRhs
-    { context = Case
-    , guards = map (fmap mkCaseCmdGuard . fromGenLocated) grhssGRHSs
+  CaseGuardedRhs
+    { guards = map (fmap mkCaseCmdGuard . fromGenLocated) grhssGRHSs
     , localBinds = grhssLocalBinds
     }
 
@@ -93,7 +92,6 @@ mkLambdaCmdGuardedRhs ::
      GHC.GRHSs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> GuardedRhs
 mkLambdaCmdGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
-    { context = Plain
-    , guards = map (fmap mkLambdaCmdGuard . fromGenLocated) grhssGRHSs
+    { guards = map (fmap mkLambdaCmdGuard . fromGenLocated) grhssGRHSs
     , localBinds = grhssLocalBinds
     }
