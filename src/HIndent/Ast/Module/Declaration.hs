@@ -43,6 +43,7 @@ mkModuleDeclaration m =
   case GHC.hsmodName m of
     Nothing -> Nothing
     Just name' -> Just ModuleDeclaration {..}
-      where name = mkModuleName <$> fromGenLocated name'
-            warning = mkModuleWarning m
-            exports = mkExportCollection m
+      where
+        name = mkModuleName <$> fromGenLocated name'
+        warning = mkModuleWarning m
+        exports = mkExportCollection m
