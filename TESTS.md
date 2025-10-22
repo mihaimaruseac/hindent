@@ -1235,21 +1235,22 @@ g x =
        in y
 ```
 
-The indent after a top-level `where` has always 2 spaces.
+The indent after a top-level `where` respects the indent size setting.
 
 ```haskell 4
 f = undefined
-  where
-    g = undefined
+    where
+        g = undefined
 ```
 
-The indent after a `where` inside a `case` depends on the indent space setting
+The indent after a `where` inside a `case` respects the indent size setting
 
 ```haskell 4
 f =
     case x of
         x -> undefined
-            where y = undefined
+            where
+                y = undefined
 ```
 
 #### Pattern matchings
@@ -1820,12 +1821,12 @@ Multiple line function signature inside a `where`
 
 ```haskell 4
 foo = undefined
-  where
-    go :: Fooooooooooooooooooooooo
-       -> Fooooooooooooooooooooooo
-       -> Fooooooooooooooooooooooo
-       -> Fooooooooooooooooooooooo
-    go = undefined
+    where
+        go :: Fooooooooooooooooooooooo
+           -> Fooooooooooooooooooooooo
+           -> Fooooooooooooooooooooooo
+           -> Fooooooooooooooooooooooo
+        go = undefined
 ```
 
 Types with many type applications
@@ -3576,11 +3577,12 @@ quasiQuotes =
                                       typeString
                                       (map (snd $(presentVar)) xs))
                                 ]
-                              where getCh (CharPresentation "GHC.Types.Char" ch) =
-                                      ch
-                                    getCh (ChoicePresentation _ ((_, CharPresentation _ ch):_)) =
-                                      ch
-                                    getCh _ = ""
+                              where
+                                getCh (CharPresentation "GHC.Types.Char" ch) =
+                                  ch
+                                getCh (ChoicePresentation _ ((_, CharPresentation _ ch):_)) =
+                                  ch
+                                getCh _ = ""
                             _ ->
                               ListPresentation
                                 typeString

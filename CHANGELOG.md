@@ -10,6 +10,7 @@
 
 ### Changed
 
+- Unified `where` clause formatting and respect `configIndentSpaces` for bindings ([#1118])
 - `hindent-mode`: Show an error string on any return code that's not 0 ([#1096])
 - `hindent-mode`: The `hindent-extra-args` variable may now be a function ([#1096])
 

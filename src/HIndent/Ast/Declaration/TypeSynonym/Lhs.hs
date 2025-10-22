@@ -44,8 +44,9 @@ mkTypeSynonymLhs GHC.SynDecl {tcdFixity = GHC.Prefix, ..} = Prefix {..}
 mkTypeSynonymLhs GHC.SynDecl {tcdFixity = GHC.Infix, ..} =
   case GHC.hsq_explicit tcdTyVars of
     [l, r] -> Infix {..}
-      where left = mkTypeVariable <$> fromGenLocated l
-            iName = fromGenLocated $ fmap mkInfixName tcdLName
-            right = mkTypeVariable <$> fromGenLocated r
+      where
+        left = mkTypeVariable <$> fromGenLocated l
+        iName = fromGenLocated $ fmap mkInfixName tcdLName
+        right = mkTypeVariable <$> fromGenLocated r
     _ -> error "Unexpected number of type variables for infix type synonym."
 mkTypeSynonymLhs _ = error "Not a type synonym."
