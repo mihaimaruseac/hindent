@@ -38,7 +38,7 @@ import HIndent.Ast.Declaration.Instance.Family.Type.Associated
   )
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression (mkExpression)
-import HIndent.Ast.LocalBinds (mkLocalBindsWithComments)
+import HIndent.Ast.LocalBinds (mkLocalBinds)
 import HIndent.Ast.MatchGroup (mkCmdMatchGroup)
 import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.ImportExport
@@ -166,8 +166,7 @@ prettyStmtLRExpr GHC.ApplicativeStmt {} = notGeneratedByParser
 #endif
 prettyStmtLRExpr (GHC.BodyStmt _ body _ _) =
   pretty $ mkExpression <$> fromGenLocated body
-prettyStmtLRExpr (GHC.LetStmt _ l) =
-  string "let " |=> pretty (mkLocalBindsWithComments l)
+prettyStmtLRExpr (GHC.LetStmt _ l) = string "let " |=> pretty (mkLocalBinds l)
 prettyStmtLRExpr (GHC.ParStmt _ xs _ _) = hvBarSep $ fmap pretty xs
 prettyStmtLRExpr GHC.TransStmt {..} =
   vCommaSep
@@ -206,8 +205,7 @@ prettyStmtLRCmd (GHC.BindStmt _ pat body) = hor <-|> ver
 prettyStmtLRCmd GHC.ApplicativeStmt {} = notGeneratedByParser
 #endif
 prettyStmtLRCmd (GHC.BodyStmt _ body _ _) = pretty body
-prettyStmtLRCmd (GHC.LetStmt _ l) =
-  string "let " |=> pretty (mkLocalBindsWithComments l)
+prettyStmtLRCmd (GHC.LetStmt _ l) = string "let " |=> pretty (mkLocalBinds l)
 prettyStmtLRCmd (GHC.ParStmt _ xs _ _) = hvBarSep $ fmap pretty xs
 prettyStmtLRCmd GHC.TransStmt {..} =
   vCommaSep
@@ -747,13 +745,13 @@ prettyHsCmd (GHC.HsCmdIf _ _ cond t f) = do
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 prettyHsCmd (GHC.HsCmdLet _ _ binds _ expr) =
   lined
-    [ string "let " |=> pretty (mkLocalBindsWithComments binds)
+    [ string "let " |=> pretty (mkLocalBinds binds)
     , string " in " |=> pretty expr
     ]
 #else
 prettyHsCmd (GHC.HsCmdLet _ binds expr) =
   lined
-    [ string "let " |=> pretty (mkLocalBindsWithComments binds)
+    [ string "let " |=> pretty (mkLocalBinds binds)
     , string " in " |=> pretty expr
     ]
 #endif

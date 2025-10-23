@@ -36,7 +36,7 @@ import HIndent.Ast.Expression.RangeExpression
   )
 import HIndent.Ast.Expression.RecordUpdateField (mkRecordUpdateFields)
 import HIndent.Ast.Guard (Guard, mkMultiWayIfExprGuard)
-import HIndent.Ast.LocalBinds (LocalBinds, mkLocalBindsWithComments)
+import HIndent.Ast.LocalBinds (LocalBinds, mkLocalBinds)
 import HIndent.Ast.MatchGroup (MatchGroup, hasMatches, mkExprMatchGroup)
 import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.Prefix
@@ -506,19 +506,19 @@ mkExpression (GHC.HsMultiIf _ clauses) =
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkExpression (GHC.HsLet _ localBinds body) =
   LetBinding
-    { bindings = mkLocalBindsWithComments localBinds
+    { bindings = mkLocalBinds localBinds
     , expression = mkExpression <$> fromGenLocated body
     }
 #elif MIN_VERSION_ghc_lib_parser(9, 8, 1)
 mkExpression (GHC.HsLet _ _ localBinds _ body) =
   LetBinding
-    { bindings = mkLocalBindsWithComments localBinds
+    { bindings = mkLocalBinds localBinds
     , expression = mkExpression <$> fromGenLocated body
     }
 #else
 mkExpression (GHC.HsLet _ localBinds body) =
   LetBinding
-    { bindings = mkLocalBindsWithComments localBinds
+    { bindings = mkLocalBinds localBinds
     , expression = mkExpression <$> fromGenLocated body
     }
 #endif

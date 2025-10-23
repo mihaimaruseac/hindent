@@ -66,21 +66,21 @@ mkGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
     { guards = map (fmap mkExprGuard . fromGenLocated) grhssGRHSs
-    , localBinds = mkLocalBindsWithComments grhssLocalBinds
+    , localBinds = mkLocalBinds grhssLocalBinds
     }
 
 mkCaseGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkCaseGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
     { guards = map (fmap mkCaseExprGuard . fromGenLocated) grhssGRHSs
-    , localBinds = mkLocalBindsWithComments grhssLocalBinds
+    , localBinds = mkLocalBinds grhssLocalBinds
     }
 
 mkLambdaGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkLambdaGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
     { guards = map (fmap mkLambdaExprGuard . fromGenLocated) grhssGRHSs
-    , localBinds = mkLocalBindsWithComments grhssLocalBinds
+    , localBinds = mkLocalBinds grhssLocalBinds
     }
 
 mkMultiWayIfGuardedRhs ::
@@ -88,14 +88,14 @@ mkMultiWayIfGuardedRhs ::
 mkMultiWayIfGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
     { guards = map (fmap mkMultiWayIfExprGuard . fromGenLocated) grhssGRHSs
-    , localBinds = mkLocalBindsWithComments grhssLocalBinds
+    , localBinds = mkLocalBinds grhssLocalBinds
     }
 
 mkCaseCmdGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> GuardedRhs
 mkCaseCmdGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
     { guards = map (fmap mkCaseCmdGuard . fromGenLocated) grhssGRHSs
-    , localBinds = mkLocalBindsWithComments grhssLocalBinds
+    , localBinds = mkLocalBinds grhssLocalBinds
     }
 
 mkLambdaCmdGuardedRhs ::
@@ -103,5 +103,5 @@ mkLambdaCmdGuardedRhs ::
 mkLambdaCmdGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
     { guards = map (fmap mkLambdaCmdGuard . fromGenLocated) grhssGRHSs
-    , localBinds = mkLocalBindsWithComments grhssLocalBinds
+    , localBinds = mkLocalBinds grhssLocalBinds
     }

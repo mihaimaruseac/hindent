@@ -3,7 +3,7 @@
 
 module HIndent.Ast.LocalBinds
   ( LocalBinds(..)
-  , mkLocalBindsWithComments
+  , mkLocalBinds
   , hasLocalBinds
   ) where
 
@@ -46,15 +46,14 @@ instance Pretty LocalBinds where
                spaced [pretty name, string "=", pretty expr])
           implicitBindings
 
-mkLocalBindsWithComments ::
-     GHC.HsLocalBinds GHC.GhcPs -> WithComments LocalBinds
-mkLocalBindsWithComments (GHC.HsValBinds ann binds) =
+mkLocalBinds :: GHC.HsLocalBinds GHC.GhcPs -> WithComments LocalBinds
+mkLocalBinds (GHC.HsValBinds ann binds) =
   fromEpAnn ann
     $ ValueLocalBinds {sigBindFamilies = Just $ mkSigBindFamilies binds}
-mkLocalBindsWithComments (GHC.HsIPBinds ann binds) =
+mkLocalBinds (GHC.HsIPBinds ann binds) =
   fromEpAnn ann
     $ ImplicitParameterLocalBinds {implicitBindings = mkImplicitBindings binds}
-mkLocalBindsWithComments GHC.EmptyLocalBinds {} =
+mkLocalBinds GHC.EmptyLocalBinds {} =
   mkWithComments $ ValueLocalBinds {sigBindFamilies = Nothing}
 
 hasLocalBinds :: LocalBinds -> Bool
