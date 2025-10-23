@@ -31,7 +31,6 @@ import qualified HIndent.Pretty.SigBindFamily as SBF
 data LocalBinds
   = ValueLocalBinds ValueBindGroup
   | ImplicitParameterLocalBinds ImplicitParameterBinds
-  | EmptyLocalBinds
 
 newtype ValueBindGroup = ValueBindGroup
   { sigBindFamilies :: [WithComments SBF.SigBindFamily]
@@ -49,7 +48,6 @@ data ImplicitParameterBind = ImplicitParameterBind
 instance CommentExtraction LocalBinds where
   nodeComments ValueLocalBinds {} = NodeComments [] [] []
   nodeComments ImplicitParameterLocalBinds {} = NodeComments [] [] []
-  nodeComments EmptyLocalBinds {} = NodeComments [] [] []
 
 instance CommentExtraction ValueBindGroup where
   nodeComments ValueBindGroup {} = NodeComments [] [] []
@@ -63,7 +61,6 @@ instance CommentExtraction ImplicitParameterBind where
 instance Pretty LocalBinds where
   pretty' (ValueLocalBinds binds) = pretty binds
   pretty' (ImplicitParameterLocalBinds binds) = pretty binds
-  pretty' EmptyLocalBinds = pure ()
 
 instance Pretty ValueBindGroup where
   pretty' ValueBindGroup {..} = lined $ fmap pretty sigBindFamilies
@@ -84,7 +81,9 @@ mkLocalBindsWithComments (GHC.HsIPBinds ann binds) =
   fromEpAnn ann
     $ ImplicitParameterLocalBinds
     $ ImplicitParameterBinds {implicitBindings = mkImplicitBindings binds}
-mkLocalBindsWithComments GHC.EmptyLocalBinds {} = mkWithComments EmptyLocalBinds
+mkLocalBindsWithComments GHC.EmptyLocalBinds {} =
+  mkWithComments
+    $ ValueLocalBinds ValueBindGroup {sigBindFamilies = []}
 
 mkLocalBindsFromLocated ::
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
@@ -96,10 +95,10 @@ mkLocalBindsFromLocated = mkLocalBindsWithComments
 #endif
 
 hasLocalBinds :: LocalBinds -> Bool
-hasLocalBinds (ValueLocalBinds _) = True
+hasLocalBinds (ValueLocalBinds ValueBindGroup {..}) =
+  not $ null sigBindFamilies
 hasLocalBinds (ImplicitParameterLocalBinds ImplicitParameterBinds {..}) =
   not $ null implicitBindings
-hasLocalBinds EmptyLocalBinds = False
 
 valueLocalBinds :: LocalBinds -> Maybe ValueBindGroup
 valueLocalBinds (ValueLocalBinds binds) = Just binds

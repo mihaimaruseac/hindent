@@ -94,7 +94,6 @@ instance CommentExtraction SrcSpan where
 instance CommentExtraction (HsLocalBindsLR GhcPs GhcPs) where
   nodeComments (HsValBinds x _) = nodeComments x
   nodeComments (HsIPBinds x _) = nodeComments x
-  nodeComments EmptyLocalBinds {} = emptyNodeComments
 
 instance CommentExtraction (HsValBindsLR GhcPs GhcPs) where
   nodeComments ValBinds {} = emptyNodeComments
