@@ -51,7 +51,11 @@ instance Pretty GuardedRhs where
                && null commentsAfter)
         valueFamilies = valueSigBindFamilies node
         ipBindings = implicitParameterBindings node
-        shouldPrintWhere = isJust valueFamilies || not (null ipBindings)
+        shouldPrintWhere =
+          if not (null ipBindings)
+            then error
+                   "LocalBinds construction mismatch: ImplicitParameters at GuardedRhs"
+            else isJust valueFamilies
     when (shouldPrintWhere || hasComments) $ do
       indentSpaces <- getIndentSpaces
       indentedWithSpace indentSpaces
