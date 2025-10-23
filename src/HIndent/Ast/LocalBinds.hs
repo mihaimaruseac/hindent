@@ -4,16 +4,12 @@
 module HIndent.Ast.LocalBinds
   ( LocalBinds(..)
   , mkLocalBindsWithComments
-  , mkLocalBindsFromLocated
   , hasLocalBinds
   ) where
 
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified GHC.Data.Bag as GHC
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-import GHC.Types.SrcLoc (unLoc)
 #endif
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.NodeComments (NodeComments(..))
@@ -60,14 +56,7 @@ mkLocalBindsWithComments (GHC.HsIPBinds ann binds) =
     $ ImplicitParameterLocalBinds {implicitBindings = mkImplicitBindings binds}
 mkLocalBindsWithComments GHC.EmptyLocalBinds {} =
   mkWithComments $ ValueLocalBinds {sigBindFamilies = Nothing}
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-mkLocalBindsFromLocated ::
-     GHC.XRec GHC.GhcPs (GHC.HsLocalBinds GHC.GhcPs) -> WithComments LocalBinds
-mkLocalBindsFromLocated = mkLocalBindsWithComments . unLoc
-#else
-mkLocalBindsFromLocated :: GHC.HsLocalBinds GHC.GhcPs -> WithComments LocalBinds
-mkLocalBindsFromLocated = mkLocalBindsWithComments
-#endif
+
 hasLocalBinds :: LocalBinds -> Bool
 hasLocalBinds ValueLocalBinds {sigBindFamilies = Just families} =
   not $ null families
