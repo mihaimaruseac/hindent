@@ -2,9 +2,11 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.LocalBinds
-  ( LocalBinds(..)
+  ( LocalBinds
   , mkLocalBinds
   , hasLocalBinds
+  , valueSigBindFamilies
+  , implicitParameterBindings
   ) where
 
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -61,6 +63,16 @@ hasLocalBinds ValueLocalBinds {sigBindFamilies = Just families} =
   not $ null families
 hasLocalBinds ValueLocalBinds {sigBindFamilies = Nothing} = False
 hasLocalBinds ImplicitParameterLocalBinds {..} = not $ null implicitBindings
+
+valueSigBindFamilies :: LocalBinds -> Maybe [WithComments SBF.SigBindFamily]
+valueSigBindFamilies ValueLocalBinds {..} = sigBindFamilies
+valueSigBindFamilies _ = Nothing
+
+implicitParameterBindings ::
+     LocalBinds
+  -> [WithComments (WithComments ImplicitParameterName, WithComments Expression)]
+implicitParameterBindings ImplicitParameterLocalBinds {..} = implicitBindings
+implicitParameterBindings _ = []
 
 mkSigBindFamilies ::
      GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> [WithComments SBF.SigBindFamily]

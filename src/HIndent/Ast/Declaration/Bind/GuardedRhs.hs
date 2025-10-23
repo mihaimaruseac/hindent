@@ -13,6 +13,7 @@ module HIndent.Ast.Declaration.Bind.GuardedRhs
   ) where
 
 import Control.Monad (when)
+import Data.Maybe (isJust)
 import HIndent.Ast.Guard
   ( Guard
   , mkCaseCmdGuard
@@ -48,11 +49,9 @@ instance Pretty GuardedRhs where
             (null commentsBefore
                && null commentsOnSameLine
                && null commentsAfter)
-        shouldPrintWhere =
-          case node of
-            ValueLocalBinds {sigBindFamilies = Just _} -> True
-            ValueLocalBinds {sigBindFamilies = Nothing} -> False
-            ImplicitParameterLocalBinds {} -> True
+        valueFamilies = valueSigBindFamilies node
+        ipBindings = implicitParameterBindings node
+        shouldPrintWhere = isJust valueFamilies || not (null ipBindings)
     when (shouldPrintWhere || hasComments) $ do
       indentSpaces <- getIndentSpaces
       indentedWithSpace indentSpaces
