@@ -23,24 +23,23 @@ import HIndent.Pretty.NodeComments
 import qualified HIndent.Pretty.SigBindFamily as SBF
 
 data LocalBinds
-  = ValueLocalBinds
+  = Value
       { sigBindFamilies :: Maybe [WithComments SBF.SigBindFamily]
       }
-  | ImplicitParameterLocalBinds
+  | ImplicitParameters
       { implicitBindings :: [WithComments
                                ( WithComments ImplicitParameterName
                                , WithComments Expression)]
       }
 
 instance CommentExtraction LocalBinds where
-  nodeComments ValueLocalBinds {} = NodeComments [] [] []
-  nodeComments ImplicitParameterLocalBinds {} = NodeComments [] [] []
+  nodeComments Value {} = NodeComments [] [] []
+  nodeComments ImplicitParameters {} = NodeComments [] [] []
 
 instance Pretty LocalBinds where
-  pretty' ValueLocalBinds {sigBindFamilies = Just families} =
-    lined $ fmap pretty families
-  pretty' ValueLocalBinds {sigBindFamilies = Nothing} = pure ()
-  pretty' ImplicitParameterLocalBinds {..} =
+  pretty' Value {sigBindFamilies = Just families} = lined $ fmap pretty families
+  pretty' Value {sigBindFamilies = Nothing} = pure ()
+  pretty' ImplicitParameters {..} =
     lined
       $ fmap
           (\binding ->
@@ -50,28 +49,26 @@ instance Pretty LocalBinds where
 
 mkLocalBinds :: GHC.HsLocalBinds GHC.GhcPs -> WithComments LocalBinds
 mkLocalBinds (GHC.HsValBinds ann binds) =
-  fromEpAnn ann
-    $ ValueLocalBinds {sigBindFamilies = Just $ mkSigBindFamilies binds}
+  fromEpAnn ann $ Value {sigBindFamilies = Just $ mkSigBindFamilies binds}
 mkLocalBinds (GHC.HsIPBinds ann binds) =
   fromEpAnn ann
-    $ ImplicitParameterLocalBinds {implicitBindings = mkImplicitBindings binds}
+    $ ImplicitParameters {implicitBindings = mkImplicitBindings binds}
 mkLocalBinds GHC.EmptyLocalBinds {} =
-  mkWithComments $ ValueLocalBinds {sigBindFamilies = Nothing}
+  mkWithComments $ Value {sigBindFamilies = Nothing}
 
 hasLocalBinds :: LocalBinds -> Bool
-hasLocalBinds ValueLocalBinds {sigBindFamilies = Just families} =
-  not $ null families
-hasLocalBinds ValueLocalBinds {sigBindFamilies = Nothing} = False
-hasLocalBinds ImplicitParameterLocalBinds {..} = not $ null implicitBindings
+hasLocalBinds Value {sigBindFamilies = Just families} = not $ null families
+hasLocalBinds Value {sigBindFamilies = Nothing} = False
+hasLocalBinds ImplicitParameters {..} = not $ null implicitBindings
 
 valueSigBindFamilies :: LocalBinds -> Maybe [WithComments SBF.SigBindFamily]
-valueSigBindFamilies ValueLocalBinds {..} = sigBindFamilies
+valueSigBindFamilies Value {..} = sigBindFamilies
 valueSigBindFamilies _ = Nothing
 
 implicitParameterBindings ::
      LocalBinds
   -> [WithComments (WithComments ImplicitParameterName, WithComments Expression)]
-implicitParameterBindings ImplicitParameterLocalBinds {..} = implicitBindings
+implicitParameterBindings ImplicitParameters {..} = implicitBindings
 implicitParameterBindings _ = []
 
 mkSigBindFamilies ::
