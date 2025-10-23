@@ -3,13 +3,10 @@
 
 module HIndent.Ast.LocalBinds
   ( LocalBinds(..)
-  , ValueBindGroup(..)
-  , ImplicitParameterBinds(..)
   , ImplicitParameterBind(..)
   , mkLocalBindsWithComments
   , mkLocalBindsFromLocated
   , hasLocalBinds
-  , valueLocalBinds
   ) where
 
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -28,16 +25,9 @@ import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 import qualified HIndent.Pretty.SigBindFamily as SBF
 
-data LocalBinds
-  = ValueLocalBinds ValueBindGroup
-  | ImplicitParameterLocalBinds ImplicitParameterBinds
-
-newtype ValueBindGroup = ValueBindGroup
+data LocalBinds = LocalBinds
   { sigBindFamilies :: [WithComments SBF.SigBindFamily]
-  }
-
-newtype ImplicitParameterBinds = ImplicitParameterBinds
-  { implicitBindings :: [WithComments ImplicitParameterBind]
+  , implicitBindings :: [WithComments ImplicitParameterBind]
   }
 
 data ImplicitParameterBind = ImplicitParameterBind
@@ -46,27 +36,14 @@ data ImplicitParameterBind = ImplicitParameterBind
   }
 
 instance CommentExtraction LocalBinds where
-  nodeComments ValueLocalBinds {} = NodeComments [] [] []
-  nodeComments ImplicitParameterLocalBinds {} = NodeComments [] [] []
-
-instance CommentExtraction ValueBindGroup where
-  nodeComments ValueBindGroup {} = NodeComments [] [] []
-
-instance CommentExtraction ImplicitParameterBinds where
-  nodeComments ImplicitParameterBinds {} = NodeComments [] [] []
+  nodeComments LocalBinds {} = NodeComments [] [] []
 
 instance CommentExtraction ImplicitParameterBind where
   nodeComments ImplicitParameterBind {} = NodeComments [] [] []
 
 instance Pretty LocalBinds where
-  pretty' (ValueLocalBinds binds) = pretty binds
-  pretty' (ImplicitParameterLocalBinds binds) = pretty binds
-
-instance Pretty ValueBindGroup where
-  pretty' ValueBindGroup {..} = lined $ fmap pretty sigBindFamilies
-
-instance Pretty ImplicitParameterBinds where
-  pretty' ImplicitParameterBinds {..} = lined $ fmap pretty implicitBindings
+  pretty' LocalBinds {..} =
+    lined $ fmap pretty sigBindFamilies ++ fmap pretty implicitBindings
 
 instance Pretty ImplicitParameterBind where
   pretty' ImplicitParameterBind {..} =
@@ -76,14 +53,19 @@ mkLocalBindsWithComments ::
      GHC.HsLocalBinds GHC.GhcPs -> WithComments LocalBinds
 mkLocalBindsWithComments (GHC.HsValBinds ann binds) =
   fromEpAnn ann
-    $ ValueLocalBinds ValueBindGroup {sigBindFamilies = mkSigBindFamilies binds}
+    $ LocalBinds
+        { sigBindFamilies = mkSigBindFamilies binds
+        , implicitBindings = []
+        }
 mkLocalBindsWithComments (GHC.HsIPBinds ann binds) =
   fromEpAnn ann
-    $ ImplicitParameterLocalBinds
-    $ ImplicitParameterBinds {implicitBindings = mkImplicitBindings binds}
+    $ LocalBinds
+        { sigBindFamilies = []
+        , implicitBindings = mkImplicitBindings binds
+        }
 mkLocalBindsWithComments GHC.EmptyLocalBinds {} =
   mkWithComments
-    $ ValueLocalBinds ValueBindGroup {sigBindFamilies = []}
+    $ LocalBinds {sigBindFamilies = [], implicitBindings = []}
 
 mkLocalBindsFromLocated ::
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
@@ -95,14 +77,8 @@ mkLocalBindsFromLocated = mkLocalBindsWithComments
 #endif
 
 hasLocalBinds :: LocalBinds -> Bool
-hasLocalBinds (ValueLocalBinds ValueBindGroup {..}) =
-  not $ null sigBindFamilies
-hasLocalBinds (ImplicitParameterLocalBinds ImplicitParameterBinds {..}) =
-  not $ null implicitBindings
-
-valueLocalBinds :: LocalBinds -> Maybe ValueBindGroup
-valueLocalBinds (ValueLocalBinds binds) = Just binds
-valueLocalBinds _ = Nothing
+hasLocalBinds LocalBinds {..} =
+  not (null sigBindFamilies && null implicitBindings)
 
 mkSigBindFamilies ::
      GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> [WithComments SBF.SigBindFamily]
