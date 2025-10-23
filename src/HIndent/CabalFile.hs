@@ -55,13 +55,13 @@ mkStanza bi mnames fpaths =
             Just relpath ->
               any (equalFilePath $ dropExtension relpath) modpaths
                 || any (equalFilePath relpath) fpaths
-     in any inDir $ hsSourceDirsPrime bi
+     in any inDir $ hsSourceDirs' bi
+  where
 
-hsSourceDirsPrime :: BuildInfo -> [FilePath]
 #if MIN_VERSION_Cabal(3, 6, 0)
-hsSourceDirsPrime = fmap getSymbolicPath . hsSourceDirs
+        hsSourceDirs' = (map getSymbolicPath) . hsSourceDirs
 #else
-hsSourceDirsPrime = hsSourceDirs
+        hsSourceDirs' = hsSourceDirs
 #endif
 -- | Extract `Stanza`s from a package
 packageStanzas :: PackageDescription -> [Stanza]
