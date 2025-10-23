@@ -42,14 +42,24 @@ instance Pretty GuardedRhs where
   pretty' GuardedRhs {..} = do
     mapM_ pretty guards
     let node = getNode localBinds
-    when (hasLocalBinds node) $ do
+        NodeComments {..} = getComments localBinds
+        hasComments =
+          not
+            (null commentsBefore
+               && null commentsOnSameLine
+               && null commentsAfter)
+        shouldPrintWhere =
+          case node of
+            ValueLocalBinds {sigBindFamilies = Just _} -> True
+            ValueLocalBinds {sigBindFamilies = Nothing} -> False
+            ImplicitParameterLocalBinds {} -> True
+    when (shouldPrintWhere || hasComments) $ do
       indentSpaces <- getIndentSpaces
       indentedWithSpace indentSpaces
         $ newlinePrefixed
             [ string "where"
-            , prettyWith localBinds
-                $ \local ->
-                    indentedWithSpace indentSpaces $ pretty local
+            , prettyWith localBinds $ \local ->
+                indentedWithSpace indentSpaces $ pretty local
             ]
 
 mkGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs

@@ -3,7 +3,6 @@
 
 module HIndent.Ast.LocalBinds
   ( LocalBinds(..)
-  , ImplicitParameterBind(..)
   , mkLocalBindsWithComments
   , mkLocalBindsFromLocated
   , hasLocalBinds
@@ -25,60 +24,55 @@ import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 import qualified HIndent.Pretty.SigBindFamily as SBF
 
-data LocalBinds = LocalBinds
-  { sigBindFamilies :: [WithComments SBF.SigBindFamily]
-  , implicitBindings :: [WithComments ImplicitParameterBind]
-  }
-
-data ImplicitParameterBind = ImplicitParameterBind
-  { name :: WithComments ImplicitParameterName
-  , expression :: WithComments Expression
-  }
+data LocalBinds
+  = ValueLocalBinds
+      { sigBindFamilies :: Maybe [WithComments SBF.SigBindFamily]
+      }
+  | ImplicitParameterLocalBinds
+      { implicitBindings :: [WithComments
+                               ( WithComments ImplicitParameterName
+                               , WithComments Expression)]
+      }
 
 instance CommentExtraction LocalBinds where
-  nodeComments LocalBinds {} = NodeComments [] [] []
-
-instance CommentExtraction ImplicitParameterBind where
-  nodeComments ImplicitParameterBind {} = NodeComments [] [] []
+  nodeComments ValueLocalBinds {} = NodeComments [] [] []
+  nodeComments ImplicitParameterLocalBinds {} = NodeComments [] [] []
 
 instance Pretty LocalBinds where
-  pretty' LocalBinds {..} =
-    lined $ fmap pretty sigBindFamilies ++ fmap pretty implicitBindings
-
-instance Pretty ImplicitParameterBind where
-  pretty' ImplicitParameterBind {..} =
-    spaced [pretty name, string "=", pretty expression]
+  pretty' ValueLocalBinds {sigBindFamilies = Just families} =
+    lined $ fmap pretty families
+  pretty' ValueLocalBinds {sigBindFamilies = Nothing} = pure ()
+  pretty' ImplicitParameterLocalBinds {..} =
+    lined
+      $ fmap
+          (\binding ->
+             prettyWith binding $ \(name, expr) ->
+               spaced [pretty name, string "=", pretty expr])
+          implicitBindings
 
 mkLocalBindsWithComments ::
      GHC.HsLocalBinds GHC.GhcPs -> WithComments LocalBinds
 mkLocalBindsWithComments (GHC.HsValBinds ann binds) =
   fromEpAnn ann
-    $ LocalBinds
-        { sigBindFamilies = mkSigBindFamilies binds
-        , implicitBindings = []
-        }
+    $ ValueLocalBinds {sigBindFamilies = Just $ mkSigBindFamilies binds}
 mkLocalBindsWithComments (GHC.HsIPBinds ann binds) =
   fromEpAnn ann
-    $ LocalBinds
-        { sigBindFamilies = []
-        , implicitBindings = mkImplicitBindings binds
-        }
+    $ ImplicitParameterLocalBinds {implicitBindings = mkImplicitBindings binds}
 mkLocalBindsWithComments GHC.EmptyLocalBinds {} =
-  mkWithComments
-    $ LocalBinds {sigBindFamilies = [], implicitBindings = []}
-
-mkLocalBindsFromLocated ::
+  mkWithComments $ ValueLocalBinds {sigBindFamilies = Nothing}
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+mkLocalBindsFromLocated ::
      GHC.XRec GHC.GhcPs (GHC.HsLocalBinds GHC.GhcPs) -> WithComments LocalBinds
 mkLocalBindsFromLocated = mkLocalBindsWithComments . unLoc
 #else
-     GHC.HsLocalBinds GHC.GhcPs -> WithComments LocalBinds
+mkLocalBindsFromLocated :: GHC.HsLocalBinds GHC.GhcPs -> WithComments LocalBinds
 mkLocalBindsFromLocated = mkLocalBindsWithComments
 #endif
-
 hasLocalBinds :: LocalBinds -> Bool
-hasLocalBinds LocalBinds {..} =
-  not (null sigBindFamilies && null implicitBindings)
+hasLocalBinds ValueLocalBinds {sigBindFamilies = Just families} =
+  not $ null families
+hasLocalBinds ValueLocalBinds {sigBindFamilies = Nothing} = False
+hasLocalBinds ImplicitParameterLocalBinds {..} = not $ null implicitBindings
 
 mkSigBindFamilies ::
      GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> [WithComments SBF.SigBindFamily]
@@ -88,30 +82,28 @@ mkSigBindFamilies (GHC.ValBinds _ binds sigs) =
 #else
 mkSigBindFamilies (GHC.ValBinds _ bindBag sigs) =
   fromGenLocated
-    <$>
-      SBF.mkSortedLSigBindFamilyList sigs (GHC.bagToList bindBag) [] [] []
+    <$> SBF.mkSortedLSigBindFamilyList sigs (GHC.bagToList bindBag) [] [] []
 #endif
 mkSigBindFamilies GHC.XValBindsLR {} =
   error "`ghc-lib-parser` never generates this AST node."
 
 mkImplicitBindings ::
-     GHC.HsIPBinds GHC.GhcPs -> [WithComments ImplicitParameterBind]
+     GHC.HsIPBinds GHC.GhcPs
+  -> [WithComments (WithComments ImplicitParameterName, WithComments Expression)]
 mkImplicitBindings (GHC.IPBinds _ binds) =
-  fmap (fmap mkImplicitParameterBind . fromGenLocated) binds
+  fmap (fmap mkImplicitParameterBinding . fromGenLocated) binds
 
-mkImplicitParameterBind :: GHC.IPBind GHC.GhcPs -> ImplicitParameterBind
+mkImplicitParameterBinding ::
+     GHC.IPBind GHC.GhcPs
+  -> (WithComments ImplicitParameterName, WithComments Expression)
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
-mkImplicitParameterBind (GHC.IPBind _ lhs rhs) =
-  ImplicitParameterBind
-    { name = mkImplicitParameterName <$> fromGenLocated lhs
-    , expression = mkExpression <$> fromGenLocated rhs
-    }
+mkImplicitParameterBinding (GHC.IPBind _ lhs rhs) =
+  ( mkImplicitParameterName <$> fromGenLocated lhs
+  , mkExpression <$> fromGenLocated rhs)
 #else
-mkImplicitParameterBind (GHC.IPBind _ (Left lhs) rhs) =
-  ImplicitParameterBind
-    { name = mkImplicitParameterName <$> fromGenLocated lhs
-    , expression = mkExpression <$> fromGenLocated rhs
-    }
-mkImplicitParameterBind (GHC.IPBind _ (Right _) _) =
+mkImplicitParameterBinding (GHC.IPBind _ (Left lhs) rhs) =
+  ( mkImplicitParameterName <$> fromGenLocated lhs
+  , mkExpression <$> fromGenLocated rhs)
+mkImplicitParameterBinding (GHC.IPBind _ (Right _) _) =
   error "`ghc-lib-parser` never generates this AST node."
 #endif
