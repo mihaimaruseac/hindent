@@ -55,9 +55,7 @@ instance Pretty GuardedRhs where
           $ newlinePrefixed
               [ string "where"
               , prettyWith fams $ \binds ->
-                  if null binds
-                    then pure ()
-                    else indentedBlock $ lined $ fmap pretty binds
+                  indentedBlock $ lined $ fmap pretty binds
               ]
       Nothing -> pure ()
 
