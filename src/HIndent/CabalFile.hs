@@ -57,11 +57,10 @@ mkStanza bi mnames fpaths =
                 || any (equalFilePath relpath) fpaths
      in any inDir $ hsSourceDirs' bi
   where
-
 #if MIN_VERSION_Cabal(3, 6, 0)
-        hsSourceDirs' = (map getSymbolicPath) . hsSourceDirs
+    hsSourceDirs' = (map getSymbolicPath) . hsSourceDirs
 #else
-        hsSourceDirs' = hsSourceDirs
+    hsSourceDirs' = hsSourceDirs
 #endif
 -- | Extract `Stanza`s from a package
 packageStanzas :: PackageDescription -> [Stanza]

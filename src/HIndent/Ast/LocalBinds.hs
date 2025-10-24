@@ -6,10 +6,8 @@ module HIndent.Ast.LocalBinds
   , mkLocalBinds
   , hasLocalBinds
   , valueSigBindFamilies
+  , valueFamiliesWithComments
   , implicitParameterBindings
-  , ValueBindGroup(..)
-  , mkValueBindGroup
-  , hasValueBindGroup
   ) where
 
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -20,6 +18,15 @@ import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.Type.ImplicitParameterName
 import HIndent.Ast.WithComments
+  ( WithComments
+  , addComments
+  , fromEpAnn
+  , fromGenLocated
+  , getComments
+  , getNode
+  , mkWithComments
+  , prettyWith
+  )
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
@@ -68,6 +75,15 @@ valueSigBindFamilies :: LocalBinds -> Maybe [WithComments SBF.SigBindFamily]
 valueSigBindFamilies Value {..} = sigBindFamilies
 valueSigBindFamilies _ = Nothing
 
+valueFamiliesWithComments ::
+     WithComments LocalBinds
+  -> Maybe (WithComments [WithComments SBF.SigBindFamily])
+valueFamiliesWithComments lc =
+  case getNode lc of
+    Value {sigBindFamilies = Just fams} ->
+      Just $ addComments (getComments lc) (mkWithComments fams)
+    _ -> Nothing
+
 implicitParameterBindings ::
      LocalBinds
   -> [WithComments (WithComments ImplicitParameterName, WithComments Expression)]
@@ -107,22 +123,3 @@ mkImplicitParameterBinding (GHC.IPBind _ (Left lhs) rhs) =
 mkImplicitParameterBinding (GHC.IPBind _ (Right _) _) =
   error "`ghc-lib-parser` never generates this AST node."
 #endif
-newtype ValueBindGroup = ValueBindGroup
-  { valueFamilies :: [WithComments SBF.SigBindFamily]
-  }
-
-instance CommentExtraction ValueBindGroup where
-  nodeComments ValueBindGroup {} = NodeComments [] [] []
-
-instance Pretty ValueBindGroup where
-  pretty' ValueBindGroup {..} = lined $ fmap pretty valueFamilies
-
-mkValueBindGroup ::
-     GHC.HsLocalBinds GHC.GhcPs -> WithComments (Maybe ValueBindGroup)
-mkValueBindGroup (GHC.HsValBinds ann binds) =
-  Just . ValueBindGroup <$> fromEpAnn ann (mkSigBindFamilies binds)
-mkValueBindGroup GHC.EmptyLocalBinds {} = mkWithComments Nothing
-mkValueBindGroup GHC.HsIPBinds {} = mkWithComments Nothing
-
-hasValueBindGroup :: ValueBindGroup -> Bool
-hasValueBindGroup ValueBindGroup {..} = not $ null valueFamilies
