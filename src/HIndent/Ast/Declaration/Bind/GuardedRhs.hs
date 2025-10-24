@@ -12,8 +12,6 @@ module HIndent.Ast.Declaration.Bind.GuardedRhs
   , mkLambdaCmdGuardedRhs
   ) where
 
-import Control.Monad (when)
-import Data.Maybe (isJust)
 import HIndent.Ast.Guard
   ( Guard
   , mkCaseCmdGuard
@@ -51,20 +49,17 @@ instance CommentExtraction GuardedRhs where
 instance Pretty GuardedRhs where
   pretty' GuardedRhs {..} = do
     mapM_ pretty guards
-    let families = localBinds
-        shouldPrintWhere = isJust families
-    when shouldPrintWhere
-      $ indentedBlock
-      $ newlinePrefixed
-          [ string "where"
-          , case families of
-              Just fams ->
-                prettyWith fams $ \binds ->
+    case localBinds of
+      Just fams ->
+        indentedBlock
+          $ newlinePrefixed
+              [ string "where"
+              , prettyWith fams $ \binds ->
                   if null binds
                     then pure ()
                     else indentedBlock $ lined $ fmap pretty binds
-              Nothing -> pure ()
-          ]
+              ]
+      Nothing -> pure ()
 
 mkGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkGuardedRhs GHC.GRHSs {..} =
