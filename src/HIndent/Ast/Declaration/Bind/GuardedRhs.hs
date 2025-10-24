@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Bind.GuardedRhs
@@ -23,7 +24,7 @@ import HIndent.Ast.Guard
   , mkLambdaExprGuard
   , mkMultiWayIfExprGuard
   )
-import HIndent.Ast.LocalBinds
+import HIndent.Ast.LocalBinds (ValueBindGroup, mkValueBindGroup)
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -33,7 +34,7 @@ import HIndent.Pretty.NodeComments
 
 data GuardedRhs = GuardedRhs
   { guards :: [WithComments Guard]
-  , localBinds :: WithComments LocalBinds
+  , localBinds :: WithComments (Maybe ValueBindGroup)
   }
 
 instance CommentExtraction GuardedRhs where
@@ -42,48 +43,43 @@ instance CommentExtraction GuardedRhs where
 instance Pretty GuardedRhs where
   pretty' GuardedRhs {..} = do
     mapM_ pretty guards
-    let node = getNode localBinds
+    let families = getNode localBinds
         NodeComments {..} = getComments localBinds
         hasComments =
           not
             (null commentsBefore
                && null commentsOnSameLine
                && null commentsAfter)
-        valueFamilies = valueSigBindFamilies node
-        ipBindings = implicitParameterBindings node
-        shouldPrintWhere =
-          if not (null ipBindings)
-            then error
-                   "LocalBinds construction mismatch: ImplicitParameters at GuardedRhs"
-            else isJust valueFamilies
+        shouldPrintWhere = isJust families
     when (shouldPrintWhere || hasComments) $ do
       indentSpaces <- getIndentSpaces
       indentedWithSpace indentSpaces
         $ newlinePrefixed
             [ string "where"
-            , prettyWith localBinds $ \local ->
-                indentedWithSpace indentSpaces $ pretty local
+            , prettyWith localBinds $ \case
+                Just group -> indentedWithSpace indentSpaces $ pretty group
+                Nothing -> pure ()
             ]
 
 mkGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
     { guards = map (fmap mkExprGuard . fromGenLocated) grhssGRHSs
-    , localBinds = mkLocalBinds grhssLocalBinds
+    , localBinds = mkValueBindGroup grhssLocalBinds
     }
 
 mkCaseGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkCaseGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
     { guards = map (fmap mkCaseExprGuard . fromGenLocated) grhssGRHSs
-    , localBinds = mkLocalBinds grhssLocalBinds
+    , localBinds = mkValueBindGroup grhssLocalBinds
     }
 
 mkLambdaGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkLambdaGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
     { guards = map (fmap mkLambdaExprGuard . fromGenLocated) grhssGRHSs
-    , localBinds = mkLocalBinds grhssLocalBinds
+    , localBinds = mkValueBindGroup grhssLocalBinds
     }
 
 mkMultiWayIfGuardedRhs ::
@@ -91,14 +87,14 @@ mkMultiWayIfGuardedRhs ::
 mkMultiWayIfGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
     { guards = map (fmap mkMultiWayIfExprGuard . fromGenLocated) grhssGRHSs
-    , localBinds = mkLocalBinds grhssLocalBinds
+    , localBinds = mkValueBindGroup grhssLocalBinds
     }
 
 mkCaseCmdGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> GuardedRhs
 mkCaseCmdGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
     { guards = map (fmap mkCaseCmdGuard . fromGenLocated) grhssGRHSs
-    , localBinds = mkLocalBinds grhssLocalBinds
+    , localBinds = mkValueBindGroup grhssLocalBinds
     }
 
 mkLambdaCmdGuardedRhs ::
@@ -106,5 +102,5 @@ mkLambdaCmdGuardedRhs ::
 mkLambdaCmdGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
     { guards = map (fmap mkLambdaCmdGuard . fromGenLocated) grhssGRHSs
-    , localBinds = mkLocalBinds grhssLocalBinds
+    , localBinds = mkValueBindGroup grhssLocalBinds
     }

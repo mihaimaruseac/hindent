@@ -7,6 +7,9 @@ module HIndent.Ast.LocalBinds
   , hasLocalBinds
   , valueSigBindFamilies
   , implicitParameterBindings
+  , ValueBindGroup(..)
+  , mkValueBindGroup
+  , hasValueBindGroup
   ) where
 
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -104,3 +107,22 @@ mkImplicitParameterBinding (GHC.IPBind _ (Left lhs) rhs) =
 mkImplicitParameterBinding (GHC.IPBind _ (Right _) _) =
   error "`ghc-lib-parser` never generates this AST node."
 #endif
+newtype ValueBindGroup = ValueBindGroup
+  { valueFamilies :: [WithComments SBF.SigBindFamily]
+  }
+
+instance CommentExtraction ValueBindGroup where
+  nodeComments ValueBindGroup {} = NodeComments [] [] []
+
+instance Pretty ValueBindGroup where
+  pretty' ValueBindGroup {..} = lined $ fmap pretty valueFamilies
+
+mkValueBindGroup ::
+     GHC.HsLocalBinds GHC.GhcPs -> WithComments (Maybe ValueBindGroup)
+mkValueBindGroup (GHC.HsValBinds ann binds) =
+  Just . ValueBindGroup <$> fromEpAnn ann (mkSigBindFamilies binds)
+mkValueBindGroup GHC.EmptyLocalBinds {} = mkWithComments Nothing
+mkValueBindGroup GHC.HsIPBinds {} = mkWithComments Nothing
+
+hasValueBindGroup :: ValueBindGroup -> Bool
+hasValueBindGroup ValueBindGroup {..} = not $ null valueFamilies
