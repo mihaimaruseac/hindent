@@ -38,6 +38,7 @@ import HIndent.Ast.Declaration.Instance.Family.Type.Associated
   )
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression (mkExpression)
+import HIndent.Ast.LocalBinds (mkLocalBinds)
 import HIndent.Ast.MatchGroup (mkCmdMatchGroup)
 import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.ImportExport
@@ -46,7 +47,6 @@ import HIndent.Ast.Name.RecordField (mkFieldNameFromFieldOcc)
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Pattern
 import HIndent.Ast.Type
-import HIndent.Ast.Type.ImplicitParameterName (mkImplicitParameterName)
 import HIndent.Ast.Type.Strictness
 import HIndent.Ast.WithComments
 import HIndent.Pretty.Combinators
@@ -54,9 +54,6 @@ import HIndent.Pretty.NodeComments
 import qualified HIndent.Pretty.SigBindFamily as SBF
 import HIndent.Pretty.Types
 import HIndent.Printer
-#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
-import qualified GHC.Data.Bag as GHC
-#endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 import qualified GHC.Types.Name.Reader as GHC
 #endif
@@ -169,7 +166,7 @@ prettyStmtLRExpr GHC.ApplicativeStmt {} = notGeneratedByParser
 #endif
 prettyStmtLRExpr (GHC.BodyStmt _ body _ _) =
   pretty $ mkExpression <$> fromGenLocated body
-prettyStmtLRExpr (GHC.LetStmt _ l) = string "let " |=> pretty l
+prettyStmtLRExpr (GHC.LetStmt _ l) = string "let " |=> pretty (mkLocalBinds l)
 prettyStmtLRExpr (GHC.ParStmt _ xs _ _) = hvBarSep $ fmap pretty xs
 prettyStmtLRExpr GHC.TransStmt {..} =
   vCommaSep
@@ -208,7 +205,7 @@ prettyStmtLRCmd (GHC.BindStmt _ pat body) = hor <-|> ver
 prettyStmtLRCmd GHC.ApplicativeStmt {} = notGeneratedByParser
 #endif
 prettyStmtLRCmd (GHC.BodyStmt _ body _ _) = pretty body
-prettyStmtLRCmd (GHC.LetStmt _ l) = string "let " |=> pretty l
+prettyStmtLRCmd (GHC.LetStmt _ l) = string "let " |=> pretty (mkLocalBinds l)
 prettyStmtLRCmd (GHC.ParStmt _ xs _ _) = hvBarSep $ fmap pretty xs
 prettyStmtLRCmd GHC.TransStmt {..} =
   vCommaSep
@@ -303,32 +300,6 @@ instance Pretty SBF.SigBindFamily where
 
 instance Pretty GHC.EpaComment where
   pretty' GHC.EpaComment {..} = pretty $ mkComment ac_tok
-
-instance Pretty (GHC.HsLocalBindsLR GHC.GhcPs GHC.GhcPs) where
-  pretty' (GHC.HsValBinds _ lr) = pretty lr
-  pretty' (GHC.HsIPBinds _ x) = pretty x
-  pretty' GHC.EmptyLocalBinds {} =
-    error
-      "This branch indicates that the bind is empty, but since calling this code means that let or where has already been output, it cannot be handled here. It should be handled higher up in the AST."
-
-instance Pretty (GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs) where
-  pretty' = prettyHsValBindsLR
-
-prettyHsValBindsLR :: GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> Printer ()
-#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-prettyHsValBindsLR (GHC.ValBinds _ methods sigs) =
-  lined $ fmap pretty sigsAndMethods
-  where
-    sigsAndMethods = SBF.mkSortedLSigBindFamilyList sigs methods [] [] []
-prettyHsValBindsLR GHC.XValBindsLR {} = notUsedInParsedStage
-#else
-prettyHsValBindsLR (GHC.ValBinds _ methods sigs) =
-  lined $ fmap pretty sigsAndMethods
-  where
-    sigsAndMethods =
-      SBF.mkSortedLSigBindFamilyList sigs (GHC.bagToList methods) [] [] []
-prettyHsValBindsLR GHC.XValBindsLR {} = notUsedInParsedStage
-#endif
 #if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
 -- | For pattern matching against a record.
 instance Pretty
@@ -686,29 +657,6 @@ instance Pretty (GHC.HsPragE GHC.GhcPs) where
   pretty' (GHC.HsPragSCC _ _ x) =
     spaced [string "{-# SCC", pretty x, string "#-}"]
 #endif
-instance Pretty (GHC.HsIPBinds GHC.GhcPs) where
-  pretty' (GHC.IPBinds _ xs) = lined $ fmap pretty xs
-
-instance Pretty (GHC.IPBind GHC.GhcPs) where
-  pretty' = prettyIPBind
-
-prettyIPBind :: GHC.IPBind GHC.GhcPs -> Printer ()
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
-prettyIPBind (GHC.IPBind _ l r) =
-  spaced
-    [ pretty $ mkImplicitParameterName <$> fromGenLocated l
-    , string "="
-    , pretty $ mkExpression <$> fromGenLocated r
-    ]
-#else
-prettyIPBind (GHC.IPBind _ (Right _) _) = notUsedInParsedStage
-prettyIPBind (GHC.IPBind _ (Left l) r) =
-  spaced
-    [ pretty $ mkImplicitParameterName <$> fromGenLocated l
-    , string "="
-    , pretty $ mkExpression <$> fromGenLocated r
-    ]
-#endif
 instance Pretty (GHC.HsCmdTop GHC.GhcPs) where
   pretty' (GHC.HsCmdTop _ cmd) = pretty cmd
 
@@ -796,10 +744,16 @@ prettyHsCmd (GHC.HsCmdIf _ _ cond t f) = do
   indentedBlock $ lined [string "then " >> pretty t, string "else " >> pretty f]
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 prettyHsCmd (GHC.HsCmdLet _ _ binds _ expr) =
-  lined [string "let " |=> pretty binds, string " in " |=> pretty expr]
+  lined
+    [ string "let " |=> pretty (mkLocalBinds binds)
+    , string " in " |=> pretty expr
+    ]
 #else
 prettyHsCmd (GHC.HsCmdLet _ binds expr) =
-  lined [string "let " |=> pretty binds, string " in " |=> pretty expr]
+  lined
+    [ string "let " |=> pretty (mkLocalBinds binds)
+    , string " in " |=> pretty expr
+    ]
 #endif
 prettyHsCmd (GHC.HsCmdDo _ stmts) = do
   string "do"

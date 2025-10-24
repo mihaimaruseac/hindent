@@ -59,9 +59,9 @@ mkStanza bi mnames fpaths =
   where
 
 #if MIN_VERSION_Cabal(3, 6, 0)
-        hsSourceDirs' = (map getSymbolicPath) . hsSourceDirs
+    hsSourceDirs' = (map getSymbolicPath) . hsSourceDirs
 #else
-        hsSourceDirs' = hsSourceDirs
+    hsSourceDirs' = hsSourceDirs
 #endif
 -- | Extract `Stanza`s from a package
 packageStanzas :: PackageDescription -> [Stanza]
