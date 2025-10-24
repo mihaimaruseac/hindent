@@ -34,7 +34,8 @@ import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 import qualified HIndent.Pretty.SigBindFamily as SBF
-#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+#else
 import qualified GHC.Data.Bag as Bag
 #endif
 data GuardedRhs = GuardedRhs
@@ -106,16 +107,16 @@ valueFamiliesWithComments (GHC.HsValBinds ann valBinds) =
   Just $ fromEpAnn ann $ fromGenLocated <$> sigBindFamilies valBinds
 valueFamiliesWithComments GHC.HsIPBinds {} = Nothing
 valueFamiliesWithComments GHC.EmptyLocalBinds {} = Nothing
-#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
-sigBindFamilies ::
-     GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> [GHC.LocatedA SBF.SigBindFamily]
-sigBindFamilies (GHC.ValBinds _ bindBag sigs) =
-  SBF.mkSortedLSigBindFamilyList sigs (Bag.bagToList bindBag) [] [] []
-#else
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 sigBindFamilies ::
      GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> [GHC.LocatedA SBF.SigBindFamily]
 sigBindFamilies (GHC.ValBinds _ binds sigs) =
   SBF.mkSortedLSigBindFamilyList sigs binds [] [] []
+#else
+sigBindFamilies ::
+     GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> [GHC.LocatedA SBF.SigBindFamily]
+sigBindFamilies (GHC.ValBinds _ bindBag sigs) =
+  SBF.mkSortedLSigBindFamilyList sigs (Bag.bagToList bindBag) [] [] []
 #endif
 sigBindFamilies GHC.XValBindsLR {} =
   error "`ghc-lib-parser` never generates this AST node."
