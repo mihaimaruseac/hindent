@@ -23,10 +23,22 @@ import HIndent.Ast.Guard
   , mkLambdaExprGuard
   , mkMultiWayIfExprGuard
   )
-import HIndent.Ast.LocalBinds (mkLocalBinds, valueFamiliesWithComments)
+import HIndent.Ast.LocalBinds
+  ( LocalBinds
+  , mkLocalBinds
+  , valueSigBindFamilies
+  )
 import HIndent.Ast.NodeComments
 import qualified HIndent.Pretty.SigBindFamily as SBF
 import HIndent.Ast.WithComments
+  ( WithComments
+  , addComments
+  , fromGenLocated
+  , getComments
+  , getNode
+  , mkWithComments
+  , prettyWith
+  )
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -114,3 +126,12 @@ mkLambdaCmdGuardedRhs GHC.GRHSs {..} =
     , localBinds =
         valueFamiliesWithComments $ mkLocalBinds grhssLocalBinds
     }
+
+valueFamiliesWithComments ::
+     WithComments LocalBinds
+  -> Maybe (WithComments [WithComments SBF.SigBindFamily])
+valueFamiliesWithComments binds =
+  case valueSigBindFamilies (getNode binds) of
+    Just fams ->
+      Just $ addComments (getComments binds) (mkWithComments fams)
+    Nothing -> Nothing

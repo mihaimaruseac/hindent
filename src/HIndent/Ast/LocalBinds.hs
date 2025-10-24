@@ -6,7 +6,6 @@ module HIndent.Ast.LocalBinds
   , mkLocalBinds
   , hasLocalBinds
   , valueSigBindFamilies
-  , valueFamiliesWithComments
   , implicitParameterBindings
   ) where
 
@@ -19,11 +18,8 @@ import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.Type.ImplicitParameterName
 import HIndent.Ast.WithComments
   ( WithComments
-  , addComments
   , fromEpAnn
   , fromGenLocated
-  , getComments
-  , getNode
   , mkWithComments
   , prettyWith
   )
@@ -74,15 +70,6 @@ hasLocalBinds ImplicitParameters {..} = not $ null implicitBindings
 valueSigBindFamilies :: LocalBinds -> Maybe [WithComments SBF.SigBindFamily]
 valueSigBindFamilies Value {..} = sigBindFamilies
 valueSigBindFamilies _ = Nothing
-
-valueFamiliesWithComments ::
-     WithComments LocalBinds
-  -> Maybe (WithComments [WithComments SBF.SigBindFamily])
-valueFamiliesWithComments lc =
-  case getNode lc of
-    Value {sigBindFamilies = Just fams} ->
-      Just $ addComments (getComments lc) (mkWithComments fams)
-    _ -> Nothing
 
 implicitParameterBindings ::
      LocalBinds
