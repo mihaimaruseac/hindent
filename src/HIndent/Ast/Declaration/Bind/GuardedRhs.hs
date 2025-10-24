@@ -63,9 +63,8 @@ instance Pretty GuardedRhs where
                && null commentsOnSameLine
                && null commentsAfter)
         shouldPrintWhere = isJust families
-    when (shouldPrintWhere || hasComments) $ do
-      indentSpaces <- getIndentSpaces
-      indentedWithSpace indentSpaces
+    when (shouldPrintWhere || hasComments) $
+      indentedBlock
         $ newlinePrefixed
             [ string "where"
             , case families of
@@ -73,7 +72,7 @@ instance Pretty GuardedRhs where
                   prettyWith fams $ \binds ->
                     if null binds
                       then pure ()
-                      else indentedWithSpace indentSpaces $ lined $ fmap pretty binds
+                      else indentedBlock $ lined $ fmap pretty binds
                 Nothing -> pure ()
             ]
 
