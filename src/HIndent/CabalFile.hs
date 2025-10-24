@@ -57,6 +57,7 @@ mkStanza bi mnames fpaths =
                 || any (equalFilePath relpath) fpaths
      in any inDir $ hsSourceDirs' bi
   where
+
 #if MIN_VERSION_Cabal(3, 6, 0)
     hsSourceDirs' = (map getSymbolicPath) . hsSourceDirs
 #else
