@@ -2645,6 +2645,19 @@ f =
    in f
 ```
 
+With implicit parameters in a `where`
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/1120
+{-# LANGUAGE ImplicitParams #-}
+
+foo :: Int -> Int
+foo x
+  | x > 0 = ?bar
+  where
+    ?bar = x + 1
+```
+
 inside a `do`
 
 ```haskell
