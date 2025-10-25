@@ -21,6 +21,7 @@
 - Fix formatting of associated data families in type classes ([#1051])
 - Kind signatures and deriving clauses in GADTs are now properly printed ([#1053])
 - Visible forall (`forall a ->`) is now correctly formatted instead of being converted to invisible forall ([#1060])
+- Keep `where` clauses that contain implicit parameter bindings ([#1121])
 
 ### Removed
 
@@ -414,6 +415,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#1121]: https://github.com/mihaimaruseac/hindent/pull/1121
 [#1096]: https://github.com/mihaimaruseac/hindent/pull/1096
 [#1077]: https://github.com/mihaimaruseac/hindent/pull/1077
 [#1060]: https://github.com/mihaimaruseac/hindent/pull/1060
