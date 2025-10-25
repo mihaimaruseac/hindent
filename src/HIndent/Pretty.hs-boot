@@ -67,6 +67,8 @@ instance Pretty (GHC.HsLocalBindsLR GHC.GhcPs GHC.GhcPs)
 
 instance Pretty (GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs)
 
+instance Pretty (GHC.HsIPBinds GHC.GhcPs)
+
 instance Pretty QualifiedDo
 
 instance Pretty (GHC.HsCmd GHC.GhcPs)

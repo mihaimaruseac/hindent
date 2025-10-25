@@ -41,16 +41,20 @@ instance Pretty GuardedRhs where
   pretty' GuardedRhs {..} = do
     mapM_ pretty guards
     case localBinds of
-      GHC.HsValBinds epa lr -> do
+      GHC.HsValBinds epa lr -> prettyWhere $ GHC.L epa lr
+      GHC.HsIPBinds epa ipBinds
+        | hasImplicitBindings ipBinds -> prettyWhere $ GHC.L epa ipBinds
+      _ -> pure ()
+    where
+      prettyWhere binds = do
         indentSpaces <- getIndentSpaces
         indentedWithSpace indentSpaces
           $ newlinePrefixed
               [ string "where"
-              , printCommentsAnd
-                  (GHC.L epa lr)
-                  (indentedWithSpace indentSpaces . pretty)
+              , printCommentsAnd binds (indentedWithSpace indentSpaces . pretty)
               ]
-      _ -> return ()
+      hasImplicitBindings (GHC.IPBinds _ binds) = not $ null binds
+      hasImplicitBindings GHC.XHsIPBinds {} = False
 
 mkGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkGuardedRhs GHC.GRHSs {..} =
