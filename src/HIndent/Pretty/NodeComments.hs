@@ -218,9 +218,6 @@ instance CommentExtraction (HsLit GhcPs) where
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
   nodeComments HsMultilineString {} = emptyNodeComments
 #endif
-instance CommentExtraction (HsIPBinds GhcPs) where
-  nodeComments IPBinds {} = emptyNodeComments
-
 instance CommentExtraction (HsCmdTop GhcPs) where
   nodeComments HsCmdTop {} = emptyNodeComments
 
@@ -930,15 +927,6 @@ nodeCommentsHsPragE :: HsPragE GhcPs -> NodeComments
 nodeCommentsHsPragE (HsPragSCC (x, _) _) = nodeComments x
 #else
 nodeCommentsHsPragE (HsPragSCC x _ _) = nodeComments x
-#endif
-instance CommentExtraction (IPBind GhcPs) where
-  nodeComments = nodeCommentsIPBind
-
-nodeCommentsIPBind :: IPBind GhcPs -> NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 12, 1) || !MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsIPBind (IPBind x _ _) = nodeComments x
-#else
-nodeCommentsIPBind (IPBind x _ _) = mconcat $ fmap nodeComments x
 #endif
 instance CommentExtraction (DerivStrategy GhcPs) where
   nodeComments = nodeCommentsDerivStrategy

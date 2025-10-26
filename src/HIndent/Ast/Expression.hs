@@ -36,6 +36,7 @@ import HIndent.Ast.Expression.RangeExpression
   )
 import HIndent.Ast.Expression.RecordUpdateField (mkRecordUpdateFields)
 import HIndent.Ast.Guard (Guard, mkMultiWayIfExprGuard)
+import HIndent.Ast.LocalBinds (LocalBinds, mkLocalBinds)
 import HIndent.Ast.MatchGroup (MatchGroup, hasMatches, mkExprMatchGroup)
 import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.Prefix
@@ -115,7 +116,7 @@ data Expression
       }
   | MultiIf [WithComments Guard]
   | LetBinding
-      { bindings :: GHC.HsLocalBinds GHC.GhcPs
+      { bindings :: WithComments LocalBinds
       , expression :: WithComments Expression
       }
   | DoBlock
@@ -503,14 +504,29 @@ mkExpression (GHC.HsIf _ predicateExpr thenExpr elseExpr) =
 mkExpression (GHC.HsMultiIf _ clauses) =
   MultiIf (fmap (fmap mkMultiWayIfExprGuard . fromGenLocated) clauses)
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-mkExpression (GHC.HsLet _ bindings body) =
-  LetBinding {expression = mkExpression <$> fromGenLocated body, ..}
+mkExpression (GHC.HsLet _ localBinds body) =
+  case mkLocalBinds localBinds of
+    Nothing ->
+      error
+        "`ghc-lib-parser` never generates a `HsLet` node with empty bindings."
+    Just bindings ->
+      LetBinding {expression = mkExpression <$> fromGenLocated body, ..}
 #elif MIN_VERSION_ghc_lib_parser(9, 8, 1)
-mkExpression (GHC.HsLet _ _ bindings _ body) =
-  LetBinding {expression = mkExpression <$> fromGenLocated body, ..}
+mkExpression (GHC.HsLet _ _ localBinds _ body) =
+  case mkLocalBinds localBinds of
+    Nothing ->
+      error
+        "`ghc-lib-parser` never generates a `HsLet` node with empty bindings."
+    Just bindings ->
+      LetBinding {expression = mkExpression <$> fromGenLocated body, ..}
 #else
-mkExpression (GHC.HsLet _ bindings body) =
-  LetBinding {expression = mkExpression <$> fromGenLocated body, ..}
+mkExpression (GHC.HsLet _ localBinds body) =
+  case mkLocalBinds localBinds of
+    Nothing ->
+      error
+        "`ghc-lib-parser` never generates a `HsLet` node with empty bindings."
+    Just bindings ->
+      LetBinding {expression = mkExpression <$> fromGenLocated body, ..}
 #endif
 mkExpression (GHC.HsDo _ GHC.ListComp statements) =
   ListComprehension $ LC.mkListComprehension <$> fromGenLocated statements
