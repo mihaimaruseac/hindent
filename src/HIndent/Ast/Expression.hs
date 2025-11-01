@@ -42,6 +42,7 @@ import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.Pattern
+import HIndent.Ast.Statement (ExprStatement, mkExprStatement)
 import HIndent.Ast.Type
 import HIndent.Ast.Type.ImplicitParameterName
   ( ImplicitParameterName
@@ -121,7 +122,7 @@ data Expression
       }
   | DoBlock
       { qualifiedDo :: QualifiedDo
-      , statements :: GHC.XRec GHC.GhcPs [GHC.ExprLStmt GHC.GhcPs]
+      , statements :: WithComments [WithComments ExprStatement]
       }
   | ListComprehension (WithComments LC.ListComprehension)
   | ListLiteral [WithComments Expression]
@@ -276,7 +277,7 @@ instance Pretty Expression where
   pretty' DoBlock {..} = do
     pretty qualifiedDo
     newline
-    indentedBlock $ printCommentsAnd statements (lined . fmap pretty)
+    indentedBlock $ prettyWith statements (lined . fmap pretty)
   pretty' (ListComprehension listComprehension) = pretty listComprehension
   pretty' (ListLiteral listItems) = horizontal <-|> vertical
     where
@@ -529,13 +530,27 @@ mkExpression (GHC.HsLet _ localBinds body) =
       LetBinding {expression = mkExpression <$> fromGenLocated body, ..}
 #endif
 mkExpression (GHC.HsDo _ GHC.ListComp statements) =
-  ListComprehension $ LC.mkListComprehension <$> fromGenLocated statements
+  ListComprehension
+    $ LC.mkListComprehension . fmap (fmap mkExprStatement . fromGenLocated)
+        <$> fromGenLocated statements
 mkExpression (GHC.HsDo _ GHC.MonadComp statements) =
-  ListComprehension $ LC.mkListComprehension <$> fromGenLocated statements
+  ListComprehension
+    $ LC.mkListComprehension . fmap (fmap mkExprStatement . fromGenLocated)
+        <$> fromGenLocated statements
 mkExpression (GHC.HsDo _ (GHC.DoExpr moduleName) statements) =
-  DoBlock {qualifiedDo = QualifiedDo (fmap mkModuleName moduleName) Do, ..}
+  DoBlock
+    { qualifiedDo = QualifiedDo (fmap mkModuleName moduleName) Do
+    , statements =
+        fmap (fmap mkExprStatement . fromGenLocated)
+          <$> fromGenLocated statements
+    }
 mkExpression (GHC.HsDo _ (GHC.MDoExpr moduleName) statements) =
-  DoBlock {qualifiedDo = QualifiedDo (fmap mkModuleName moduleName) Mdo, ..}
+  DoBlock
+    { qualifiedDo = QualifiedDo (fmap mkModuleName moduleName) Mdo
+    , statements =
+        fmap (fmap mkExprStatement . fromGenLocated)
+          <$> fromGenLocated statements
+    }
 mkExpression (GHC.HsDo _ GHC.GhciStmtCtxt {} _) =
   error "`ghc-lib-parser` never generates this AST node."
 mkExpression (GHC.ExplicitList _ items) =

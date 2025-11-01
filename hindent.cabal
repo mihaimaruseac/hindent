@@ -127,6 +127,7 @@ library
       HIndent.Ast.Pattern
       HIndent.Ast.Pattern.RecordFields
       HIndent.Ast.Role
+      HIndent.Ast.Statement
       HIndent.Ast.Type
       HIndent.Ast.Type.Bang
       HIndent.Ast.Type.Forall
