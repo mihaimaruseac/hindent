@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeFamilies #-}
 
@@ -14,6 +13,7 @@ module HIndent.Ast.Guard
   ) where
 
 import Control.Monad (unless)
+import HIndent.Ast.Cmd (Cmd, mkCmd)
 import {-# SOURCE #-} HIndent.Ast.Expression
   ( GuardExpression
   , mkExpression
@@ -42,7 +42,7 @@ data Guard
   | CmdGuard
       { guardContext :: GuardContext
       , conditions :: [GHC.GuardLStmt GHC.GhcPs]
-      , cmd :: GHC.LHsCmd GHC.GhcPs
+      , cmd :: WithComments Cmd
       }
 
 instance CommentExtraction Guard where
@@ -67,17 +67,9 @@ instance Pretty Guard where
     | null conditions = do
       space
       string (contextSeparator guardContext)
-      printCommentsAnd cmd $ \case
-        GHC.HsCmdDo _ stmts ->
-          let hor = space >> printCommentsAnd stmts (lined . fmap pretty)
-              ver = do
-                newline
-                indentedBlock $ printCommentsAnd stmts (lined . fmap pretty)
-           in hor <-|> ver
-        x ->
-          let hor = space >> pretty x
-              ver = newline >> indentedBlock (pretty x)
-           in hor <-|> ver
+      let hor = space >> pretty cmd
+          ver = newline >> indentedBlock (pretty cmd)
+       in hor <-|> ver
     | otherwise = do
       unless (guardContext == MultiWayIfGuard) newline
       (if guardContext == MultiWayIfGuard
@@ -86,17 +78,9 @@ instance Pretty Guard where
         string "| " |=> vCommaSep (fmap pretty conditions)
         space
         string (contextSeparator guardContext)
-        printCommentsAnd cmd $ \case
-          GHC.HsCmdDo _ stmts ->
-            let hor = space >> printCommentsAnd stmts (lined . fmap pretty)
-                ver = do
-                  newline
-                  indentedBlock $ printCommentsAnd stmts (lined . fmap pretty)
-             in hor <-|> ver
-          x ->
-            let hor = space >> pretty x
-                ver = newline >> indentedBlock (pretty x)
-             in hor <-|> ver
+        let hor = space >> pretty cmd
+            ver = newline >> indentedBlock (pretty cmd)
+         in hor <-|> ver
 
 contextSeparator :: GuardContext -> String
 contextSeparator PlainGuard = "="
@@ -138,8 +122,9 @@ mkMultiWayIfExprGuard (GHC.GRHS _ conditions resultExpr) =
 
 mkCaseCmdGuard :: GHC.GRHS GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> Guard
 mkCaseCmdGuard (GHC.GRHS _ conditions cmd) =
-  CmdGuard {guardContext = CaseGuard, ..}
+  CmdGuard {guardContext = CaseGuard, cmd = fmap mkCmd (fromGenLocated cmd), ..}
 
 mkLambdaCmdGuard :: GHC.GRHS GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> Guard
 mkLambdaCmdGuard (GHC.GRHS _ conditions cmd) =
-  CmdGuard {guardContext = LambdaGuard, ..}
+  CmdGuard
+    {guardContext = LambdaGuard, cmd = fmap mkCmd (fromGenLocated cmd), ..}

@@ -3,10 +3,13 @@
 
 module HIndent.Ast.Statement
   ( ExprStatement
+  , CmdStatement
   , mkExprStatement
+  , mkCmdStatement
   ) where
 
 import qualified GHC.Hs as GHC
+import {-# SOURCE #-} HIndent.Ast.Cmd (Cmd, mkCmd)
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.LocalBinds (LocalBinds, mkLocalBinds)
 import HIndent.Ast.Pattern (Pattern, mkPattern)
@@ -17,11 +20,13 @@ import HIndent.Pretty.NodeComments (CommentExtraction(..), emptyNodeComments)
 
 type ExprStatement = Statement Expression
 
+type CmdStatement = Statement Cmd
+
 data Statement a
   = Expression (WithComments a)
   | Binding
       { lhsPattern :: WithComments Pattern
-      , expression :: WithComments a
+      , rhs :: WithComments a
       }
   | LetBinding (WithComments LocalBinds)
   | Parallel [[WithComments (Statement a)]]
@@ -43,8 +48,8 @@ instance Pretty a => Pretty (Statement a) where
     string " <-"
     hor <-|> ver
     where
-      hor = space >> pretty expression
-      ver = newline >> indentedBlock (pretty expression)
+      hor = space >> pretty rhs
+      ver = newline >> indentedBlock (pretty rhs)
   pretty' (LetBinding binds) = string "let " |=> pretty binds
   pretty' (Parallel blocks)
     | any ((> 1) . length) blocks =
@@ -62,7 +67,7 @@ mkExprStatement (GHC.LastStmt _ expr _ _) =
 mkExprStatement (GHC.BindStmt _ pat expr) =
   Binding
     { lhsPattern = mkPattern <$> fromGenLocated pat
-    , expression = mkExpression <$> fromGenLocated expr
+    , rhs = mkExpression <$> fromGenLocated expr
     }
 mkExprStatement (GHC.BodyStmt _ body _ _) =
   Expression $ mkExpression <$> fromGenLocated body
@@ -95,4 +100,34 @@ mkExprStatement GHC.ApplicativeStmt {} =
   error "`ghc-lib-parser` never generates this AST node."
 #endif
 mkExprStatement GHC.XStmtLR {} =
+  error "`ghc-lib-parser` never generates this AST node."
+
+mkCmdStatement ::
+     GHC.StmtLR GHC.GhcPs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> CmdStatement
+mkCmdStatement (GHC.LastStmt _ cmd _ _) =
+  Expression $ mkCmd <$> fromGenLocated cmd
+mkCmdStatement (GHC.BindStmt _ pat cmd) =
+  Binding
+    { lhsPattern = mkPattern <$> fromGenLocated pat
+    , rhs = mkCmd <$> fromGenLocated cmd
+    }
+mkCmdStatement (GHC.BodyStmt _ cmd _ _) =
+  Expression $ mkCmd <$> fromGenLocated cmd
+mkCmdStatement (GHC.LetStmt _ binds) =
+  case mkLocalBinds binds of
+    Just localBinds -> LetBinding localBinds
+    Nothing ->
+      error
+        "`ghc-lib-parser` never generates a `LetStmt` without bindings in the parsed AST."
+mkCmdStatement GHC.ParStmt {} =
+  error "`ghc-lib-parser` never generates this AST node."
+mkCmdStatement GHC.TransStmt {} =
+  error "`ghc-lib-parser` never generates this AST node."
+mkCmdStatement GHC.RecStmt {} =
+  error "`ghc-lib-parser` never generates this AST node."
+#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
+mkCmdStatement GHC.ApplicativeStmt {} =
+  error "`ghc-lib-parser` never generates this AST node."
+#endif
+mkCmdStatement GHC.XStmtLR {} =
   error "`ghc-lib-parser` never generates this AST node."
