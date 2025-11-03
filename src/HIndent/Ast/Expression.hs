@@ -20,10 +20,12 @@ import Control.Monad
 import Control.Monad.RWS (gets)
 import Data.List.NonEmpty (NonEmpty(..), (<|))
 import qualified Data.List.NonEmpty as NonEmpty
+import Data.Monoid (First(..))
 import qualified GHC.Hs as GHC
 import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.Fixity as GHC
 import qualified GHC.Types.SrcLoc as GHC
+import HIndent.Ast.Cmd (Cmd, CmdDoBlock, mkCmdDoBlock, mkCmdFromHsCmdTop)
 import HIndent.Ast.Expression.Bracket (Bracket, mkBracket)
 import qualified HIndent.Ast.Expression.ListComprehension as LC
 import HIndent.Ast.Expression.OverloadedLabel
@@ -50,7 +52,7 @@ import HIndent.Ast.Type.ImplicitParameterName
   )
 import HIndent.Ast.WithComments
 import HIndent.CabalFile ()
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty, printCommentsAnd)
+import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 import HIndent.Pretty.Types (DoOrMdo(..), QualifiedDo(..))
@@ -149,7 +151,11 @@ data Expression
   | Splice Splice
   | ProcExpression
       { pat :: WithComments Pattern
-      , cmd :: GHC.LHsCmdTop GHC.GhcPs
+      , cmd :: WithComments Cmd
+      }
+  | ProcDo
+      { pat :: WithComments Pattern
+      , block :: CmdDoBlock
       }
   | StaticExpression (WithComments Expression)
   | PragmaticExpression
@@ -305,22 +311,17 @@ instance Pretty Expression where
   pretty' (ArithmeticSequence rangeExpression) = pretty rangeExpression
   pretty' (TypedQuotation expr) = typedBrackets $ pretty expr
   pretty' (UntypedQuotation bracket) = pretty bracket
-  pretty' ProcExpression {..} =
-    case cmd of
-      x@(GHC.L _ (GHC.HsCmdTop _ (GHC.L _ (GHC.HsCmdDo _ stmts)))) -> do
-        spaced [string "proc", pretty pat, string "-> do"]
-        newline
-        indentedBlock
-          $ printCommentsAnd
-              x
-              (const (printCommentsAnd stmts (lined . fmap pretty)))
-      _ -> hor <-|> ver
+  pretty' ProcExpression {..} = hor <-|> ver
     where
       hor = spaced [string "proc", pretty pat, string "->", pretty cmd]
       ver = do
         spaced [string "proc", pretty pat, string "->"]
         newline
         indentedBlock $ pretty cmd
+  pretty' ProcDo {..} = do
+    spaced [string "proc", pretty pat, string "-> do"]
+    newline
+    indentedBlock $ pretty block
   pretty' (StaticExpression expr) = spaced [string "static", pretty expr]
   pretty' PragmaticExpression {..} = spaced [pretty pragma, pretty expression]
   pretty' (Splice splice') = pretty splice'
@@ -600,8 +601,12 @@ mkExpression (GHC.HsSpliceE _ splice) = Splice $ mkSplice splice
 mkExpression (GHC.HsTypedSplice _ expr) = Splice $ mkSplice expr
 mkExpression (GHC.HsUntypedSplice _ splice) = Splice $ mkSplice splice
 #endif
-mkExpression (GHC.HsProc _ pat cmd) =
-  ProcExpression {pat = mkPattern <$> fromGenLocated pat, ..}
+mkExpression (GHC.HsProc _ pat command) =
+  case getFirst $ foldMap (First . mkCmdDoBlock) cmd of
+    Just block -> ProcDo {pat = mkPattern <$> fromGenLocated pat, block}
+    Nothing -> ProcExpression {pat = mkPattern <$> fromGenLocated pat, cmd}
+  where
+    cmd = flattenComments $ mkCmdFromHsCmdTop <$> fromGenLocated command
 mkExpression (GHC.HsStatic _ staticExpr) =
   StaticExpression $ mkExpression <$> fromGenLocated staticExpr
 mkExpression (GHC.HsPragE _ pragma pragmaticExpr) =

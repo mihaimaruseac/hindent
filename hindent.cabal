@@ -37,6 +37,7 @@ library
   other-modules:
       HIndent.Applicative
       HIndent.Ast
+      HIndent.Ast.Cmd
       HIndent.Ast.Comment
       HIndent.Ast.Context
       HIndent.Ast.Declaration

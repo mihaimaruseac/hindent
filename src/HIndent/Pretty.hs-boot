@@ -69,19 +69,11 @@ instance Pretty (GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs)
 
 instance Pretty QualifiedDo
 
-instance Pretty (GHC.HsCmd GHC.GhcPs)
-
 instance Pretty
            (GHC.StmtLR
               GHC.GhcPs
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
-
-instance Pretty
-           (GHC.StmtLR
-              GHC.GhcPs
-              GHC.GhcPs
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsCmd GHC.GhcPs)))
 
 instance Pretty
            (GHC.HsWildCardBndrs
@@ -94,7 +86,5 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs)))
 
 instance Pretty (GHC.DotFieldOcc GHC.GhcPs)
-
-instance Pretty (GHC.HsCmdTop GHC.GhcPs)
 
 instance Pretty (GHC.HsPragE GHC.GhcPs)

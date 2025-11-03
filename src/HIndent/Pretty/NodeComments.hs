@@ -218,9 +218,6 @@ instance CommentExtraction (HsLit GhcPs) where
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
   nodeComments HsMultilineString {} = emptyNodeComments
 #endif
-instance CommentExtraction (HsCmdTop GhcPs) where
-  nodeComments HsCmdTop {} = emptyNodeComments
-
 instance CommentExtraction (HsOuterSigTyVarBndrs GhcPs) where
   nodeComments HsOuterImplicit {} = emptyNodeComments
   nodeComments HsOuterExplicit {..} = nodeComments hso_xexplicit
@@ -954,38 +951,6 @@ nodeCommentsXViaStrategyPs :: XViaStrategyPs -> NodeComments
 nodeCommentsXViaStrategyPs (XViaStrategyPs x _) = nodeComments x
 #else
 nodeCommentsXViaStrategyPs (XViaStrategyPs x _) = mconcat $ fmap nodeComments x
-#endif
-instance CommentExtraction (HsCmd GhcPs) where
-  nodeComments = nodeCommentsHsCmd
-
-nodeCommentsHsCmd :: HsCmd GhcPs -> NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-nodeCommentsHsCmd (HsCmdArrApp (_, x) _ _ _ _) = nodeComments x
-nodeCommentsHsCmd (HsCmdArrForm x _ _ _) = nodeComments x
-#else
-nodeCommentsHsCmd (HsCmdArrApp x _ _ _ _) = nodeComments x
-nodeCommentsHsCmd (HsCmdArrForm x _ _ _ _) = nodeComments x
-#endif
-nodeCommentsHsCmd HsCmdLam {} = emptyNodeComments
-nodeCommentsHsCmd (HsCmdCase x _ _) = nodeComments x
-nodeCommentsHsCmd (HsCmdIf x _ _ _ _) = nodeComments x
-nodeCommentsHsCmd (HsCmdDo x _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsCmd HsCmdApp {} = emptyNodeComments
-#else
-nodeCommentsHsCmd (HsCmdApp x _ _) = nodeComments x
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsHsCmd HsCmdPar {} = emptyNodeComments
-nodeCommentsHsCmd HsCmdLet {} = emptyNodeComments
-#elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
-nodeCommentsHsCmd (HsCmdPar x _ _ _) = nodeComments x
-nodeCommentsHsCmd (HsCmdLamCase x _ _) = nodeComments x
-nodeCommentsHsCmd (HsCmdLet x _ _ _ _) = nodeComments x
-#else
-nodeCommentsHsCmd (HsCmdPar x _) = nodeComments x
-nodeCommentsHsCmd (HsCmdLamCase x _) = nodeComments x
-nodeCommentsHsCmd (HsCmdLet x _ _) = nodeComments x
 #endif
 instance CommentExtraction (RuleBndr GhcPs) where
   nodeComments = nodeCommentsRuleBndr
