@@ -41,8 +41,6 @@ instance Pretty GHC.StringLiteral
 
 instance Pretty Context
 
-instance Pretty (GHC.DerivClauseTys GHC.GhcPs)
-
 instance Pretty
            (GHC.HsScaled
               GHC.GhcPs
@@ -62,10 +60,6 @@ instance Pretty
 instance Pretty (GHC.HsLit GHC.GhcPs)
 
 instance Pretty (GHC.HsOverLit GHC.GhcPs)
-
-instance Pretty (GHC.HsLocalBindsLR GHC.GhcPs GHC.GhcPs)
-
-instance Pretty (GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs)
 
 instance Pretty QualifiedDo
 
