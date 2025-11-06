@@ -40,8 +40,6 @@ import HIndent.Ast.Declaration.Instance.Family.Type.Associated
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression (mkExpression)
 import HIndent.Ast.LocalBinds (mkLocalBinds)
-import HIndent.Ast.LocalBinds.ImplicitBindings (mkImplicitBindings)
-import HIndent.Ast.MatchGroup (mkCmdMatchGroup)
 import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.ImportExport
 import HIndent.Ast.Name.Prefix
@@ -56,9 +54,6 @@ import HIndent.Pretty.NodeComments
 import qualified HIndent.Pretty.SigBindFamily as SBF
 import HIndent.Pretty.Types
 import HIndent.Printer
-#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
-import qualified GHC.Data.Bag as GHC
-#endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 import qualified GHC.Types.Name.Reader as GHC
 #endif
@@ -267,32 +262,6 @@ instance Pretty SBF.SigBindFamily where
 
 instance Pretty GHC.EpaComment where
   pretty' GHC.EpaComment {..} = pretty $ mkComment ac_tok
-
-instance Pretty (GHC.HsLocalBindsLR GHC.GhcPs GHC.GhcPs) where
-  pretty' (GHC.HsValBinds _ lr) = pretty lr
-  pretty' (GHC.HsIPBinds _ x) = pretty $ mkImplicitBindings x
-  pretty' GHC.EmptyLocalBinds {} =
-    error
-      "This branch indicates that the bind is empty, but since calling this code means that let or where has already been output, it cannot be handled here. It should be handled higher up in the AST."
-
-instance Pretty (GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs) where
-  pretty' = prettyHsValBindsLR
-
-prettyHsValBindsLR :: GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> Printer ()
-#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-prettyHsValBindsLR (GHC.ValBinds _ methods sigs) =
-  lined $ fmap pretty sigsAndMethods
-  where
-    sigsAndMethods = SBF.mkSortedLSigBindFamilyList sigs methods [] [] []
-prettyHsValBindsLR GHC.XValBindsLR {} = notUsedInParsedStage
-#else
-prettyHsValBindsLR (GHC.ValBinds _ methods sigs) =
-  lined $ fmap pretty sigsAndMethods
-  where
-    sigsAndMethods =
-      SBF.mkSortedLSigBindFamilyList sigs (GHC.bagToList methods) [] [] []
-prettyHsValBindsLR GHC.XValBindsLR {} = notUsedInParsedStage
-#endif
 #if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
 -- | For pattern matching against a record.
 instance Pretty
@@ -369,11 +338,6 @@ instance Pretty
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
   pretty' (GHC.HsScaled _ ty) = pretty $ fmap mkType ty
-
-instance Pretty (GHC.DerivClauseTys GHC.GhcPs) where
-  pretty' (GHC.DctSingle _ ty) = parens $ pretty $ mkTypeFromHsSigType <$> ty
-  pretty' (GHC.DctMulti _ ts) =
-    hvTuple $ pretty . fmap mkTypeFromHsSigType . fromGenLocated <$> ts
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance Pretty GHC.StringLiteral where
   pretty' GHC.StringLiteral {sl_st = GHC.SourceText s} = string $ GHC.unpackFS s

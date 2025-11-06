@@ -11,7 +11,6 @@ import Data.Maybe
 import Data.Void
 import GHC.Data.BooleanFormula
 import GHC.Hs
-import GHC.Stack
 import GHC.Types.Basic
 import GHC.Types.Fixity
 import GHC.Types.ForeignCall
@@ -25,6 +24,9 @@ import HIndent.Pretty.Types
 import GHC.Core.DataCon
 #else
 import GHC.Unit
+#endif
+#if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
+import GHC.Stack
 #endif
 -- | An interface to extract comments from an AST node.
 class CommentExtraction a where
@@ -91,15 +93,6 @@ instance CommentExtraction SrcSpan where
   nodeComments RealSrcSpan {} = emptyNodeComments
   nodeComments UnhelpfulSpan {} = emptyNodeComments
 
-instance CommentExtraction (HsLocalBindsLR GhcPs GhcPs) where
-  nodeComments (HsValBinds x _) = nodeComments x
-  nodeComments (HsIPBinds x _) = nodeComments x
-  nodeComments EmptyLocalBinds {} = emptyNodeComments
-
-instance CommentExtraction (HsValBindsLR GhcPs GhcPs) where
-  nodeComments ValBinds {} = emptyNodeComments
-  nodeComments XValBindsLR {} = notUsedInParsedStage
-
 -- HsConDeclH98Details
 instance CommentExtraction
            (HsConDetails
@@ -123,10 +116,6 @@ instance CommentExtraction (BooleanFormula a) where
 
 instance CommentExtraction (ImportDecl GhcPs) where
   nodeComments ImportDecl {..} = nodeComments ideclExt
-
-instance CommentExtraction (DerivClauseTys GhcPs) where
-  nodeComments DctSingle {} = emptyNodeComments
-  nodeComments DctMulti {} = emptyNodeComments
 
 instance CommentExtraction StringLiteral where
   nodeComments StringLiteral {} = emptyNodeComments
@@ -1274,6 +1263,7 @@ instance CommentExtraction ActivationAnn where
       , maybe emptyNodeComments nodeComments aa_val
       ]
 #endif
+#if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
 -- | Marks an AST node as never appearing in the AST.
 --
 -- Some AST node types are only used in the renaming or type-checking phase.
@@ -1281,7 +1271,7 @@ notUsedInParsedStage :: HasCallStack => a
 notUsedInParsedStage =
   error
     "This AST should never appears in an AST. It only appears in the renaming or type checked stages."
-
+#endif
 -- | A 'NodeComment' with no comments.
 emptyNodeComments :: NodeComments
 emptyNodeComments = NodeComments [] [] []
