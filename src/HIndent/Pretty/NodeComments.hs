@@ -615,44 +615,6 @@ nodeCommentsStmtLR TransStmt {..} = mconcat $ fmap nodeComments trS_ext
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 nodeCommentsStmtLR ApplicativeStmt {} = emptyNodeComments
 #endif
-
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance CommentExtraction (HsMatchContext (GenLocated SrcSpanAnnN RdrName)) where
-  nodeComments = nodeCommentsMatchContext
-#else
-instance CommentExtraction (HsMatchContext GhcPs) where
-  nodeComments = nodeCommentsMatchContext
-#endif
-
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsMatchContext ::
-     HsMatchContext (GenLocated SrcSpanAnnN RdrName) -> NodeComments
-#else
-nodeCommentsMatchContext :: HsMatchContext GhcPs -> NodeComments
-#endif
-nodeCommentsMatchContext FunRhs {} = emptyNodeComments
-nodeCommentsMatchContext CaseAlt {} = emptyNodeComments
-nodeCommentsMatchContext IfAlt {} = emptyNodeComments
-nodeCommentsMatchContext ArrowMatchCtxt {} = emptyNodeComments
-nodeCommentsMatchContext PatBindRhs {} = emptyNodeComments
-nodeCommentsMatchContext PatBindGuards {} = emptyNodeComments
-nodeCommentsMatchContext RecUpd {} = emptyNodeComments
-nodeCommentsMatchContext StmtCtxt {} = emptyNodeComments
-nodeCommentsMatchContext ThPatSplice {} = emptyNodeComments
-nodeCommentsMatchContext ThPatQuote {} = emptyNodeComments
-nodeCommentsMatchContext PatSyn {} = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsMatchContext LamAlt {} = emptyNodeComments
-#endif
-#if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsMatchContext LambdaExpr {} = emptyNodeComments
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsMatchContext LamCaseAlt {} = emptyNodeComments
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 0)
-nodeCommentsMatchContext LazyPatCtx {} = emptyNodeComments
-#endif
 instance CommentExtraction (ConDeclField GhcPs) where
   nodeComments = nodeCommentsConDeclField
 

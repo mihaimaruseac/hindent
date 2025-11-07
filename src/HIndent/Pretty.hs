@@ -47,7 +47,6 @@ import HIndent.Ast.Name.RecordField (mkFieldNameFromFieldOcc)
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Pattern
 import HIndent.Ast.Type
-import HIndent.Ast.Type.Strictness
 import HIndent.Ast.WithComments
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
@@ -201,52 +200,7 @@ instance Pretty
       fieldPrinters =
         fmap pretty rec_flds
           ++ maybeToList (fmap (const (string "..")) rec_dotdot)
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-instance Pretty
-           (GHC.HsMatchContext (GHC.GenLocated GHC.SrcSpanAnnN GHC.RdrName)) where
-  pretty' = prettyHsMatchContext
 
-prettyHsMatchContext ::
-     GHC.HsMatchContext (GHC.GenLocated GHC.SrcSpanAnnN GHC.RdrName)
-  -> Printer ()
-prettyHsMatchContext GHC.FunRhs {..} =
-  maybe (pure ()) pretty (mkStrictness mc_strictness)
-    >> pretty (fmap mkPrefixName mc_fun)
-prettyHsMatchContext GHC.CaseAlt = return ()
-prettyHsMatchContext GHC.LamAlt {} = notGeneratedByParser
-prettyHsMatchContext GHC.LazyPatCtx = notGeneratedByParser
-prettyHsMatchContext GHC.IfAlt {} = notGeneratedByParser
-prettyHsMatchContext GHC.ArrowMatchCtxt {} = notGeneratedByParser
-prettyHsMatchContext GHC.PatBindRhs {} = notGeneratedByParser
-prettyHsMatchContext GHC.PatBindGuards {} = notGeneratedByParser
-prettyHsMatchContext GHC.RecUpd {} = notGeneratedByParser
-prettyHsMatchContext GHC.StmtCtxt {} = notGeneratedByParser
-prettyHsMatchContext GHC.ThPatSplice {} = notGeneratedByParser
-prettyHsMatchContext GHC.ThPatQuote {} = notGeneratedByParser
-prettyHsMatchContext GHC.PatSyn {} = notGeneratedByParser
-#else
-instance Pretty (GHC.HsMatchContext GHC.GhcPs) where
-  pretty' = prettyHsMatchContext
-
-prettyHsMatchContext :: GHC.HsMatchContext GHC.GhcPs -> Printer ()
-prettyHsMatchContext GHC.FunRhs {..} =
-  maybe (pure ()) pretty (mkStrictness mc_strictness)
-    >> pretty (fmap mkPrefixName mc_fun)
-prettyHsMatchContext GHC.LambdaExpr = return ()
-prettyHsMatchContext GHC.CaseAlt = return ()
-prettyHsMatchContext GHC.IfAlt {} = notGeneratedByParser
-prettyHsMatchContext GHC.ArrowMatchCtxt {} = notGeneratedByParser
-prettyHsMatchContext GHC.PatBindRhs {} = notGeneratedByParser
-prettyHsMatchContext GHC.PatBindGuards {} = notGeneratedByParser
-prettyHsMatchContext GHC.RecUpd {} = notGeneratedByParser
-prettyHsMatchContext GHC.StmtCtxt {} = notGeneratedByParser
-prettyHsMatchContext GHC.ThPatSplice {} = notGeneratedByParser
-prettyHsMatchContext GHC.ThPatQuote {} = notGeneratedByParser
-prettyHsMatchContext GHC.PatSyn {} = notGeneratedByParser
-#if MIN_VERSION_ghc_lib_parser(9, 4, 1)
-prettyHsMatchContext GHC.LamCaseAlt {} = notUsedInParsedStage
-#endif
-#endif
 instance Pretty (GHC.ParStmtBlock GHC.GhcPs GHC.GhcPs) where
   pretty' (GHC.ParStmtBlock _ xs _ _) = hvCommaSep $ fmap pretty xs
 
