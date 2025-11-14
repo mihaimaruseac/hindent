@@ -22,7 +22,6 @@ module HIndent.Pretty
 
 import Control.Monad
 import Control.Monad.RWS
-import Data.Maybe
 import qualified GHC.Data.FastString as GHC
 import qualified GHC.Hs as GHC
 import GHC.Stack
@@ -43,7 +42,6 @@ import HIndent.Ast.LocalBinds (mkLocalBinds)
 import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.ImportExport
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.Name.RecordField (mkFieldNameFromFieldOcc)
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Pattern
 import HIndent.Ast.Type
@@ -53,9 +51,6 @@ import HIndent.Pretty.NodeComments
 import qualified HIndent.Pretty.SigBindFamily as SBF
 import HIndent.Pretty.Types
 import HIndent.Printer
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-import qualified GHC.Types.Name.Reader as GHC
-#endif
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import qualified GHC.Core.DataCon as GHC
 #else
@@ -177,30 +172,6 @@ prettyStmtLRExpr GHC.TransStmt {..} =
 prettyStmtLRExpr GHC.RecStmt {..} =
   string "rec " |=> printCommentsAnd recS_stmts (lined . fmap pretty)
 
--- | For pattern matching.
-instance Pretty
-           (GHC.HsRecFields
-              GHC.GhcPs
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.Pat GHC.GhcPs))) where
-  pretty' GHC.HsRecFields {..} = horizontal <-|> vertical
-    where
-      horizontal =
-        case rec_dotdot of
-          Just _ -> braces $ string ".."
-          Nothing -> hFields $ fmap pretty rec_flds
-      vertical = vFields $ fmap pretty rec_flds
-
--- | For record updates
-instance Pretty
-           (GHC.HsRecFields
-              GHC.GhcPs
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
-  pretty' GHC.HsRecFields {..} = hvFields fieldPrinters
-    where
-      fieldPrinters =
-        fmap pretty rec_flds
-          ++ maybeToList (fmap (const (string "..")) rec_dotdot)
-
 instance Pretty (GHC.ParStmtBlock GHC.GhcPs GHC.GhcPs) where
   pretty' (GHC.ParStmtBlock _ xs _ _) = hvCommaSep $ fmap pretty xs
 
@@ -216,77 +187,7 @@ instance Pretty SBF.SigBindFamily where
 
 instance Pretty GHC.EpaComment where
   pretty' GHC.EpaComment {..} = pretty $ mkComment ac_tok
-#if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
--- | For pattern matching against a record.
-instance Pretty
-           (GHC.HsRecField'
-              (GHC.FieldOcc GHC.GhcPs)
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.Pat GHC.GhcPs))) where
-  pretty' GHC.HsRecField {..} =
-    (pretty (mkFieldNameFromFieldOcc <$> hsRecFieldLbl) >> string " = ")
-      |=> pretty (mkPattern <$> fromGenLocated hsRecFieldArg)
 
--- | For record updates.
-instance Pretty
-           (GHC.HsRecField'
-              (GHC.FieldOcc GHC.GhcPs)
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
-  pretty' GHC.HsRecField {..} = do
-    pretty $ mkFieldNameFromFieldOcc <$> hsRecFieldLbl
-    unless hsRecPun $ do
-      string " ="
-      horizontal <-|> vertical
-    where
-      horizontal = space >> pretty hsRecFieldArg
-      vertical = newline >> indentedBlock (pretty hsRecFieldArg)
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
--- | For pattern matchings against records.
-instance Pretty
-           (GHC.HsFieldBind
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.FieldOcc GHC.GhcPs))
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.Pat GHC.GhcPs))) where
-  pretty' GHC.HsFieldBind {..} =
-    (pretty (mkFieldNameFromFieldOcc <$> hfbLHS) >> string " = ")
-      |=> pretty (mkPattern <$> hfbRHS)
-
--- | For record updates.
-instance Pretty
-           (GHC.HsFieldBind
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.FieldOcc GHC.GhcPs))
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
-  pretty' GHC.HsFieldBind {..} = do
-    pretty $ mkFieldNameFromFieldOcc <$> hfbLHS
-    unless hfbPun $ do
-      string " ="
-      horizontal <-|> vertical
-    where
-      horizontal = space >> pretty (mkExpression <$> hfbRHS)
-      vertical = newline >> indentedBlock (pretty $ mkExpression <$> hfbRHS)
-#elif MIN_VERSION_ghc_lib_parser(9, 4, 1)
--- | For pattern matchings against records.
-instance Pretty
-           (GHC.HsFieldBind
-              (GHC.GenLocated (GHC.SrcAnn GHC.NoEpAnns) (GHC.FieldOcc GHC.GhcPs))
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.Pat GHC.GhcPs))) where
-  pretty' GHC.HsFieldBind {..} =
-    (pretty (mkFieldNameFromFieldOcc <$> hfbLHS) >> string " = ")
-      |=> (pretty $ mkPattern <$> fromGenLocated hfbRHS)
-
--- | For record updates.
-instance Pretty
-           (GHC.HsFieldBind
-              (GHC.GenLocated (GHC.SrcAnn GHC.NoEpAnns) (GHC.FieldOcc GHC.GhcPs))
-              (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
-  pretty' GHC.HsFieldBind {..} = do
-    pretty $ mkFieldNameFromFieldOcc <$> hfbLHS
-    unless hfbPun $ do
-      string " ="
-      horizontal <-|> vertical
-    where
-      horizontal = space >> pretty (mkExpression <$> hfbRHS)
-      vertical = newline >> indentedBlock (pretty $ mkExpression <$> hfbRHS)
-#endif
 instance Pretty
            (GHC.HsScaled
               GHC.GhcPs
