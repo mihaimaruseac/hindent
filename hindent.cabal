@@ -99,6 +99,7 @@ library
       HIndent.Ast.Expression.ListComprehension
       HIndent.Ast.Expression.OverloadedLabel
       HIndent.Ast.Expression.RangeExpression
+      HIndent.Ast.Expression.RecordConstructionField
       HIndent.Ast.Expression.RecordUpdateField
       HIndent.Ast.Expression.Splice
       HIndent.Ast.FileHeaderPragma
@@ -127,6 +128,7 @@ library
       HIndent.Ast.NodeComments
       HIndent.Ast.Pattern
       HIndent.Ast.Pattern.RecordFields
+      HIndent.Ast.Record.Field
       HIndent.Ast.Role
       HIndent.Ast.Statement
       HIndent.Ast.Type

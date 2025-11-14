@@ -36,6 +36,10 @@ import HIndent.Ast.Expression.RangeExpression
   ( RangeExpression
   , mkRangeExpression
   )
+import HIndent.Ast.Expression.RecordConstructionField
+  ( RecordConstructionFields
+  , mkRecordConstructionFields
+  )
 import HIndent.Ast.Expression.RecordUpdateField (mkRecordUpdateFields)
 import HIndent.Ast.Guard (Guard, mkMultiWayIfExprGuard)
 import HIndent.Ast.LocalBinds (LocalBinds, mkLocalBinds)
@@ -130,7 +134,7 @@ data Expression
   | ListLiteral [WithComments Expression]
   | RecordConstruction
       { name :: WithComments PrefixName
-      , binds :: GHC.HsRecordBinds GHC.GhcPs
+      , fields :: RecordConstructionFields
       }
   | RecordUpdate
       { expression :: WithComments Expression
@@ -291,10 +295,10 @@ instance Pretty Expression where
       vertical = vList $ fmap pretty listItems
   pretty' RecordConstruction {..} = horizontal <-|> vertical
     where
-      horizontal = spaced [pretty name, pretty binds]
+      horizontal = spaced [pretty name, pretty fields]
       vertical = do
         pretty name
-        (space >> pretty binds) <-|> (newline >> indentedBlock (pretty binds))
+        (space >> pretty fields) <-|> (newline >> indentedBlock (pretty fields))
   pretty' RecordUpdate {..} = pretty $ mkRecordUpdateFields expression updates
   pretty' FieldProjection {..} = do
     pretty expression
@@ -556,8 +560,13 @@ mkExpression (GHC.HsDo _ GHC.GhciStmtCtxt {} _) =
   error "`ghc-lib-parser` never generates this AST node."
 mkExpression (GHC.ExplicitList _ items) =
   ListLiteral (fmap (fmap mkExpression . fromGenLocated) items)
-mkExpression (GHC.RecordCon {GHC.rcon_con = conName, GHC.rcon_flds = binds}) =
-  RecordConstruction {name = mkPrefixName <$> fromGenLocated conName, binds}
+mkExpression (GHC.RecordCon { GHC.rcon_con = conName
+                            , GHC.rcon_flds = recordFields
+                            }) =
+  RecordConstruction
+    { name = mkPrefixName <$> fromGenLocated conName
+    , fields = mkRecordConstructionFields recordFields
+    }
 mkExpression (GHC.RecordUpd { GHC.rupd_expr = recordExpr
                             , GHC.rupd_flds = updates
                             }) =

@@ -15,7 +15,6 @@ import HIndent.Ast.WithComments (WithComments)
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments (CommentExtraction(..), emptyNodeComments)
-import HIndent.Printer (Printer)
 
 data ListComprehension = ListComprehension
   { leading :: WithComments ExprStatement
