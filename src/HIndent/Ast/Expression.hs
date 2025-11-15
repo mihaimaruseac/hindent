@@ -40,7 +40,10 @@ import HIndent.Ast.Expression.RecordConstructionField
   ( RecordConstructionFields
   , mkRecordConstructionFields
   )
-import HIndent.Ast.Expression.RecordUpdateField (mkRecordUpdateFields)
+import HIndent.Ast.Expression.RecordUpdateField
+  ( RecordUpdateFields
+  , mkRecordUpdateFields
+  )
 import HIndent.Ast.Guard (Guard, mkMultiWayIfExprGuard)
 import HIndent.Ast.LocalBinds (LocalBinds, mkLocalBinds)
 import HIndent.Ast.MatchGroup (MatchGroup, hasMatches, mkExprMatchGroup)
@@ -136,10 +139,7 @@ data Expression
       { name :: WithComments PrefixName
       , fields :: RecordConstructionFields
       }
-  | RecordUpdate
-      { expression :: WithComments Expression
-      , updates :: GHC.LHsRecUpdFields GHC.GhcPs
-      }
+  | RecordUpdate RecordUpdateFields
   | FieldProjection
       { expression :: WithComments Expression
       , selector :: GHC.XRec GHC.GhcPs (GHC.DotFieldOcc GHC.GhcPs)
@@ -299,7 +299,7 @@ instance Pretty Expression where
       vertical = do
         pretty name
         (space >> pretty fields) <-|> (newline >> indentedBlock (pretty fields))
-  pretty' RecordUpdate {..} = pretty $ mkRecordUpdateFields expression updates
+  pretty' (RecordUpdate fields) = pretty fields
   pretty' FieldProjection {..} = do
     pretty expression
     dot
@@ -571,7 +571,7 @@ mkExpression (GHC.RecordUpd { GHC.rupd_expr = recordExpr
                             , GHC.rupd_flds = updates
                             }) =
   RecordUpdate
-    {expression = mkExpression <$> fromGenLocated recordExpr, updates}
+    $ mkRecordUpdateFields (mkExpression <$> fromGenLocated recordExpr) updates
 mkExpression (GHC.HsGetField {GHC.gf_expr = fieldExpr, GHC.gf_field = selector}) =
   FieldProjection
     {expression = mkExpression <$> fromGenLocated fieldExpr, selector}
