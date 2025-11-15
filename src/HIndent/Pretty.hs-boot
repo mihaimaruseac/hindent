@@ -74,6 +74,4 @@ instance Pretty
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
 
-instance Pretty (GHC.DotFieldOcc GHC.GhcPs)
-
 instance Pretty (GHC.HsPragE GHC.GhcPs)
