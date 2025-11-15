@@ -96,6 +96,7 @@ library
       HIndent.Ast.Declaration.Warning.Kind
       HIndent.Ast.Expression
       HIndent.Ast.Expression.Bracket
+      HIndent.Ast.Expression.FieldSelector
       HIndent.Ast.Expression.ListComprehension
       HIndent.Ast.Expression.OverloadedLabel
       HIndent.Ast.Expression.RangeExpression

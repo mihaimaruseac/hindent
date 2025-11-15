@@ -947,9 +947,6 @@ instance CommentExtraction (HsQuote GhcPs) where
 instance CommentExtraction (WithHsDocIdentifiers StringLiteral GhcPs) where
   nodeComments WithHsDocIdentifiers {} = emptyNodeComments
 
-instance CommentExtraction (DotFieldOcc GhcPs) where
-  nodeComments DotFieldOcc {..} = nodeComments dfoExt
-
 instance CommentExtraction (HsFieldBind a b) where
   nodeComments = nodeCommentsHsFieldBind
 
