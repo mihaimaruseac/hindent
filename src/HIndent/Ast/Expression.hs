@@ -27,6 +27,7 @@ import qualified GHC.Types.Fixity as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Cmd (Cmd, CmdDoBlock, mkCmdDoBlock, mkCmdFromHsCmdTop)
 import HIndent.Ast.Expression.Bracket (Bracket, mkBracket)
+import HIndent.Ast.Expression.FieldSelector (FieldSelector, mkFieldSelector)
 import qualified HIndent.Ast.Expression.ListComprehension as LC
 import HIndent.Ast.Expression.OverloadedLabel
   ( OverloadedLabel
@@ -40,7 +41,10 @@ import HIndent.Ast.Expression.RecordConstructionField
   ( RecordConstructionFields
   , mkRecordConstructionFields
   )
-import HIndent.Ast.Expression.RecordUpdateField (mkRecordUpdateFields)
+import HIndent.Ast.Expression.RecordUpdateField
+  ( RecordUpdateFields
+  , mkRecordUpdateFields
+  )
 import HIndent.Ast.Guard (Guard, mkMultiWayIfExprGuard)
 import HIndent.Ast.LocalBinds (LocalBinds, mkLocalBinds)
 import HIndent.Ast.MatchGroup (MatchGroup, hasMatches, mkExprMatchGroup)
@@ -136,15 +140,12 @@ data Expression
       { name :: WithComments PrefixName
       , fields :: RecordConstructionFields
       }
-  | RecordUpdate
-      { expression :: WithComments Expression
-      , updates :: GHC.LHsRecUpdFields GHC.GhcPs
-      }
+  | RecordUpdate RecordUpdateFields
   | FieldProjection
       { expression :: WithComments Expression
-      , selector :: GHC.XRec GHC.GhcPs (GHC.DotFieldOcc GHC.GhcPs)
+      , selector :: WithComments FieldSelector
       }
-  | Projection (NonEmpty (GHC.XRec GHC.GhcPs (GHC.DotFieldOcc GHC.GhcPs)))
+  | Projection (NonEmpty (WithComments FieldSelector))
   | TypeSignature
       { expression :: WithComments Expression
       , signature :: WithComments Type
@@ -299,7 +300,7 @@ instance Pretty Expression where
       vertical = do
         pretty name
         (space >> pretty fields) <-|> (newline >> indentedBlock (pretty fields))
-  pretty' RecordUpdate {..} = pretty $ mkRecordUpdateFields expression updates
+  pretty' (RecordUpdate fields) = pretty fields
   pretty' FieldProjection {..} = do
     pretty expression
     dot
@@ -571,15 +572,18 @@ mkExpression (GHC.RecordUpd { GHC.rupd_expr = recordExpr
                             , GHC.rupd_flds = updates
                             }) =
   RecordUpdate
-    {expression = mkExpression <$> fromGenLocated recordExpr, updates}
+    $ mkRecordUpdateFields (mkExpression <$> fromGenLocated recordExpr) updates
 mkExpression (GHC.HsGetField {GHC.gf_expr = fieldExpr, GHC.gf_field = selector}) =
   FieldProjection
-    {expression = mkExpression <$> fromGenLocated fieldExpr, selector}
+    { expression = mkExpression <$> fromGenLocated fieldExpr
+    , selector = fmap mkFieldSelector (fromGenLocated selector)
+    }
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkExpression (GHC.HsProjection {GHC.proj_flds = fields}) =
-  Projection $ GHC.noLocA <$> fields
+  Projection $ fmap (mkWithComments . mkFieldSelector) fields
 #else
-mkExpression (GHC.HsProjection {GHC.proj_flds = fields}) = Projection fields
+mkExpression (GHC.HsProjection {GHC.proj_flds = fields}) =
+  Projection $ fmap (fmap mkFieldSelector . fromGenLocated) fields
 #endif
 mkExpression (GHC.ExprWithTySig _ signatureExpr ty) =
   TypeSignature
