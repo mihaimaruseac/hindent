@@ -89,7 +89,7 @@ data Expression
   | Application (NonEmpty (WithComments Expression))
   | TypeApplication
       { expression :: WithComments Expression
-      , typeArg :: GHC.LHsWcType (GHC.NoGhcTc GHC.GhcPs)
+      , typeArg :: WithComments Type
       }
   | OperatorApplication
       { firstOperand :: WithComments Expression
@@ -390,10 +390,16 @@ mkExpression (GHC.HsApp _ function argument) =
         go current (y:ys) = current : go y ys
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkExpression (GHC.HsAppType _ fun typeArg) =
-  TypeApplication {expression = mkExpression <$> fromGenLocated fun, ..}
+  TypeApplication
+    { expression = mkExpression <$> fromGenLocated fun
+    , typeArg = mkTypeFromLHsWcType typeArg
+    }
 #else
 mkExpression (GHC.HsAppType _ fun _ typeArg) =
-  TypeApplication {expression = mkExpression <$> fromGenLocated fun, ..}
+  TypeApplication
+    { expression = mkExpression <$> fromGenLocated fun
+    , typeArg = mkTypeFromLHsWcType typeArg
+    }
 #endif
 mkExpression (GHC.OpApp _ lhs op rhs) = OperatorApplication {..}
   where

@@ -10,6 +10,7 @@ module HIndent.Ast.Type
   , InstDeclType
   , mkType
   , mkTypeFromHsSigType
+  , mkTypeFromLHsWcType
   , mkVerticalFuncType
   , mkDeclSigType
   , mkInstDeclType
@@ -299,6 +300,10 @@ mkTypeFromHsSigType GHC.HsSig {..} =
         $ UniversalType
             {telescope = telescope, body = mkType <$> fromGenLocated sig_body}
     Nothing -> mkType <$> fromGenLocated sig_body
+
+mkTypeFromLHsWcType ::
+     GHC.LHsWcType (GHC.NoGhcTc GHC.GhcPs) -> WithComments Type
+mkTypeFromLHsWcType GHC.HsWC {..} = mkType <$> fromGenLocated hswc_body
 
 newtype VerticalFuncType =
   VerticalFuncType Type
