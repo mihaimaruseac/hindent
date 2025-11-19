@@ -22,6 +22,7 @@
 - Kind signatures and deriving clauses in GADTs are now properly printed ([#1053])
 - Visible forall (`forall a ->`) is now correctly formatted instead of being converted to invisible forall ([#1060])
 - Keep `where` clauses that contain implicit parameter bindings ([#1121])
+- Keep `as Foo` module aliases also with unqualified modules ([#1139])
 
 ### Removed
 
