@@ -99,6 +99,7 @@ library
       HIndent.Ast.Expression.FieldSelector
       HIndent.Ast.Expression.ListComprehension
       HIndent.Ast.Expression.OverloadedLabel
+      HIndent.Ast.Expression.Pragmatic
       HIndent.Ast.Expression.RangeExpression
       HIndent.Ast.Expression.RecordConstructionField
       HIndent.Ast.Expression.RecordUpdateField

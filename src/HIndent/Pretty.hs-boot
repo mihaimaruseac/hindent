@@ -73,5 +73,3 @@ instance Pretty
            (GHC.HsWildCardBndrs
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
-
-instance Pretty (GHC.HsPragE GHC.GhcPs)

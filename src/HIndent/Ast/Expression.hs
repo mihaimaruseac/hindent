@@ -33,6 +33,7 @@ import HIndent.Ast.Expression.OverloadedLabel
   ( OverloadedLabel
   , mkOverloadedLabel
   )
+import HIndent.Ast.Expression.Pragmatic (ExpressionPragma, mkExpressionPragma)
 import HIndent.Ast.Expression.RangeExpression
   ( RangeExpression
   , mkRangeExpression
@@ -164,7 +165,7 @@ data Expression
       }
   | StaticExpression (WithComments Expression)
   | PragmaticExpression
-      { pragma :: GHC.HsPragE GHC.GhcPs
+      { pragma :: WithComments ExpressionPragma
       , expression :: WithComments Expression
       }
 
@@ -630,7 +631,9 @@ mkExpression (GHC.HsStatic _ staticExpr) =
   StaticExpression $ mkExpression <$> fromGenLocated staticExpr
 mkExpression (GHC.HsPragE _ pragma pragmaticExpr) =
   PragmaticExpression
-    {expression = mkExpression <$> fromGenLocated pragmaticExpr, ..}
+    { expression = mkExpression <$> fromGenLocated pragmaticExpr
+    , pragma = mkExpressionPragma pragma
+    }
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkExpression (GHC.HsRecSel _ _) =
   error "`ghc-lib-parser` never generates this AST node."
