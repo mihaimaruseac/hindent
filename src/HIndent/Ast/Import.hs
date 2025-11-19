@@ -28,16 +28,12 @@ data QualificationPosition
   | Post
   deriving (Eq)
 
-data Qualification = Qualification
-  { qualifiedAs :: Maybe (WithComments ModuleName)
-  , position :: QualificationPosition
-  } deriving (Eq)
-
 data Import = Import
   { moduleName :: WithComments ModuleName
   , isSafe :: Bool
   , isBoot :: Bool
-  , qualification :: Maybe Qualification
+  , qualifiedAs :: Maybe (WithComments ModuleName)
+  , qualification :: Maybe QualificationPosition
   , packageName :: Maybe GHC.StringLiteral
   , importEntries :: Maybe (WithComments ImportEntryCollection)
   }
@@ -50,12 +46,12 @@ instance Pretty Import where
     string "import "
     when isBoot $ string "{-# SOURCE #-} "
     when isSafe $ string "safe "
-    when (fmap position qualification == Just Pre) $ string "qualified "
+    when (qualification == Just Pre) $ string "qualified "
     whenJust packageName $ \name -> pretty name >> space
     pretty moduleName
-    when (fmap position qualification == Just Post) $ string " qualified"
-    case qualification of
-      Just Qualification {qualifiedAs = Just name} ->
+    when (qualification == Just Post) $ string " qualified"
+    case qualifiedAs of
+      Just name ->
         string " as " >> pretty name
       _ -> pure ()
     whenJust importEntries pretty
@@ -67,24 +63,11 @@ mkImport decl@GHC.ImportDecl {..} = Import {..}
     isSafe = ideclSafe
     isBoot = ideclSource == GHC.IsBoot
     qualification =
-      case (ideclQualified, ideclAs, ideclQualified) of
-        (GHC.NotQualified, _, _) -> Nothing
-        (_, Nothing, GHC.QualifiedPre) ->
-          Just Qualification {qualifiedAs = Nothing, position = Pre}
-        (_, Nothing, GHC.QualifiedPost) ->
-          Just Qualification {qualifiedAs = Nothing, position = Post}
-        (_, Just name, GHC.QualifiedPre) ->
-          Just
-            Qualification
-              { qualifiedAs = Just $ mkModuleName <$> fromGenLocated name
-              , position = Pre
-              }
-        (_, Just name, GHC.QualifiedPost) ->
-          Just
-            Qualification
-              { qualifiedAs = Just $ mkModuleName <$> fromGenLocated name
-              , position = Post
-              }
+      case ideclQualified of
+        GHC.NotQualified -> Nothing
+        GHC.QualifiedPre -> Just Pre
+        GHC.QualifiedPost -> Just Post
+    qualifiedAs = fmap mkModuleName . fromGenLocated <$> ideclAs
     packageName = GHC.getPackageName decl
     importEntries = mkImportEntryCollection decl
 
