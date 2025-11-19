@@ -218,6 +218,7 @@ Import lists
 
 ```haskell
 import Control.Lens (_2, _Just)
+import Control.Lens as Optic
 import Data.Text
 import Data.Text
 import qualified Data.Text as T
