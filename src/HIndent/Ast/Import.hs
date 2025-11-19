@@ -51,8 +51,7 @@ instance Pretty Import where
     pretty moduleName
     when (qualification == Just Post) $ string " qualified"
     case qualifiedAs of
-      Just name ->
-        string " as " >> pretty name
+      Just name -> string " as " >> pretty name
       _ -> pure ()
     whenJust importEntries pretty
 
