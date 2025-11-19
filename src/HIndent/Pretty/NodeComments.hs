@@ -867,15 +867,6 @@ nodeCommentsInlineSpec NoUserInlinePrag {} = emptyNodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 nodeCommentsInlineSpec Opaque {} = emptyNodeComments
 #endif
-instance CommentExtraction (HsPragE GhcPs) where
-  nodeComments = nodeCommentsHsPragE
-
-nodeCommentsHsPragE :: HsPragE GhcPs -> NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-nodeCommentsHsPragE (HsPragSCC (x, _) _) = nodeComments x
-#else
-nodeCommentsHsPragE (HsPragSCC x _ _) = nodeComments x
-#endif
 instance CommentExtraction (DerivStrategy GhcPs) where
   nodeComments = nodeCommentsDerivStrategy
 
