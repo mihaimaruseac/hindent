@@ -18,7 +18,6 @@ import GHC.Types.Name.Reader
 import GHC.Types.SourceText
 import GHC.Types.SrcLoc
 import HIndent.Ast.NodeComments
-import HIndent.Pretty.SigBindFamily
 import HIndent.Pretty.Types
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import GHC.Core.DataCon
@@ -78,13 +77,6 @@ instance CommentExtraction EpaCommentTok where
 
 instance CommentExtraction (SpliceDecl GhcPs) where
   nodeComments SpliceDecl {} = emptyNodeComments
-
-instance CommentExtraction SigBindFamily where
-  nodeComments (Sig x) = nodeComments x
-  nodeComments (Bind x) = nodeComments x
-  nodeComments (Family x) = nodeComments x
-  nodeComments (TyFamInst x) = nodeComments x
-  nodeComments (DataFamInst x) = nodeComments x
 
 instance CommentExtraction EpaComment where
   nodeComments EpaComment {} = emptyNodeComments

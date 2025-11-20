@@ -31,11 +31,6 @@ import HIndent.Applicative (whenJust)
 import HIndent.Ast.Comment (mkComment)
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Data.Body
-import HIndent.Ast.Declaration.Family.Data
-import HIndent.Ast.Declaration.Family.Type
-import HIndent.Ast.Declaration.Instance.Family.Type.Associated
-  ( mkAssociatedType
-  )
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression (mkExpression)
 import HIndent.Ast.LocalBinds (mkLocalBinds)
@@ -44,9 +39,12 @@ import HIndent.Ast.NodeComments
 import HIndent.Ast.Pattern
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
+import HIndent.GhcOrdered.BindGroupElement
+  ( BindGroupElement
+  , foldBindGroupElement
+  )
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-import qualified HIndent.Pretty.SigBindFamily as SBF
 import HIndent.Pretty.Types
 import HIndent.Printer
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
@@ -170,18 +168,17 @@ prettyStmtLRExpr GHC.TransStmt {..} =
 prettyStmtLRExpr GHC.RecStmt {..} =
   string "rec " |=> printCommentsAnd recS_stmts (lined . fmap pretty)
 
+instance CommentExtraction BindGroupElement where
+  nodeComments =
+    foldBindGroupElement
+      (const $ NodeComments [] [] [])
+      (const $ NodeComments [] [] [])
+
+instance Pretty BindGroupElement where
+  pretty' = foldBindGroupElement (pretty . mkSignature) (pretty . mkBind)
+
 instance Pretty (GHC.ParStmtBlock GHC.GhcPs GHC.GhcPs) where
   pretty' (GHC.ParStmtBlock _ xs _ _) = hvCommaSep $ fmap pretty xs
-
-instance Pretty SBF.SigBindFamily where
-  pretty' (SBF.Sig x) = pretty $ mkSignature x
-  pretty' (SBF.Bind x) = pretty $ mkBind x
-  pretty' (SBF.Family x)
-    | Just fam <- mkTypeFamily x = pretty fam
-    | Just fam <- mkDataFamily x = pretty fam
-    | otherwise = error "Unreachable"
-  pretty' (SBF.TyFamInst x) = pretty $ mkAssociatedType x
-  pretty' (SBF.DataFamInst x) = pretty $ DataFamInstDeclInsideClassInst x
 
 instance Pretty GHC.EpaComment where
   pretty' GHC.EpaComment {..} = pretty $ mkComment ac_tok
