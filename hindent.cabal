@@ -47,6 +47,8 @@ library
       HIndent.Ast.Declaration.Bind
       HIndent.Ast.Declaration.Bind.GuardedRhs
       HIndent.Ast.Declaration.Class
+      HIndent.Ast.Declaration.Class.AssociatedThing
+      HIndent.Ast.Declaration.Class.AssociatedThings
       HIndent.Ast.Declaration.Class.FunctionalDependency
       HIndent.Ast.Declaration.Class.NameAndTypeVariables
       HIndent.Ast.Declaration.Collection
@@ -71,6 +73,7 @@ library
       HIndent.Ast.Declaration.Foreign.CallingConvention
       HIndent.Ast.Declaration.Foreign.Safety
       HIndent.Ast.Declaration.Instance.Class
+      HIndent.Ast.Declaration.Instance.Class.Member
       HIndent.Ast.Declaration.Instance.Class.OverlapMode
       HIndent.Ast.Declaration.Instance.Family.Data
       HIndent.Ast.Declaration.Instance.Family.Type
@@ -114,6 +117,7 @@ library
       HIndent.Ast.Import.Entry.Collection
       HIndent.Ast.Import.ImportingOrHiding
       HIndent.Ast.LocalBinds
+      HIndent.Ast.LocalBinds.Declarations
       HIndent.Ast.LocalBinds.ImplicitBinding
       HIndent.Ast.LocalBinds.ImplicitBindings
       HIndent.Ast.Match
@@ -155,6 +159,9 @@ library
       HIndent.GhcLibParserWrapper.GHC.Hs.ImpExp
       HIndent.GhcLibParserWrapper.GHC.Parser.Annotation
       HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings
+      HIndent.GhcOrdered.BindGroupElement
+      HIndent.GhcOrdered.ClassElement
+      HIndent.GhcOrdered.InstanceMember
       HIndent.Language
       HIndent.LanguageExtension
       HIndent.LanguageExtension.Conversion
@@ -176,7 +183,6 @@ library
       HIndent.Pretty.Combinators.Switch
       HIndent.Pretty.Combinators.Wrap
       HIndent.Pretty.NodeComments
-      HIndent.Pretty.SigBindFamily
       HIndent.Pretty.Types
       HIndent.Printer
       Paths_hindent
