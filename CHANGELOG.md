@@ -23,6 +23,7 @@
 - Visible forall (`forall a ->`) is now correctly formatted instead of being converted to invisible forall ([#1060])
 - Keep `where` clauses that contain implicit parameter bindings ([#1121])
 - Keep `as Foo` module aliases also with unqualified modules ([#1140])
+- Preserve default associated type families in classes instead of dropping them ([#1143])
 
 ### Removed
 
@@ -416,6 +417,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#1143]: https://github.com/mihaimaruseac/hindent/pull/1143
 [#1140]: https://github.com/mihaimaruseac/hindent/pull/1140
 [#1121]: https://github.com/mihaimaruseac/hindent/pull/1121
 [#1096]: https://github.com/mihaimaruseac/hindent/pull/1096

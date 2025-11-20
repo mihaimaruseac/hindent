@@ -84,6 +84,7 @@ instance CommentExtraction SigBindFamily where
   nodeComments (Bind x) = nodeComments x
   nodeComments (Family x) = nodeComments x
   nodeComments (TyFamInst x) = nodeComments x
+  nodeComments (TyFamDeflt x) = nodeComments x
   nodeComments (DataFamInst x) = nodeComments x
 
 instance CommentExtraction EpaComment where
