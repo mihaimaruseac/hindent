@@ -65,7 +65,8 @@ mkClassDeclaration x@GHC.ClassDecl {..}
     context = fmap (fmap mkContext . fromGenLocated) tcdCtxt
     functionalDependencies =
       fmap (fmap mkFunctionalDependency . fromGenLocated) tcdFDs
-    associatedThings = mkSortedLSigBindFamilyList tcdSigs tcdMeths tcdATs [] []
+    associatedThings =
+      mkSortedLSigBindFamilyList tcdSigs tcdMeths tcdATs [] tcdATDefs []
 #else
 mkClassDeclaration x@GHC.ClassDecl {..}
   | Just nameAndTypeVariables <- mkNameAndTypeVariables x =
@@ -75,6 +76,12 @@ mkClassDeclaration x@GHC.ClassDecl {..}
     functionalDependencies =
       fmap (fmap mkFunctionalDependency . fromGenLocated) tcdFDs
     associatedThings =
-      mkSortedLSigBindFamilyList tcdSigs (GHC.bagToList tcdMeths) tcdATs [] []
+      mkSortedLSigBindFamilyList
+        tcdSigs
+        (GHC.bagToList tcdMeths)
+        tcdATs
+        []
+        tcdATDefs
+        []
 #endif
 mkClassDeclaration _ = Nothing

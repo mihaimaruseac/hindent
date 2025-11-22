@@ -75,6 +75,7 @@ library
       HIndent.Ast.Declaration.Instance.Family.Data
       HIndent.Ast.Declaration.Instance.Family.Type
       HIndent.Ast.Declaration.Instance.Family.Type.Associated
+      HIndent.Ast.Declaration.Instance.Family.Type.Associated.Default
       HIndent.Ast.Declaration.PatternSynonym
       HIndent.Ast.Declaration.Rule
       HIndent.Ast.Declaration.Rule.Binder

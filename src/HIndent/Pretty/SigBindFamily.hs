@@ -25,6 +25,7 @@ data SigBindFamily
   | Bind (HsBindLR GhcPs GhcPs)
   | Family (FamilyDecl GhcPs)
   | TyFamInst (TyFamInstDecl GhcPs)
+  | TyFamDeflt (TyFamDefltDecl GhcPs)
   | DataFamInst (DataFamInstDecl GhcPs)
 
 -- | 'SigBindFamily' with the location information.
@@ -37,11 +38,12 @@ mkSortedLSigBindFamilyList ::
   -> [LHsBindLR GhcPs GhcPs]
   -> [LFamilyDecl GhcPs]
   -> [LTyFamInstDecl GhcPs]
+  -> [LTyFamDefltDecl GhcPs]
   -> [LDataFamInstDecl GhcPs]
   -> [LSigBindFamily]
-mkSortedLSigBindFamilyList sigs binds fams datafams =
+mkSortedLSigBindFamilyList sigs binds fams insts deflts datafams =
   sortBy (compare `on` realSrcSpan . locA . getLoc)
-    . mkLSigBindFamilyList sigs binds fams datafams
+    $ mkLSigBindFamilyList sigs binds fams insts deflts datafams
 
 -- | Creates a list of 'LSigBindFamily' from arguments.
 mkLSigBindFamilyList ::
@@ -49,13 +51,15 @@ mkLSigBindFamilyList ::
   -> [LHsBindLR GhcPs GhcPs]
   -> [LFamilyDecl GhcPs]
   -> [LTyFamInstDecl GhcPs]
+  -> [LTyFamDefltDecl GhcPs]
   -> [LDataFamInstDecl GhcPs]
   -> [LSigBindFamily]
-mkLSigBindFamilyList sigs binds fams insts datafams =
+mkLSigBindFamilyList sigs binds fams insts deflts datafams =
   fmap (fmap Sig) sigs
     ++ fmap (fmap Bind) binds
     ++ fmap (fmap Family) fams
     ++ fmap (fmap TyFamInst) insts
+    ++ fmap (fmap TyFamDeflt) deflts
     ++ fmap (fmap DataFamInst) datafams
 
 -- | Destructs a list of 'LSigBindFamily'
@@ -65,13 +69,15 @@ destructLSigBindFamilyList ::
      , [LHsBindLR GhcPs GhcPs]
      , [LFamilyDecl GhcPs]
      , [LTyFamInstDecl GhcPs]
+     , [LTyFamDefltDecl GhcPs]
      , [LDataFamInstDecl GhcPs])
 destructLSigBindFamilyList =
-  (,,,,)
+  (,,,,,)
     <$> filterLSig
     <*> filterLBind
     <*> filterLFamily
     <*> filterLTyFamInst
+    <*> filterLTyFamDeflt
     <*> filterLDataFamInst
 
 -- | Filters out 'Sig's and extract the wrapped values.
@@ -104,6 +110,14 @@ filterLTyFamInst =
   mapMaybe
     (\case
        (L l (TyFamInst x)) -> Just $ L l x
+       _ -> Nothing)
+
+-- | Filters out 'TyFamDeflt's and extract the wrapped values.
+filterLTyFamDeflt :: [LSigBindFamily] -> [LTyFamDefltDecl GhcPs]
+filterLTyFamDeflt =
+  mapMaybe
+    (\case
+       (L l (TyFamDeflt x)) -> Just $ L l x
        _ -> Nothing)
 
 -- | Filters out 'DataFamInst's and extract the wrapped values.

@@ -36,6 +36,9 @@ import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Instance.Family.Type.Associated
   ( mkAssociatedType
   )
+import HIndent.Ast.Declaration.Instance.Family.Type.Associated.Default
+  ( mkAssociatedTypeDefault
+  )
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression (mkExpression)
 import HIndent.Ast.LocalBinds (mkLocalBinds)
@@ -181,6 +184,7 @@ instance Pretty SBF.SigBindFamily where
     | Just fam <- mkDataFamily x = pretty fam
     | otherwise = error "Unreachable"
   pretty' (SBF.TyFamInst x) = pretty $ mkAssociatedType x
+  pretty' (SBF.TyFamDeflt x) = pretty $ mkAssociatedTypeDefault x
   pretty' (SBF.DataFamInst x) = pretty $ DataFamInstDeclInsideClassInst x
 
 instance Pretty GHC.EpaComment where
