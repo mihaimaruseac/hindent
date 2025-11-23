@@ -1,4 +1,4 @@
-module HIndent.GhcOrdered.InstanceMember
+module HIndent.Ast.GhcOrdered.InstanceMember
   ( InstanceMember
   , LInstanceMember
   , foldInstanceMember
@@ -8,7 +8,9 @@ module HIndent.GhcOrdered.InstanceMember
 import Data.Function (on)
 import Data.List (sortBy)
 import qualified GHC.Types.SrcLoc as GHC
+import HIndent.Ast.NodeComments (NodeComments(..))
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty.NodeComments (CommentExtraction(..))
 
 -- | Elements allowed inside a class instance declaration.
 data InstanceMember
@@ -18,6 +20,9 @@ data InstanceMember
   | InstanceMemberDataFamily (GHC.DataFamInstDecl GHC.GhcPs)
 
 type LInstanceMember = GHC.LocatedA InstanceMember
+
+instance CommentExtraction InstanceMember where
+  nodeComments _ = NodeComments [] [] []
 
 foldInstanceMember ::
      (GHC.Sig GHC.GhcPs -> r)

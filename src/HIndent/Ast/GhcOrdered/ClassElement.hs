@@ -1,4 +1,4 @@
-module HIndent.GhcOrdered.ClassElement
+module HIndent.Ast.GhcOrdered.ClassElement
   ( ClassElement
   , LClassElement
   , foldClassElement
@@ -10,7 +10,9 @@ import Data.Function (on)
 import Data.List (sortBy)
 import Data.Maybe (mapMaybe)
 import qualified GHC.Types.SrcLoc as GHC
+import HIndent.Ast.NodeComments (NodeComments(..))
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty.NodeComments (CommentExtraction(..))
 
 -- | Elements that may appear inside a class declaration.
 data ClassElement
@@ -20,6 +22,9 @@ data ClassElement
   | ClassElementTypeDefault (GHC.TyFamInstDecl GHC.GhcPs)
 
 type LClassElement = GHC.LocatedA ClassElement
+
+instance CommentExtraction ClassElement where
+  nodeComments _ = NodeComments [] [] []
 
 foldClassElement ::
      (GHC.Sig GHC.GhcPs -> r)

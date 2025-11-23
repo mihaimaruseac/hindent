@@ -10,11 +10,14 @@ import HIndent.Ast.Declaration.Family.Data
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Instance.Family.Type.Associated
 import HIndent.Ast.Declaration.Signature
+import HIndent.Ast.GhcOrdered.ClassElement
+  ( foldClassElement
+  , mkSortedClassElements
+  )
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import HIndent.GhcOrdered.ClassElement (foldClassElement, mkSortedClassElements)
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.NodeComments
 
 data ClassAssociatedThing

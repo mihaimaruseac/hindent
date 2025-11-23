@@ -9,14 +9,14 @@ module HIndent.Ast.Declaration.Instance.Class.Member
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Instance.Family.Type.Associated
 import HIndent.Ast.Declaration.Signature
-import HIndent.Ast.NodeComments
-import HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import HIndent.GhcOrdered.InstanceMember
+import HIndent.Ast.GhcOrdered.InstanceMember
   ( foldInstanceMember
   , mkSortedInstanceMembers
   )
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Ast.NodeComments
+import HIndent.Ast.WithComments
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.NodeComments
 import HIndent.Pretty.Types
   ( DataFamInstDecl'(..)

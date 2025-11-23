@@ -3,8 +3,8 @@ module HIndent.Ast.LocalBinds.Declarations
   , mkLocalBindDeclarations
   ) where
 
+import HIndent.Ast.GhcOrdered.BindGroupElement (BindGroupElement)
 import HIndent.Ast.WithComments (WithComments)
-import HIndent.GhcOrdered.BindGroupElement (BindGroupElement)
 
 newtype LocalBindDeclarations = LocalBindDeclarations
   { getBindGroupElements :: [WithComments BindGroupElement]

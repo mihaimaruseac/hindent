@@ -11,7 +11,7 @@ import HIndent.Ast.Declaration.Class.AssociatedThing
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments (CommentExtraction(..))
 

@@ -41,6 +41,7 @@ import HIndent.Ast.Declaration.Instance.Family.Type.Associated.Default
   )
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression (mkExpression)
+import qualified HIndent.Ast.GhcOrdered.BindGroupElement as BGE
 import HIndent.Ast.LocalBinds (mkLocalBinds)
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
@@ -175,6 +176,9 @@ prettyStmtLRExpr GHC.RecStmt {..} =
 
 instance Pretty (GHC.ParStmtBlock GHC.GhcPs GHC.GhcPs) where
   pretty' (GHC.ParStmtBlock _ xs _ _) = hvCommaSep $ fmap pretty xs
+
+instance Pretty BGE.BindGroupElement where
+  pretty' = BGE.foldBindGroupElement (pretty . mkSignature) (pretty . mkBind)
 
 instance Pretty SBF.SigBindFamily where
   pretty' (SBF.Sig x) = pretty $ mkSignature x

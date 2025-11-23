@@ -110,6 +110,9 @@ library
       HIndent.Ast.Expression.Splice
       HIndent.Ast.FileHeaderPragma
       HIndent.Ast.FileHeaderPragma.Collection
+      HIndent.Ast.GhcOrdered.BindGroupElement
+      HIndent.Ast.GhcOrdered.ClassElement
+      HIndent.Ast.GhcOrdered.InstanceMember
       HIndent.Ast.Guard
       HIndent.Ast.Import
       HIndent.Ast.Import.Collection
@@ -159,9 +162,6 @@ library
       HIndent.GhcLibParserWrapper.GHC.Hs.ImpExp
       HIndent.GhcLibParserWrapper.GHC.Parser.Annotation
       HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings
-      HIndent.GhcOrdered.BindGroupElement
-      HIndent.GhcOrdered.ClassElement
-      HIndent.GhcOrdered.InstanceMember
       HIndent.Language
       HIndent.LanguageExtension
       HIndent.LanguageExtension.Conversion
@@ -183,6 +183,7 @@ library
       HIndent.Pretty.Combinators.Switch
       HIndent.Pretty.Combinators.Wrap
       HIndent.Pretty.NodeComments
+      HIndent.Pretty.SigBindFamily
       HIndent.Pretty.Types
       HIndent.Printer
       Paths_hindent

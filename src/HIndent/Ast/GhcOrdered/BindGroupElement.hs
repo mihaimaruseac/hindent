@@ -1,4 +1,4 @@
-module HIndent.GhcOrdered.BindGroupElement
+module HIndent.Ast.GhcOrdered.BindGroupElement
   ( BindGroupElement
   , LBindGroupElement
   , foldBindGroupElement
@@ -10,7 +10,9 @@ import Data.Function (on)
 import Data.List (sortBy)
 import Data.Maybe (mapMaybe)
 import qualified GHC.Types.SrcLoc as GHC
+import HIndent.Ast.NodeComments (NodeComments(..))
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty.NodeComments (CommentExtraction(..))
 
 -- | Elements that can appear together inside a binding group such as
 -- @let@/@where@ blocks.
@@ -19,6 +21,9 @@ data BindGroupElement
   | BindGroupBind (GHC.HsBindLR GHC.GhcPs GHC.GhcPs)
 
 type LBindGroupElement = GHC.LocatedA BindGroupElement
+
+instance CommentExtraction BindGroupElement where
+  nodeComments _ = NodeComments [] [] []
 
 foldBindGroupElement ::
      (GHC.Sig GHC.GhcPs -> r)

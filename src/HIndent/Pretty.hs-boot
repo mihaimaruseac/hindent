@@ -11,7 +11,8 @@ import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty.NodeComments
-import HIndent.GhcOrdered.BindGroupElement
+import HIndent.Ast.GhcOrdered.BindGroupElement
+import HIndent.Pretty.SigBindFamily (SigBindFamily)
 import HIndent.Pretty.Types
 import HIndent.Printer
 
@@ -36,6 +37,8 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
 
 instance Pretty BindGroupElement
+
+instance Pretty SigBindFamily
 
 instance Pretty DataFamInstDecl'
 
