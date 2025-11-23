@@ -31,17 +31,13 @@ import HIndent.Applicative (whenJust)
 import HIndent.Ast.Comment (mkComment)
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Data.Body
-import HIndent.Ast.Declaration.Family.Data
-import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Instance.Family.Type.Associated
   ( mkAssociatedType
-  )
-import HIndent.Ast.Declaration.Instance.Family.Type.Associated.Default
-  ( mkAssociatedTypeDefault
   )
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression (mkExpression)
 import qualified HIndent.Ast.GhcOrdered.BindGroupElement as BGE
+import qualified HIndent.Ast.GhcOrdered.InstanceMember as IM
 import HIndent.Ast.LocalBinds (mkLocalBinds)
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
@@ -50,7 +46,6 @@ import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-import qualified HIndent.Pretty.SigBindFamily as SBF
 import HIndent.Pretty.Types
 import HIndent.Printer
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
@@ -180,16 +175,13 @@ instance Pretty (GHC.ParStmtBlock GHC.GhcPs GHC.GhcPs) where
 instance Pretty BGE.BindGroupElement where
   pretty' = BGE.foldBindGroupElement (pretty . mkSignature) (pretty . mkBind)
 
-instance Pretty SBF.SigBindFamily where
-  pretty' (SBF.Sig x) = pretty $ mkSignature x
-  pretty' (SBF.Bind x) = pretty $ mkBind x
-  pretty' (SBF.Family x)
-    | Just fam <- mkTypeFamily x = pretty fam
-    | Just fam <- mkDataFamily x = pretty fam
-    | otherwise = error "Unreachable"
-  pretty' (SBF.TyFamInst x) = pretty $ mkAssociatedType x
-  pretty' (SBF.TyFamDeflt x) = pretty $ mkAssociatedTypeDefault x
-  pretty' (SBF.DataFamInst x) = pretty $ DataFamInstDeclInsideClassInst x
+instance Pretty IM.InstanceMember where
+  pretty' =
+    IM.foldInstanceMember
+      (pretty . mkSignature)
+      (pretty . mkBind)
+      (pretty . mkAssociatedType)
+      (pretty . DataFamInstDeclInsideClassInst)
 
 instance Pretty GHC.EpaComment where
   pretty' GHC.EpaComment {..} = pretty $ mkComment ac_tok
