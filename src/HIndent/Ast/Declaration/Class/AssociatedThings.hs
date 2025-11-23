@@ -1,37 +1,23 @@
 module HIndent.Ast.Declaration.Class.AssociatedThings
-  ( AssociatedThings
+  ( ClassAssociatedThings
   , mkAssociatedThings
   , nullAssociatedThings
+  , mkClassAssociatedThings
   ) where
 
 import HIndent.Ast.Declaration.Class.AssociatedThing
-  ( ClassAssociatedThing
+  ( ClassAssociatedThings(..)
   , mkClassAssociatedThings
   )
-import HIndent.Ast.NodeComments
-import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import HIndent.Pretty (Pretty(..), pretty)
-import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments (CommentExtraction(..))
-
-newtype AssociatedThings =
-  AssociatedThings [WithComments ClassAssociatedThing]
-
-instance CommentExtraction AssociatedThings where
-  nodeComments AssociatedThings {} = NodeComments [] [] []
-
-instance Pretty AssociatedThings where
-  pretty' (AssociatedThings items) = newlinePrefixed $ fmap pretty items
 
 mkAssociatedThings ::
      [GHC.LSig GHC.GhcPs]
   -> [GHC.LHsBindLR GHC.GhcPs GHC.GhcPs]
   -> [GHC.LFamilyDecl GHC.GhcPs]
   -> [GHC.LTyFamInstDecl GHC.GhcPs]
-  -> AssociatedThings
-mkAssociatedThings sigs binds fams tyInsts =
-  AssociatedThings (mkClassAssociatedThings sigs binds fams tyInsts)
+  -> ClassAssociatedThings
+mkAssociatedThings = mkClassAssociatedThings
 
-nullAssociatedThings :: AssociatedThings -> Bool
-nullAssociatedThings (AssociatedThings items) = null items
+nullAssociatedThings :: ClassAssociatedThings -> Bool
+nullAssociatedThings (ClassAssociatedThings items) = null items
