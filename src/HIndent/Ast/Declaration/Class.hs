@@ -10,7 +10,6 @@ import Control.Monad
 import Data.Maybe
 import HIndent.Applicative
 import HIndent.Ast.Context
-import HIndent.Ast.Declaration.Class.AssociatedThing
 import HIndent.Ast.Declaration.Class.AssociatedThings
 import HIndent.Ast.Declaration.Class.FunctionalDependency
 import HIndent.Ast.Declaration.Class.NameAndTypeVariables
