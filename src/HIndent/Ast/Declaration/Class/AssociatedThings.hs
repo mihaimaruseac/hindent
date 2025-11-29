@@ -1,6 +1,5 @@
 module HIndent.Ast.Declaration.Class.AssociatedThings
   ( ClassAssociatedThings
-  , mkAssociatedThings
   , nullAssociatedThings
   , mkClassAssociatedThings
   ) where
@@ -25,14 +24,6 @@ instance CommentExtraction ClassAssociatedThings where
 
 instance Pretty ClassAssociatedThings where
   pretty' (ClassAssociatedThings items) = newlinePrefixed $ fmap pretty items
-
-mkAssociatedThings ::
-     [GHC.LSig GHC.GhcPs]
-  -> [GHC.LHsBindLR GHC.GhcPs GHC.GhcPs]
-  -> [GHC.LFamilyDecl GHC.GhcPs]
-  -> [GHC.LTyFamInstDecl GHC.GhcPs]
-  -> ClassAssociatedThings
-mkAssociatedThings = mkClassAssociatedThings
 
 mkClassAssociatedThings ::
      [GHC.LSig GHC.GhcPs]
