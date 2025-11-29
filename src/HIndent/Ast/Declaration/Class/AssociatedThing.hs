@@ -1,7 +1,12 @@
 {-# LANGUAGE CPP #-}
 
 module HIndent.Ast.Declaration.Class.AssociatedThing
-  ( ClassAssociatedThing(..)
+  ( ClassAssociatedThing
+  , classAssociatedSignature
+  , classAssociatedMethod
+  , classAssociatedTypeFamily
+  , classAssociatedDataFamily
+  , classAssociatedTypeDefault
   ) where
 
 import HIndent.Ast.Declaration.Bind
@@ -19,6 +24,21 @@ data ClassAssociatedThing
   | ClassAssociatedTypeFamily TypeFamily
   | ClassAssociatedDataFamily DataFamily
   | ClassAssociatedTypeDefault AssociatedTypeDefault
+
+classAssociatedSignature :: Signature -> ClassAssociatedThing
+classAssociatedSignature = ClassAssociatedSignature
+
+classAssociatedMethod :: Bind -> ClassAssociatedThing
+classAssociatedMethod = ClassAssociatedMethod
+
+classAssociatedTypeFamily :: TypeFamily -> ClassAssociatedThing
+classAssociatedTypeFamily = ClassAssociatedTypeFamily
+
+classAssociatedDataFamily :: DataFamily -> ClassAssociatedThing
+classAssociatedDataFamily = ClassAssociatedDataFamily
+
+classAssociatedTypeDefault :: AssociatedTypeDefault -> ClassAssociatedThing
+classAssociatedTypeDefault = ClassAssociatedTypeDefault
 
 instance CommentExtraction ClassAssociatedThing where
   nodeComments ClassAssociatedSignature {} = NodeComments [] [] []

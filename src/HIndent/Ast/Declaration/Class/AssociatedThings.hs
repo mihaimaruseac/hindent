@@ -6,7 +6,14 @@ module HIndent.Ast.Declaration.Class.AssociatedThings
   ) where
 
 import HIndent.Ast.Declaration.Bind
-import HIndent.Ast.Declaration.Class.AssociatedThing (ClassAssociatedThing(..))
+import HIndent.Ast.Declaration.Class.AssociatedThing
+  ( ClassAssociatedThing
+  , classAssociatedDataFamily
+  , classAssociatedMethod
+  , classAssociatedSignature
+  , classAssociatedTypeDefault
+  , classAssociatedTypeFamily
+  )
 import HIndent.Ast.Declaration.Family.Data
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Instance.Family.Type.Associated.Default
@@ -53,13 +60,13 @@ mkClassAssociatedThings sigs binds fams tyInsts =
   where
     convert =
       foldClassElement
-        (ClassAssociatedSignature . mkSignature)
-        (ClassAssociatedMethod . mkBind)
+        (classAssociatedSignature . mkSignature)
+        (classAssociatedMethod . mkBind)
         convertFamily
-        (ClassAssociatedTypeDefault . mkAssociatedTypeDefault)
+        (classAssociatedTypeDefault . mkAssociatedTypeDefault)
     convertFamily decl
-      | Just fam <- mkTypeFamily decl = ClassAssociatedTypeFamily fam
-      | Just fam <- mkDataFamily decl = ClassAssociatedDataFamily fam
+      | Just fam <- mkTypeFamily decl = classAssociatedTypeFamily fam
+      | Just fam <- mkDataFamily decl = classAssociatedDataFamily fam
       | otherwise = error "Unreachable"
 
 nullAssociatedThings :: ClassAssociatedThings -> Bool
