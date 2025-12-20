@@ -9,6 +9,7 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified GHC.Data.Bag as GHC
 #endif
+import qualified HIndent.Ast.GhcOrdered.BindGroupElement as BGE
 import HIndent.Ast.LocalBinds.ImplicitBindings
   ( ImplicitBindings
   , mkImplicitBindings
@@ -18,11 +19,10 @@ import HIndent.Ast.WithComments (WithComments, fromEpAnn, fromGenLocated)
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-import qualified HIndent.Pretty.SigBindFamily as SBF
 
 data LocalBinds
   = Value
-      { sigBindFamilies :: [WithComments SBF.SigBindFamily]
+      { sigBindFamilies :: [WithComments BGE.BindGroupElement]
       }
   | ImplicitParameters
       { implicitBindings :: ImplicitBindings
@@ -46,14 +46,13 @@ mkLocalBinds (GHC.HsIPBinds ann binds) =
 mkLocalBinds GHC.EmptyLocalBinds {} = Nothing
 
 mkSigBindFamilies ::
-     GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> [WithComments SBF.SigBindFamily]
+     GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> [WithComments BGE.BindGroupElement]
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkSigBindFamilies (GHC.ValBinds _ binds sigs) =
-  fmap fromGenLocated $ SBF.mkSortedLSigBindFamilyList sigs binds [] [] [] []
+  fmap fromGenLocated $ BGE.mkSortedBindGroupElements sigs binds
 #else
 mkSigBindFamilies (GHC.ValBinds _ bindBag sigs) =
-  fromGenLocated
-    <$> SBF.mkSortedLSigBindFamilyList sigs (GHC.bagToList bindBag) [] [] [] []
+  fromGenLocated <$> BGE.mkSortedBindGroupElements sigs (GHC.bagToList bindBag)
 #endif
 mkSigBindFamilies GHC.XValBindsLR {} =
   error "`ghc-lib-parser` never generates this AST node."
