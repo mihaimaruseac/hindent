@@ -24,22 +24,22 @@ import HIndent.Pretty.Types
   )
 
 data ClassInstanceMember
-  = InstanceSignature Signature
-  | InstanceMethod Bind
-  | InstanceTypeFamily AssociatedType
-  | InstanceDataFamily DataFamInstDecl'
+  = Signature Signature
+  | Method Bind
+  | TypeFamily AssociatedType
+  | DataFamily DataFamInstDecl'
 
 instance CommentExtraction ClassInstanceMember where
-  nodeComments InstanceSignature {} = NodeComments [] [] []
-  nodeComments InstanceMethod {} = NodeComments [] [] []
-  nodeComments InstanceTypeFamily {} = NodeComments [] [] []
-  nodeComments InstanceDataFamily {} = NodeComments [] [] []
+  nodeComments Signature {} = NodeComments [] [] []
+  nodeComments Method {} = NodeComments [] [] []
+  nodeComments TypeFamily {} = NodeComments [] [] []
+  nodeComments DataFamily {} = NodeComments [] [] []
 
 instance Pretty ClassInstanceMember where
-  pretty' (InstanceSignature sig) = pretty sig
-  pretty' (InstanceMethod bind) = pretty bind
-  pretty' (InstanceTypeFamily assoc) = pretty assoc
-  pretty' (InstanceDataFamily inst) = pretty inst
+  pretty' (Signature sig) = pretty sig
+  pretty' (Method bind) = pretty bind
+  pretty' (TypeFamily assoc) = pretty assoc
+  pretty' (DataFamily inst) = pretty inst
 
 mkClassInstanceMembers ::
      [GHC.LSig GHC.GhcPs]
@@ -54,7 +54,7 @@ mkClassInstanceMembers sigs binds tyInsts dataInsts =
   where
     convert =
       foldInstanceMember
-        (InstanceSignature . mkSignature)
-        (InstanceMethod . mkBind)
-        (InstanceTypeFamily . mkAssociatedType)
-        (InstanceDataFamily . DataFamInstDeclInsideClassInst)
+        (Signature . mkSignature)
+        (Method . mkBind)
+        (TypeFamily . mkAssociatedType)
+        (DataFamily . DataFamInstDeclInsideClassInst)
