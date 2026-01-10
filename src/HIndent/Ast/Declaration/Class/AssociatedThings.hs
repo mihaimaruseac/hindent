@@ -1,7 +1,7 @@
 module HIndent.Ast.Declaration.Class.AssociatedThings
   ( ClassAssociatedThings
-  , hasAssociatedThings
   , mkClassAssociatedThings
+  , hasAssociatedThings
   ) where
 
 import HIndent.Ast.Declaration.Class.AssociatedThing
