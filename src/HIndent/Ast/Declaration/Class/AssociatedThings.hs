@@ -1,6 +1,6 @@
 module HIndent.Ast.Declaration.Class.AssociatedThings
   ( ClassAssociatedThings
-  , nullAssociatedThings
+  , hasAssociatedThings
   , mkClassAssociatedThings
   ) where
 
@@ -37,5 +37,5 @@ mkClassAssociatedThings sigs binds fams tyInsts =
         (fromGenLocated . fmap mkClassAssociatedThing)
         (mkSortedClassElements sigs binds fams tyInsts)
 
-nullAssociatedThings :: ClassAssociatedThings -> Bool
-nullAssociatedThings (ClassAssociatedThings items) = null items
+hasAssociatedThings :: ClassAssociatedThings -> Bool
+hasAssociatedThings (ClassAssociatedThings items) = not (null items)

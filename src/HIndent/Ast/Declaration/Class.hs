@@ -44,7 +44,7 @@ instance Pretty ClassDeclaration where
         pretty nameAndTypeVariables
         unless (null functionalDependencies)
           $ string " | " >> hCommaSep (fmap pretty functionalDependencies)
-        unless (nullAssociatedThings associatedThings) $ string " where"
+        when (hasAssociatedThings associatedThings) $ string " where"
       verHead = do
         string "class " |=> do
           whenJust context $ \ctx -> pretty ctx >> string " =>" >> newline
@@ -53,7 +53,7 @@ instance Pretty ClassDeclaration where
           newline
           indentedBlock
             $ string "| " |=> vCommaSep (fmap pretty functionalDependencies)
-        unless (nullAssociatedThings associatedThings)
+        when (hasAssociatedThings associatedThings)
           $ newline >> indentedBlock (string "where")
 
 mkClassDeclaration :: GHC.TyClDecl GHC.GhcPs -> Maybe ClassDeclaration
