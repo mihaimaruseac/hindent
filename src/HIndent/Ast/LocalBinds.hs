@@ -22,7 +22,7 @@ import HIndent.Pretty.NodeComments
 
 data LocalBinds
   = Value
-      { sigBindFamilies :: [WithComments BGE.BindGroupElement]
+      { sigBindFamilies :: BGE.BindGroupElements
       }
   | ImplicitParameters
       { implicitBindings :: ImplicitBindings
@@ -33,7 +33,8 @@ instance CommentExtraction LocalBinds where
   nodeComments ImplicitParameters {} = NodeComments [] [] []
 
 instance Pretty LocalBinds where
-  pretty' Value {sigBindFamilies = families} = lined $ fmap pretty families
+  pretty' Value {sigBindFamilies = families} =
+    lined $ pretty <$> BGE.elements families
   pretty' (ImplicitParameters {implicitBindings = binds}) = pretty binds
 
 mkLocalBinds :: GHC.HsLocalBinds GHC.GhcPs -> Maybe (WithComments LocalBinds)
@@ -46,7 +47,7 @@ mkLocalBinds (GHC.HsIPBinds ann binds) =
 mkLocalBinds GHC.EmptyLocalBinds {} = Nothing
 
 mkSigBindFamilies ::
-     GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> [WithComments BGE.BindGroupElement]
+     GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> BGE.BindGroupElements
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkSigBindFamilies (GHC.ValBinds _ binds sigs) =
   BGE.mkSortedBindGroupElements sigs binds

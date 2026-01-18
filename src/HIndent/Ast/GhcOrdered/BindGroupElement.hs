@@ -1,5 +1,6 @@
 module HIndent.Ast.GhcOrdered.BindGroupElement
   ( BindGroupElement
+  , BindGroupElements(..)
   , foldBindGroupElement
   , mkSortedBindGroupElements
   , destructBindGroupElements
@@ -27,6 +28,10 @@ data BindGroupElement
   = BindGroupSignature (GHC.Sig GHC.GhcPs)
   | BindGroupBind (GHC.HsBindLR GHC.GhcPs GHC.GhcPs)
 
+newtype BindGroupElements = BindGroupElements
+  { elements :: [WithComments BindGroupElement]
+  }
+
 instance CommentExtraction BindGroupElement where
   nodeComments _ = NodeComments [] [] []
 
@@ -42,20 +47,22 @@ foldBindGroupElement _ onBind (BindGroupBind bind) = onBind bind
 mkSortedBindGroupElements ::
      [GHC.LSig GHC.GhcPs]
   -> [GHC.LHsBindLR GHC.GhcPs GHC.GhcPs]
-  -> [WithComments BindGroupElement]
+  -> BindGroupElements
 mkSortedBindGroupElements sigs binds =
-  fromGenLocated
-    <$> sortBy
-          (compare `on` GHC.realSrcSpan . GHC.locA . GHC.getLoc)
-          (fmap (fmap BindGroupSignature) sigs
-             ++ fmap (fmap BindGroupBind) binds)
+  BindGroupElements
+    $ fromGenLocated
+        <$> sortBy
+              (compare `on` GHC.realSrcSpan . GHC.locA . GHC.getLoc)
+              (fmap (fmap BindGroupSignature) sigs
+                 ++ fmap (fmap BindGroupBind) binds)
 
 -- | Split sorted elements back into their original buckets.
 destructBindGroupElements ::
-     [WithComments BindGroupElement]
+     BindGroupElements
   -> ( [WithComments (GHC.Sig GHC.GhcPs)]
      , [WithComments (GHC.HsBindLR GHC.GhcPs GHC.GhcPs)])
-destructBindGroupElements xs = (mapMaybe toSig xs, mapMaybe toBind xs)
+destructBindGroupElements (BindGroupElements xs) =
+  (mapMaybe toSig xs, mapMaybe toBind xs)
   where
     toSig x =
       case getNode x of
