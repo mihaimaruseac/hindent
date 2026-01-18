@@ -111,6 +111,7 @@ library
       HIndent.Ast.FileHeaderPragma
       HIndent.Ast.FileHeaderPragma.Collection
       HIndent.Ast.GhcOrdered.BindGroupElement
+      HIndent.Ast.GhcOrdered.BindGroupElements
       HIndent.Ast.GhcOrdered.ClassElement
       HIndent.Ast.GhcOrdered.InstanceMember
       HIndent.Ast.Guard

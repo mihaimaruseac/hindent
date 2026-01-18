@@ -9,7 +9,7 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified GHC.Data.Bag as GHC
 #endif
-import qualified HIndent.Ast.GhcOrdered.BindGroupElement as BGE
+import qualified HIndent.Ast.GhcOrdered.BindGroupElements as BGE
 import HIndent.Ast.LocalBinds.ImplicitBindings
   ( ImplicitBindings
   , mkImplicitBindings
@@ -34,7 +34,7 @@ instance CommentExtraction LocalBinds where
 
 instance Pretty LocalBinds where
   pretty' Value {sigBindFamilies = families} =
-    lined $ pretty <$> BGE.elements families
+    lined $ pretty <$> BGE.bindGroupElements families
   pretty' (ImplicitParameters {implicitBindings = binds}) = pretty binds
 
 mkLocalBinds :: GHC.HsLocalBinds GHC.GhcPs -> Maybe (WithComments LocalBinds)
