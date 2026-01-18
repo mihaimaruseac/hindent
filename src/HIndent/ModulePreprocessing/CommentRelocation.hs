@@ -45,9 +45,9 @@ import Control.Monad.State
 import Data.Foldable
 import Data.Function
 import Data.List (partition, sortBy)
+import Data.Maybe
 import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)
-import HIndent.Ast.GhcOrdered.BindGroupElement
 import HIndent.Ast.GhcOrdered.ClassElement
 import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.GhcLibParserWrapper.GHC.Parser.Annotation
@@ -59,14 +59,15 @@ import Control.Monad
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import GHC.Data.Bag
 #endif
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-import Data.Maybe
-#endif
 -- | A wrapper type used in everywhereMEpAnnsBackwards' to collect all
 -- 'EpAnn's to apply a function with them in order their positions.
 data Wrapper =
   forall a. Typeable (EpAnn a) =>
             Wrapper (EpAnn a)
+
+data LocatedBindGroupElement
+  = BindGroupSignature (LSig GhcPs)
+  | BindGroupBind (LHsBindLR GhcPs GhcPs)
 
 -- | 'State' with comments.
 type WithComments = State [LEpaComment]
@@ -304,11 +305,16 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       -> [LSig GhcPs]
       -> WithComments (LHsBindsLR GhcPs GhcPs, [LSig GhcPs])
     relocateCommentsBindsSigs binds sigs = do
-      bindsSigs' <- mapM addCommentsBeforeEpAnn bindsSigs
-      let (sigs', binds') = destructBindGroupElements bindsSigs'
+      bindsSigs' <- mapM addCommentsBeforeElement bindsSigs
+      let (sigs', binds') = destructLocatedBindGroupElements bindsSigs'
       pure (binds', sigs')
       where
-        bindsSigs = mkSortedBindGroupElements sigs binds
+        bindsSigs = mkSortedLocatedBindGroupElements sigs binds
+    addCommentsBeforeElement element =
+      case element of
+        BindGroupSignature sig ->
+          BindGroupSignature <$> addCommentsBeforeEpAnn sig
+        BindGroupBind bind -> BindGroupBind <$> addCommentsBeforeEpAnn bind
     addCommentsBeforeEpAnn (L epa@EpAnn { entry = EpaSpan (RealSrcSpan anc _)
                                         , ..
                                         } x) = do
@@ -319,6 +325,20 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       put notAbove
       pure $ L epa' x
     addCommentsBeforeEpAnn x = pure x
+    mkSortedLocatedBindGroupElements sigs binds =
+      sortBy
+        (compare `on` bindGroupElementSrcSpan)
+        (fmap BindGroupSignature sigs ++ fmap BindGroupBind binds)
+    bindGroupElementSrcSpan (BindGroupSignature sig) =
+      realSrcSpan $ locA $ getLoc sig
+    bindGroupElementSrcSpan (BindGroupBind bind) =
+      realSrcSpan $ locA $ getLoc bind
+    destructLocatedBindGroupElements xs =
+      (mapMaybe toSig xs, mapMaybe toBind xs)
+    toSig (BindGroupSignature sig) = Just sig
+    toSig _ = Nothing
+    toBind (BindGroupBind bind) = Just bind
+    toBind _ = Nothing
     partitionAboveNotAbove cs sp =
       fst
         $ foldr'
@@ -489,11 +509,16 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       -> [LSig GhcPs]
       -> WithComments (LHsBindsLR GhcPs GhcPs, [LSig GhcPs])
     relocateCommentsBindsSigs binds sigs = do
-      bindsSigs' <- mapM addCommentsBeforeEpAnn bindsSigs
-      let (sigs', binds') = destructBindGroupElements bindsSigs'
+      bindsSigs' <- mapM addCommentsBeforeElement bindsSigs
+      let (sigs', binds') = destructLocatedBindGroupElements bindsSigs'
       pure (listToBag binds', sigs')
       where
-        bindsSigs = mkSortedBindGroupElements sigs (bagToList binds)
+        bindsSigs = mkSortedLocatedBindGroupElements sigs (bagToList binds)
+    addCommentsBeforeElement element =
+      case element of
+        BindGroupSignature sig ->
+          BindGroupSignature <$> addCommentsBeforeEpAnn sig
+        BindGroupBind bind -> BindGroupBind <$> addCommentsBeforeEpAnn bind
     addCommentsBeforeEpAnn (L epa@EpAnn {..} x)
       | EpaSpan (RealSrcSpan anc _) <- entry = do
         cs <- get
@@ -503,6 +528,20 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
         put notAbove
         pure $ L epa' x
       | otherwise = undefined
+    mkSortedLocatedBindGroupElements sigs binds =
+      sortBy
+        (compare `on` bindGroupElementSrcSpan)
+        (fmap BindGroupSignature sigs ++ fmap BindGroupBind binds)
+    bindGroupElementSrcSpan (BindGroupSignature sig) =
+      realSrcSpan $ locA $ getLoc sig
+    bindGroupElementSrcSpan (BindGroupBind bind) =
+      realSrcSpan $ locA $ getLoc bind
+    destructLocatedBindGroupElements xs =
+      (mapMaybe toSig xs, mapMaybe toBind xs)
+    toSig (BindGroupSignature sig) = Just sig
+    toSig _ = Nothing
+    toBind (BindGroupBind bind) = Just bind
+    toBind _ = Nothing
     partitionAboveNotAbove cs sp =
       fst
         $ foldr'
@@ -674,11 +713,16 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       -> [LSig GhcPs]
       -> WithComments (LHsBindsLR GhcPs GhcPs, [LSig GhcPs])
     relocateCommentsBindsSigs binds sigs = do
-      bindsSigs' <- mapM addCommentsBeforeEpAnn bindsSigs
-      let (sigs', binds') = destructBindGroupElements bindsSigs'
+      bindsSigs' <- mapM addCommentsBeforeElement bindsSigs
+      let (sigs', binds') = destructLocatedBindGroupElements bindsSigs'
       pure (listToBag binds', sigs')
       where
-        bindsSigs = mkSortedBindGroupElements sigs (bagToList binds)
+        bindsSigs = mkSortedLocatedBindGroupElements sigs (bagToList binds)
+    addCommentsBeforeElement element =
+      case element of
+        BindGroupSignature sig ->
+          BindGroupSignature <$> addCommentsBeforeEpAnn sig
+        BindGroupBind bind -> BindGroupBind <$> addCommentsBeforeEpAnn bind
     addCommentsBeforeEpAnn (L (SrcSpanAnn epa@EpAnn {..} sp) x) = do
       cs <- get
       let (notAbove, above) =
@@ -687,6 +731,20 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       put notAbove
       pure $ L (SrcSpanAnn epa' sp) x
     addCommentsBeforeEpAnn x = pure x
+    mkSortedLocatedBindGroupElements sigs binds =
+      sortBy
+        (compare `on` bindGroupElementSrcSpan)
+        (fmap BindGroupSignature sigs ++ fmap BindGroupBind binds)
+    bindGroupElementSrcSpan (BindGroupSignature sig) =
+      realSrcSpan $ locA $ getLoc sig
+    bindGroupElementSrcSpan (BindGroupBind bind) =
+      realSrcSpan $ locA $ getLoc bind
+    destructLocatedBindGroupElements xs =
+      (mapMaybe toSig xs, mapMaybe toBind xs)
+    toSig (BindGroupSignature sig) = Just sig
+    toSig _ = Nothing
+    toBind (BindGroupBind bind) = Just bind
+    toBind _ = Nothing
     partitionAboveNotAbove cs sp =
       fst
         $ foldr'

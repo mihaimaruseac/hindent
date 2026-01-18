@@ -1,6 +1,5 @@
 module HIndent.Ast.GhcOrdered.BindGroupElement
   ( BindGroupElement
-  , LBindGroupElement
   , foldBindGroupElement
   , mkSortedBindGroupElements
   , destructBindGroupElements
@@ -11,6 +10,14 @@ import Data.List (sortBy)
 import Data.Maybe (mapMaybe)
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.NodeComments (NodeComments(..))
+import {-# SOURCE #-} HIndent.Ast.WithComments
+  ( WithComments
+  , addComments
+  , fromGenLocated
+  , getComments
+  , getNode
+  , mkWithComments
+  )
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty.NodeComments (CommentExtraction(..))
 
@@ -19,8 +26,6 @@ import HIndent.Pretty.NodeComments (CommentExtraction(..))
 data BindGroupElement
   = BindGroupSignature (GHC.Sig GHC.GhcPs)
   | BindGroupBind (GHC.HsBindLR GHC.GhcPs GHC.GhcPs)
-
-type LBindGroupElement = GHC.LocatedA BindGroupElement
 
 instance CommentExtraction BindGroupElement where
   nodeComments _ = NodeComments [] [] []
@@ -37,19 +42,28 @@ foldBindGroupElement _ onBind (BindGroupBind bind) = onBind bind
 mkSortedBindGroupElements ::
      [GHC.LSig GHC.GhcPs]
   -> [GHC.LHsBindLR GHC.GhcPs GHC.GhcPs]
-  -> [LBindGroupElement]
+  -> [WithComments BindGroupElement]
 mkSortedBindGroupElements sigs binds =
-  sortBy
-    (compare `on` GHC.realSrcSpan . GHC.locA . GHC.getLoc)
-    (fmap (fmap BindGroupSignature) sigs ++ fmap (fmap BindGroupBind) binds)
+  fromGenLocated
+    <$> sortBy
+          (compare `on` GHC.realSrcSpan . GHC.locA . GHC.getLoc)
+          (fmap (fmap BindGroupSignature) sigs
+             ++ fmap (fmap BindGroupBind) binds)
 
 -- | Split sorted elements back into their original buckets.
 destructBindGroupElements ::
-     [LBindGroupElement]
-  -> ([GHC.LSig GHC.GhcPs], [GHC.LHsBindLR GHC.GhcPs GHC.GhcPs])
+     [WithComments BindGroupElement]
+  -> ( [WithComments (GHC.Sig GHC.GhcPs)]
+     , [WithComments (GHC.HsBindLR GHC.GhcPs GHC.GhcPs)])
 destructBindGroupElements xs = (mapMaybe toSig xs, mapMaybe toBind xs)
   where
-    toSig (GHC.L l (BindGroupSignature sig)) = Just (GHC.L l sig)
-    toSig _ = Nothing
-    toBind (GHC.L l (BindGroupBind bind)) = Just (GHC.L l bind)
-    toBind _ = Nothing
+    toSig x =
+      case getNode x of
+        BindGroupSignature sig ->
+          Just $ addComments (getComments x) (mkWithComments sig)
+        _ -> Nothing
+    toBind x =
+      case getNode x of
+        BindGroupBind bind ->
+          Just $ addComments (getComments x) (mkWithComments bind)
+        _ -> Nothing

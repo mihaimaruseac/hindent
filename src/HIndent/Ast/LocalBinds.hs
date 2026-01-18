@@ -15,7 +15,7 @@ import HIndent.Ast.LocalBinds.ImplicitBindings
   , mkImplicitBindings
   )
 import HIndent.Ast.NodeComments (NodeComments(..))
-import HIndent.Ast.WithComments (WithComments, fromEpAnn, fromGenLocated)
+import HIndent.Ast.WithComments (WithComments, fromEpAnn)
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
@@ -49,10 +49,10 @@ mkSigBindFamilies ::
      GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> [WithComments BGE.BindGroupElement]
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkSigBindFamilies (GHC.ValBinds _ binds sigs) =
-  fmap fromGenLocated $ BGE.mkSortedBindGroupElements sigs binds
+  BGE.mkSortedBindGroupElements sigs binds
 #else
 mkSigBindFamilies (GHC.ValBinds _ bindBag sigs) =
-  fromGenLocated <$> BGE.mkSortedBindGroupElements sigs (GHC.bagToList bindBag)
+  BGE.mkSortedBindGroupElements sigs (GHC.bagToList bindBag)
 #endif
 mkSigBindFamilies GHC.XValBindsLR {} =
   error "`ghc-lib-parser` never generates this AST node."
