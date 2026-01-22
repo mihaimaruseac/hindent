@@ -74,6 +74,7 @@ library
       HIndent.Ast.Declaration.Foreign.Safety
       HIndent.Ast.Declaration.Instance.Class
       HIndent.Ast.Declaration.Instance.Class.Member
+      HIndent.Ast.Declaration.Instance.Class.Members
       HIndent.Ast.Declaration.Instance.Class.OverlapMode
       HIndent.Ast.Declaration.Instance.Family.Data
       HIndent.Ast.Declaration.Instance.Family.Type
@@ -112,7 +113,6 @@ library
       HIndent.Ast.FileHeaderPragma.Collection
       HIndent.Ast.GhcOrdered.BindGroupElement
       HIndent.Ast.GhcOrdered.BindGroupElements
-      HIndent.Ast.GhcOrdered.ClassElement
       HIndent.Ast.GhcOrdered.InstanceMember
       HIndent.Ast.Guard
       HIndent.Ast.Import

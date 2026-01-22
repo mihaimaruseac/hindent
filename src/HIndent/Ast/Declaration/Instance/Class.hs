@@ -8,8 +8,8 @@ module HIndent.Ast.Declaration.Instance.Class
 
 import Control.Monad
 import HIndent.Applicative
+import HIndent.Ast.Declaration.Instance.Class.Members
 import HIndent.Ast.Declaration.Instance.Class.OverlapMode
-import HIndent.Ast.GhcOrdered.InstanceMember
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type (InstDeclType, mkInstDeclType)
 import HIndent.Ast.WithComments
@@ -44,12 +44,12 @@ instance Pretty ClassInstance where
       indentedBlock $ lined $ fmap pretty sigsAndMethods
     where
       sigsAndMethods =
-        fromGenLocated
-          <$> mkSortedInstanceMembers
-                cid_sigs
-                binds
-                cid_tyfam_insts
-                cid_datafam_insts
+        classInstanceMembers
+          $ mkClassInstanceMembers
+              cid_sigs
+              binds
+              cid_tyfam_insts
+              cid_datafam_insts
 
 mkClassInstance :: GHC.InstDecl GHC.GhcPs -> Maybe ClassInstance
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)

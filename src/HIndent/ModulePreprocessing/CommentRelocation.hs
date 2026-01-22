@@ -48,7 +48,11 @@ import Data.List (partition, sortBy)
 import Data.Maybe
 import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)
-import HIndent.Ast.GhcOrdered.ClassElement
+import HIndent.Ast.Declaration.Class.AssociatedThing (LClassAssociatedThing)
+import HIndent.Ast.Declaration.Class.AssociatedThings
+  ( destructClassAssociatedThings
+  , mkSortedClassAssociatedThings
+  )
 import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.GhcLibParserWrapper.GHC.Parser.Annotation
 import HIndent.Pragma
@@ -208,9 +212,9 @@ relocateCommentsInClass =
     annSetter
     cond
   where
-    elemGetter :: LHsDecl GhcPs -> [LClassElement]
+    elemGetter :: LHsDecl GhcPs -> [LClassAssociatedThing]
     elemGetter (L _ (TyClD _ ClassDecl {..})) =
-      mkSortedClassElements tcdSigs tcdMeths tcdATs tcdATDefs
+      mkSortedClassAssociatedThings tcdSigs tcdMeths tcdATs tcdATDefs
     elemGetter _ = []
     elemSetter xs (L sp (TyClD ext ClassDecl {..})) = L sp (TyClD ext newDecl)
       where
@@ -222,7 +226,8 @@ relocateCommentsInClass =
             , tcdATDefs = tyFamDeflts
             , ..
             }
-        (sigs, binds, typeFamilies, tyFamDeflts) = destructClassElements xs
+        (sigs, binds, typeFamilies, tyFamDeflts) =
+          destructClassAssociatedThings xs
     elemSetter _ x = x
     annGetter (L ann _) = ann
     annSetter newAnn (L _ x) = L newAnn x
@@ -412,9 +417,13 @@ relocateCommentsInClass =
     annSetter
     cond
   where
-    elemGetter :: LHsDecl GhcPs -> [LClassElement]
+    elemGetter :: LHsDecl GhcPs -> [LClassAssociatedThing]
     elemGetter (L _ (TyClD _ ClassDecl {..})) =
-      mkSortedClassElements tcdSigs (bagToList tcdMeths) tcdATs tcdATDefs
+      mkSortedClassAssociatedThings
+        tcdSigs
+        (bagToList tcdMeths)
+        tcdATs
+        tcdATDefs
     elemGetter _ = []
     elemSetter xs (L sp (TyClD ext ClassDecl {..})) = L sp (TyClD ext newDecl)
       where
@@ -426,7 +435,8 @@ relocateCommentsInClass =
             , tcdATDefs = tyFamDeflts
             , ..
             }
-        (sigs, binds, typeFamilies, tyFamDeflts) = destructClassElements xs
+        (sigs, binds, typeFamilies, tyFamDeflts) =
+          destructClassAssociatedThings xs
     elemSetter _ x = x
     annGetter (L ann _) = ann
     annSetter newAnn (L _ x) = L newAnn x
@@ -615,9 +625,13 @@ relocateCommentsInClass =
     annSetter
     cond
   where
-    elemGetter :: LHsDecl GhcPs -> [LClassElement]
+    elemGetter :: LHsDecl GhcPs -> [LClassAssociatedThing]
     elemGetter (L _ (TyClD _ ClassDecl {..})) =
-      mkSortedClassElements tcdSigs (bagToList tcdMeths) tcdATs tcdATDefs
+      mkSortedClassAssociatedThings
+        tcdSigs
+        (bagToList tcdMeths)
+        tcdATs
+        tcdATDefs
     elemGetter _ = []
     elemSetter xs (L sp (TyClD ext ClassDecl {..})) = L sp (TyClD ext newDecl)
       where
@@ -629,7 +643,8 @@ relocateCommentsInClass =
             , tcdATDefs = tyFamDeflts
             , ..
             }
-        (sigs, binds, typeFamilies, tyFamDeflts) = destructClassElements xs
+        (sigs, binds, typeFamilies, tyFamDeflts) =
+          destructClassAssociatedThings xs
     elemSetter _ x = x
     annGetter (L SrcSpanAnn {..} _) = ann
     annSetter newAnn (L SrcSpanAnn {..} x) = L SrcSpanAnn {ann = newAnn, ..} x

@@ -39,7 +39,6 @@ instance Pretty
 instance Pretty BindGroupElement
 
 instance Pretty InstanceMember
-
 instance Pretty DataFamInstDecl'
 
 instance Pretty GHC.StringLiteral

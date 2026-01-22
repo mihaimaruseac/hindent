@@ -1,27 +1,19 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE PatternSynonyms #-}
-
 module HIndent.Ast.Declaration.Instance.Class.Member
   ( ClassInstanceMember
-  , mkClassInstanceMembers
+  , mkClassInstanceMember
   ) where
 
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Instance.Family.Type.Associated
 import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.GhcOrdered.InstanceMember
-  ( foldInstanceMember
-  , mkSortedInstanceMembers
+  ( InstanceMember
+  , foldInstanceMember
   )
 import HIndent.Ast.NodeComments
-import HIndent.Ast.WithComments
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import HIndent.Pretty (Pretty(..), pretty)
+import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.NodeComments
-import HIndent.Pretty.Types
-  ( DataFamInstDecl'(..)
-  , pattern DataFamInstDeclInsideClassInst
-  )
+import HIndent.Pretty.Types (DataFamInstDecl'(..), DataFamInstDeclFor(..))
 
 data ClassInstanceMember
   = Signature Signature
@@ -41,20 +33,10 @@ instance Pretty ClassInstanceMember where
   pretty' (TypeFamily assoc) = pretty assoc
   pretty' (DataFamily inst) = pretty inst
 
-mkClassInstanceMembers ::
-     [GHC.LSig GHC.GhcPs]
-  -> [GHC.LHsBindLR GHC.GhcPs GHC.GhcPs]
-  -> [GHC.LTyFamInstDecl GHC.GhcPs]
-  -> [GHC.LDataFamInstDecl GHC.GhcPs]
-  -> [WithComments ClassInstanceMember]
-mkClassInstanceMembers sigs binds tyInsts dataInsts =
-  fmap
-    (fromGenLocated . fmap convert)
-    (mkSortedInstanceMembers sigs binds tyInsts dataInsts)
-  where
-    convert =
-      foldInstanceMember
-        (Signature . mkSignature)
-        (Method . mkBind)
-        (TypeFamily . mkAssociatedType)
-        (DataFamily . DataFamInstDeclInsideClassInst)
+mkClassInstanceMember :: InstanceMember -> ClassInstanceMember
+mkClassInstanceMember =
+  foldInstanceMember
+    (Signature . mkSignature)
+    (Method . mkBind)
+    (TypeFamily . mkAssociatedType)
+    (DataFamily . DataFamInstDecl' DataFamInstDeclForInsideClassInst)
