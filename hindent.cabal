@@ -1,6 +1,6 @@
 cabal-version: 2.0
 
--- This file has been generated from package.yaml by hpack version 0.38.1.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -47,6 +47,7 @@ library
       HIndent.Ast.Declaration.Bind
       HIndent.Ast.Declaration.Bind.GuardedRhs
       HIndent.Ast.Declaration.Class
+      HIndent.Ast.Declaration.Class.AssociatedThings
       HIndent.Ast.Declaration.Class.FunctionalDependency
       HIndent.Ast.Declaration.Class.NameAndTypeVariables
       HIndent.Ast.Declaration.Collection
@@ -71,6 +72,8 @@ library
       HIndent.Ast.Declaration.Foreign.CallingConvention
       HIndent.Ast.Declaration.Foreign.Safety
       HIndent.Ast.Declaration.Instance.Class
+      HIndent.Ast.Declaration.Instance.Class.Member
+      HIndent.Ast.Declaration.Instance.Class.Members
       HIndent.Ast.Declaration.Instance.Class.OverlapMode
       HIndent.Ast.Declaration.Instance.Family.Data
       HIndent.Ast.Declaration.Instance.Family.Type
@@ -107,6 +110,9 @@ library
       HIndent.Ast.Expression.Splice
       HIndent.Ast.FileHeaderPragma
       HIndent.Ast.FileHeaderPragma.Collection
+      HIndent.Ast.GhcOrdered.BindGroupElement
+      HIndent.Ast.GhcOrdered.BindGroupElements
+      HIndent.Ast.GhcOrdered.InstanceMember
       HIndent.Ast.Guard
       HIndent.Ast.Import
       HIndent.Ast.Import.Collection
@@ -114,6 +120,7 @@ library
       HIndent.Ast.Import.Entry.Collection
       HIndent.Ast.Import.ImportingOrHiding
       HIndent.Ast.LocalBinds
+      HIndent.Ast.LocalBinds.Declarations
       HIndent.Ast.LocalBinds.ImplicitBinding
       HIndent.Ast.LocalBinds.ImplicitBindings
       HIndent.Ast.Match
@@ -176,7 +183,6 @@ library
       HIndent.Pretty.Combinators.Switch
       HIndent.Pretty.Combinators.Wrap
       HIndent.Pretty.NodeComments
-      HIndent.Pretty.SigBindFamily
       HIndent.Pretty.Types
       HIndent.Printer
       Paths_hindent

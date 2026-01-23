@@ -8,6 +8,7 @@ module HIndent.Ast.Declaration.Instance.Class
 
 import Control.Monad
 import HIndent.Applicative
+import HIndent.Ast.Declaration.Instance.Class.Members
 import HIndent.Ast.Declaration.Instance.Class.OverlapMode
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type (InstDeclType, mkInstDeclType)
@@ -16,7 +17,6 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-import HIndent.Pretty.SigBindFamily
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified GHC.Data.Bag as GHC
 #endif
@@ -44,13 +44,12 @@ instance Pretty ClassInstance where
       indentedBlock $ lined $ fmap pretty sigsAndMethods
     where
       sigsAndMethods =
-        mkSortedLSigBindFamilyList
-          cid_sigs
-          binds
-          []
-          cid_tyfam_insts
-          []
-          cid_datafam_insts
+        classInstanceMembers
+          $ mkClassInstanceMembers
+              cid_sigs
+              binds
+              cid_tyfam_insts
+              cid_datafam_insts
 
 mkClassInstance :: GHC.InstDecl GHC.GhcPs -> Maybe ClassInstance
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
