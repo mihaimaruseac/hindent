@@ -48,9 +48,9 @@ import Data.List (partition, sortBy)
 import Data.Maybe
 import GHC.Types.SrcLoc
 import Generics.SYB hiding (GT, typeOf, typeRep)
-import HIndent.Ast.Declaration.Class.AssociatedThing (LClassAssociatedThing)
 import HIndent.Ast.Declaration.Class.AssociatedThings
-  ( destructClassAssociatedThings
+  ( LClassAssociatedThing
+  , destructClassAssociatedThings
   , mkSortedClassAssociatedThings
   )
 import HIndent.GhcLibParserWrapper.GHC.Hs

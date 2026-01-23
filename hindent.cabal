@@ -1,6 +1,6 @@
 cabal-version: 2.0
 
--- This file has been generated from package.yaml by hpack version 0.38.1.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -47,7 +47,6 @@ library
       HIndent.Ast.Declaration.Bind
       HIndent.Ast.Declaration.Bind.GuardedRhs
       HIndent.Ast.Declaration.Class
-      HIndent.Ast.Declaration.Class.AssociatedThing
       HIndent.Ast.Declaration.Class.AssociatedThings
       HIndent.Ast.Declaration.Class.FunctionalDependency
       HIndent.Ast.Declaration.Class.NameAndTypeVariables
