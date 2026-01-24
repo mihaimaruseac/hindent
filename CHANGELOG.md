@@ -4,7 +4,7 @@
 
 ### Added
 
-- Support for GHC 9.14
+- Support for GHC 9.14 ([#1163])
 - Support for GHC 9.12 ([#1000])
 - Support for GHC2024 ([#1040])
 - Support for linear types ([#1077])
