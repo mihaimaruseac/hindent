@@ -453,6 +453,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [#728]: https://github.com/mihaimaruseac/hindent/pull/728
 [#727]: https://github.com/mihaimaruseac/hindent/pull/727
 [#720]: https://github.com/mihaimaruseac/hindent/pull/720
+[#1163]: https://github.com/mihaimaruseac/hindent/pull/1163
 [#715]: https://github.com/mihaimaruseac/hindent/pull/715
 [#712]: https://github.com/mihaimaruseac/hindent/pull/712
 [#709]: https://github.com/mihaimaruseac/hindent/pull/709
