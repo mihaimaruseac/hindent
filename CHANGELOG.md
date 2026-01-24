@@ -4,6 +4,16 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+## [6.3.0] - 2026-01-24
+
+### Added
+
 - Support for GHC 9.12 ([#1000])
 - Support for GHC2024 ([#1040])
 - Support for linear types ([#1077])
@@ -24,8 +34,6 @@
 - Keep `where` clauses that contain implicit parameter bindings ([#1121])
 - Keep `as Foo` module aliases also with unqualified modules ([#1140])
 - Preserve default associated type families in classes instead of dropping them ([#1143])
-
-### Removed
 
 ## [6.2.1] - 2024-11-28
 
@@ -384,7 +392,8 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 
 - A bug in printing operators in statements.
 
-[unreleased]: https://github.com/mihaimaruseac/hindent/compare/v6.2.1...HEAD
+[unreleased]: https://github.com/mihaimaruseac/hindent/compare/v6.3.0...HEAD
+[6.3.0]: https://github.com/mihaimaruseac/hindent/compare/v6.2.1...v6.3.0
 [6.2.1]: https://github.com/mihaimaruseac/hindent/compare/v6.2.0...v6.2.1
 [6.2.0]: https://github.com/mihaimaruseac/hindent/compare/v6.1.0...v6.2.0
 [6.1.0]: https://github.com/mihaimaruseac/hindent/compare/v6.0.0...v6.1.0

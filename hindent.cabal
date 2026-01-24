@@ -5,7 +5,7 @@ cabal-version: 2.0
 -- see: https://github.com/sol/hpack
 
 name:           hindent
-version:        6.2.1
+version:        6.3.0
 synopsis:       Extensible Haskell pretty printer
 description:    Extensible Haskell pretty printer. Both a library and an executable.
                 See the GitHub page for usage \/ explanation: <https://github.com/mihaimaruseac/hindent>
