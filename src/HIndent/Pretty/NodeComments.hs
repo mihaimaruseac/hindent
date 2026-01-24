@@ -11,6 +11,7 @@ import Data.Maybe
 import Data.Void
 import GHC.Data.BooleanFormula
 import GHC.Hs
+import GHC.Parser.Annotation
 import GHC.Types.Basic
 import GHC.Types.Fixity
 import GHC.Types.ForeignCall
@@ -31,6 +32,22 @@ import GHC.Stack
 -- | An interface to extract comments from an AST node.
 class CommentExtraction a where
   nodeComments :: a -> NodeComments
+
+instance CommentExtraction NoExtField where
+  nodeComments _ = emptyNodeComments
+
+instance CommentExtraction SourceText where
+  nodeComments _ = emptyNodeComments
+
+instance (CommentExtraction a, CommentExtraction b) => CommentExtraction (a, b) where
+  nodeComments (a, b) = nodeComments a <> nodeComments b
+
+instance (CommentExtraction a, CommentExtraction b, CommentExtraction c) =>
+         CommentExtraction (a, b, c) where
+  nodeComments (a, b, c) = nodeComments a <> nodeComments b <> nodeComments c
+
+instance CommentExtraction a => CommentExtraction (Maybe a) where
+  nodeComments = maybe emptyNodeComments nodeComments
 
 instance CommentExtraction l => CommentExtraction (GenLocated l e) where
   nodeComments (L l _) = nodeComments l
@@ -92,7 +109,13 @@ instance CommentExtraction EpaComment where
 instance CommentExtraction SrcSpan where
   nodeComments RealSrcSpan {} = emptyNodeComments
   nodeComments UnhelpfulSpan {} = emptyNodeComments
-
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+-- HsConDeclH98Details
+instance CommentExtraction (HsConDetails a b) where
+  nodeComments PrefixCon {} = emptyNodeComments
+  nodeComments RecCon {} = emptyNodeComments
+  nodeComments InfixCon {} = emptyNodeComments
+#else
 -- HsConDeclH98Details
 instance CommentExtraction
            (HsConDetails
@@ -107,7 +130,7 @@ instance CommentExtraction
 
 instance CommentExtraction (HsScaled GhcPs a) where
   nodeComments HsScaled {} = emptyNodeComments
-
+#endif
 instance CommentExtraction (BooleanFormula a) where
   nodeComments Var {} = emptyNodeComments
   nodeComments And {} = emptyNodeComments
@@ -192,8 +215,10 @@ instance CommentExtraction (HsLit GhcPs) where
   nodeComments HsWordPrim {} = emptyNodeComments
   nodeComments HsInt64Prim {} = emptyNodeComments
   nodeComments HsWord64Prim {} = emptyNodeComments
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
   nodeComments HsInteger {} = emptyNodeComments
   nodeComments HsRat {} = emptyNodeComments
+#endif
   nodeComments HsFloatPrim {} = emptyNodeComments
   nodeComments HsDoublePrim {} = emptyNodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 8, 0)
@@ -358,6 +383,7 @@ nodeCommentsAnnExplicitSum AnnExplicitSum {..} =
     $ fmap nodeComments
     $ aesOpen : aesBarsBefore <> aesBarsAfter <> [aesClose]
 #endif
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
 instance CommentExtraction EpAnnUnboundVar where
   nodeComments = nodeCommentsEpAnnUnboundVar
 
@@ -371,6 +397,7 @@ nodeCommentsEpAnnUnboundVar EpAnnUnboundVar {..} =
     $ fmap
         nodeComments
         [fst hsUnboundBackquotes, snd hsUnboundBackquotes, hsUnboundHole]
+#endif
 #endif
 instance CommentExtraction AnnSig where
   nodeComments = nodeCommentsAnnSig
@@ -521,7 +548,9 @@ nodeCommentsHsExpr HsApp {} = emptyNodeComments
 nodeCommentsHsExpr HsLit {} = emptyNodeComments
 nodeCommentsHsExpr HsOverLit {} = emptyNodeComments
 nodeCommentsHsExpr HsIPVar {} = emptyNodeComments
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
 nodeCommentsHsExpr (HsUnboundVar x _) = fromMaybe mempty $ fmap nodeComments x
+#endif
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 nodeCommentsHsExpr (HsStatic x _) = nodeComments x
 nodeCommentsHsExpr (HsProc (a, b) _ _) =
@@ -615,6 +644,13 @@ nodeCommentsStmtLR TransStmt {..} = mconcat $ fmap nodeComments trS_ext
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 nodeCommentsStmtLR ApplicativeStmt {} = emptyNodeComments
 #endif
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+instance CommentExtraction (HsConDeclField GhcPs) where
+  nodeComments = nodeCommentsHsConDeclField
+
+nodeCommentsHsConDeclField :: HsConDeclField GhcPs -> NodeComments
+nodeCommentsHsConDeclField CDF {..} = nodeComments cdf_ext
+#else
 instance CommentExtraction (ConDeclField GhcPs) where
   nodeComments = nodeCommentsConDeclField
 
@@ -624,6 +660,7 @@ nodeCommentsConDeclField ConDeclField {..} = nodeComments cd_fld_ext
 #else
 nodeCommentsConDeclField ConDeclField {..} =
   mconcat $ fmap nodeComments cd_fld_ext
+#endif
 #endif
 instance CommentExtraction (HsDerivingClause GhcPs) where
   nodeComments = nodeCommentsHsDerivingClause

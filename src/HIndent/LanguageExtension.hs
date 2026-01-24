@@ -26,12 +26,20 @@ import qualified GHC.LanguageExtensions.Type as GLP
 -- (e.g., GHC2021) enables.
 implicitExtensions :: GLP.Language -> [Extension]
 implicitExtensions = fmap EnableExtension . GLP.languageExtensions . Just
-
 -- | This function returns a list of extensions that the passed extension
 -- enables and disables.
 --
 -- For example, @GADTs@ enables @GADTSyntax@ and @RebindableSyntax@
 -- disables @ImplicitPrelude@.
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+extensionImplies :: Extension -> [Extension]
+extensionImplies (EnableExtension e) =
+  toExtension <$> filter (\(a, _) -> e == a) GLP.impliedXFlags
+  where
+    toExtension (_, GLP.On e') = EnableExtension e'
+    toExtension (_, GLP.Off e') = DisableExtension e'
+extensionImplies _ = []
+#else
 extensionImplies :: Extension -> [Extension]
 extensionImplies (EnableExtension e) =
   toExtension <$> filter (\(a, _, _) -> e == a) GLP.impliedXFlags
@@ -39,7 +47,7 @@ extensionImplies (EnableExtension e) =
     toExtension (_, True, e') = EnableExtension e'
     toExtension (_, False, e') = DisableExtension e'
 extensionImplies _ = []
-
+#endif
 -- | Collect pragmas specified in the source code.
 collectLanguageExtensionsFromSource :: String -> [Extension]
 collectLanguageExtensionsFromSource =

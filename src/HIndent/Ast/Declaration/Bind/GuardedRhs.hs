@@ -12,6 +12,7 @@ module HIndent.Ast.Declaration.Bind.GuardedRhs
   , mkLambdaCmdGuardedRhs
   ) where
 
+import Data.Foldable (toList)
 import HIndent.Applicative (whenJust)
 import HIndent.Ast.Guard
   ( Guard
@@ -49,21 +50,22 @@ instance Pretty GuardedRhs where
 mkGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
-    { guards = map (fmap mkExprGuard . fromGenLocated) grhssGRHSs
+    { guards = fmap (fmap mkExprGuard . fromGenLocated) (toList grhssGRHSs)
     , localBinds = mkLocalBinds grhssLocalBinds
     }
 
 mkCaseGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkCaseGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
-    { guards = map (fmap mkCaseExprGuard . fromGenLocated) grhssGRHSs
+    { guards = fmap (fmap mkCaseExprGuard . fromGenLocated) (toList grhssGRHSs)
     , localBinds = mkLocalBinds grhssLocalBinds
     }
 
 mkLambdaGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkLambdaGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
-    { guards = map (fmap mkLambdaExprGuard . fromGenLocated) grhssGRHSs
+    { guards =
+        fmap (fmap mkLambdaExprGuard . fromGenLocated) (toList grhssGRHSs)
     , localBinds = mkLocalBinds grhssLocalBinds
     }
 
@@ -71,14 +73,15 @@ mkMultiWayIfGuardedRhs ::
      GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkMultiWayIfGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
-    { guards = map (fmap mkMultiWayIfExprGuard . fromGenLocated) grhssGRHSs
+    { guards =
+        fmap (fmap mkMultiWayIfExprGuard . fromGenLocated) (toList grhssGRHSs)
     , localBinds = mkLocalBinds grhssLocalBinds
     }
 
 mkCaseCmdGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> GuardedRhs
 mkCaseCmdGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
-    { guards = map (fmap mkCaseCmdGuard . fromGenLocated) grhssGRHSs
+    { guards = fmap (fmap mkCaseCmdGuard . fromGenLocated) (toList grhssGRHSs)
     , localBinds = mkLocalBinds grhssLocalBinds
     }
 
@@ -86,6 +89,6 @@ mkLambdaCmdGuardedRhs ::
      GHC.GRHSs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> GuardedRhs
 mkLambdaCmdGuardedRhs GHC.GRHSs {..} =
   GuardedRhs
-    { guards = map (fmap mkLambdaCmdGuard . fromGenLocated) grhssGRHSs
+    { guards = fmap (fmap mkLambdaCmdGuard . fromGenLocated) (toList grhssGRHSs)
     , localBinds = mkLocalBinds grhssLocalBinds
     }

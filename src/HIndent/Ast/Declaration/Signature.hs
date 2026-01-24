@@ -18,6 +18,9 @@ import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type (DeclSigType, Type, mkDeclSigType, mkTypeFromHsSigType)
 import HIndent.Ast.WithComments
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+import qualified GHC.Types.SrcLoc as SrcLoc
+#endif
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -179,6 +182,21 @@ mkSignature (GHC.SpecSig _ n s _) = Specialise {..}
   where
     name = fromGenLocated $ fmap mkPrefixName n
     sigs = flattenComments . fmap mkTypeFromHsSigType . fromGenLocated <$> s
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkSignature (GHC.SpecSigE _ _ expr _) = Specialise {..}
+  where
+    (name, sigs) =
+      case SrcLoc.unLoc expr of
+        GHC.ExprWithTySig _ body sig ->
+          case SrcLoc.unLoc body of
+            GHC.HsVar _ n ->
+              ( fromGenLocated $ fmap mkPrefixName n
+              , [ flattenComments
+                    $ mkTypeFromHsSigType <$> fromGenLocated (GHC.hswc_body sig)
+                ])
+            _ -> error "Unexpected SPECIALISE target."
+        _ -> error "Unexpected SPECIALISE signature."
+#endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkSignature (GHC.SCCFunSig _ n _) = Scc name
   where

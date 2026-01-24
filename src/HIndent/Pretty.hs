@@ -187,12 +187,13 @@ instance Pretty SBF.SigBindFamily where
 
 instance Pretty GHC.EpaComment where
   pretty' GHC.EpaComment {..} = pretty $ mkComment ac_tok
-
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
 instance Pretty
            (GHC.HsScaled
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
   pretty' (GHC.HsScaled _ ty) = pretty $ fmap mkType ty
+#endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance Pretty GHC.StringLiteral where
   pretty' GHC.StringLiteral {sl_st = GHC.SourceText s} = string $ GHC.unpackFS s
@@ -416,8 +417,10 @@ prettyHsLit (GHC.HsIntPrim _ x) = string $ show x ++ "#"
 prettyHsLit GHC.HsWordPrim {} = notUsedInParsedStage
 prettyHsLit GHC.HsInt64Prim {} = notUsedInParsedStage
 prettyHsLit GHC.HsWord64Prim {} = notUsedInParsedStage
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
 prettyHsLit GHC.HsInteger {} = notUsedInParsedStage
 prettyHsLit GHC.HsRat {} = notUsedInParsedStage
+#endif
 prettyHsLit (GHC.HsFloatPrim _ x) = pretty x >> string "#"
 prettyHsLit GHC.HsDoublePrim {} = notUsedInParsedStage
 #if MIN_VERSION_ghc_lib_parser(9, 8, 1)

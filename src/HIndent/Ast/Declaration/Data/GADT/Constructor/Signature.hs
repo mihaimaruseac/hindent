@@ -81,7 +81,26 @@ mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.RecConGADT xs, ..} =
         }
 #endif
 mkConstructorSignature GHC.ConDeclH98 {} = Nothing
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+buildFunctionType ::
+     [GHC.HsConDeclField GHC.GhcPs]
+  -> GHC.LHsType GHC.GhcPs
+  -> WithComments Type
+buildFunctionType fields resultTy =
+  mkType <$> fromGenLocated (foldr mkFun resultTy fields)
 
+mkFun ::
+     GHC.HsConDeclField GHC.GhcPs
+  -> GHC.LHsType GHC.GhcPs
+  -> GHC.LHsType GHC.GhcPs
+mkFun field accTy =
+  GHC.noLocA
+    (GHC.HsFunTy
+       GHC.noExtField
+       (GHC.cdf_multiplicity field)
+       (GHC.cdf_type field)
+       accTy)
+#else
 buildFunctionType ::
      [GHC.HsScaled GHC.GhcPs (GHC.LHsType GHC.GhcPs)]
   -> GHC.LHsType GHC.GhcPs
@@ -102,4 +121,5 @@ mkFun (GHC.HsScaled mult paramTy) accTy =
 #else
 mkFun (GHC.HsScaled mult paramTy) accTy =
   GHC.noLocA (GHC.HsFunTy GHC.NoExtField mult paramTy accTy)
+#endif
 #endif

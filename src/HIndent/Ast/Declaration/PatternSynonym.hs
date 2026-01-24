@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.PatternSynonym
@@ -66,7 +67,23 @@ instance Pretty PatternSynonym where
     whenJust explicitMatches $ \matches -> do
       newline
       indentedBlock $ string "where " |=> pretty matches
-
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkParameters :: GHC.HsPatSynDetails GHC.GhcPs -> Parameters
+mkParameters (GHC.PrefixCon args) =
+  Prefix {args = map (fromGenLocated . fmap mkPrefixName) args}
+mkParameters (GHC.InfixCon l r) =
+  Infix
+    { leftArg = fromGenLocated $ fmap mkPrefixName l
+    , rightArg = fromGenLocated $ fmap mkPrefixName r
+    }
+mkParameters (GHC.RecCon fields) =
+  Record
+    { fields =
+        map
+          (mkWithComments . mkFieldNameFromFieldOcc . GHC.recordPatSynField)
+          fields
+    }
+#else
 mkParameters :: GHC.HsPatSynDetails GHC.GhcPs -> Parameters
 mkParameters (GHC.PrefixCon _ args) =
   Prefix {args = map (fromGenLocated . fmap mkPrefixName) args}
@@ -82,7 +99,7 @@ mkParameters (GHC.RecCon fields) =
           (mkWithComments . mkFieldNameFromFieldOcc . GHC.recordPatSynField)
           fields
     }
-
+#endif
 mkPatternSynonym :: GHC.PatSynBind GHC.GhcPs GHC.GhcPs -> PatternSynonym
 mkPatternSynonym GHC.PSB {..} = PatternSynonym {..}
   where

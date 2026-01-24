@@ -1,0 +1,3 @@
+packages: .
+allow-newer: *:base, aeson:time, aeson:template-haskell, uuid-types:template-haskell
+constraints: yaml >=0.11.11.2, aeson >=2.2.3.0
