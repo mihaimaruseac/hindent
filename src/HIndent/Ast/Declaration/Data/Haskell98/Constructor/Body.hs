@@ -6,6 +6,7 @@ module HIndent.Ast.Declaration.Data.Haskell98.Constructor.Body
   , isRecord
   ) where
 
+import HIndent.Ast.Declaration.Data.Constructor.Field
 import HIndent.Ast.Declaration.Data.Record.Field
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
@@ -19,12 +20,12 @@ import HIndent.Pretty.NodeComments
 data Haskell98ConstructorBody
   = Infix
       { iName :: WithComments InfixName -- Using `name` in all constructors causes a type clash
-      , left :: GHC.HsScaled GHC.GhcPs (GHC.LBangType GHC.GhcPs)
-      , right :: GHC.HsScaled GHC.GhcPs (GHC.LBangType GHC.GhcPs)
+      , left :: ConstructorField
+      , right :: ConstructorField
       }
   | Prefix
       { pName :: WithComments PrefixName
-      , types :: [GHC.HsScaled GHC.GhcPs (GHC.LBangType GHC.GhcPs)]
+      , types :: [ConstructorField]
       }
   | Record
       { rName :: WithComments PrefixName
@@ -49,15 +50,19 @@ instance Pretty Haskell98ConstructorBody where
 
 mkHaskell98ConstructorBody ::
      GHC.ConDecl GHC.GhcPs -> Maybe Haskell98ConstructorBody
-mkHaskell98ConstructorBody GHC.ConDeclH98 { con_args = GHC.InfixCon left right
+mkHaskell98ConstructorBody GHC.ConDeclH98 { con_args = GHC.InfixCon leftField rightField
                                           , ..
                                           } = Just Infix {..}
   where
     iName = fromGenLocated $ fmap mkInfixName con_name
-mkHaskell98ConstructorBody GHC.ConDeclH98 {con_args = GHC.PrefixCon _ types, ..} =
-  Just Prefix {..}
+    left = mkConstructorField leftField
+    right = mkConstructorField rightField
+mkHaskell98ConstructorBody GHC.ConDeclH98 { con_args = GHC.PrefixCon _ rawTypes
+                                          , ..
+                                          } = Just Prefix {..}
   where
     pName = fromGenLocated $ fmap mkPrefixName con_name
+    types = fmap mkConstructorField rawTypes
 mkHaskell98ConstructorBody GHC.ConDeclH98 {con_args = GHC.RecCon rs, ..} =
   Just Record {..}
   where

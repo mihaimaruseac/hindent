@@ -52,6 +52,7 @@ library
       HIndent.Ast.Declaration.Collection
       HIndent.Ast.Declaration.Data
       HIndent.Ast.Declaration.Data.Body
+      HIndent.Ast.Declaration.Data.Constructor.Field
       HIndent.Ast.Declaration.Data.Deriving
       HIndent.Ast.Declaration.Data.Deriving.Clause
       HIndent.Ast.Declaration.Data.Deriving.Strategy
