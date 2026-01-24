@@ -417,6 +417,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#1163]: https://github.com/mihaimaruseac/hindent/pull/1163
 [#1140]: https://github.com/mihaimaruseac/hindent/pull/1140
 [#1121]: https://github.com/mihaimaruseac/hindent/pull/1121
 [#1096]: https://github.com/mihaimaruseac/hindent/pull/1096
@@ -453,7 +454,6 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [#728]: https://github.com/mihaimaruseac/hindent/pull/728
 [#727]: https://github.com/mihaimaruseac/hindent/pull/727
 [#720]: https://github.com/mihaimaruseac/hindent/pull/720
-[#1163]: https://github.com/mihaimaruseac/hindent/pull/1163
 [#715]: https://github.com/mihaimaruseac/hindent/pull/715
 [#712]: https://github.com/mihaimaruseac/hindent/pull/712
 [#709]: https://github.com/mihaimaruseac/hindent/pull/709
