@@ -68,38 +68,6 @@ instance Pretty PatternSynonym where
       newline
       indentedBlock $ string "where " |=> pretty matches
 
-mkParameters :: GHC.HsPatSynDetails GHC.GhcPs -> Parameters
-#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-mkParameters (GHC.PrefixCon args) =
-  Prefix {args = map (fromGenLocated . fmap mkPrefixName) args}
-mkParameters (GHC.InfixCon l r) =
-  Infix
-    { leftArg = fromGenLocated $ fmap mkPrefixName l
-    , rightArg = fromGenLocated $ fmap mkPrefixName r
-    }
-mkParameters (GHC.RecCon fields) =
-  Record
-    { fields =
-        map
-          (mkWithComments . mkFieldNameFromFieldOcc . GHC.recordPatSynField)
-          fields
-    }
-#else
-mkParameters (GHC.PrefixCon _ args) =
-  Prefix {args = map (fromGenLocated . fmap mkPrefixName) args}
-mkParameters (GHC.InfixCon l r) =
-  Infix
-    { leftArg = fromGenLocated $ fmap mkPrefixName l
-    , rightArg = fromGenLocated $ fmap mkPrefixName r
-    }
-mkParameters (GHC.RecCon fields) =
-  Record
-    { fields =
-        map
-          (mkWithComments . mkFieldNameFromFieldOcc . GHC.recordPatSynField)
-          fields
-    }
-#endif
 mkPatternSynonym :: GHC.PatSynBind GHC.GhcPs GHC.GhcPs -> PatternSynonym
 mkPatternSynonym GHC.PSB {..} = PatternSynonym {..}
   where
@@ -112,3 +80,30 @@ mkPatternSynonym GHC.PSB {..} = PatternSynonym {..}
         GHC.ExplicitBidirectional matches ->
           (False, Just $ mkExprMatchGroup matches)
     definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
+
+mkParameters :: GHC.HsPatSynDetails GHC.GhcPs -> Parameters
+mkParameters details =
+  case details of
+    GHC.InfixCon l r ->
+      Infix
+        { leftArg = fromGenLocated $ fmap mkPrefixName l
+        , rightArg = fromGenLocated $ fmap mkPrefixName r
+        }
+    GHC.RecCon fields ->
+      Record
+        { fields =
+            map
+              (mkWithComments . mkFieldNameFromFieldOcc . GHC.recordPatSynField)
+              fields
+        }
+    _ ->
+      Prefix
+        {args = map (fromGenLocated . fmap mkPrefixName) (prefixArgs details)}
+
+prefixArgs :: GHC.HsPatSynDetails GHC.GhcPs -> [GHC.LIdP GHC.GhcPs]
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+prefixArgs (GHC.PrefixCon args) = args
+#else
+prefixArgs (GHC.PrefixCon _ args) = args
+#endif
+prefixArgs _ = error "mkParameters: expected PrefixCon"
