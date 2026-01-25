@@ -18,7 +18,9 @@ module HIndent.Ast.Type
   ) where
 
 import Control.Monad.RWS (gets)
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 import qualified GHC.Types.SourceText as SourceText
+#endif
 import HIndent.Ast.Declaration.Data.Record.Field
 import HIndent.Ast.Expression.Splice
 import HIndent.Ast.Name.Infix

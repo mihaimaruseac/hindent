@@ -100,9 +100,6 @@ mkExprStatement GHC.RecStmt {..} =
 mkExprStatement GHC.ApplicativeStmt {} =
   error "`ghc-lib-parser` never generates this AST node."
 #endif
-mkExprStatement GHC.XStmtLR {} =
-  error "`ghc-lib-parser` never generates this AST node."
-
 mkCmdStatement ::
      GHC.StmtLR GHC.GhcPs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> CmdStatement
 mkCmdStatement (GHC.LastStmt _ cmd _ _) =
@@ -130,5 +127,3 @@ mkCmdStatement GHC.RecStmt {} =
 mkCmdStatement GHC.ApplicativeStmt {} =
   error "`ghc-lib-parser` never generates this AST node."
 #endif
-mkCmdStatement GHC.XStmtLR {} =
-  error "`ghc-lib-parser` never generates this AST node."

@@ -27,8 +27,10 @@ import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.Fixity as GHC
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 import qualified GHC.Types.Name.Occurrence as NameOccurrence
-#endif
 import qualified GHC.Types.Name.Reader as NameReader
+#elif !MIN_VERSION_ghc_lib_parser(9, 6, 0)
+import qualified GHC.Types.Name.Reader as NameReader
+#endif
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Cmd (Cmd, CmdDoBlock, mkCmdDoBlock, mkCmdFromHsCmdTop)
 import HIndent.Ast.Expression.Bracket (Bracket, mkBracket)
@@ -624,8 +626,6 @@ mkExpression GHC.HsFunArr {} =
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkExpression (GHC.HsTypedSplice _ (GHC.HsTypedSpliceExpr _ expr)) =
   Splice $ mkTypedSplice expr
-mkExpression (GHC.HsTypedSplice _ GHC.XTypedSplice {}) =
-  error "`ghc-lib-parser` never generates this AST node."
 mkExpression (GHC.HsUntypedSplice _ splice) = Splice $ mkSplice splice
 #elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
 mkExpression (GHC.HsTypedSplice _ expr) = Splice $ mkTypedSplice expr

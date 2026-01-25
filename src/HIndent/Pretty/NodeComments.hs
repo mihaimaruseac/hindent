@@ -6,12 +6,15 @@ module HIndent.Pretty.NodeComments
   ( CommentExtraction(..)
   , emptyNodeComments
   ) where
-
-import Data.Maybe
-import Data.Void
+#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
+import Data.Maybe (maybeToList)
+#endif
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
+import Data.Void (Void)
+#endif
 import GHC.Data.BooleanFormula
 import GHC.Hs
-import GHC.Parser.Annotation
+import GHC.Parser.Annotation ()
 import GHC.Types.Basic
 import GHC.Types.Fixity
 import GHC.Types.ForeignCall
@@ -443,6 +446,9 @@ nodeCommentsSig (FixSig ((a, b), _) _) =
 nodeCommentsSig (InlineSig (a, b, c) _ _) =
   mconcat [nodeComments a, nodeComments b, nodeComments c]
 nodeCommentsSig (SpecSig x _ _ _) = nodeComments x
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+nodeCommentsSig (SpecSigE x _ _ _) = nodeComments x
+#endif
 nodeCommentsSig (SpecInstSig ((a, b, c), _) _) =
   mconcat [nodeComments a, nodeComments b, nodeComments c]
 nodeCommentsSig (MinimalSig ((a, b), _) _) =
@@ -550,7 +556,10 @@ nodeCommentsHsExpr HsLit {} = emptyNodeComments
 nodeCommentsHsExpr HsOverLit {} = emptyNodeComments
 nodeCommentsHsExpr HsIPVar {} = emptyNodeComments
 #if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
-nodeCommentsHsExpr (HsUnboundVar x _) = fromMaybe mempty $ fmap nodeComments x
+nodeCommentsHsExpr (HsUnboundVar x _) = maybe mempty nodeComments x
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+nodeCommentsHsExpr HsHole {} = emptyNodeComments
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 nodeCommentsHsExpr (HsStatic x _) = nodeComments x
