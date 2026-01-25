@@ -15,15 +15,6 @@
 ## [6.3.0] - 2026-01-24
 
 ### Added
-### Changed
-
-### Fixed
-
-### Removed
-
-## [6.3.0] - 2026-01-24
-
-### Added
 
 - Support for GHC 9.12 ([#1000])
 - Support for GHC2024 ([#1040])
