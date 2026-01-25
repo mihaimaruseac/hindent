@@ -17,6 +17,7 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
+
 data Haskell98ConstructorBody
   = Infix
       { iName :: WithComments InfixName -- Using `name` in all constructors causes a type clash
@@ -38,8 +39,7 @@ instance CommentExtraction Haskell98ConstructorBody where
   nodeComments Record {} = NodeComments [] [] []
 
 instance Pretty Haskell98ConstructorBody where
-  pretty' Infix {..} =
-    spaced [pretty left, pretty iName, pretty right]
+  pretty' Infix {..} = spaced [pretty left, pretty iName, pretty right]
   pretty' Prefix {..} = pretty pName >> hor <-|> ver
     where
       hor = spacePrefixed $ fmap pretty types
