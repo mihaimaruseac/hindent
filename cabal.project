@@ -1,5 +1,5 @@
 packages: .
-# NOTE: GHC 9.14.1 uses template-haskell 2.24; uuid-types upper bound
-# blocks the solver. Related issue: https://github.com/haskell-hvr/uuid/issues/95
+-- NOTE: GHC 9.14.1 uses template-haskell 2.24; uuid-types upper bound
+-- blocks the solver. Related issue: https://github.com/haskell-hvr/uuid/issues/95
 allow-newer: *:base, aeson:time, aeson:template-haskell, uuid-types:template-haskell
 constraints: yaml >=0.11.11.2, aeson >=2.2.3.0
