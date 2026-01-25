@@ -208,7 +208,7 @@ relocateCommentsInClass =
   where
     elemGetter :: LHsDecl GhcPs -> [LSigBindFamily]
     elemGetter (L _ (TyClD _ ClassDecl {..})) =
-      mkSortedLSigBindFamilyList tcdSigs tcdMeths tcdATs tcdATDefs []
+      mkSortedLSigBindFamilyList tcdSigs tcdMeths tcdATs [] tcdATDefs []
     elemGetter _ = []
     elemSetter xs (L sp (TyClD ext ClassDecl {..})) = L sp (TyClD ext newDecl)
       where
@@ -217,10 +217,10 @@ relocateCommentsInClass =
             { tcdSigs = sigs
             , tcdMeths = binds
             , tcdATs = typeFamilies
-            , tcdATDefs = tyFamInsts
+            , tcdATDefs = tyFamDeflts
             , ..
             }
-        (sigs, binds, typeFamilies, tyFamInsts, _) =
+        (sigs, binds, typeFamilies, _, tyFamDeflts, _) =
           destructLSigBindFamilyList xs
     elemSetter _ x = x
     annGetter (L ann _) = ann
@@ -307,7 +307,7 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       bindsSigs' <- mapM addCommentsBeforeEpAnn bindsSigs
       pure (filterLBind bindsSigs', filterLSig bindsSigs')
       where
-        bindsSigs = mkSortedLSigBindFamilyList sigs binds [] [] []
+        bindsSigs = mkSortedLSigBindFamilyList sigs binds [] [] [] []
     addCommentsBeforeEpAnn (L epa@EpAnn { entry = EpaSpan (RealSrcSpan anc _)
                                         , ..
                                         } x) = do
@@ -397,6 +397,7 @@ relocateCommentsInClass =
         tcdSigs
         (bagToList tcdMeths)
         tcdATs
+        []
         tcdATDefs
         []
     elemGetter _ = []
@@ -407,10 +408,10 @@ relocateCommentsInClass =
             { tcdSigs = sigs
             , tcdMeths = listToBag binds
             , tcdATs = typeFamilies
-            , tcdATDefs = tyFamInsts
+            , tcdATDefs = tyFamDeflts
             , ..
             }
-        (sigs, binds, typeFamilies, tyFamInsts, _) =
+        (sigs, binds, typeFamilies, _, tyFamDeflts, _) =
           destructLSigBindFamilyList xs
     elemSetter _ x = x
     annGetter (L ann _) = ann
@@ -497,7 +498,8 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       bindsSigs' <- mapM addCommentsBeforeEpAnn bindsSigs
       pure (listToBag $ filterLBind bindsSigs', filterLSig bindsSigs')
       where
-        bindsSigs = mkSortedLSigBindFamilyList sigs (bagToList binds) [] [] []
+        bindsSigs =
+          mkSortedLSigBindFamilyList sigs (bagToList binds) [] [] [] []
     addCommentsBeforeEpAnn (L epa@EpAnn {..} x)
       | EpaSpan (RealSrcSpan anc _) <- entry = do
         cs <- get
@@ -586,6 +588,7 @@ relocateCommentsInClass =
         tcdSigs
         (bagToList tcdMeths)
         tcdATs
+        []
         tcdATDefs
         []
     elemGetter _ = []
@@ -596,10 +599,10 @@ relocateCommentsInClass =
             { tcdSigs = sigs
             , tcdMeths = listToBag binds
             , tcdATs = typeFamilies
-            , tcdATDefs = tyFamInsts
+            , tcdATDefs = tyFamDeflts
             , ..
             }
-        (sigs, binds, typeFamilies, tyFamInsts, _) =
+        (sigs, binds, typeFamilies, _, tyFamDeflts, _) =
           destructLSigBindFamilyList xs
     elemSetter _ x = x
     annGetter (L SrcSpanAnn {..} _) = ann
@@ -687,7 +690,8 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       bindsSigs' <- mapM addCommentsBeforeEpAnn bindsSigs
       pure (listToBag $ filterLBind bindsSigs', filterLSig bindsSigs')
       where
-        bindsSigs = mkSortedLSigBindFamilyList sigs (bagToList binds) [] [] []
+        bindsSigs =
+          mkSortedLSigBindFamilyList sigs (bagToList binds) [] [] [] []
     addCommentsBeforeEpAnn (L (SrcSpanAnn epa@EpAnn {..} sp) x) = do
       cs <- get
       let (notAbove, above) =

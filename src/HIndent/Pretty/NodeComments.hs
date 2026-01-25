@@ -101,6 +101,7 @@ instance CommentExtraction SigBindFamily where
   nodeComments (Bind x) = nodeComments x
   nodeComments (Family x) = nodeComments x
   nodeComments (TyFamInst x) = nodeComments x
+  nodeComments (TyFamDeflt x) = nodeComments x
   nodeComments (DataFamInst x) = nodeComments x
 
 instance CommentExtraction EpaComment where
@@ -698,36 +699,6 @@ nodeCommentsHsTyVarBndr (KindedTyVar x _ _ _) = mconcat $ fmap nodeComments x
 nodeCommentsHsTyVarBndr (UserTyVar x _ _) = nodeComments x
 nodeCommentsHsTyVarBndr (KindedTyVar x _ _ _) = nodeComments x
 #endif
-instance CommentExtraction (IE GhcPs) where
-  nodeComments = nodeCommentsIE
-
-nodeCommentsIE :: IE GhcPs -> NodeComments
-nodeCommentsIE IEVar {} = emptyNodeComments
-nodeCommentsIE IEGroup {} = emptyNodeComments
-nodeCommentsIE IEDoc {} = emptyNodeComments
-nodeCommentsIE IEDocNamed {} = emptyNodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
-nodeCommentsIE (IEThingAbs _ x _) = nodeComments x
-nodeCommentsIE (IEThingAll _ x _) = nodeComments x
-nodeCommentsIE (IEThingWith _ x _ _ _) = nodeComments x
-#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-nodeCommentsIE (IEModuleContents (x, y) _) =
-  mconcat $ maybeToList (fmap nodeComments x) <> [nodeComments y]
-#else
-nodeCommentsIE (IEModuleContents (x, y) _) =
-  mconcat $ maybeToList (fmap nodeComments x) <> fmap nodeComments y
-#endif
-#elif MIN_VERSION_ghc_lib_parser(9, 8, 1)
-nodeCommentsIE (IEThingAbs (_, x) _) = nodeComments x
-nodeCommentsIE (IEThingAll (_, x) _) = nodeComments x
-nodeCommentsIE (IEThingWith (_, x) _ _ _) = nodeComments x
-nodeCommentsIE (IEModuleContents (_, x) _) = nodeComments x
-#else
-nodeCommentsIE (IEThingAbs x _) = nodeComments x
-nodeCommentsIE (IEThingAll x _) = nodeComments x
-nodeCommentsIE (IEThingWith x _ _ _) = nodeComments x
-nodeCommentsIE (IEModuleContents x _) = nodeComments x
-#endif
 instance CommentExtraction (FamEqn GhcPs a) where
   nodeComments = nodeCommentsFamEqn
 
@@ -903,15 +874,6 @@ nodeCommentsInlineSpec NoInline {} = emptyNodeComments
 nodeCommentsInlineSpec NoUserInlinePrag {} = emptyNodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 nodeCommentsInlineSpec Opaque {} = emptyNodeComments
-#endif
-instance CommentExtraction (HsPragE GhcPs) where
-  nodeComments = nodeCommentsHsPragE
-
-nodeCommentsHsPragE :: HsPragE GhcPs -> NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-nodeCommentsHsPragE (HsPragSCC (x, _) _) = nodeComments x
-#else
-nodeCommentsHsPragE (HsPragSCC x _ _) = nodeComments x
 #endif
 instance CommentExtraction (DerivStrategy GhcPs) where
   nodeComments = nodeCommentsDerivStrategy

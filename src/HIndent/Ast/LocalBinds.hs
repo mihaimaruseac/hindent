@@ -49,11 +49,11 @@ mkSigBindFamilies ::
      GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> [WithComments SBF.SigBindFamily]
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkSigBindFamilies (GHC.ValBinds _ binds sigs) =
-  fmap fromGenLocated $ SBF.mkSortedLSigBindFamilyList sigs binds [] [] []
+  fmap fromGenLocated $ SBF.mkSortedLSigBindFamilyList sigs binds [] [] [] []
 #else
 mkSigBindFamilies (GHC.ValBinds _ bindBag sigs) =
   fromGenLocated
-    <$> SBF.mkSortedLSigBindFamilyList sigs (GHC.bagToList bindBag) [] [] []
+    <$> SBF.mkSortedLSigBindFamilyList sigs (GHC.bagToList bindBag) [] [] [] []
 #endif
 mkSigBindFamilies GHC.XValBindsLR {} =
   error "`ghc-lib-parser` never generates this AST node."

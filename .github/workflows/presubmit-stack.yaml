@@ -24,19 +24,19 @@ jobs:
         resolver: [nightly]
     steps:
       - name: Checkout code
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
       - name: Setup Haskell Compiler (stack)
         id: setup-haskell
-        uses: haskell-actions/setup@82e8b5066385702e477d9dc98f287070493e8abd # v2.8.2
+        uses: haskell-actions/setup@f9150cb1d140e9a9271700670baa38991e6fa25c # v2.10.3
         with:
           enable-stack: true
           stack-no-global: true
 
       - name: Cache .stack-work
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: .stack-work
           key: stack-work-${{ matrix.os }}-${{ matrix.resolver }}-${{ hashFiles('stack.yaml', '**/*.cabal') }}-${{ hashFiles('internal/**','src/**','app/**','tests/**','benchmarks/**') }}
@@ -45,7 +45,7 @@ jobs:
             stack-work-${{ matrix.os }}-${{ matrix.resolver }}-
 
       - name: Cache ~/.stack
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: ${{ steps.setup-haskell.outputs.stack-root }}
           key: stack-root-${{ matrix.os }}-${{ matrix.resolver }}-${{ hashFiles('stack.yaml', '**/*.cabal') }}

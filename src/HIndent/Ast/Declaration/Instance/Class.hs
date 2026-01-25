@@ -49,6 +49,7 @@ instance Pretty ClassInstance where
           binds
           []
           cid_tyfam_insts
+          []
           cid_datafam_insts
 
 mkClassInstance :: GHC.InstDecl GHC.GhcPs -> Maybe ClassInstance

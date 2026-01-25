@@ -630,6 +630,15 @@ instance Foo a where
     FooBar a
 ```
 
+Default associated type family keeps its default
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/897
+class Foo a where
+  type Bar a
+  type instance Bar a = ()
+```
+
 #### With overlapping pragmas
 
 `OVERLAPPING`

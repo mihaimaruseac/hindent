@@ -1,11 +1,11 @@
 cabal-version: 2.0
 
--- This file has been generated from package.yaml by hpack version 0.38.1.
+-- This file has been generated from package.yaml by hpack version 0.39.1.
 --
 -- see: https://github.com/sol/hpack
 
 name:           hindent
-version:        6.2.1
+version:        6.3.0
 synopsis:       Extensible Haskell pretty printer
 description:    Extensible Haskell pretty printer. Both a library and an executable.
                 See the GitHub page for usage \/ explanation: <https://github.com/mihaimaruseac/hindent>
@@ -52,6 +52,7 @@ library
       HIndent.Ast.Declaration.Collection
       HIndent.Ast.Declaration.Data
       HIndent.Ast.Declaration.Data.Body
+      HIndent.Ast.Declaration.Data.Constructor.Field
       HIndent.Ast.Declaration.Data.Deriving
       HIndent.Ast.Declaration.Data.Deriving.Clause
       HIndent.Ast.Declaration.Data.Deriving.Strategy
@@ -75,6 +76,7 @@ library
       HIndent.Ast.Declaration.Instance.Family.Data
       HIndent.Ast.Declaration.Instance.Family.Type
       HIndent.Ast.Declaration.Instance.Family.Type.Associated
+      HIndent.Ast.Declaration.Instance.Family.Type.Associated.Default
       HIndent.Ast.Declaration.PatternSynonym
       HIndent.Ast.Declaration.Rule
       HIndent.Ast.Declaration.Rule.Binder
@@ -99,6 +101,7 @@ library
       HIndent.Ast.Expression.FieldSelector
       HIndent.Ast.Expression.ListComprehension
       HIndent.Ast.Expression.OverloadedLabel
+      HIndent.Ast.Expression.Pragmatic
       HIndent.Ast.Expression.RangeExpression
       HIndent.Ast.Expression.RecordConstructionField
       HIndent.Ast.Expression.RecordUpdateField
