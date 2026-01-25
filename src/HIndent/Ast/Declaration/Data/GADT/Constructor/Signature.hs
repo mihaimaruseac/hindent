@@ -88,7 +88,16 @@ buildFunctionType ::
   -> WithComments Type
 buildFunctionType fields resultTy =
   mkType <$> fromGenLocated (foldr mkFun resultTy fields)
+#else
+buildFunctionType ::
+     [GHC.HsScaled GHC.GhcPs (GHC.LHsType GHC.GhcPs)]
+  -> GHC.LHsType GHC.GhcPs
+  -> WithComments Type
+buildFunctionType scaledTypes resultTy =
+  mkType <$> fromGenLocated (foldr mkFun resultTy scaledTypes)
+#endif
 
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkFun ::
      GHC.HsConDeclField GHC.GhcPs
   -> GHC.LHsType GHC.GhcPs
@@ -101,13 +110,6 @@ mkFun field accTy =
        (GHC.cdf_type field)
        accTy)
 #else
-buildFunctionType ::
-     [GHC.HsScaled GHC.GhcPs (GHC.LHsType GHC.GhcPs)]
-  -> GHC.LHsType GHC.GhcPs
-  -> WithComments Type
-buildFunctionType scaledTypes resultTy =
-  mkType <$> fromGenLocated (foldr mkFun resultTy scaledTypes)
-
 mkFun ::
      GHC.HsScaled GHC.GhcPs (GHC.LHsType GHC.GhcPs)
   -> GHC.LHsType GHC.GhcPs
