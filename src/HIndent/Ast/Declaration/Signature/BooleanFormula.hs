@@ -5,7 +5,7 @@ module HIndent.Ast.Declaration.Signature.BooleanFormula
   , mkBooleanFormula
   ) where
 
-import qualified GHC.Data.BooleanFormula as BF
+import qualified GHC.Data.BooleanFormula as GHC
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
@@ -32,23 +32,23 @@ instance Pretty BooleanFormula where
   pretty' (Or xs) = hvBarSep $ fmap pretty xs
   pretty' (Parens x) = parens $ pretty x
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-mkBooleanFormula :: BF.BooleanFormula GHC.GhcPs -> BooleanFormula
-mkBooleanFormula (BF.Var x) = Var $ fromGenLocated $ fmap mkPrefixName x
-mkBooleanFormula (BF.And xs) = And $ fmap mkBooleanFormulaWithComments xs
-mkBooleanFormula (BF.Or xs) = Or $ fmap mkBooleanFormulaWithComments xs
-mkBooleanFormula (BF.Parens x) = Parens $ mkBooleanFormulaWithComments x
+mkBooleanFormula :: GHC.BooleanFormula GHC.GhcPs -> BooleanFormula
+mkBooleanFormula (GHC.Var x) = Var $ fromGenLocated $ fmap mkPrefixName x
+mkBooleanFormula (GHC.And xs) = And $ fmap mkBooleanFormulaWithComments xs
+mkBooleanFormula (GHC.Or xs) = Or $ fmap mkBooleanFormulaWithComments xs
+mkBooleanFormula (GHC.Parens x) = Parens $ mkBooleanFormulaWithComments x
 
 mkBooleanFormulaWithComments ::
-     BF.LBooleanFormula GHC.GhcPs -> WithComments BooleanFormula
+     GHC.LBooleanFormula GHC.GhcPs -> WithComments BooleanFormula
 mkBooleanFormulaWithComments = fmap mkBooleanFormula . fromGenLocated
 #else
-mkBooleanFormula :: BF.BooleanFormula (GHC.LIdP GHC.GhcPs) -> BooleanFormula
-mkBooleanFormula (BF.Var x) = Var $ fromGenLocated $ fmap mkPrefixName x
-mkBooleanFormula (BF.And xs) = And $ fmap mkBooleanFormulaWithComments xs
-mkBooleanFormula (BF.Or xs) = Or $ fmap mkBooleanFormulaWithComments xs
-mkBooleanFormula (BF.Parens x) = Parens $ mkBooleanFormulaWithComments x
+mkBooleanFormula :: GHC.BooleanFormula (GHC.LIdP GHC.GhcPs) -> BooleanFormula
+mkBooleanFormula (GHC.Var x) = Var $ fromGenLocated $ fmap mkPrefixName x
+mkBooleanFormula (GHC.And xs) = And $ fmap mkBooleanFormulaWithComments xs
+mkBooleanFormula (GHC.Or xs) = Or $ fmap mkBooleanFormulaWithComments xs
+mkBooleanFormula (GHC.Parens x) = Parens $ mkBooleanFormulaWithComments x
 
 mkBooleanFormulaWithComments ::
-     BF.LBooleanFormula (GHC.LIdP GHC.GhcPs) -> WithComments BooleanFormula
+     GHC.LBooleanFormula (GHC.LIdP GHC.GhcPs) -> WithComments BooleanFormula
 mkBooleanFormulaWithComments = fmap mkBooleanFormula . fromGenLocated
 #endif
