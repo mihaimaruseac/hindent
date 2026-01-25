@@ -214,7 +214,6 @@ mkCmd (GHC.HsCmdDo _ stmts) =
     { statements =
         fmap (fmap mkCmdStatement . fromGenLocated) <$> fromGenLocated stmts
     }
-mkCmd _ = error "`ghc-lib-parser` never generates this AST node."
 
 mkCmdFromHsCmdTop :: GHC.HsCmdTop GHC.GhcPs -> WithComments Cmd
 mkCmdFromHsCmdTop (GHC.HsCmdTop _ cmd) = mkCmd <$> fromGenLocated cmd
