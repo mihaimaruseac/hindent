@@ -82,28 +82,22 @@ mkPatternSynonym GHC.PSB {..} = PatternSynonym {..}
     definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
 
 mkParameters :: GHC.HsPatSynDetails GHC.GhcPs -> Parameters
-mkParameters details =
-  case details of
-    GHC.InfixCon l r ->
-      Infix
-        { leftArg = fromGenLocated $ fmap mkPrefixName l
-        , rightArg = fromGenLocated $ fmap mkPrefixName r
-        }
-    GHC.RecCon fields ->
-      Record
-        { fields =
-            map
-              (mkWithComments . mkFieldNameFromFieldOcc . GHC.recordPatSynField)
-              fields
-        }
-    _ ->
-      Prefix
-        {args = map (fromGenLocated . fmap mkPrefixName) (prefixArgs details)}
-
-prefixArgs :: GHC.HsPatSynDetails GHC.GhcPs -> [GHC.LIdP GHC.GhcPs]
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-prefixArgs (GHC.PrefixCon args) = args
+mkParameters (GHC.PrefixCon args) =
+  Prefix {args = map (fromGenLocated . fmap mkPrefixName) args}
 #else
-prefixArgs (GHC.PrefixCon _ args) = args
+mkParameters (GHC.PrefixCon _ args) =
+  Prefix {args = map (fromGenLocated . fmap mkPrefixName) args}
 #endif
-prefixArgs _ = error "mkParameters: expected PrefixCon"
+mkParameters (GHC.InfixCon l r) =
+  Infix
+    { leftArg = fromGenLocated $ fmap mkPrefixName l
+    , rightArg = fromGenLocated $ fmap mkPrefixName r
+    }
+mkParameters (GHC.RecCon fields) =
+  Record
+    { fields =
+        map
+          (mkWithComments . mkFieldNameFromFieldOcc . GHC.recordPatSynField)
+          fields
+    }
