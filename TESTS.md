@@ -241,6 +241,14 @@ Import with `ExplicitNamespaces`.
 import Prlude (type FilePath)
 ```
 
+Import a `data` namespace.
+
+```haskell since 9.14.0
+{-# LANGUAGE ExplicitNamespaces #-}
+
+import Foo (data Bar)
+```
+
 Import a pattern
 
 ```haskell

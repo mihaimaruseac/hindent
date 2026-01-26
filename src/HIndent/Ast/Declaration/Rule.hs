@@ -54,7 +54,6 @@ mkRuleBinders :: GHC.RuleDecl GHC.GhcPs -> [WithComments RuleBinder]
 mkRuleBinders GHC.HsRule {..} =
   case rd_bndrs of
     GHC.RuleBndrs {..} -> fmap (fmap mkRuleBinder . fromGenLocated) rb_tmvs
-    GHC.XRuleBndrs {} -> []
 #else
 mkRuleBinders GHC.HsRule {..} =
   fmap (fmap mkRuleBinder . fromGenLocated) rd_tmvs
