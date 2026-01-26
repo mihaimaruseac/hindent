@@ -68,19 +68,6 @@ instance Pretty PatternSynonym where
       newline
       indentedBlock $ string "where " |=> pretty matches
 
-mkPatternSynonym :: GHC.PatSynBind GHC.GhcPs GHC.GhcPs -> PatternSynonym
-mkPatternSynonym GHC.PSB {..} = PatternSynonym {..}
-  where
-    name = psb_id
-    parameters = mkWithComments $ mkParameters psb_args
-    (isImplicitBidirectional, explicitMatches) =
-      case psb_dir of
-        GHC.Unidirectional -> (False, Nothing)
-        GHC.ImplicitBidirectional -> (True, Nothing)
-        GHC.ExplicitBidirectional matches ->
-          (False, Just $ mkExprMatchGroup matches)
-    definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
-
 mkParameters :: GHC.HsPatSynDetails GHC.GhcPs -> Parameters
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkParameters (GHC.PrefixCon args) =
@@ -101,3 +88,16 @@ mkParameters (GHC.RecCon fields) =
           (mkWithComments . mkFieldNameFromFieldOcc . GHC.recordPatSynField)
           fields
     }
+
+mkPatternSynonym :: GHC.PatSynBind GHC.GhcPs GHC.GhcPs -> PatternSynonym
+mkPatternSynonym GHC.PSB {..} = PatternSynonym {..}
+  where
+    name = psb_id
+    parameters = mkWithComments $ mkParameters psb_args
+    (isImplicitBidirectional, explicitMatches) =
+      case psb_dir of
+        GHC.Unidirectional -> (False, Nothing)
+        GHC.ImplicitBidirectional -> (True, Nothing)
+        GHC.ExplicitBidirectional matches ->
+          (False, Just $ mkExprMatchGroup matches)
+    definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
