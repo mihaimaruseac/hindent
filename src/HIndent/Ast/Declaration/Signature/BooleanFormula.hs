@@ -34,21 +34,17 @@ instance Pretty BooleanFormula where
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkBooleanFormula :: GHC.BooleanFormula GHC.GhcPs -> BooleanFormula
 mkBooleanFormula (GHC.Var x) = Var $ fromGenLocated $ fmap mkPrefixName x
-mkBooleanFormula (GHC.And xs) = And $ fmap mkBooleanFormulaWithComments xs
-mkBooleanFormula (GHC.Or xs) = Or $ fmap mkBooleanFormulaWithComments xs
-mkBooleanFormula (GHC.Parens x) = Parens $ mkBooleanFormulaWithComments x
-
-mkBooleanFormulaWithComments ::
-     GHC.LBooleanFormula GHC.GhcPs -> WithComments BooleanFormula
-mkBooleanFormulaWithComments = fmap mkBooleanFormula . fromGenLocated
+mkBooleanFormula (GHC.And xs) =
+  And $ fmap (fmap mkBooleanFormula . fromGenLocated) xs
+mkBooleanFormula (GHC.Or xs) =
+  Or $ fmap (fmap mkBooleanFormula . fromGenLocated) xs
+mkBooleanFormula (GHC.Parens x) = Parens $ mkBooleanFormula <$> fromGenLocated x
 #else
 mkBooleanFormula :: GHC.BooleanFormula (GHC.LIdP GHC.GhcPs) -> BooleanFormula
 mkBooleanFormula (GHC.Var x) = Var $ fromGenLocated $ fmap mkPrefixName x
-mkBooleanFormula (GHC.And xs) = And $ fmap mkBooleanFormulaWithComments xs
-mkBooleanFormula (GHC.Or xs) = Or $ fmap mkBooleanFormulaWithComments xs
-mkBooleanFormula (GHC.Parens x) = Parens $ mkBooleanFormulaWithComments x
-
-mkBooleanFormulaWithComments ::
-     GHC.LBooleanFormula (GHC.LIdP GHC.GhcPs) -> WithComments BooleanFormula
-mkBooleanFormulaWithComments = fmap mkBooleanFormula . fromGenLocated
+mkBooleanFormula (GHC.And xs) =
+  And $ fmap (fmap mkBooleanFormula . fromGenLocated) xs
+mkBooleanFormula (GHC.Or xs) =
+  Or $ fmap (fmap mkBooleanFormula . fromGenLocated) xs
+mkBooleanFormula (GHC.Parens x) = Parens $ mkBooleanFormula <$> fromGenLocated x
 #endif
