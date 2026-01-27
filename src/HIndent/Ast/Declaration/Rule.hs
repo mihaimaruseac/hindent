@@ -51,8 +51,8 @@ mkRuleDeclaration rule@GHC.HsRule {..} = RuleDeclaration {..}
 
 mkRuleBinders :: GHC.RuleDecl GHC.GhcPs -> [WithComments RuleBinder]
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-mkRuleBinders GHC.HsRule {..} =
-  fmap (fmap mkRuleBinder . fromGenLocated) (GHC.rb_tmvs rd_bndrs)
+mkRuleBinders GHC.HsRule {rd_bndrs = GHC.RuleBndrs {..}} =
+  fmap (fmap mkRuleBinder . fromGenLocated) rb_tmvs
 #else
 mkRuleBinders GHC.HsRule {..} =
   fmap (fmap mkRuleBinder . fromGenLocated) rd_tmvs
