@@ -57,6 +57,7 @@ data Signature
   | Specialise
       { name :: WithComments PrefixName
       , sigs :: [WithComments Type]
+      , parentheses :: Bool
       }
   | SpecialiseInstance (WithComments Type)
   | Minimal (WithComments BooleanFormula)
@@ -129,13 +130,13 @@ instance Pretty Signature where
     pretty name
     string " #-}"
   pretty' Specialise {..} =
-    spaced
-      [ string "{-# SPECIALISE"
-      , pretty name
-      , string "::"
-      , hCommaSep $ fmap pretty sigs
-      , string "#-}"
-      ]
+    spaced [string "{-# SPECIALISE", specialiseBody, string "#-}"]
+    where
+      sigDoc = hCommaSep $ fmap pretty sigs
+      specialiseBody =
+        if parentheses
+          then parens $ spaced [pretty name, string "::", sigDoc]
+          else spaced [pretty name, string "::", sigDoc]
   pretty' (SpecialiseInstance sig) =
     spaced [string "{-# SPECIALISE instance", pretty sig, string "#-}"]
   pretty' (Minimal xs) =
@@ -182,13 +183,15 @@ mkSignature (GHC.SpecSig _ n s _) = Specialise {..}
   where
     name = fromGenLocated $ fmap mkPrefixName n
     sigs = flattenComments . fmap mkTypeFromHsSigType . fromGenLocated <$> s
+    parentheses = False
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkSignature (GHC.SpecSigE _ _ expr _) = Specialise {..}
   where
+    (parentheses, exprWithoutParens) = stripParens expr
     (name, sigs) =
-      case SrcLoc.unLoc expr of
+      case exprWithoutParens of
         GHC.ExprWithTySig _ body sig ->
-          case SrcLoc.unLoc body of
+          case snd $ stripParens body of
             GHC.HsVar _ n ->
               ( fromGenLocated $ fmap mkPrefixName n
               , [ flattenComments
@@ -196,6 +199,12 @@ mkSignature (GHC.SpecSigE _ _ expr _) = Specialise {..}
                 ])
             _ -> error "Unexpected SPECIALISE target."
         _ -> error "Unexpected SPECIALISE signature."
+    stripParens e =
+      case SrcLoc.unLoc e of
+        GHC.HsPar _ inner ->
+          let (_, innerExpr) = stripParens inner
+           in (True, innerExpr)
+        other -> (False, other)
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkSignature (GHC.SCCFunSig _ n _) = Scc name

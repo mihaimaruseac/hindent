@@ -1573,6 +1573,12 @@ Top-level `SPECIALISE`
 {-# SPECIALISE lookup :: [(Int, Int)] -> Int -> Maybe Int #-}
 ```
 
+Top-level `SPECIALISE` (since 9.14.0)
+
+```haskell since 9.14.0
+{-# SPECIALISE (lookup :: [(Int, Int)] -> Int -> Maybe Int) #-}
+```
+
 Multiple signatures in a `SPECIALISE`
 
 ```haskell
