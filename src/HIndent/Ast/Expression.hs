@@ -74,6 +74,9 @@ import HIndent.Pretty.NodeComments
 import HIndent.Pretty.Types (DoOrMdo(..), QualifiedDo(..))
 import HIndent.Printer
 import qualified Language.Haskell.Syntax.Basic as HS
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
+import qualified Language.Haskell.Syntax.Expr as HSExpr
+#endif
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import Data.Maybe
 import HIndent.Ast.Expression.Splice (Splice, mkSplice, mkTypedSplice)
@@ -344,11 +347,11 @@ mkExpression (GHC.HsVar _ name) =
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkExpression (GHC.HsHole hole) = UnboundVariable $ mkPrefixName $ holeName hole
 #endif
-#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-#elif MIN_VERSION_ghc_lib_parser(9, 6, 0)
-mkExpression (GHC.HsUnboundVar _ name) = UnboundVariable $ mkPrefixName name
-#else
-mkExpression (GHC.HsUnboundVar _ name) =
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0) && MIN_VERSION_ghc_lib_parser(9, 6, 0)
+mkExpression (HSExpr.HsUnboundVar _ name) = UnboundVariable $ mkPrefixName name
+#elif !MIN_VERSION_ghc_lib_parser(9, 14, 0) \
+  && !MIN_VERSION_ghc_lib_parser(9, 6, 0)
+mkExpression (HSExpr.HsUnboundVar _ name) =
   UnboundVariable $ mkPrefixName $ NameReader.mkRdrUnqual name
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)

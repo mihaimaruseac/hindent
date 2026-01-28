@@ -134,7 +134,7 @@ instance Pretty Signature where
     space
     pretty name
     string " #-}"
-  pretty' Specialise {name = name, sigs = sigs} =
+  pretty' Specialise {..} =
     spaced
       [ string "{-# SPECIALISE"
       , pretty name

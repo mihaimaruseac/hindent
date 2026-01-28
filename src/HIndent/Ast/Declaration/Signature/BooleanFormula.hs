@@ -33,18 +33,12 @@ instance Pretty BooleanFormula where
   pretty' (Parens x) = parens $ pretty x
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkBooleanFormula :: GHC.BooleanFormula GHC.GhcPs -> BooleanFormula
-mkBooleanFormula (GHC.Var x) = Var $ fromGenLocated $ fmap mkPrefixName x
-mkBooleanFormula (GHC.And xs) =
-  And $ fmap (fmap mkBooleanFormula . fromGenLocated) xs
-mkBooleanFormula (GHC.Or xs) =
-  Or $ fmap (fmap mkBooleanFormula . fromGenLocated) xs
-mkBooleanFormula (GHC.Parens x) = Parens $ mkBooleanFormula <$> fromGenLocated x
 #else
 mkBooleanFormula :: GHC.BooleanFormula (GHC.LIdP GHC.GhcPs) -> BooleanFormula
+#endif
 mkBooleanFormula (GHC.Var x) = Var $ fromGenLocated $ fmap mkPrefixName x
 mkBooleanFormula (GHC.And xs) =
   And $ fmap (fmap mkBooleanFormula . fromGenLocated) xs
 mkBooleanFormula (GHC.Or xs) =
   Or $ fmap (fmap mkBooleanFormula . fromGenLocated) xs
 mkBooleanFormula (GHC.Parens x) = Parens $ mkBooleanFormula <$> fromGenLocated x
-#endif
