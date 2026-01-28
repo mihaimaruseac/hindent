@@ -52,7 +52,12 @@ mkSplice :: GHC.HsUntypedSplice GHC.GhcPs -> Splice
 mkSplice (GHC.HsUntypedSpliceExpr anns x)
   | hasDollarToken anns = UntypedDollar $ mkExpression <$> fromGenLocated x
   | otherwise = UntypedBare $ mkExpression <$> fromGenLocated x
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) =
+  QuasiQuote (mkPrefixName (GHC.unLoc l)) r
+#else
 mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) = QuasiQuote (mkPrefixName l) r
+#endif
 #else
 mkSplice :: GHC.HsSplice GHC.GhcPs -> Splice
 mkSplice (GHC.HsTypedSplice _ _ _ body) =

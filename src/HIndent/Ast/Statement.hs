@@ -8,6 +8,7 @@ module HIndent.Ast.Statement
   , mkCmdStatement
   ) where
 
+import Data.Foldable (toList)
 import qualified GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Ast.Cmd (Cmd, mkCmd)
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
@@ -82,7 +83,7 @@ mkExprStatement (GHC.ParStmt _ blocks _ _) =
     $ fmap
         (\(GHC.ParStmtBlock _ stmts _ _) ->
            fmap (fmap mkExprStatement . fromGenLocated) stmts)
-        blocks
+        (toList blocks)
 mkExprStatement GHC.TransStmt {..} =
   Transform
     { steps = fmap (fmap mkExprStatement . fromGenLocated) trS_stmts

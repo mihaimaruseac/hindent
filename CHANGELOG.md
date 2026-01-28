@@ -4,6 +4,8 @@
 
 ### Added
 
+- Support for GHC 9.14 ([#1163])
+
 ### Changed
 
 ### Fixed
@@ -426,6 +428,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#1163]: https://github.com/mihaimaruseac/hindent/pull/1163
 [#1143]: https://github.com/mihaimaruseac/hindent/pull/1143
 [#1140]: https://github.com/mihaimaruseac/hindent/pull/1140
 [#1121]: https://github.com/mihaimaruseac/hindent/pull/1121

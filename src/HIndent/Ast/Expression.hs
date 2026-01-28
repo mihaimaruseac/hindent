@@ -18,12 +18,19 @@ module HIndent.Ast.Expression
 
 import Control.Monad
 import Control.Monad.RWS (gets)
+import Data.Foldable (toList)
 import Data.List.NonEmpty (NonEmpty(..), (<|))
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Monoid (First(..))
 import qualified GHC.Hs as GHC
 import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.Fixity as GHC
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+import qualified GHC.Types.Name.Occurrence as NameOccurrence
+import qualified GHC.Types.Name.Reader as NameReader
+#elif !MIN_VERSION_ghc_lib_parser(9, 6, 0)
+import qualified GHC.Types.Name.Reader as NameReader
+#endif
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Cmd (Cmd, CmdDoBlock, mkCmdDoBlock, mkCmdFromHsCmdTop)
 import HIndent.Ast.Expression.Bracket (Bracket, mkBracket)
@@ -67,13 +74,15 @@ import HIndent.Pretty.NodeComments
 import HIndent.Pretty.Types (DoOrMdo(..), QualifiedDo(..))
 import HIndent.Printer
 import qualified Language.Haskell.Syntax.Basic as HS
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
+import qualified Language.Haskell.Syntax.Expr as HSExpr
+#endif
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import Data.Maybe
 import HIndent.Ast.Expression.Splice (Splice, mkSplice, mkTypedSplice)
 import HIndent.Fixity (fixities)
 import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
 #else
-import qualified GHC.Types.Name.Reader as NameReader
 import HIndent.Ast.Expression.Splice (Splice, mkSplice)
 #endif
 data Expression
@@ -335,10 +344,14 @@ instance Pretty Expression where
 mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
 mkExpression (GHC.HsVar _ name) =
   Variable $ mkPrefixName <$> fromGenLocated name
-#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
-mkExpression (GHC.HsUnboundVar _ name) = UnboundVariable $ mkPrefixName name
-#else
-mkExpression (GHC.HsUnboundVar _ name) =
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkExpression (GHC.HsHole hole) = UnboundVariable $ mkPrefixName $ holeName hole
+#endif
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0) && MIN_VERSION_ghc_lib_parser(9, 6, 0)
+mkExpression (HSExpr.HsUnboundVar _ name) = UnboundVariable $ mkPrefixName name
+#elif !MIN_VERSION_ghc_lib_parser(9, 14, 0) \
+  && !MIN_VERSION_ghc_lib_parser(9, 6, 0)
+mkExpression (HSExpr.HsUnboundVar _ name) =
   UnboundVariable $ mkPrefixName $ NameReader.mkRdrUnqual name
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
@@ -516,7 +529,7 @@ mkExpression (GHC.HsIf _ predicateExpr thenExpr elseExpr) =
     , elseBranch = mkExpression <$> fromGenLocated elseExpr
     }
 mkExpression (GHC.HsMultiIf _ clauses) =
-  MultiIf (fmap (fmap mkMultiWayIfExprGuard . fromGenLocated) clauses)
+  MultiIf $ fmap (fmap mkMultiWayIfExprGuard . fromGenLocated) (toList clauses)
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkExpression (GHC.HsLet _ localBinds body) =
   case mkLocalBinds localBinds of
@@ -613,7 +626,11 @@ mkExpression GHC.HsQual {} =
 mkExpression GHC.HsFunArr {} =
   error "`ghc-lib-parser` never generates this AST node."
 #endif
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkExpression (GHC.HsTypedSplice _ (GHC.HsTypedSpliceExpr _ expr)) =
+  Splice $ mkTypedSplice expr
+mkExpression (GHC.HsUntypedSplice _ splice) = Splice $ mkSplice splice
+#elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
 mkExpression (GHC.HsTypedSplice _ expr) = Splice $ mkTypedSplice expr
 mkExpression (GHC.HsUntypedSplice _ splice) = Splice $ mkSplice splice
 #else
@@ -649,7 +666,11 @@ instance Pretty InfixExpr where
   pretty' (InfixExpr (UnboundVariable name)) = pretty $ mkPrefixAsInfix name
   pretty' (InfixExpr (Parenthesized inner)) = pretty $ fmap InfixExpr inner
   pretty' (InfixExpr x) = pretty x
-
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+holeName :: GHC.HoleKind -> NameReader.RdrName
+holeName (GHC.HoleVar name) = GHC.unLoc name
+holeName GHC.HoleError = NameReader.mkRdrUnqual (NameOccurrence.mkVarOcc "_")
+#endif
 data GuardExpression
   = GuardWithDo Expression
   | GuardWithAppAndDo Expression

@@ -154,6 +154,26 @@ mkPattern (GHC.TuplePat _ pats GHC.Unboxed) =
 mkPattern (GHC.SumPat _ x position numElem) =
   Sum
     {pat = mkPattern <$> fromGenLocated x, position = position, arity = numElem}
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkPattern GHC.ConPat {..} =
+  case pat_args of
+    GHC.PrefixCon as ->
+      PrefixConstructor
+        { name = mkPrefixName <$> fromGenLocated pat_con
+        , patterns = fmap (fmap mkPattern . fromGenLocated) as
+        }
+    GHC.RecCon rec ->
+      RecordConstructor
+        { name = mkPrefixName <$> fromGenLocated pat_con
+        , fields = mkRecordFieldsPat rec
+        }
+    GHC.InfixCon a b ->
+      InfixConstructor
+        { left = mkPattern <$> fromGenLocated a
+        , operator = mkInfixName <$> fromGenLocated pat_con
+        , right = mkPattern <$> fromGenLocated b
+        }
+#else
 mkPattern GHC.ConPat {..} =
   case pat_args of
     GHC.PrefixCon _ as ->
@@ -172,6 +192,7 @@ mkPattern GHC.ConPat {..} =
         , operator = mkInfixName <$> fromGenLocated pat_con
         , right = mkPattern <$> fromGenLocated b
         }
+#endif
 mkPattern (GHC.ViewPat _ l r) =
   View
     { expression = mkExpression <$> fromGenLocated l
