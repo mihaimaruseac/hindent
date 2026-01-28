@@ -36,22 +36,6 @@ import GHC.Stack
 class CommentExtraction a where
   nodeComments :: a -> NodeComments
 
-instance CommentExtraction NoExtField where
-  nodeComments _ = emptyNodeComments
-
-instance CommentExtraction SourceText where
-  nodeComments _ = emptyNodeComments
-
-instance (CommentExtraction a, CommentExtraction b) => CommentExtraction (a, b) where
-  nodeComments (a, b) = nodeComments a <> nodeComments b
-
-instance (CommentExtraction a, CommentExtraction b, CommentExtraction c) =>
-         CommentExtraction (a, b, c) where
-  nodeComments (a, b, c) = nodeComments a <> nodeComments b <> nodeComments c
-
-instance CommentExtraction a => CommentExtraction (Maybe a) where
-  nodeComments = maybe emptyNodeComments nodeComments
-
 instance CommentExtraction l => CommentExtraction (GenLocated l e) where
   nodeComments (L l _) = nodeComments l
 
@@ -533,7 +517,7 @@ nodeCommentsHsExpr HsRecFld {} = emptyNodeComments
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-nodeCommentsHsExpr (HsTypedSplice x _) = nodeComments x
+nodeCommentsHsExpr (HsTypedSplice _ _) = emptyNodeComments
 #else
 nodeCommentsHsExpr (HsTypedSplice x _) = mconcat $ fmap nodeComments x
 #endif
@@ -659,7 +643,9 @@ instance CommentExtraction (HsConDeclField GhcPs) where
   nodeComments = nodeCommentsHsConDeclField
 
 nodeCommentsHsConDeclField :: HsConDeclField GhcPs -> NodeComments
-nodeCommentsHsConDeclField CDF {..} = nodeComments cdf_ext
+nodeCommentsHsConDeclField CDF {..} =
+  case cdf_ext of
+    (ext, _) -> nodeCommentsTriple ext
 #else
 instance CommentExtraction (ConDeclField GhcPs) where
   nodeComments = nodeCommentsConDeclField
@@ -769,7 +755,7 @@ instance CommentExtraction (RuleDecl GhcPs) where
 
 nodeCommentsRuleDecl :: RuleDecl GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-nodeCommentsRuleDecl HsRule {..} = nodeComments $ fst rd_ext
+nodeCommentsRuleDecl HsRule {..} = nodeCommentsPair $ fst rd_ext
 #else
 nodeCommentsRuleDecl HsRule {..} = nodeComments rd_ext
 #endif
@@ -1217,7 +1203,7 @@ instance CommentExtraction AnnSpecSig where
     mconcat
       [ nodeComments ass_open
       , nodeComments ass_close
-      , nodeComments ass_dcolon
+      , maybe emptyNodeComments nodeComments ass_dcolon
       , nodeComments ass_act
       ]
 
@@ -1239,6 +1225,15 @@ notUsedInParsedStage =
   error
     "This AST should never appears in an AST. It only appears in the renaming or type checked stages."
 #endif
+nodeCommentsPair :: (CommentExtraction a, CommentExtraction b) => (a, b) -> NodeComments
+nodeCommentsPair (a, b) = nodeComments a <> nodeComments b
+
+nodeCommentsTriple ::
+     (CommentExtraction a, CommentExtraction b, CommentExtraction c)
+  => (a, b, c)
+  -> NodeComments
+nodeCommentsTriple (a, b, c) = nodeComments a <> nodeComments b <> nodeComments c
+
 -- | A 'NodeComment' with no comments.
 emptyNodeComments :: NodeComments
 emptyNodeComments = NodeComments [] [] []
