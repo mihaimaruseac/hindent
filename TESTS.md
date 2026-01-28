@@ -1573,7 +1573,7 @@ Top-level `SPECIALISE`
 {-# SPECIALISE lookup :: [(Int, Int)] -> Int -> Maybe Int #-}
 ```
 
-Top-level `SPECIALISE` with expression (since 9.14.0)
+Top-level `SPECIALISE` with expression
 
 ```haskell since 9.14.0
 {-# SPECIALISE ((+) 1 :: Int -> Int) #-}
