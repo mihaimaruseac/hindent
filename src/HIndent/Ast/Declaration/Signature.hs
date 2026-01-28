@@ -13,15 +13,14 @@ import HIndent.Ast.Declaration.Signature.BooleanFormula
 import HIndent.Ast.Declaration.Signature.Fixity
 import HIndent.Ast.Declaration.Signature.Inline.Phase
 import HIndent.Ast.Declaration.Signature.Inline.Spec
-import {-# SOURCE #-} HIndent.Ast.Expression (Expression)
-#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-import {-# SOURCE #-} HIndent.Ast.Expression (mkExpression)
-#endif
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type (DeclSigType, Type, mkDeclSigType, mkTypeFromHsSigType)
 import HIndent.Ast.WithComments
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+import qualified GHC.Types.SrcLoc as SrcLoc
+#endif
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -60,9 +59,6 @@ data Signature
       , sigs :: [WithComments Type]
       , parentheses :: Bool
       }
-  | SpecialiseExpr
-      { expression :: WithComments Expression
-      }
   | SpecialiseInstance (WithComments Type)
   | Minimal (WithComments BooleanFormula)
   | Scc (WithComments PrefixName)
@@ -76,7 +72,6 @@ instance CommentExtraction Signature where
   nodeComments Fixity {} = NodeComments [] [] []
   nodeComments Inline {} = NodeComments [] [] []
   nodeComments Specialise {} = NodeComments [] [] []
-  nodeComments SpecialiseExpr {} = NodeComments [] [] []
   nodeComments SpecialiseInstance {} = NodeComments [] [] []
   nodeComments Minimal {} = NodeComments [] [] []
   nodeComments Scc {} = NodeComments [] [] []
@@ -142,8 +137,6 @@ instance Pretty Signature where
         if parentheses
           then parens $ spaced [pretty name, string "::", sigDoc]
           else spaced [pretty name, string "::", sigDoc]
-  pretty' SpecialiseExpr {..} =
-    spaced [string "{-# SPECIALISE", pretty expression, string "#-}"]
   pretty' (SpecialiseInstance sig) =
     spaced [string "{-# SPECIALISE instance", pretty sig, string "#-}"]
   pretty' (Minimal xs) =
@@ -192,9 +185,26 @@ mkSignature (GHC.SpecSig _ n s _) = Specialise {..}
     sigs = flattenComments . fmap mkTypeFromHsSigType . fromGenLocated <$> s
     parentheses = False
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-mkSignature (GHC.SpecSigE _ _ expr _) = SpecialiseExpr {..}
+mkSignature (GHC.SpecSigE _ _ expr _) = Specialise {..}
   where
-    expression = mkExpression <$> fromGenLocated expr
+    (parentheses, exprWithoutParens) = stripParens expr
+    (name, sigs) =
+      case exprWithoutParens of
+        GHC.ExprWithTySig _ body sig ->
+          case snd $ stripParens body of
+            GHC.HsVar _ n ->
+              ( fromGenLocated $ fmap mkPrefixName n
+              , [ flattenComments
+                    $ mkTypeFromHsSigType <$> fromGenLocated (GHC.hswc_body sig)
+                ])
+            _ -> error "Unexpected SPECIALISE target."
+        _ -> error "Unexpected SPECIALISE signature."
+    stripParens e =
+      case SrcLoc.unLoc e of
+        GHC.HsPar _ inner ->
+          let (_, innerExpr) = stripParens inner
+           in (True, innerExpr)
+        other -> (False, other)
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkSignature (GHC.SCCFunSig _ n _) = Scc name
