@@ -134,14 +134,14 @@ instance Pretty Signature where
     space
     pretty name
     string " #-}"
-  pretty' Specialise {..} =
-    spaced [string "{-# SPECIALISE", specialiseBody, string "#-}"]
-    where
-      sigDoc = hCommaSep $ fmap pretty sigs
-      specialiseBody =
-        if parentheses
-          then parens $ spaced [pretty name, string "::", sigDoc]
-          else spaced [pretty name, string "::", sigDoc]
+  pretty' Specialise {name = name, sigs = sigs} =
+    spaced
+      [ string "{-# SPECIALISE"
+      , pretty name
+      , string "::"
+      , hCommaSep $ fmap pretty sigs
+      , string "#-}"
+      ]
   pretty' SpecialiseExpr {..} =
     spaced [string "{-# SPECIALISE", pretty expression, string "#-}"]
   pretty' (SpecialiseInstance sig) =
