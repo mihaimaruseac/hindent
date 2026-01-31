@@ -754,8 +754,10 @@ instance CommentExtraction (RuleDecl GhcPs) where
   nodeComments = nodeCommentsRuleDecl
 
 nodeCommentsRuleDecl :: RuleDecl GhcPs -> NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 nodeCommentsRuleDecl HsRule {..} = nodeCommentsPair $ fst rd_ext
+#elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
+nodeCommentsRuleDecl HsRule {..} = nodeComments $ fst rd_ext
 #else
 nodeCommentsRuleDecl HsRule {..} = nodeComments rd_ext
 #endif
@@ -1225,14 +1227,16 @@ notUsedInParsedStage =
   error
     "This AST should never appears in an AST. It only appears in the renaming or type checked stages."
 #endif
-nodeCommentsPair :: (CommentExtraction a, CommentExtraction b) => (a, b) -> NodeComments
+nodeCommentsPair ::
+     (CommentExtraction a, CommentExtraction b) => (a, b) -> NodeComments
 nodeCommentsPair (a, b) = nodeComments a <> nodeComments b
 
 nodeCommentsTriple ::
      (CommentExtraction a, CommentExtraction b, CommentExtraction c)
   => (a, b, c)
   -> NodeComments
-nodeCommentsTriple (a, b, c) = nodeComments a <> nodeComments b <> nodeComments c
+nodeCommentsTriple (a, b, c) =
+  nodeComments a <> nodeComments b <> nodeComments c
 
 -- | A 'NodeComment' with no comments.
 emptyNodeComments :: NodeComments
