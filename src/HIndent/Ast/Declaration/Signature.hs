@@ -13,6 +13,10 @@ import HIndent.Ast.Declaration.Signature.BooleanFormula
 import HIndent.Ast.Declaration.Signature.Fixity
 import HIndent.Ast.Declaration.Signature.Inline.Phase
 import HIndent.Ast.Declaration.Signature.Inline.Spec
+import {-# SOURCE #-} HIndent.Ast.Expression (Expression)
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+import {-# SOURCE #-} HIndent.Ast.Expression (mkExpression)
+#endif
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
@@ -54,6 +58,10 @@ data Signature
   | Specialise
       { name :: WithComments PrefixName
       , sigs :: [WithComments Type]
+      , parentheses :: Bool
+      }
+  | SpecialiseExpr
+      { expression :: WithComments Expression
       }
   | SpecialiseInstance (WithComments Type)
   | Minimal (WithComments BooleanFormula)
@@ -68,6 +76,7 @@ instance CommentExtraction Signature where
   nodeComments Fixity {} = NodeComments [] [] []
   nodeComments Inline {} = NodeComments [] [] []
   nodeComments Specialise {} = NodeComments [] [] []
+  nodeComments SpecialiseExpr {} = NodeComments [] [] []
   nodeComments SpecialiseInstance {} = NodeComments [] [] []
   nodeComments Minimal {} = NodeComments [] [] []
   nodeComments Scc {} = NodeComments [] [] []
@@ -133,6 +142,8 @@ instance Pretty Signature where
       , hCommaSep $ fmap pretty sigs
       , string "#-}"
       ]
+  pretty' SpecialiseExpr {..} =
+    spaced [string "{-# SPECIALISE", pretty expression, string "#-}"]
   pretty' (SpecialiseInstance sig) =
     spaced [string "{-# SPECIALISE instance", pretty sig, string "#-}"]
   pretty' (Minimal xs) =
@@ -179,6 +190,12 @@ mkSignature (GHC.SpecSig _ n s _) = Specialise {..}
   where
     name = fromGenLocated $ fmap mkPrefixName n
     sigs = flattenComments . fmap mkTypeFromHsSigType . fromGenLocated <$> s
+    parentheses = False
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkSignature (GHC.SpecSigE _ _ expr _) = SpecialiseExpr {..}
+  where
+    expression = mkExpression <$> fromGenLocated expr
+#endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkSignature (GHC.SCCFunSig _ n _) = Scc name
   where
