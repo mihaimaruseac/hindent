@@ -14,9 +14,6 @@ import HIndent.Ast.Declaration.Signature.Fixity
 import HIndent.Ast.Declaration.Signature.Inline.Phase
 import HIndent.Ast.Declaration.Signature.Inline.Spec
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression)
-#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-import {-# SOURCE #-} HIndent.Ast.Expression (mkExpression)
-#endif
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
@@ -26,7 +23,9 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+import {-# SOURCE #-} HIndent.Ast.Expression (mkExpression)
+#endif
 -- We want to use the same name for `parameters` and `signature`, but GHC
 -- doesn't allow it.
 data Signature

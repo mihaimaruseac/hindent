@@ -6,12 +6,7 @@ module HIndent.Pretty.NodeComments
   ( CommentExtraction(..)
   , emptyNodeComments
   ) where
-#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
-import Data.Maybe (maybeToList)
-#endif
-#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
-import Data.Void (Void)
-#endif
+
 import GHC.Data.BooleanFormula
 import GHC.Hs
 import GHC.Parser.Annotation ()
@@ -31,6 +26,12 @@ import GHC.Unit
 #endif
 #if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
 import GHC.Stack
+#endif
+#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
+import Data.Maybe (maybeToList)
+#endif
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
+import Data.Void (Void)
 #endif
 -- | An interface to extract comments from an AST node.
 class CommentExtraction a where

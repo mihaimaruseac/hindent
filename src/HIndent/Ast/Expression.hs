@@ -25,12 +25,6 @@ import Data.Monoid (First(..))
 import qualified GHC.Hs as GHC
 import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.Fixity as GHC
-#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-import qualified GHC.Types.Name.Occurrence as NameOccurrence
-import qualified GHC.Types.Name.Reader as NameReader
-#elif !MIN_VERSION_ghc_lib_parser(9, 6, 0)
-import qualified GHC.Types.Name.Reader as NameReader
-#endif
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Cmd (Cmd, CmdDoBlock, mkCmdDoBlock, mkCmdFromHsCmdTop)
 import HIndent.Ast.Expression.Bracket (Bracket, mkBracket)
@@ -74,9 +68,6 @@ import HIndent.Pretty.NodeComments
 import HIndent.Pretty.Types (DoOrMdo(..), QualifiedDo(..))
 import HIndent.Printer
 import qualified Language.Haskell.Syntax.Basic as HS
-#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
-import qualified Language.Haskell.Syntax.Expr as HSExpr
-#endif
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import Data.Maybe
 import HIndent.Ast.Expression.Splice (Splice, mkSplice, mkTypedSplice)
@@ -84,6 +75,15 @@ import HIndent.Fixity (fixities)
 import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
 #else
 import HIndent.Ast.Expression.Splice (Splice, mkSplice)
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+import qualified GHC.Types.Name.Occurrence as NameOccurrence
+import qualified GHC.Types.Name.Reader as NameReader
+#elif !MIN_VERSION_ghc_lib_parser(9, 6, 0)
+import qualified GHC.Types.Name.Reader as NameReader
+#endif
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
+import qualified Language.Haskell.Syntax.Expr as HSExpr
 #endif
 data Expression
   = Variable (WithComments PrefixName)
