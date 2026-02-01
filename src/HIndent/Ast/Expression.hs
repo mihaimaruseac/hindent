@@ -82,13 +82,12 @@ import qualified GHC.Types.Name.Reader as GHC
 #elif !MIN_VERSION_ghc_lib_parser(9, 6, 0)
 import qualified GHC.Types.Name.Reader as GHC
 #endif
-#if !MIN_VERSION_ghc_lib_parser(9, 14, 0) \
-  && !MIN_VERSION_ghc_lib_parser(9, 6, 0)
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0) && !MIN_VERSION_ghc_lib_parser(9, 6, 0)
 import qualified Language.Haskell.Syntax.Expr as GHC
 #endif
 data Expression
   = Variable (WithComments PrefixName)
-  | UnboundVariable PrefixName
+  | UnboundVariable (WithComments PrefixName)
   | OverloadedLabel OverloadedLabel
   | ImplicitParameter ImplicitParameterName
   | OverloadedLiteral (GHC.HsOverLit GHC.GhcPs)
@@ -346,19 +345,14 @@ mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
 mkExpression (GHC.HsVar _ name) =
   Variable $ mkPrefixName <$> fromGenLocated name
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-mkExpression (GHC.HsHole hole) =
-  UnboundVariable
-    $ mkPrefixName
-    $ case hole of
-        GHC.HoleVar name -> GHC.unLoc name
-        GHC.HoleError -> GHC.mkRdrUnqual (GHC.mkVarOcc "_")
+mkExpression (GHC.HsHole (GHC.HoleVar name)) =
+  UnboundVariable $ mkPrefixName $ name
+mkExpression (GHC.HsHole GHC.HoleError) =
+  error "`ghc-lib-parser` never generates this AST node."
 #endif
 #if !MIN_VERSION_ghc_lib_parser(9, 14, 0) && MIN_VERSION_ghc_lib_parser(9, 6, 0)
-mkExpression (GHC.HsUnboundVar _ name) = UnboundVariable $ mkPrefixName name
-#elif !MIN_VERSION_ghc_lib_parser(9, 14, 0) \
-  && !MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkExpression (GHC.HsUnboundVar _ name) =
-  UnboundVariable $ mkPrefixName $ GHC.mkRdrUnqual name
+  UnboundVariable $ mkPrefixName <$> mkWithComments name
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkExpression (GHC.HsOverLabel _ label) =
@@ -669,7 +663,7 @@ instance CommentExtraction InfixExpr where
 
 instance Pretty InfixExpr where
   pretty' (InfixExpr (Variable name)) = pretty $ mkPrefixAsInfix <$> name
-  pretty' (InfixExpr (UnboundVariable name)) = pretty $ mkPrefixAsInfix name
+  pretty' (InfixExpr (UnboundVariable name)) = pretty $ mkPrefixAsInfix <$> name
   pretty' (InfixExpr (Parenthesized inner)) = pretty $ fmap InfixExpr inner
   pretty' (InfixExpr x) = pretty x
 
