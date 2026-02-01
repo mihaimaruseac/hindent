@@ -58,7 +58,6 @@ data Signature
   | Specialise
       { name :: WithComments PrefixName
       , sigs :: [WithComments Type]
-      , parentheses :: Bool
       }
   | SpecialiseExpr
       { expression :: WithComments Expression
@@ -190,7 +189,6 @@ mkSignature (GHC.SpecSig _ n s _) = Specialise {..}
   where
     name = fromGenLocated $ fmap mkPrefixName n
     sigs = flattenComments . fmap mkTypeFromHsSigType . fromGenLocated <$> s
-    parentheses = False
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkSignature (GHC.SpecSigE _ _ expr _) = SpecialiseExpr {..}
   where
