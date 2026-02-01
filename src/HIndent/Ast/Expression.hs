@@ -346,7 +346,12 @@ mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
 mkExpression (GHC.HsVar _ name) =
   Variable $ mkPrefixName <$> fromGenLocated name
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-mkExpression (GHC.HsHole hole) = UnboundVariable $ mkPrefixName $ holeName hole
+mkExpression (GHC.HsHole hole) =
+  UnboundVariable
+    $ mkPrefixName
+    $ case hole of
+        GHC.HoleVar name -> GHC.unLoc name
+        GHC.HoleError -> GHC.mkRdrUnqual (GHC.mkVarOcc "_")
 #endif
 #if !MIN_VERSION_ghc_lib_parser(9, 14, 0) && MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkExpression (GHC.HsUnboundVar _ name) = UnboundVariable $ mkPrefixName name
@@ -667,11 +672,7 @@ instance Pretty InfixExpr where
   pretty' (InfixExpr (UnboundVariable name)) = pretty $ mkPrefixAsInfix name
   pretty' (InfixExpr (Parenthesized inner)) = pretty $ fmap InfixExpr inner
   pretty' (InfixExpr x) = pretty x
-#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-holeName :: GHC.HoleKind -> GHC.RdrName
-holeName (GHC.HoleVar name) = GHC.unLoc name
-holeName GHC.HoleError = GHC.mkRdrUnqual (GHC.mkVarOcc "_")
-#endif
+
 data GuardExpression
   = GuardWithDo Expression
   | GuardWithAppAndDo Expression
