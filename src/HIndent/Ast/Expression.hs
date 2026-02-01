@@ -82,8 +82,9 @@ import qualified GHC.Types.Name.Reader as GHC
 #elif !MIN_VERSION_ghc_lib_parser(9, 6, 0)
 import qualified GHC.Types.Name.Reader as GHC
 #endif
-#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
-import qualified Language.Haskell.Syntax.Expr as HSExpr
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0) \
+  && !MIN_VERSION_ghc_lib_parser(9, 6, 0)
+import qualified Language.Haskell.Syntax.Expr as GHC
 #endif
 data Expression
   = Variable (WithComments PrefixName)
@@ -348,10 +349,10 @@ mkExpression (GHC.HsVar _ name) =
 mkExpression (GHC.HsHole hole) = UnboundVariable $ mkPrefixName $ holeName hole
 #endif
 #if !MIN_VERSION_ghc_lib_parser(9, 14, 0) && MIN_VERSION_ghc_lib_parser(9, 6, 0)
-mkExpression (HSExpr.HsUnboundVar _ name) = UnboundVariable $ mkPrefixName name
+mkExpression (GHC.HsUnboundVar _ name) = UnboundVariable $ mkPrefixName name
 #elif !MIN_VERSION_ghc_lib_parser(9, 14, 0) \
   && !MIN_VERSION_ghc_lib_parser(9, 6, 0)
-mkExpression (HSExpr.HsUnboundVar _ name) =
+mkExpression (GHC.HsUnboundVar _ name) =
   UnboundVariable $ mkPrefixName $ GHC.mkRdrUnqual name
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
