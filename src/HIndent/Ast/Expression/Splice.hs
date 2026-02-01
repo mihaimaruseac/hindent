@@ -10,7 +10,7 @@ import qualified GHC.Data.FastString as GHC
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
-import HIndent.Ast.WithComments (WithComments, fromGenLocated)
+import HIndent.Ast.WithComments (WithComments, fromGenLocated, mkWithComments)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -22,7 +22,7 @@ data Splice
   = Typed (WithComments Expression)
   | UntypedDollar (WithComments Expression)
   | UntypedBare (WithComments Expression)
-  | QuasiQuote PrefixName GHC.FastString
+  | QuasiQuote (WithComments PrefixName) GHC.FastString
 
 instance CommentExtraction Splice where
   nodeComments (Typed expr) = nodeComments expr
@@ -53,10 +53,10 @@ mkSplice (GHC.HsUntypedSpliceExpr anns x)
   | hasDollarToken anns = UntypedDollar $ mkExpression <$> fromGenLocated x
   | otherwise = UntypedBare $ mkExpression <$> fromGenLocated x
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) =
-  QuasiQuote (mkPrefixName (GHC.unLoc l)) r
-#else
 mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) = QuasiQuote (mkPrefixName l) r
+#else
+mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) =
+  QuasiQuote (mkPrefixName <$> mkWithComments l) r
 #endif
 #else
 mkSplice :: GHC.HsSplice GHC.GhcPs -> Splice
