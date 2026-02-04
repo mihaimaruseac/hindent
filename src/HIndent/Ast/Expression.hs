@@ -343,8 +343,7 @@ mkExpression (GHC.HsHole (GHC.HoleVar name)) =
   UnboundVariable $ mkPrefixName <$> fromGenLocated name
 mkExpression (GHC.HsHole GHC.HoleError) =
   error "`ghc-lib-parser` never generates this AST node."
-#endif
-#if !MIN_VERSION_ghc_lib_parser(9, 14, 0) && MIN_VERSION_ghc_lib_parser(9, 6, 0)
+#elif MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkExpression (GHC.HsUnboundVar _ name) =
   UnboundVariable $ mkPrefixName <$> mkWithComments name
 #endif
