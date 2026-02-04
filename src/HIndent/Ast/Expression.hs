@@ -75,9 +75,9 @@ import HIndent.Fixity (fixities)
 import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
 #else
 import HIndent.Ast.Expression.Splice (Splice, mkSplice)
-#endif
 #if !MIN_VERSION_ghc_lib_parser(9, 6, 0)
 import qualified Language.Haskell.Syntax.Expr as GHC
+#endif
 #endif
 data Expression
   = Variable (WithComments PrefixName)
