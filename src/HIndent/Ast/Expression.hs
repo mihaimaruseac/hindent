@@ -76,12 +76,6 @@ import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
 #else
 import HIndent.Ast.Expression.Splice (Splice, mkSplice)
 #endif
-#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-import qualified GHC.Types.Name.Occurrence as GHC
-import qualified GHC.Types.Name.Reader as GHC
-#elif !MIN_VERSION_ghc_lib_parser(9, 6, 0)
-import qualified GHC.Types.Name.Reader as GHC
-#endif
 #if !MIN_VERSION_ghc_lib_parser(9, 14, 0) && !MIN_VERSION_ghc_lib_parser(9, 6, 0)
 import qualified Language.Haskell.Syntax.Expr as GHC
 #endif
@@ -346,7 +340,7 @@ mkExpression (GHC.HsVar _ name) =
   Variable $ mkPrefixName <$> fromGenLocated name
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkExpression (GHC.HsHole (GHC.HoleVar name)) =
-  UnboundVariable $ mkPrefixName $ name
+  UnboundVariable $ mkPrefixName <$> fromGenLocated name
 mkExpression (GHC.HsHole GHC.HoleError) =
   error "`ghc-lib-parser` never generates this AST node."
 #endif
