@@ -28,7 +28,13 @@ instance Pretty Multiplicity where
   pretty' MkUnrestricted = pure ()
   pretty' MkLinear = string "%1"
   pretty' (MkExplicit mult) = string "%" >> pretty mult
-
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkMultiplicity :: GHC.HsMultAnn GHC.GhcPs -> Multiplicity
+mkMultiplicity GHC.HsUnannotated {} = MkUnrestricted
+mkMultiplicity GHC.HsLinearAnn {} = MkLinear
+mkMultiplicity (GHC.HsExplicitMult _ mult) =
+  MkExplicit (mkType <$> fromGenLocated mult)
+#else
 mkMultiplicity :: GHC.HsArrow GHC.GhcPs -> Multiplicity
 mkMultiplicity (GHC.HsUnrestrictedArrow _) = MkUnrestricted
 mkMultiplicity (GHC.HsLinearArrow _) = MkLinear
@@ -38,6 +44,7 @@ mkMultiplicity (GHC.HsExplicitMult _ mult) =
 #else
 mkMultiplicity (GHC.HsExplicitMult _ mult _) =
   MkExplicit (mkType <$> fromGenLocated mult)
+#endif
 #endif
 isUnrestricted :: Multiplicity -> Bool
 isUnrestricted MkUnrestricted = True

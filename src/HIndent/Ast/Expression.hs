@@ -18,6 +18,7 @@ module HIndent.Ast.Expression
 
 import Control.Monad
 import Control.Monad.RWS (gets)
+import Data.Foldable (toList)
 import Data.List.NonEmpty (NonEmpty(..), (<|))
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Monoid (First(..))
@@ -73,12 +74,12 @@ import HIndent.Ast.Expression.Splice (Splice, mkSplice, mkTypedSplice)
 import HIndent.Fixity (fixities)
 import qualified Language.Haskell.GhclibParserEx.GHC.Hs.Expr as GHC
 #else
-import qualified GHC.Types.Name.Reader as NameReader
 import HIndent.Ast.Expression.Splice (Splice, mkSplice)
+import qualified Language.Haskell.Syntax.Expr as GHC
 #endif
 data Expression
   = Variable (WithComments PrefixName)
-  | UnboundVariable PrefixName
+  | UnboundVariable (WithComments PrefixName)
   | OverloadedLabel OverloadedLabel
   | ImplicitParameter ImplicitParameterName
   | OverloadedLiteral (GHC.HsOverLit GHC.GhcPs)
@@ -335,11 +336,14 @@ instance Pretty Expression where
 mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
 mkExpression (GHC.HsVar _ name) =
   Variable $ mkPrefixName <$> fromGenLocated name
-#if MIN_VERSION_ghc_lib_parser(9, 6, 0)
-mkExpression (GHC.HsUnboundVar _ name) = UnboundVariable $ mkPrefixName name
-#else
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkExpression (GHC.HsHole (GHC.HoleVar name)) =
+  UnboundVariable $ mkPrefixName <$> fromGenLocated name
+mkExpression (GHC.HsHole GHC.HoleError) =
+  error "`ghc-lib-parser` never generates this AST node."
+#elif MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkExpression (GHC.HsUnboundVar _ name) =
-  UnboundVariable $ mkPrefixName $ NameReader.mkRdrUnqual name
+  UnboundVariable $ mkPrefixName <$> mkWithComments name
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkExpression (GHC.HsOverLabel _ label) =
@@ -516,7 +520,7 @@ mkExpression (GHC.HsIf _ predicateExpr thenExpr elseExpr) =
     , elseBranch = mkExpression <$> fromGenLocated elseExpr
     }
 mkExpression (GHC.HsMultiIf _ clauses) =
-  MultiIf (fmap (fmap mkMultiWayIfExprGuard . fromGenLocated) clauses)
+  MultiIf $ fmap (fmap mkMultiWayIfExprGuard . fromGenLocated) (toList clauses)
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkExpression (GHC.HsLet _ localBinds body) =
   case mkLocalBinds localBinds of
@@ -613,7 +617,11 @@ mkExpression GHC.HsQual {} =
 mkExpression GHC.HsFunArr {} =
   error "`ghc-lib-parser` never generates this AST node."
 #endif
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkExpression (GHC.HsTypedSplice _ (GHC.HsTypedSpliceExpr _ expr)) =
+  Splice $ mkTypedSplice expr
+mkExpression (GHC.HsUntypedSplice _ splice) = Splice $ mkSplice splice
+#elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
 mkExpression (GHC.HsTypedSplice _ expr) = Splice $ mkTypedSplice expr
 mkExpression (GHC.HsUntypedSplice _ splice) = Splice $ mkSplice splice
 #else
@@ -646,7 +654,7 @@ instance CommentExtraction InfixExpr where
 
 instance Pretty InfixExpr where
   pretty' (InfixExpr (Variable name)) = pretty $ mkPrefixAsInfix <$> name
-  pretty' (InfixExpr (UnboundVariable name)) = pretty $ mkPrefixAsInfix name
+  pretty' (InfixExpr (UnboundVariable name)) = pretty $ mkPrefixAsInfix <$> name
   pretty' (InfixExpr (Parenthesized inner)) = pretty $ fmap InfixExpr inner
   pretty' (InfixExpr x) = pretty x
 
