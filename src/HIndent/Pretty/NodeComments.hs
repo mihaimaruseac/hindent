@@ -641,11 +641,8 @@ nodeCommentsStmtLR ApplicativeStmt {} = emptyNodeComments
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 instance CommentExtraction (HsConDeclField GhcPs) where
-  nodeComments = nodeCommentsHsConDeclField
-
-nodeCommentsHsConDeclField :: HsConDeclField GhcPs -> NodeComments
-nodeCommentsHsConDeclField CDF {cdf_ext = ((a, b, c), _)} =
-  nodeComments a <> nodeComments b <> nodeComments c
+  nodeComments CDF {cdf_ext = ((a, b, c), _)} =
+    nodeComments a <> nodeComments b <> nodeComments c
 #else
 instance CommentExtraction (ConDeclField GhcPs) where
   nodeComments = nodeCommentsConDeclField
