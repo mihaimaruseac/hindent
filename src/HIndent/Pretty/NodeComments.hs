@@ -646,7 +646,7 @@ instance CommentExtraction (HsConDeclField GhcPs) where
 nodeCommentsHsConDeclField :: HsConDeclField GhcPs -> NodeComments
 nodeCommentsHsConDeclField CDF {..} =
   case cdf_ext of
-    (ext, _) -> nodeCommentsTriple ext
+    ((a, b, c), _) -> nodeComments a <> nodeComments b <> nodeComments c
 #else
 instance CommentExtraction (ConDeclField GhcPs) where
   nodeComments = nodeCommentsConDeclField
@@ -756,7 +756,9 @@ instance CommentExtraction (RuleDecl GhcPs) where
 
 nodeCommentsRuleDecl :: RuleDecl GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-nodeCommentsRuleDecl HsRule {..} = nodeCommentsPair $ fst rd_ext
+nodeCommentsRuleDecl HsRule {..} =
+  case fst rd_ext of
+    (a, b) -> nodeComments a <> nodeComments b
 #elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
 nodeCommentsRuleDecl HsRule {..} = nodeComments $ fst rd_ext
 #else
@@ -1227,20 +1229,6 @@ notUsedInParsedStage :: HasCallStack => a
 notUsedInParsedStage =
   error
     "This AST should never appears in an AST. It only appears in the renaming or type checked stages."
-#endif
-#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-nodeCommentsPair ::
-     (CommentExtraction a, CommentExtraction b) => (a, b) -> NodeComments
-nodeCommentsPair (a, b) = nodeComments a <> nodeComments b
-#endif
-
-#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-nodeCommentsTriple ::
-     (CommentExtraction a, CommentExtraction b, CommentExtraction c)
-  => (a, b, c)
-  -> NodeComments
-nodeCommentsTriple (a, b, c) =
-  nodeComments a <> nodeComments b <> nodeComments c
 #endif
 -- | A 'NodeComment' with no comments.
 emptyNodeComments :: NodeComments
