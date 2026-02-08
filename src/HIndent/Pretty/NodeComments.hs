@@ -644,9 +644,8 @@ instance CommentExtraction (HsConDeclField GhcPs) where
   nodeComments = nodeCommentsHsConDeclField
 
 nodeCommentsHsConDeclField :: HsConDeclField GhcPs -> NodeComments
-nodeCommentsHsConDeclField CDF {..} =
-  case cdf_ext of
-    ((a, b, c), _) -> nodeComments a <> nodeComments b <> nodeComments c
+nodeCommentsHsConDeclField CDF {cdf_ext = ((a, b, c), _)} =
+  nodeComments a <> nodeComments b <> nodeComments c
 #else
 instance CommentExtraction (ConDeclField GhcPs) where
   nodeComments = nodeCommentsConDeclField
@@ -756,9 +755,8 @@ instance CommentExtraction (RuleDecl GhcPs) where
 
 nodeCommentsRuleDecl :: RuleDecl GhcPs -> NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-nodeCommentsRuleDecl HsRule {..} =
-  case fst rd_ext of
-    (a, b) -> nodeComments a <> nodeComments b
+nodeCommentsRuleDecl HsRule {rd_ext = ((a, b), _)} =
+  nodeComments a <> nodeComments b
 #elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
 nodeCommentsRuleDecl HsRule {..} = nodeComments $ fst rd_ext
 #else
