@@ -40,6 +40,9 @@ class CommentExtraction a where
 instance CommentExtraction l => CommentExtraction (GenLocated l e) where
   nodeComments (L l _) = nodeComments l
 
+instance CommentExtraction NoExtField where
+  nodeComments _ = emptyNodeComments
+
 instance CommentExtraction (MatchGroup GhcPs a) where
   nodeComments MG {} = emptyNodeComments
 
@@ -518,7 +521,7 @@ nodeCommentsHsExpr HsRecFld {} = emptyNodeComments
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-nodeCommentsHsExpr (HsTypedSplice _ _) = emptyNodeComments
+nodeCommentsHsExpr (HsTypedSplice x _) = nodeComments x
 #else
 nodeCommentsHsExpr (HsTypedSplice x _) = mconcat $ fmap nodeComments x
 #endif
