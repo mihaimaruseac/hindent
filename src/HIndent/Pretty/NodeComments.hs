@@ -33,7 +33,7 @@ import GHC.Stack
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import Data.Maybe (maybeToList)
 #endif
-#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
+#if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 import Data.Void (Void)
 #endif
 -- | An interface to extract comments from an AST node.
@@ -107,6 +107,12 @@ instance CommentExtraction (HsConDetails a b) where
   nodeComments PrefixCon {} = emptyNodeComments
   nodeComments RecCon {} = emptyNodeComments
   nodeComments InfixCon {} = emptyNodeComments
+#elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
+-- HsConDeclH98Details
+instance CommentExtraction (HsConDetails a b c) where
+  nodeComments PrefixCon {} = emptyNodeComments
+  nodeComments RecCon {} = emptyNodeComments
+  nodeComments InfixCon {} = emptyNodeComments
 #else
 -- HsConDeclH98Details
 instance CommentExtraction
@@ -119,7 +125,8 @@ instance CommentExtraction
   nodeComments PrefixCon {} = emptyNodeComments
   nodeComments RecCon {} = emptyNodeComments
   nodeComments InfixCon {} = emptyNodeComments
-
+#endif
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
 instance CommentExtraction (HsScaled GhcPs a) where
   nodeComments HsScaled {} = emptyNodeComments
 #endif
