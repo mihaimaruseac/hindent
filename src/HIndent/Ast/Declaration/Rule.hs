@@ -45,10 +45,18 @@ mkRuleDeclaration :: GHC.RuleDecl GHC.GhcPs -> RuleDeclaration
 mkRuleDeclaration rule@GHC.HsRule {..} = RuleDeclaration {..}
   where
     name = mkRuleName <$> getName rule
-    binders = fmap (fmap mkRuleBinder . fromGenLocated) rd_tmvs
+    binders = mkRuleBinders rule
     lhs = mkExpression <$> fromGenLocated rd_lhs
     rhs = mkExpression <$> fromGenLocated rd_rhs
 
+mkRuleBinders :: GHC.RuleDecl GHC.GhcPs -> [WithComments RuleBinder]
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkRuleBinders GHC.HsRule {rd_bndrs = GHC.RuleBndrs {..}} =
+  fmap (fmap mkRuleBinder . fromGenLocated) rb_tmvs
+#else
+mkRuleBinders GHC.HsRule {..} =
+  fmap (fmap mkRuleBinder . fromGenLocated) rd_tmvs
+#endif
 getName :: GHC.RuleDecl GHC.GhcPs -> WithComments GHC.RuleName
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 getName = fromGenLocated . GHC.rd_name

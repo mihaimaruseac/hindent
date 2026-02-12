@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Data.Haskell98.Constructor.Body
@@ -57,12 +58,21 @@ mkHaskell98ConstructorBody GHC.ConDeclH98 { con_args = GHC.InfixCon leftField ri
     iName = fromGenLocated $ fmap mkInfixName con_name
     left = mkConstructorField leftField
     right = mkConstructorField rightField
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkHaskell98ConstructorBody GHC.ConDeclH98 { con_args = GHC.PrefixCon rawTypes
+                                          , ..
+                                          } = Just Prefix {..}
+  where
+    pName = fromGenLocated $ fmap mkPrefixName con_name
+    types = fmap mkConstructorField rawTypes
+#else
 mkHaskell98ConstructorBody GHC.ConDeclH98 { con_args = GHC.PrefixCon _ rawTypes
                                           , ..
                                           } = Just Prefix {..}
   where
     pName = fromGenLocated $ fmap mkPrefixName con_name
     types = fmap mkConstructorField rawTypes
+#endif
 mkHaskell98ConstructorBody GHC.ConDeclH98 {con_args = GHC.RecCon rs, ..} =
   Just Record {..}
   where

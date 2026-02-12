@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module HIndent.Ast.Declaration.Signature.BooleanFormula
   ( BooleanFormula
   , mkBooleanFormula
@@ -29,8 +31,11 @@ instance Pretty BooleanFormula where
   pretty' (And xs) = hvCommaSep $ fmap pretty xs
   pretty' (Or xs) = hvBarSep $ fmap pretty xs
   pretty' (Parens x) = parens $ pretty x
-
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkBooleanFormula :: GHC.BooleanFormula GHC.GhcPs -> BooleanFormula
+#else
 mkBooleanFormula :: GHC.BooleanFormula (GHC.LIdP GHC.GhcPs) -> BooleanFormula
+#endif
 mkBooleanFormula (GHC.Var x) = Var $ fromGenLocated $ fmap mkPrefixName x
 mkBooleanFormula (GHC.And xs) =
   And $ fmap (fmap mkBooleanFormula . fromGenLocated) xs

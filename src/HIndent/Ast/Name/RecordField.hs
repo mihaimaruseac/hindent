@@ -51,6 +51,19 @@ mkFieldNameFromAmbiguousFieldOcc (GHC.Unambiguous GHC.NoExtField name) =
 mkFieldNameFromAmbiguousFieldOcc (GHC.Ambiguous GHC.NoExtField name) =
   FieldName $ pure $ mkPrefixName <$> fromGenLocated name
 #endif
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkFieldNameFromFieldLabelStrings :: GHC.FieldLabelStrings GHC.GhcPs -> FieldName
+mkFieldNameFromFieldLabelStrings (GHC.FieldLabelStrings labels) =
+  FieldName $ fmap toSegment labels
+  where
+    toSegment =
+      flattenComments
+        . fmap
+            (fmap (fromString . GHC.unpackFS . GHC.field_label)
+               . fromGenLocated
+               . GHC.dfoLabel)
+        . fromGenLocated
+#else
 mkFieldNameFromFieldLabelStrings :: GHC.FieldLabelStrings GHC.GhcPs -> FieldName
 mkFieldNameFromFieldLabelStrings (GHC.FieldLabelStrings labels) =
   maybe (error "FieldLabelStrings: expected non-empty label path") FieldName
@@ -64,3 +77,4 @@ mkFieldNameFromFieldLabelStrings (GHC.FieldLabelStrings labels) =
                . fromGenLocated
                . GHC.dfoLabel)
         . fromGenLocated
+#endif

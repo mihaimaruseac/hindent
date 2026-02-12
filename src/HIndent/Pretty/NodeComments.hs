@@ -7,10 +7,12 @@ module HIndent.Pretty.NodeComments
   , emptyNodeComments
   ) where
 
-import Data.Maybe
-import Data.Void
 import GHC.Data.BooleanFormula
 import GHC.Hs
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+import qualified GHC.Hs as GHC
+#endif
+import GHC.Parser.Annotation ()
 import GHC.Types.Basic
 import GHC.Types.Fixity
 import GHC.Types.ForeignCall
@@ -27,6 +29,12 @@ import GHC.Unit
 #endif
 #if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
 import GHC.Stack
+#endif
+#if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
+import Data.Maybe (maybeToList)
+#endif
+#if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
+import Data.Void (Void)
 #endif
 -- | An interface to extract comments from an AST node.
 class CommentExtraction a where
@@ -93,7 +101,19 @@ instance CommentExtraction EpaComment where
 instance CommentExtraction SrcSpan where
   nodeComments RealSrcSpan {} = emptyNodeComments
   nodeComments UnhelpfulSpan {} = emptyNodeComments
-
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+-- HsConDeclH98Details
+instance CommentExtraction (HsConDetails a b) where
+  nodeComments PrefixCon {} = emptyNodeComments
+  nodeComments RecCon {} = emptyNodeComments
+  nodeComments InfixCon {} = emptyNodeComments
+#elif MIN_VERSION_ghc_lib_parser(9, 10, 1)
+-- HsConDeclH98Details
+instance CommentExtraction (HsConDetails a b c) where
+  nodeComments PrefixCon {} = emptyNodeComments
+  nodeComments RecCon {} = emptyNodeComments
+  nodeComments InfixCon {} = emptyNodeComments
+#else
 -- HsConDeclH98Details
 instance CommentExtraction
            (HsConDetails
@@ -105,10 +125,11 @@ instance CommentExtraction
   nodeComments PrefixCon {} = emptyNodeComments
   nodeComments RecCon {} = emptyNodeComments
   nodeComments InfixCon {} = emptyNodeComments
-
+#endif
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
 instance CommentExtraction (HsScaled GhcPs a) where
   nodeComments HsScaled {} = emptyNodeComments
-
+#endif
 instance CommentExtraction (BooleanFormula a) where
   nodeComments Var {} = emptyNodeComments
   nodeComments And {} = emptyNodeComments
@@ -193,8 +214,10 @@ instance CommentExtraction (HsLit GhcPs) where
   nodeComments HsWordPrim {} = emptyNodeComments
   nodeComments HsInt64Prim {} = emptyNodeComments
   nodeComments HsWord64Prim {} = emptyNodeComments
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
   nodeComments HsInteger {} = emptyNodeComments
   nodeComments HsRat {} = emptyNodeComments
+#endif
   nodeComments HsFloatPrim {} = emptyNodeComments
   nodeComments HsDoublePrim {} = emptyNodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 8, 0)
@@ -359,6 +382,7 @@ nodeCommentsAnnExplicitSum AnnExplicitSum {..} =
     $ fmap nodeComments
     $ aesOpen : aesBarsBefore <> aesBarsAfter <> [aesClose]
 #endif
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
 instance CommentExtraction EpAnnUnboundVar where
   nodeComments = nodeCommentsEpAnnUnboundVar
 
@@ -372,6 +396,7 @@ nodeCommentsEpAnnUnboundVar EpAnnUnboundVar {..} =
     $ fmap
         nodeComments
         [fst hsUnboundBackquotes, snd hsUnboundBackquotes, hsUnboundHole]
+#endif
 #endif
 instance CommentExtraction AnnSig where
   nodeComments = nodeCommentsAnnSig
@@ -416,6 +441,9 @@ nodeCommentsSig (FixSig ((a, b), _) _) =
 nodeCommentsSig (InlineSig (a, b, c) _ _) =
   mconcat [nodeComments a, nodeComments b, nodeComments c]
 nodeCommentsSig (SpecSig x _ _ _) = nodeComments x
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+nodeCommentsSig (SpecSigE x _ _ _) = nodeComments x
+#endif
 nodeCommentsSig (SpecInstSig ((a, b, c), _) _) =
   mconcat [nodeComments a, nodeComments b, nodeComments c]
 nodeCommentsSig (MinimalSig ((a, b), _) _) =
@@ -500,7 +528,7 @@ nodeCommentsHsExpr HsRecFld {} = emptyNodeComments
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-nodeCommentsHsExpr (HsTypedSplice x _) = nodeComments x
+nodeCommentsHsExpr (HsTypedSplice GHC.NoExtField _) = emptyNodeComments
 #else
 nodeCommentsHsExpr (HsTypedSplice x _) = mconcat $ fmap nodeComments x
 #endif
@@ -522,7 +550,12 @@ nodeCommentsHsExpr HsApp {} = emptyNodeComments
 nodeCommentsHsExpr HsLit {} = emptyNodeComments
 nodeCommentsHsExpr HsOverLit {} = emptyNodeComments
 nodeCommentsHsExpr HsIPVar {} = emptyNodeComments
-nodeCommentsHsExpr (HsUnboundVar x _) = fromMaybe mempty $ fmap nodeComments x
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
+nodeCommentsHsExpr (HsUnboundVar x _) = maybe mempty nodeComments x
+#endif
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+nodeCommentsHsExpr HsHole {} = emptyNodeComments
+#endif
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 nodeCommentsHsExpr (HsStatic x _) = nodeComments x
 nodeCommentsHsExpr (HsProc (a, b) _ _) =
@@ -616,6 +649,11 @@ nodeCommentsStmtLR TransStmt {..} = mconcat $ fmap nodeComments trS_ext
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 nodeCommentsStmtLR ApplicativeStmt {} = emptyNodeComments
 #endif
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+instance CommentExtraction (HsConDeclField GhcPs) where
+  nodeComments CDF {cdf_ext = ((a, b, c), _)} =
+    nodeComments a <> nodeComments b <> nodeComments c
+#else
 instance CommentExtraction (ConDeclField GhcPs) where
   nodeComments = nodeCommentsConDeclField
 
@@ -625,6 +663,7 @@ nodeCommentsConDeclField ConDeclField {..} = nodeComments cd_fld_ext
 #else
 nodeCommentsConDeclField ConDeclField {..} =
   mconcat $ fmap nodeComments cd_fld_ext
+#endif
 #endif
 instance CommentExtraction (HsDerivingClause GhcPs) where
   nodeComments = nodeCommentsHsDerivingClause
@@ -722,7 +761,10 @@ instance CommentExtraction (RuleDecl GhcPs) where
   nodeComments = nodeCommentsRuleDecl
 
 nodeCommentsRuleDecl :: RuleDecl GhcPs -> NodeComments
-#if MIN_VERSION_ghc_lib_parser(9, 6, 1)
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+nodeCommentsRuleDecl HsRule {rd_ext = ((a, b), _)} =
+  nodeComments a <> nodeComments b
+#elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
 nodeCommentsRuleDecl HsRule {..} = nodeComments $ fst rd_ext
 #else
 nodeCommentsRuleDecl HsRule {..} = nodeComments rd_ext
@@ -1171,7 +1213,7 @@ instance CommentExtraction AnnSpecSig where
     mconcat
       [ nodeComments ass_open
       , nodeComments ass_close
-      , nodeComments ass_dcolon
+      , maybe emptyNodeComments nodeComments ass_dcolon
       , nodeComments ass_act
       ]
 

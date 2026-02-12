@@ -9,15 +9,14 @@ module HIndent.Ast.Expression.Pragmatic
 import qualified GHC.Hs as GHC
 import qualified GHC.Types.SourceText as GHC
 import HIndent.Ast.NodeComments (NodeComments(..))
+import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty.Combinators (spaced, string)
+import HIndent.Pretty.NodeComments (CommentExtraction(..))
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 import HIndent.Ast.WithComments (WithComments, addComments, mkWithComments)
 #else
 import HIndent.Ast.WithComments (WithComments, fromEpAnn)
 #endif
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
-import HIndent.Pretty.Combinators (spaced, string)
-import HIndent.Pretty.NodeComments (CommentExtraction(..))
-
 newtype ExpressionPragma = SccPragma
   { label :: GHC.StringLiteral
   }

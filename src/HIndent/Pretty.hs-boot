@@ -41,10 +41,12 @@ instance Pretty GHC.StringLiteral
 
 instance Pretty Context
 
+#if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
 instance Pretty
            (GHC.HsScaled
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
+#endif
 #if MIN_VERSION_ghc_lib_parser(9, 8, 1)
 instance Pretty
            (GHC.HsArg

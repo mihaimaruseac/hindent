@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.PatternSynonym
@@ -68,8 +69,13 @@ instance Pretty PatternSynonym where
       indentedBlock $ string "where " |=> pretty matches
 
 mkParameters :: GHC.HsPatSynDetails GHC.GhcPs -> Parameters
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkParameters (GHC.PrefixCon args) =
+  Prefix {args = map (fromGenLocated . fmap mkPrefixName) args}
+#else
 mkParameters (GHC.PrefixCon _ args) =
   Prefix {args = map (fromGenLocated . fmap mkPrefixName) args}
+#endif
 mkParameters (GHC.InfixCon l r) =
   Infix
     { leftArg = fromGenLocated $ fmap mkPrefixName l

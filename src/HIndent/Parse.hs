@@ -52,7 +52,29 @@ lexCode code
 -- The 'StarIsType' extension is always enabled to compile a code using
 -- kinds like '* -> *'.
 parserOptsFromExtensions :: [GLP.Extension] -> ParserOpts
-#if MIN_VERSION_ghc_lib_parser(9,8,1)
+#if MIN_VERSION_ghc_lib_parser(9,14,0)
+parserOptsFromExtensions opts =
+  mkParserOpts
+    opts'
+    diagOpts
+    False -- Safe imports are off.
+    False -- Haddock comments are treated as normal comments.
+    True -- Comments are kept in an AST.
+    False -- Do not update the internal position of a comment.
+  where
+    opts' = ES.fromList $ GLP.StarIsType : opts
+    diagOpts =
+      DiagOpts
+        { diag_warning_flags = ES.empty
+        , diag_fatal_warning_flags = ES.empty
+        , diag_custom_warning_categories = emptyWarningCategorySet
+        , diag_fatal_custom_warning_categories = emptyWarningCategorySet
+        , diag_warn_is_error = False
+        , diag_reverse_errors = False
+        , diag_max_errors = Nothing
+        , diag_ppr_ctx = defaultSDocContext
+        }
+#elif MIN_VERSION_ghc_lib_parser(9,8,1)
 parserOptsFromExtensions opts =
   mkParserOpts
     opts'
