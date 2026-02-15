@@ -63,6 +63,23 @@ instance Pretty GADTConstructor where
       noForallCtx = prettyHorizontally signature <-|> prettyVertically signature
 
 mkGADTConstructor :: GHC.ConDecl GHC.GhcPs -> Maybe GADTConstructor
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkGADTConstructor decl@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}
+  where
+    names = fromMaybe (error "Couldn't get names.") $ getNames decl
+    bindings =
+      case con_outer_bndrs of
+        GHC.L _ GHC.HsOuterImplicit {} -> Nothing
+        GHC.L l GHC.HsOuterExplicit {..} ->
+          Just
+            $ fromGenLocated
+            $ fmap
+                (fmap (fmap mkTypeVariable . fromGenLocated))
+                (GHC.L l hso_bndrs)
+    signature =
+      fromMaybe (error "Couldn't get signature.") $ mkConstructorSignature decl
+    context = fmap (fmap mkContext . fromGenLocated) con_mb_cxt
+#else
 mkGADTConstructor decl@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}
   where
     names = fromMaybe (error "Couldn't get names.") $ getNames decl
@@ -78,6 +95,7 @@ mkGADTConstructor decl@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}
     signature =
       fromMaybe (error "Couldn't get signature.") $ mkConstructorSignature decl
     context = fmap (fmap mkContext . fromGenLocated) con_mb_cxt
+#endif
 mkGADTConstructor _ = Nothing
 
 getNames :: GHC.ConDecl GHC.GhcPs -> Maybe [WithComments PrefixName]
