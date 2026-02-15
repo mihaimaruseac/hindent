@@ -241,6 +241,14 @@ Import with `ExplicitNamespaces`.
 import Prlude (type FilePath)
 ```
 
+Import a `data` namespace
+
+```haskell since 9.14.0
+{-# LANGUAGE ExplicitNamespaces #-}
+
+import Foo (data Bar)
+```
+
 Import a pattern
 
 ```haskell
@@ -1563,6 +1571,12 @@ Top-level `SPECIALISE`
 
 ```haskell
 {-# SPECIALISE lookup :: [(Int, Int)] -> Int -> Maybe Int #-}
+```
+
+Top-level `SPECIALISE` with an expression
+
+```haskell since 9.14.1
+{-# SPECIALISE const 0 :: Int -> Int #-}
 ```
 
 Multiple signatures in a `SPECIALISE`
