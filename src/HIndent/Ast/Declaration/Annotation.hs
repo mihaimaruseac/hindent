@@ -9,23 +9,18 @@ module HIndent.Ast.Declaration.Annotation
 
 import HIndent.Ast.Declaration.Annotation.Provenance
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data Annotation = Annotation
   { provenance :: Provenance
   , expr :: WithComments Expression
   }
 
-instance CommentExtraction Annotation where
-  nodeComments Annotation {} = NodeComments [] [] []
-
 instance Pretty Annotation where
-  pretty' Annotation {..} =
+  pretty Annotation {..} =
     spaced [string "{-# ANN", pretty provenance, pretty expr, string "#-}"]
 
 mkAnnotation :: GHC.AnnDecl GHC.GhcPs -> Annotation

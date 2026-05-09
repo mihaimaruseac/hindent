@@ -11,12 +11,10 @@ import HIndent.Ast.Declaration.Collection
 import HIndent.Ast.FileHeaderPragma.Collection
 import HIndent.Ast.Import.Collection
 import HIndent.Ast.Module.Declaration
-import HIndent.Ast.NodeComments hiding (fromEpAnn)
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data Module = Module
   { pragmas :: FileHeaderPragmaCollection
@@ -25,11 +23,8 @@ data Module = Module
   , declarations :: DeclarationCollection
   }
 
-instance CommentExtraction Module where
-  nodeComments Module {} = NodeComments [] [] []
-
 instance Pretty Module where
-  pretty' Module {..}
+  pretty Module {..}
     | isEmpty = pure ()
     | otherwise = blanklined printers >> newline
     where

@@ -7,10 +7,8 @@ module HIndent.Ast.Declaration.Signature.Inline.Phase
 
 import qualified Data.Text as Text
 import qualified GHC.Types.Basic as GHC
-import HIndent.Ast.NodeComments
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data BeforeOrAfter
   = Before
@@ -21,13 +19,10 @@ data InlinePhase = InlinePhase
   , phase :: Int
   }
 
-instance CommentExtraction InlinePhase where
-  nodeComments InlinePhase {} = NodeComments [] [] []
-
 instance Pretty InlinePhase where
-  pretty' InlinePhase {beforeOrAfter = Before, ..} =
+  pretty InlinePhase {beforeOrAfter = Before, ..} =
     brackets (string $ Text.pack $ '~' : show phase)
-  pretty' InlinePhase {beforeOrAfter = After, ..} =
+  pretty InlinePhase {beforeOrAfter = After, ..} =
     brackets (string $ Text.pack $ show phase)
 
 mkInlinePhase :: GHC.Activation -> Maybe InlinePhase

@@ -6,22 +6,17 @@ module HIndent.Ast.Context
   , mkContext
   ) where
 
-import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 newtype Context =
   Context [WithComments Type]
 
-instance CommentExtraction Context where
-  nodeComments (Context _) = NodeComments [] [] []
-
 instance Pretty Context where
-  pretty' (Context xs) = hor <-|> ver
+  pretty (Context xs) = hor <-|> ver
     where
       hor = parensConditional $ hCommaSep $ fmap pretty xs
         where

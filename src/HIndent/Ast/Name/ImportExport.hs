@@ -10,13 +10,11 @@ import qualified Data.ByteString.Builder as S
 import qualified Data.ByteString.Lazy.Char8 as L
 import Data.Char (isLower, isUpper)
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import HIndent.Config
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 import HIndent.Printer
 
 data ImportExportName
@@ -31,17 +29,11 @@ data LetterType
   | Lower
   deriving (Eq, Ord)
 
-instance CommentExtraction ImportExportName where
-  nodeComments Regular {} = NodeComments [] [] []
-  nodeComments Pattern {} = NodeComments [] [] []
-  nodeComments Type {} = NodeComments [] [] []
-  nodeComments Data {} = NodeComments [] [] []
-
 instance Pretty ImportExportName where
-  pretty' (Regular name) = pretty name
-  pretty' (Pattern name) = spaced [string "pattern", pretty name]
-  pretty' (Type name) = string "type " >> pretty name
-  pretty' (Data name) = string "data " >> pretty name
+  pretty (Regular name) = pretty name
+  pretty (Pattern name) = spaced [string "pattern", pretty name]
+  pretty (Type name) = string "type " >> pretty name
+  pretty (Data name) = string "data " >> pretty name
 
 instance Eq ImportExportName where
   a == b = compare a b == EQ
@@ -79,7 +71,7 @@ mkImportExportName (GHC.IEData _ name) =
 #endif
 getNameString :: ImportExportName -> String
 getNameString n =
-  L.unpack $ S.toLazyByteString $ runPrinterStyle defaultConfig $ pretty' n
+  L.unpack $ S.toLazyByteString $ runPrinterStyle defaultConfig $ pretty n
 
 compareIdentifier :: String -> String -> Ordering
 compareIdentifier as@(a:_) bs@(b:_) =

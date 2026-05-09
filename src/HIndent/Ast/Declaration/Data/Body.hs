@@ -16,13 +16,11 @@ import HIndent.Applicative
 import HIndent.Ast.Declaration.Data.Deriving.Clause
 import HIndent.Ast.Declaration.Data.GADT.Constructor
 import HIndent.Ast.Declaration.Data.Haskell98.Constructor
-import HIndent.Ast.NodeComments hiding (fromEpAnn)
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data DataBody
   = GADT
@@ -36,12 +34,8 @@ data DataBody
       , derivings :: DerivingClause
       }
 
-instance CommentExtraction DataBody where
-  nodeComments GADT {} = NodeComments [] [] []
-  nodeComments Haskell98 {} = NodeComments [] [] []
-
 instance Pretty DataBody where
-  pretty' GADT {..} = do
+  pretty GADT {..} = do
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
     case constructors of
@@ -55,7 +49,7 @@ instance Pretty DataBody where
           when (hasDerivings derivings) $ do
             newline
             pretty derivings
-  pretty' Haskell98 {..} = do
+  pretty Haskell98 {..} = do
     whenJust kind $ \x -> string " :: " >> pretty x
     case constructorsH98 of
       [] -> indentedBlock derivingsAfterNewline

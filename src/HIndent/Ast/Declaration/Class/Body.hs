@@ -8,21 +8,16 @@ import Data.Function
 import Data.List (sortBy)
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Declaration.Class.Member
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 newtype ClassBody =
   ClassBody [WithComments ClassMember]
 
-instance CommentExtraction ClassBody where
-  nodeComments ClassBody {} = NodeComments [] [] []
-
 instance Pretty ClassBody where
-  pretty' (ClassBody members) = newlinePrefixed $ fmap pretty members
+  pretty (ClassBody members) = newlinePrefixed $ fmap pretty members
 
 mkClassBody ::
      [GHC.LSig GHC.GhcPs]
@@ -32,7 +27,8 @@ mkClassBody ::
   -> ClassBody
 mkClassBody sigs binds families defaults =
   ClassBody
-    $ sortMembers
+    $ fmap mkWithCommentsFromGenLocated
+    $ sortBy (compare `on` GHC.realSrcSpan . GHC.locA . GHC.getLoc)
     $ fmap (fmap mkClassSignatureMember) sigs
         ++ fmap (fmap mkClassMethodMember) binds
         ++ fmap (fmap mkAssociatedFamilyMember) families
@@ -40,8 +36,3 @@ mkClassBody sigs binds families defaults =
 
 hasClassBody :: ClassBody -> Bool
 hasClassBody (ClassBody members) = not $ null members
-
-sortMembers :: [GHC.LocatedA ClassMember] -> [WithComments ClassMember]
-sortMembers =
-  fmap mkWithCommentsFromGenLocated
-    . sortBy (compare `on` GHC.realSrcSpan . GHC.locA . GHC.getLoc)

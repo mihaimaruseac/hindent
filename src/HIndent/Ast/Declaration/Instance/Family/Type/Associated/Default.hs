@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE CPP #-}
 
 module HIndent.Ast.Declaration.Instance.Family.Type.Associated.Default
   ( AssociatedTypeDefault
@@ -7,14 +8,12 @@ module HIndent.Ast.Declaration.Instance.Family.Type.Associated.Default
   ) where
 
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type
 import HIndent.Ast.Type.Argument.Collection
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data AssociatedTypeDefault = AssociatedTypeDefault
   { name :: WithComments PrefixName
@@ -22,11 +21,8 @@ data AssociatedTypeDefault = AssociatedTypeDefault
   , bind :: WithComments Type
   }
 
-instance CommentExtraction AssociatedTypeDefault where
-  nodeComments AssociatedTypeDefault {} = NodeComments [] [] []
-
 instance Pretty AssociatedTypeDefault where
-  pretty' AssociatedTypeDefault {..} = spaced [lhs, string "=", pretty bind]
+  pretty AssociatedTypeDefault {..} = spaced [lhs, string "=", pretty bind]
     where
       lhs =
         spaced

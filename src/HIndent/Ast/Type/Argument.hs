@@ -10,9 +10,8 @@ module HIndent.Ast.Type.Argument
 import HIndent.Ast.Type (Type, mkType)
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data TypeArgument
   = TypeArgument
@@ -22,13 +21,9 @@ data TypeArgument
       { argKind :: WithComments Type
       }
 
-instance CommentExtraction TypeArgument where
-  nodeComments TypeArgument {..} = nodeComments argType
-  nodeComments KindArgument {..} = nodeComments argKind
-
 instance Pretty TypeArgument where
-  pretty' TypeArgument {..} = pretty argType
-  pretty' KindArgument {..} = string "@" >> pretty argKind
+  pretty TypeArgument {..} = pretty argType
+  pretty KindArgument {..} = string "@" >> pretty argKind
 
 mkTypeArgument ::
      GHC.HsArg GHC.GhcPs (GHC.LHsType GHC.GhcPs) (GHC.LHsType GHC.GhcPs)

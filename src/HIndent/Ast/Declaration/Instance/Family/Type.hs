@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Instance.Family.Type
@@ -7,14 +8,12 @@ module HIndent.Ast.Declaration.Instance.Family.Type
   ) where
 
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type
 import HIndent.Ast.Type.Argument.Collection
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data TypeFamilyInstance = TypeFamilyInstance
   { name :: WithComments PrefixName
@@ -22,16 +21,13 @@ data TypeFamilyInstance = TypeFamilyInstance
   , bind :: WithComments Type
   }
 
-instance CommentExtraction TypeFamilyInstance where
-  nodeComments TypeFamilyInstance {} = NodeComments [] [] []
-
 instance Pretty TypeFamilyInstance where
-  pretty' TypeFamilyInstance {..} = do
-    spaced
-      $ [string "type instance", pretty name]
-          <> [pretty types | hasTypeArguments types]
-    string " = "
-    pretty bind
+  pretty TypeFamilyInstance {..} = spaced [lhs, string "=", pretty bind]
+    where
+      lhs =
+        spaced
+          $ [string "type instance", pretty name]
+              <> [pretty types | hasTypeArguments types]
 
 mkTypeFamilyInstance :: GHC.InstDecl GHC.GhcPs -> Maybe TypeFamilyInstance
 mkTypeFamilyInstance GHC.TyFamInstD {GHC.tfid_inst = GHC.TyFamInstDecl {GHC.tfid_eqn = GHC.FamEqn {..}}} =

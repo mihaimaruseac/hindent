@@ -11,12 +11,10 @@ import HIndent.Ast.Declaration.Data.Constructor.Field
 import HIndent.Ast.Declaration.Data.Record.Field
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data Haskell98ConstructorBody
   = Infix
@@ -33,18 +31,13 @@ data Haskell98ConstructorBody
       , records :: WithComments [WithComments RecordField]
       }
 
-instance CommentExtraction Haskell98ConstructorBody where
-  nodeComments Infix {} = NodeComments [] [] []
-  nodeComments Prefix {} = NodeComments [] [] []
-  nodeComments Record {} = NodeComments [] [] []
-
 instance Pretty Haskell98ConstructorBody where
-  pretty' Infix {..} = spaced [pretty left, pretty iName, pretty right]
-  pretty' Prefix {..} = pretty pName >> hor <-|> ver
+  pretty Infix {..} = spaced [pretty left, pretty iName, pretty right]
+  pretty Prefix {..} = pretty pName >> hor <-|> ver
     where
       hor = spacePrefixed $ fmap pretty types
       ver = indentedBlock $ newlinePrefixed $ fmap pretty types
-  pretty' Record {..} = do
+  pretty Record {..} = do
     pretty rName
     prettyWith records $ \r ->
       newline >> indentedBlock (vFields $ fmap pretty r)

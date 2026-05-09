@@ -10,21 +10,16 @@ module HIndent.Ast.Declaration.Collection
 import Data.Maybe
 import qualified GHC.Hs as GHC
 import HIndent.Ast.Declaration
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 newtype DeclarationCollection =
   DeclarationCollection [WithComments Declaration]
 
-instance CommentExtraction DeclarationCollection where
-  nodeComments DeclarationCollection {} = NodeComments [] [] []
-
 instance Pretty DeclarationCollection where
-  pretty' (DeclarationCollection decls) =
+  pretty (DeclarationCollection decls) =
     mapM_ (\(x, sp) -> pretty x >> fromMaybe (return ()) sp)
       $ addDeclSeparator decls
     where

@@ -15,14 +15,12 @@ import qualified GHC.Unit as GHC
 import HIndent.Applicative
 import HIndent.Ast.Import.Entry.Collection
 import HIndent.Ast.Module.Name (ModuleName, mkModuleName)
-import HIndent.Ast.NodeComments
 import HIndent.Ast.TextValue
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs.ImpExp as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data QualificationPosition
   = Pre
@@ -39,11 +37,8 @@ data Import = Import
   , importEntries :: Maybe (WithComments ImportEntryCollection)
   }
 
-instance CommentExtraction Import where
-  nodeComments Import {} = NodeComments [] [] []
-
 instance Pretty Import where
-  pretty' Import {..} = do
+  pretty Import {..} = do
     string "import "
     when isBoot $ string "{-# SOURCE #-} "
     when isSafe $ string "safe "

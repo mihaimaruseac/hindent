@@ -12,11 +12,9 @@ import Data.Function
 import Data.List (sortBy)
 import qualified GHC.Hs as GHC
 import HIndent.Ast.Name.ImportExport
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data ImportEntry
   = SingleIdentifier (WithComments ImportExportName)
@@ -26,13 +24,10 @@ data ImportEntry
       }
   | WithAllConstructors (WithComments ImportExportName)
 
-instance CommentExtraction ImportEntry where
-  nodeComments _ = NodeComments [] [] []
-
 instance Pretty ImportEntry where
-  pretty' (SingleIdentifier wrapped) = pretty wrapped
-  pretty' (WithAllConstructors wrapped) = pretty wrapped >> string "(..)"
-  pretty' WithSpecificConstructors {..} =
+  pretty (SingleIdentifier wrapped) = pretty wrapped
+  pretty (WithAllConstructors wrapped) = pretty wrapped >> string "(..)"
+  pretty WithSpecificConstructors {..} =
     pretty name >> hFillingTuple (fmap pretty constructors)
 
 mkImportEntry :: GHC.IE GHC.GhcPs -> ImportEntry

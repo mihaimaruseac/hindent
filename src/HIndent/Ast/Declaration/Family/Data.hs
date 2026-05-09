@@ -11,14 +11,12 @@ import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Applicative
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments hiding (fromEpAnn)
 import HIndent.Ast.Type
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data DataFamily = DataFamily
   { isTopLevel :: Bool
@@ -27,11 +25,8 @@ data DataFamily = DataFamily
   , signature :: Maybe (WithComments Type)
   }
 
-instance CommentExtraction DataFamily where
-  nodeComments DataFamily {} = NodeComments [] [] []
-
 instance Pretty DataFamily where
-  pretty' DataFamily {..} = do
+  pretty DataFamily {..} = do
     string "data "
     when isTopLevel $ string "family "
     pretty name

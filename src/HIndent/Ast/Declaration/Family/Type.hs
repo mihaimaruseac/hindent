@@ -16,13 +16,11 @@ import HIndent.Ast.Declaration.Family.Type.Equation
 import HIndent.Ast.Declaration.Family.Type.Injectivity
 import HIndent.Ast.Declaration.Family.Type.ResultSignature
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments hiding (fromEpAnn)
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data TypeFamily = TypeFamily
   { isTopLevel :: Bool
@@ -33,11 +31,8 @@ data TypeFamily = TypeFamily
   , equations :: Maybe [WithComments TypeEquation]
   }
 
-instance CommentExtraction TypeFamily where
-  nodeComments TypeFamily {} = NodeComments [] [] []
-
 instance Pretty TypeFamily where
-  pretty' TypeFamily {..} = do
+  pretty TypeFamily {..} = do
     string "type "
     when isTopLevel $ string "family "
     pretty name

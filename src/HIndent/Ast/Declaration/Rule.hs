@@ -11,12 +11,10 @@ import qualified GHC.Types.Basic as GHC
 import HIndent.Ast.Declaration.Rule.Binder
 import HIndent.Ast.Declaration.Rule.Name
 import HIndent.Ast.Expression (Expression, mkExpression)
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data RuleDeclaration = RuleDeclaration
   { name :: WithComments RuleName
@@ -25,11 +23,8 @@ data RuleDeclaration = RuleDeclaration
   , rhs :: WithComments Expression
   }
 
-instance CommentExtraction RuleDeclaration where
-  nodeComments RuleDeclaration {} = NodeComments [] [] []
-
 instance Pretty RuleDeclaration where
-  pretty' (RuleDeclaration {..}) =
+  pretty (RuleDeclaration {..}) =
     spaced [pretty name, prettyLhs, string "=", pretty rhs]
     where
       prettyLhs =

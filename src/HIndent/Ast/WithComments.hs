@@ -8,7 +8,6 @@ module HIndent.Ast.WithComments
   , prettyWith
   , mkWithCommentsFromGenLocated
   , mkWithCommentsFromEpaLocated
-  , fromGenLocated
   , fromEpAnn
   , mkWithComments
   , getNode
@@ -21,7 +20,7 @@ import Control.Monad
 import Control.Monad.RWS
 import qualified GHC.Parser.Annotation as GHC
 import qualified GHC.Types.SrcLoc as GHC
-import HIndent.Ast.Comment (Comment, getColumn, mkComment)
+import HIndent.Ast.Comment (Comment, getColumn)
 import HIndent.Ast.IsGenLocatedLocation
   ( CommentGroup(..)
   , mkCommentGroupFromEpAnn
@@ -32,10 +31,8 @@ import HIndent.Ast.IsGenLocatedLocation
   , mkCommentGroupFromEpaLocation
   )
 #endif
-import qualified HIndent.Ast.NodeComments as NodeComments
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 import HIndent.Printer
 
 data WithComments a = WithComments
@@ -46,11 +43,8 @@ data WithComments a = WithComments
 instance Functor WithComments where
   fmap f WithComments {..} = WithComments comments (f node)
 
-instance CommentExtraction (WithComments a) where
-  nodeComments _ = mempty
-
 instance (Pretty a) => Pretty (WithComments a) where
-  pretty' withComments = prettyWith withComments pretty
+  pretty withComments = prettyWith withComments pretty
 
 -- | Prints comments included in the location information and then the
 -- AST node body.
@@ -112,17 +106,6 @@ mkWithCommentsFromEpaLocated ::
      GHC.GenLocated (GHC.SrcSpanAnn' (GHC.EpAnn ann)) a -> WithComments a
 mkWithCommentsFromEpaLocated = mkWithCommentsFromGenLocated
 #endif
-fromGenLocated :: (CommentExtraction l) => GHC.GenLocated l a -> WithComments a
-fromGenLocated (GHC.L l a) = WithComments (fromNodeComments $ nodeComments l) a
-
-fromNodeComments :: NodeComments.NodeComments -> CommentGroup
-fromNodeComments (NodeComments.NodeComments before sameLine after) =
-  CommentGroup
-    { commentsBefore = mkComment <$> before
-    , commentsOnSameLine = mkComment <$> sameLine
-    , commentsAfter = mkComment <$> after
-    }
-
 fromEpAnn :: GHC.EpAnn a -> b -> WithComments b
 fromEpAnn ann = WithComments (mkCommentGroupFromEpAnn ann)
 

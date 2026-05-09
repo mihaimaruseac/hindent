@@ -11,13 +11,11 @@ import Control.Monad
 import HIndent.Applicative
 import HIndent.Ast.Declaration.Instance.Class.Body
 import HIndent.Ast.Declaration.Instance.Class.OverlapMode
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type (InstDeclType, mkInstDeclType)
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified GHC.Data.Bag as GHC
 #endif
@@ -27,11 +25,8 @@ data ClassInstance = ClassInstance
   , instanceType :: WithComments InstDeclType
   }
 
-instance CommentExtraction ClassInstance where
-  nodeComments ClassInstance {} = NodeComments [] [] []
-
 instance Pretty ClassInstance where
-  pretty' ClassInstance {..} = do
+  pretty (ClassInstance {..}) = do
     string "instance " |=> do
       whenJust overlapMode $ \x -> do
         pretty x

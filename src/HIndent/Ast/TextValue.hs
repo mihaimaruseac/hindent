@@ -9,24 +9,19 @@ module HIndent.Ast.TextValue
   ) where
 
 import qualified Data.Text as Text
+import qualified GHC.Types.SourceText as GHC
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 import qualified GHC.Data.FastString as GHC
 #endif
-import qualified GHC.Types.SourceText as GHC
-import HIndent.Ast.NodeComments
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 newtype TextValue =
   TextValue Text.Text
   deriving (Eq, Ord, Show)
 
-instance CommentExtraction TextValue where
-  nodeComments _ = NodeComments [] [] []
-
 instance Pretty TextValue where
-  pretty' (TextValue value) = string value
+  pretty (TextValue value) = string value
 
 mkTextValueFromString :: String -> TextValue
 mkTextValueFromString = TextValue . Text.pack

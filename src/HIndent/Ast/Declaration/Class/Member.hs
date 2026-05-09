@@ -11,10 +11,8 @@ import HIndent.Ast.Declaration.Family.Data
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Instance.Family.Type.Associated.Default
 import HIndent.Ast.Declaration.Signature
-import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
-import HIndent.Pretty.NodeComments
+import HIndent.Pretty
 
 data ClassMember
   = Signature Signature
@@ -23,20 +21,13 @@ data ClassMember
   | AssociatedTypeDefault AssociatedTypeDefault
   | AssociatedTypeFamily TypeFamily
 
-instance CommentExtraction ClassMember where
-  nodeComments Signature {} = NodeComments [] [] []
-  nodeComments Method {} = NodeComments [] [] []
-  nodeComments AssociatedDataFamily {} = NodeComments [] [] []
-  nodeComments AssociatedTypeDefault {} = NodeComments [] [] []
-  nodeComments AssociatedTypeFamily {} = NodeComments [] [] []
-
 instance Pretty ClassMember where
-  pretty' (Signature signature) = pretty signature
-  pretty' (Method bind) = pretty bind
-  pretty' (AssociatedDataFamily dataFamily) = pretty dataFamily
-  pretty' (AssociatedTypeDefault associatedTypeDefault) =
+  pretty (Signature signature) = pretty signature
+  pretty (Method bind) = pretty bind
+  pretty (AssociatedDataFamily dataFamily) = pretty dataFamily
+  pretty (AssociatedTypeDefault associatedTypeDefault) =
     pretty associatedTypeDefault
-  pretty' (AssociatedTypeFamily typeFamily) = pretty typeFamily
+  pretty (AssociatedTypeFamily typeFamily) = pretty typeFamily
 
 mkClassSignatureMember :: GHC.Sig GHC.GhcPs -> ClassMember
 mkClassSignatureMember = Signature . mkSignature
