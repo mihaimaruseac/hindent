@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Expression.RecordUpdateField
@@ -87,38 +86,77 @@ prettyFieldVertical Field {..} = do
     string " ="
     (space >> pretty val) <-|> (newline >> indentedBlock (pretty val))
 
-collectFieldsWith ::
-     CommentExtraction (GHC.Anno label)
-  => (label -> FieldName)
-  -> [GHC.LocatedA
-        (GHC.HsFieldBind (GHC.XRec GHC.GhcPs label) (GHC.LHsExpr GHC.GhcPs))]
-  -> [WithComments Field]
-collectFieldsWith mkLabel =
-  fmap (fmap (mkField (fmap mkLabel . fromGenLocated)) . fromGenLocated)
-
 collectFields :: GHC.LHsRecUpdFields GHC.GhcPs -> [WithComments Field]
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 collectFields GHC.RegularRecUpdFields {..} =
-  collectFieldsWith mkFieldNameFromFieldOcc recUpdFields
+  fmap (fmap mkRegularField . fromGenLocated) recUpdFields
 collectFields GHC.OverloadedRecUpdFields {..} =
-  collectFieldsWith mkFieldNameFromFieldLabelStrings olRecUpdFields
+  fmap (fmap mkOverloadedField . fromGenLocated) olRecUpdFields
 #elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
 collectFields GHC.RegularRecUpdFields {..} =
-  collectFieldsWith mkFieldNameFromAmbiguousFieldOcc recUpdFields
+  fmap (fmap mkRegularField . fromGenLocated) recUpdFields
 collectFields GHC.OverloadedRecUpdFields {..} =
-  collectFieldsWith mkFieldNameFromFieldLabelStrings olRecUpdFields
+  fmap (fmap mkOverloadedField . fromGenLocated) olRecUpdFields
 #else
-collectFields = collectFieldsWith mkFieldNameFromFieldOcc . either id id
+collectFields = fmap (fmap mkRegularField . fromGenLocated) . either id id
 #endif
-mkField ::
-     (GHC.XRec GHC.GhcPs label -> WithComments FieldName)
-  -> GHC.HsFieldBind (GHC.XRec GHC.GhcPs label) (GHC.LHsExpr GHC.GhcPs)
-  -> Field
-mkField wrapLabel GHC.HsFieldBind {..} =
+
+#if MIN_VERSION_ghc_lib_parser(9, 12, 1)
+mkRegularField ::
+     GHC.HsFieldBind (GHC.LFieldOcc GHC.GhcPs) (GHC.LHsExpr GHC.GhcPs) -> Field
+mkRegularField GHC.HsFieldBind {..} =
   Field
-    { fieldName = wrapLabel hfbLHS
+    { fieldName = mkFieldNameFromFieldOcc <$> fromGenLocated hfbLHS
     , value =
         if hfbPun
           then Nothing
           else Just $ mkExpression <$> fromGenLocated hfbRHS
     }
+
+mkOverloadedField ::
+     GHC.HsFieldBind (GHC.LFieldLabelStrings GHC.GhcPs) (GHC.LHsExpr GHC.GhcPs)
+  -> Field
+mkOverloadedField GHC.HsFieldBind {..} =
+  Field
+    { fieldName = mkFieldNameFromFieldLabelStrings <$> fromGenLocated hfbLHS
+    , value =
+        if hfbPun
+          then Nothing
+          else Just $ mkExpression <$> fromGenLocated hfbRHS
+    }
+#elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
+mkRegularField ::
+     GHC.HsFieldBind (GHC.LAmbiguousFieldOcc GHC.GhcPs) (GHC.LHsExpr GHC.GhcPs)
+  -> Field
+mkRegularField GHC.HsFieldBind {..} =
+  Field
+    { fieldName = mkFieldNameFromAmbiguousFieldOcc <$> fromGenLocated hfbLHS
+    , value =
+        if hfbPun
+          then Nothing
+          else Just $ mkExpression <$> fromGenLocated hfbRHS
+    }
+
+mkOverloadedField ::
+     GHC.HsFieldBind (GHC.LFieldLabelStrings GHC.GhcPs) (GHC.LHsExpr GHC.GhcPs)
+  -> Field
+mkOverloadedField GHC.HsFieldBind {..} =
+  Field
+    { fieldName = mkFieldNameFromFieldLabelStrings <$> fromGenLocated hfbLHS
+    , value =
+        if hfbPun
+          then Nothing
+          else Just $ mkExpression <$> fromGenLocated hfbRHS
+    }
+#else
+mkRegularField ::
+     GHC.HsFieldBind (GHC.LFieldOcc GHC.GhcPs) (GHC.LHsExpr GHC.GhcPs) -> Field
+mkRegularField GHC.HsFieldBind {..} =
+  Field
+    { fieldName = mkFieldNameFromFieldOcc <$> fromGenLocated hfbLHS
+    , value =
+        if hfbPun
+          then Nothing
+          else Just $ mkExpression <$> fromGenLocated hfbRHS
+    }
+#endif
