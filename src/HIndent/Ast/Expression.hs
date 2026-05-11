@@ -35,6 +35,7 @@ import HIndent.Ast.Expression.OverloadedLabel
   , mkOverloadedLabel
   )
 import HIndent.Ast.Expression.Pragmatic (ExpressionPragma, mkExpressionPragma)
+import HIndent.Ast.Expression.QualifiedDo (QualifiedDo, mkQualifiedDo)
 import HIndent.Ast.Expression.RangeExpression
   ( RangeExpression
   , mkRangeExpression
@@ -50,7 +51,6 @@ import HIndent.Ast.Expression.RecordUpdateField
 import HIndent.Ast.Guard (Guard, mkMultiWayIfExprGuard)
 import HIndent.Ast.LocalBinds (LocalBinds, mkLocalBinds)
 import HIndent.Ast.MatchGroup (MatchGroup, hasMatches, mkExprMatchGroup)
-import HIndent.Ast.Module.Name (mkModuleName)
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.Pattern
@@ -65,7 +65,6 @@ import HIndent.CabalFile ()
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-import HIndent.Pretty.Types (DoOrMdo(..), QualifiedDo(..))
 import HIndent.Printer
 import qualified Language.Haskell.Syntax.Basic as HS
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
@@ -554,16 +553,16 @@ mkExpression (GHC.HsDo _ GHC.MonadComp statements) =
   ListComprehension
     $ LC.mkListComprehension . fmap (fmap mkExprStatement . fromGenLocated)
         <$> fromGenLocated statements
-mkExpression (GHC.HsDo _ (GHC.DoExpr moduleName) statements) =
+mkExpression (GHC.HsDo _ stmtContext@(GHC.DoExpr _) statements) =
   DoBlock
-    { qualifiedDo = QualifiedDo (fmap mkModuleName moduleName) Do
+    { qualifiedDo = mkQualifiedDo stmtContext
     , statements =
         fmap (fmap mkExprStatement . fromGenLocated)
           <$> fromGenLocated statements
     }
-mkExpression (GHC.HsDo _ (GHC.MDoExpr moduleName) statements) =
+mkExpression (GHC.HsDo _ stmtContext@(GHC.MDoExpr _) statements) =
   DoBlock
-    { qualifiedDo = QualifiedDo (fmap mkModuleName moduleName) Mdo
+    { qualifiedDo = mkQualifiedDo stmtContext
     , statements =
         fmap (fmap mkExprStatement . fromGenLocated)
           <$> fromGenLocated statements

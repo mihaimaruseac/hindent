@@ -42,12 +42,6 @@ instance CommentExtraction l => CommentExtraction (GenLocated l e) where
 instance CommentExtraction (MatchGroup GhcPs a) where
   nodeComments MG {} = emptyNodeComments
 
-instance CommentExtraction DoOrMdo where
-  nodeComments = const emptyNodeComments
-
-instance CommentExtraction QualifiedDo where
-  nodeComments = const emptyNodeComments
-
 instance CommentExtraction (HsSigType GhcPs) where
   nodeComments HsSig {} = emptyNodeComments
 
