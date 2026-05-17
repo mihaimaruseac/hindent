@@ -17,87 +17,124 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
+import HIndent.Printer
 
-data Parameters
+data PatternSynonym
   = Prefix
-      { args :: [WithComments PrefixName]
+      { name :: WithComments PrefixName
+      , args :: [WithComments PrefixName]
+      , isImplicitBidirectional :: Bool
+      , explicitMatches :: Maybe MatchGroup
+      , definition :: WithComments PatInsidePatDecl
       }
   | Infix
       { leftArg :: WithComments PrefixName
+      , operator :: WithComments InfixName
       , rightArg :: WithComments PrefixName
+      , isImplicitBidirectional :: Bool
+      , explicitMatches :: Maybe MatchGroup
+      , definition :: WithComments PatInsidePatDecl
       }
   | Record
-      { fields :: [WithComments FieldName]
+      { name :: WithComments PrefixName
+      , fields :: [WithComments FieldName]
+      , isImplicitBidirectional :: Bool
+      , explicitMatches :: Maybe MatchGroup
+      , definition :: WithComments PatInsidePatDecl
       }
 
-data PatternSynonym = PatternSynonym
-  { name :: GHC.LIdP GHC.GhcPs
-  , parameters :: WithComments Parameters
-  , isImplicitBidirectional :: Bool
-  , explicitMatches :: Maybe MatchGroup
-  , definition :: WithComments PatInsidePatDecl
-  }
-
-instance CommentExtraction Parameters where
+instance CommentExtraction PatternSynonym where
   nodeComments Prefix {} = emptyNodeComments
   nodeComments Infix {} = emptyNodeComments
   nodeComments Record {} = emptyNodeComments
 
-instance CommentExtraction PatternSynonym where
-  nodeComments PatternSynonym {} = emptyNodeComments
-
-instance Pretty Parameters where
-  pretty' Prefix {..} = spaced $ fmap pretty args
-  pretty' Infix {..} = spaced [pretty leftArg, pretty rightArg]
-  pretty' Record {..} = hFields $ fmap pretty fields
-
 instance Pretty PatternSynonym where
-  pretty' PatternSynonym {..} = do
+  pretty' Prefix {..} = do
     string "pattern "
-    case getNode parameters of
-      Infix {..} ->
-        spaced [pretty leftArg, pretty $ fmap mkInfixName name, pretty rightArg]
-      Prefix {args = []} -> pretty $ fmap mkPrefixName name
-      _ -> spaced [pretty $ fmap mkPrefixName name, pretty parameters]
-    let arrow =
-          if isImplicitBidirectional
-            then "="
-            else "<-"
-    spacePrefixed [string arrow, pretty definition]
-    whenJust explicitMatches $ \matches -> do
-      newline
-      indentedBlock $ string "where " |=> pretty matches
-
-mkParameters :: GHC.HsPatSynDetails GHC.GhcPs -> Parameters
-#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-mkParameters (GHC.PrefixCon args) =
-  Prefix {args = map (fromGenLocated . fmap mkPrefixName) args}
-#else
-mkParameters (GHC.PrefixCon _ args) =
-  Prefix {args = map (fromGenLocated . fmap mkPrefixName) args}
-#endif
-mkParameters (GHC.InfixCon l r) =
-  Infix
-    { leftArg = fromGenLocated $ fmap mkPrefixName l
-    , rightArg = fromGenLocated $ fmap mkPrefixName r
-    }
-mkParameters (GHC.RecCon fields) =
-  Record
-    { fields =
-        map
-          (mkWithComments . mkFieldNameFromFieldOcc . GHC.recordPatSynField)
-          fields
-    }
+    spaced $ pretty name : fmap pretty args
+    prettySuffix isImplicitBidirectional definition explicitMatches
+  pretty' Infix {..} = do
+    string "pattern "
+    spaced [pretty leftArg, pretty operator, pretty rightArg]
+    prettySuffix isImplicitBidirectional definition explicitMatches
+  pretty' Record {..} = do
+    string "pattern "
+    spaced [pretty name, hFields $ fmap pretty fields]
+    prettySuffix isImplicitBidirectional definition explicitMatches
 
 mkPatternSynonym :: GHC.PatSynBind GHC.GhcPs GHC.GhcPs -> PatternSynonym
-mkPatternSynonym GHC.PSB {..} = PatternSynonym {..}
+#if MIN_VERSION_ghc_lib_parser(9, 14, 0)
+mkPatternSynonym GHC.PSB {GHC.psb_args = GHC.PrefixCon prefixArgs, ..} =
+  Prefix
+    { name = fromGenLocated $ fmap mkPrefixName psb_id
+    , args = map (fromGenLocated . fmap mkPrefixName) prefixArgs
+    , definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
+    , ..
+    }
   where
-    name = psb_id
-    parameters = mkWithComments $ mkParameters psb_args
     (isImplicitBidirectional, explicitMatches) =
       case psb_dir of
         GHC.Unidirectional -> (False, Nothing)
         GHC.ImplicitBidirectional -> (True, Nothing)
         GHC.ExplicitBidirectional matches ->
           (False, Just $ mkExprMatchGroup matches)
-    definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
+#else
+mkPatternSynonym GHC.PSB {GHC.psb_args = GHC.PrefixCon _ prefixArgs, ..} =
+  Prefix
+    { name = fromGenLocated $ fmap mkPrefixName psb_id
+    , args = map (fromGenLocated . fmap mkPrefixName) prefixArgs
+    , definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
+    , ..
+    }
+  where
+    (isImplicitBidirectional, explicitMatches) =
+      case psb_dir of
+        GHC.Unidirectional -> (False, Nothing)
+        GHC.ImplicitBidirectional -> (True, Nothing)
+        GHC.ExplicitBidirectional matches ->
+          (False, Just $ mkExprMatchGroup matches)
+#endif
+mkPatternSynonym GHC.PSB {GHC.psb_args = GHC.InfixCon leftArg rightArg, ..} =
+  Infix
+    { leftArg = fromGenLocated $ fmap mkPrefixName leftArg
+    , operator = fromGenLocated $ fmap mkInfixName psb_id
+    , rightArg = fromGenLocated $ fmap mkPrefixName rightArg
+    , definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
+    , ..
+    }
+  where
+    (isImplicitBidirectional, explicitMatches) =
+      case psb_dir of
+        GHC.Unidirectional -> (False, Nothing)
+        GHC.ImplicitBidirectional -> (True, Nothing)
+        GHC.ExplicitBidirectional matches ->
+          (False, Just $ mkExprMatchGroup matches)
+mkPatternSynonym GHC.PSB {GHC.psb_args = GHC.RecCon recordFields, ..} =
+  Record
+    { name = fromGenLocated $ fmap mkPrefixName psb_id
+    , fields =
+        map
+          (mkWithComments . mkFieldNameFromFieldOcc . GHC.recordPatSynField)
+          recordFields
+    , definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
+    , ..
+    }
+  where
+    (isImplicitBidirectional, explicitMatches) =
+      case psb_dir of
+        GHC.Unidirectional -> (False, Nothing)
+        GHC.ImplicitBidirectional -> (True, Nothing)
+        GHC.ExplicitBidirectional matches ->
+          (False, Just $ mkExprMatchGroup matches)
+
+prettySuffix ::
+     Bool -> WithComments PatInsidePatDecl -> Maybe MatchGroup -> Printer ()
+prettySuffix isImplicitBidirectional definition explicitMatches = do
+  let arrow =
+        if isImplicitBidirectional
+          then "="
+          else "<-"
+  spacePrefixed [string arrow, pretty definition]
+  whenJust explicitMatches $ \matches -> do
+    newline
+    indentedBlock $ string "where " |=> pretty matches
