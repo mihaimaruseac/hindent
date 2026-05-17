@@ -17,13 +17,10 @@ module HIndent.Pretty.Types
   , Context(..)
   , HorizontalContext(..)
   , VerticalContext(..)
-  , DoOrMdo(..)
-  , QualifiedDo(..)
   , DataFamInstDeclFor(..)
   ) where
 
 import GHC.Hs
-import {-# SOURCE #-} qualified HIndent.Ast.Module.Name as HIndent
 #if !MIN_VERSION_ghc_lib_parser(9,6,1)
 import GHC.Unit
 #endif
@@ -91,16 +88,6 @@ newtype HorizontalContext =
 newtype VerticalContext =
   VerticalContext (Maybe (LHsContext GhcPs))
 #endif
--- | Values indicating whether `do` or `mdo` is used.
-data DoOrMdo
-  = Do
-  | Mdo
-
--- | Values indicating whether the `do` is qualified with a module name (and
--- whether `do` or `mdo` is used)
-data QualifiedDo =
-  QualifiedDo (Maybe HIndent.ModuleName) DoOrMdo
-
 -- | Values indicating where a data family instance is declared.
 data DataFamInstDeclFor
   = DataFamInstDeclForTopLevel

@@ -403,17 +403,6 @@ prettyHsLit x =
             indentedWithSpace (-1)
               $ lined
               $ fmap (string . dropWhile (/= '\\')) ss
-
-instance Pretty DoOrMdo where
-  pretty' Do = string "do"
-  pretty' Mdo = string "mdo"
-
-instance Pretty QualifiedDo where
-  pretty' (QualifiedDo (Just m) d) = do
-    pretty m
-    string "."
-    pretty d
-  pretty' (QualifiedDo Nothing d) = pretty d
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty GHC.FieldLabelString where
   pretty' = output
