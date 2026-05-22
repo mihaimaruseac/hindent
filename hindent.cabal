@@ -117,6 +117,8 @@ library
       HIndent.Ast.Import.Entry.Collection
       HIndent.Ast.Import.ImportingOrHiding
       HIndent.Ast.LocalBinds
+      HIndent.Ast.LocalBinds.Declaration
+      HIndent.Ast.LocalBinds.Declaration.Collection
       HIndent.Ast.LocalBinds.ImplicitBinding
       HIndent.Ast.LocalBinds.ImplicitBindings
       HIndent.Ast.Match
