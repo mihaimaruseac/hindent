@@ -341,7 +341,7 @@ benchmark hindent-bench
     , base >=4.7 && <5
     , bytestring
     , containers
-    , criterion
+    , criterion >=1.6.5.0
     , deepseq
     , directory
     , exceptions
