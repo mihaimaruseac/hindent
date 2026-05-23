@@ -84,7 +84,7 @@ benchmarks:
     main: Main.hs
     source-dirs: benchmarks
     dependencies:
-      - criterion
+      - criterion >= 1.6.5.0
       - deepseq
       - hindent
       - hindent-internal
