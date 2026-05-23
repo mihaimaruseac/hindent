@@ -148,6 +148,7 @@ library
       HIndent.Ast.Type.Strictness
       HIndent.Ast.Type.Unpackedness
       HIndent.Ast.Type.Variable
+      HIndent.Ast.WhereClause
       HIndent.Ast.WithComments
       HIndent.ByteString
       HIndent.CabalFile

@@ -20,6 +20,7 @@ import {-# SOURCE #-} HIndent.Ast.Expression
   , mkGuardExpression
   )
 import HIndent.Ast.NodeComments
+import HIndent.Ast.Statement (ExprStatement, mkExprStatement)
 import HIndent.Ast.WithComments (WithComments, fromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -36,12 +37,12 @@ data GuardContext
 data Guard
   = ExprGuard
       { guardContext :: GuardContext
-      , conditions :: [GHC.GuardLStmt GHC.GhcPs]
+      , conditions :: [WithComments ExprStatement]
       , expr :: WithComments GuardExpression
       }
   | CmdGuard
       { guardContext :: GuardContext
-      , conditions :: [GHC.GuardLStmt GHC.GhcPs]
+      , conditions :: [WithComments ExprStatement]
       , cmd :: WithComments Cmd
       }
 
@@ -92,39 +93,46 @@ mkExprGuard :: GHC.GRHS GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Guard
 mkExprGuard (GHC.GRHS _ conditions resultExpr) =
   ExprGuard
     { guardContext = PlainGuard
+    , conditions = fmap (fmap mkExprStatement . fromGenLocated) conditions
     , expr = mkGuardExpression . mkExpression <$> fromGenLocated resultExpr
-    , ..
     }
 
 mkCaseExprGuard :: GHC.GRHS GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Guard
 mkCaseExprGuard (GHC.GRHS _ conditions resultExpr) =
   ExprGuard
     { guardContext = CaseGuard
+    , conditions = fmap (fmap mkExprStatement . fromGenLocated) conditions
     , expr = mkGuardExpression . mkExpression <$> fromGenLocated resultExpr
-    , ..
     }
 
 mkLambdaExprGuard :: GHC.GRHS GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Guard
 mkLambdaExprGuard (GHC.GRHS _ conditions resultExpr) =
   ExprGuard
     { guardContext = LambdaGuard
+    , conditions = fmap (fmap mkExprStatement . fromGenLocated) conditions
     , expr = mkGuardExpression . mkExpression <$> fromGenLocated resultExpr
-    , ..
     }
 
 mkMultiWayIfExprGuard :: GHC.GRHS GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Guard
 mkMultiWayIfExprGuard (GHC.GRHS _ conditions resultExpr) =
   ExprGuard
     { guardContext = MultiWayIfGuard
+    , conditions = fmap (fmap mkExprStatement . fromGenLocated) conditions
     , expr = mkGuardExpression . mkExpression <$> fromGenLocated resultExpr
-    , ..
     }
 
 mkCaseCmdGuard :: GHC.GRHS GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> Guard
 mkCaseCmdGuard (GHC.GRHS _ conditions cmd) =
-  CmdGuard {guardContext = CaseGuard, cmd = fmap mkCmd (fromGenLocated cmd), ..}
+  CmdGuard
+    { guardContext = CaseGuard
+    , conditions = fmap (fmap mkExprStatement . fromGenLocated) conditions
+    , cmd = fmap mkCmd (fromGenLocated cmd)
+    }
 
 mkLambdaCmdGuard :: GHC.GRHS GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> Guard
 mkLambdaCmdGuard (GHC.GRHS _ conditions cmd) =
   CmdGuard
-    {guardContext = LambdaGuard, cmd = fmap mkCmd (fromGenLocated cmd), ..}
+    { guardContext = LambdaGuard
+    , conditions = fmap (fmap mkExprStatement . fromGenLocated) conditions
+    , cmd = fmap mkCmd (fromGenLocated cmd)
+    }
