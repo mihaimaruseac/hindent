@@ -137,6 +137,7 @@ library
       HIndent.Ast.Record.Field
       HIndent.Ast.Role
       HIndent.Ast.Statement
+      HIndent.Ast.TextValue
       HIndent.Ast.Type
       HIndent.Ast.Type.Argument
       HIndent.Ast.Type.Argument.Collection
@@ -209,6 +210,7 @@ library
     , regex-tdfa
     , split
     , syb
+    , text
     , transformers
     , unicode-show
     , utf8-string
@@ -245,6 +247,7 @@ library hindent-internal
     , regex-tdfa
     , split
     , syb
+    , text
     , transformers
     , unicode-show
     , utf8-string
@@ -280,6 +283,7 @@ executable hindent
     , regex-tdfa
     , split
     , syb
+    , text
     , transformers
     , unicode-show
     , utf8-string
@@ -319,6 +323,7 @@ test-suite hindent-test
     , regex-tdfa
     , split
     , syb
+    , text
     , transformers
     , unicode-show
     , utf8-string
@@ -358,6 +363,7 @@ benchmark hindent-bench
     , regex-tdfa
     , split
     , syb
+    , text
     , transformers
     , unicode-show
     , utf8-string

@@ -45,6 +45,7 @@ dependencies:
   - regex-tdfa
   - split
   - syb
+  - text
   - transformers
   - unicode-show
   - utf8-string
