@@ -72,8 +72,11 @@ library
       HIndent.Ast.Declaration.Foreign.CallingConvention
       HIndent.Ast.Declaration.Foreign.Safety
       HIndent.Ast.Declaration.Instance.Class
+      HIndent.Ast.Declaration.Instance.Class.Body
+      HIndent.Ast.Declaration.Instance.Class.Member
       HIndent.Ast.Declaration.Instance.Class.OverlapMode
       HIndent.Ast.Declaration.Instance.Family.Data
+      HIndent.Ast.Declaration.Instance.Family.Data.Associated
       HIndent.Ast.Declaration.Instance.Family.Type
       HIndent.Ast.Declaration.Instance.Family.Type.Associated
       HIndent.Ast.Declaration.Instance.Family.Type.Associated.Default
