@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.LocalBinds
   ( LocalBinds
@@ -9,51 +10,49 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified GHC.Data.Bag as GHC
 #endif
+import HIndent.Ast.LocalBinds.Declaration.Collection
 import HIndent.Ast.LocalBinds.ImplicitBindings
   ( ImplicitBindings
   , mkImplicitBindings
   )
-import HIndent.Ast.NodeComments (NodeComments(..))
-import HIndent.Ast.WithComments (WithComments, fromEpAnn, fromGenLocated)
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
-import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
-import qualified HIndent.Pretty.SigBindFamily as SBF
+import HIndent.Ast.WithComments (WithComments, fromEpAnn)
+import {-# SOURCE #-} HIndent.Pretty (Pretty(..))
+import HIndent.Pretty.NodeComments (CommentExtraction(..), emptyNodeComments)
 
 data LocalBinds
   = Value
-      { sigBindFamilies :: [WithComments SBF.SigBindFamily]
+      { declarations :: LocalDeclarationCollection
       }
   | ImplicitParameters
       { implicitBindings :: ImplicitBindings
       }
 
 instance CommentExtraction LocalBinds where
-  nodeComments Value {} = NodeComments [] [] []
-  nodeComments ImplicitParameters {} = NodeComments [] [] []
+  nodeComments _ = emptyNodeComments
 
 instance Pretty LocalBinds where
-  pretty' Value {sigBindFamilies = families} = lined $ fmap pretty families
-  pretty' (ImplicitParameters {implicitBindings = binds}) = pretty binds
+  pretty' Value {..} = pretty' declarations
+  pretty' ImplicitParameters {..} = pretty' implicitBindings
 
 mkLocalBinds :: GHC.HsLocalBinds GHC.GhcPs -> Maybe (WithComments LocalBinds)
 mkLocalBinds (GHC.HsValBinds ann binds) =
-  Just $ fromEpAnn ann $ Value {sigBindFamilies = mkSigBindFamilies binds}
+  Just
+    $ fromEpAnn ann
+    $ Value {declarations = mkLocalDeclarationCollectionFromValBinds binds}
 mkLocalBinds (GHC.HsIPBinds ann binds) =
   Just
     $ fromEpAnn ann
     $ ImplicitParameters {implicitBindings = mkImplicitBindings binds}
 mkLocalBinds GHC.EmptyLocalBinds {} = Nothing
 
-mkSigBindFamilies ::
-     GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> [WithComments SBF.SigBindFamily]
+mkLocalDeclarationCollectionFromValBinds ::
+     GHC.HsValBindsLR GHC.GhcPs GHC.GhcPs -> LocalDeclarationCollection
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-mkSigBindFamilies (GHC.ValBinds _ binds sigs) =
-  fmap fromGenLocated $ SBF.mkSortedLSigBindFamilyList sigs binds [] [] [] []
+mkLocalDeclarationCollectionFromValBinds (GHC.ValBinds _ binds sigs) =
+  mkLocalDeclarationCollection sigs binds
 #else
-mkSigBindFamilies (GHC.ValBinds _ bindBag sigs) =
-  fromGenLocated
-    <$> SBF.mkSortedLSigBindFamilyList sigs (GHC.bagToList bindBag) [] [] [] []
+mkLocalDeclarationCollectionFromValBinds (GHC.ValBinds _ bindBag sigs) =
+  mkLocalDeclarationCollection sigs (GHC.bagToList bindBag)
 #endif
-mkSigBindFamilies GHC.XValBindsLR {} =
+mkLocalDeclarationCollectionFromValBinds GHC.XValBindsLR {} =
   error "`ghc-lib-parser` never generates this AST node."

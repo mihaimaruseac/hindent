@@ -1,0 +1,28 @@
+module HIndent.Ast.LocalBinds.Declaration
+  ( LocalDeclaration
+  , mkLocalSignatureDeclaration
+  , mkLocalBindingDeclaration
+  ) where
+
+import {-# SOURCE #-} HIndent.Ast.Declaration.Bind
+import HIndent.Ast.Declaration.Signature
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty.NodeComments (CommentExtraction(..), emptyNodeComments)
+
+data LocalDeclaration
+  = Binding Bind
+  | Signature Signature
+
+instance CommentExtraction LocalDeclaration where
+  nodeComments _ = emptyNodeComments
+
+instance Pretty LocalDeclaration where
+  pretty' (Binding bind) = pretty bind
+  pretty' (Signature signature) = pretty signature
+
+mkLocalSignatureDeclaration :: GHC.Sig GHC.GhcPs -> LocalDeclaration
+mkLocalSignatureDeclaration = Signature . mkSignature
+
+mkLocalBindingDeclaration :: GHC.HsBind GHC.GhcPs -> LocalDeclaration
+mkLocalBindingDeclaration = Binding . mkBind
