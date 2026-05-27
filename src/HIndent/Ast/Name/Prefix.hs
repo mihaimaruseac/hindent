@@ -10,18 +10,20 @@ module HIndent.Ast.Name.Prefix
   ) where
 
 import Data.Maybe
+import qualified Data.Text as Text
 import qualified GHC.Types.Fixity as Fixity
 import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import HIndent.Ast.Module.Name
 import HIndent.Ast.NodeComments
+import HIndent.Ast.TextValue (TextValue, mkTextValueFromString, toText)
 import HIndent.Fixity (fixities)
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 data PrefixName = PrefixName
-  { name :: String
+  { name :: TextValue
   , moduleName :: Maybe ModuleName
   , parentheses :: Bool
   }
@@ -31,7 +33,7 @@ instance CommentExtraction PrefixName where
 
 instance Pretty PrefixName where
   pretty' PrefixName {..} =
-    wrap $ hDotSep $ catMaybes [pretty <$> moduleName, Just $ string name]
+    wrap $ hDotSep $ catMaybes [pretty <$> moduleName, Just $ pretty name]
     where
       wrap =
         if parentheses
@@ -40,19 +42,25 @@ instance Pretty PrefixName where
 
 mkPrefixName :: GHC.RdrName -> PrefixName
 mkPrefixName (GHC.Unqual name) =
-  PrefixName (showOutputable name) Nothing (parensNeeded name)
+  PrefixName
+    (mkTextValueFromString $ showOutputable name)
+    Nothing
+    (parensNeeded name)
 mkPrefixName (GHC.Qual modName name) =
   PrefixName
-    (showOutputable name)
+    (mkTextValueFromString $ showOutputable name)
     (Just $ mkModuleName modName)
     (parensNeeded name)
 mkPrefixName (GHC.Orig {}) =
   error "This AST node should not appear in the parser output."
 mkPrefixName (GHC.Exact name) =
-  PrefixName (showOutputable name) Nothing (parensNeeded $ GHC.occName name)
+  PrefixName
+    (mkTextValueFromString $ showOutputable name)
+    Nothing
+    (parensNeeded $ GHC.occName name)
 
 fromString :: String -> PrefixName
-fromString name = PrefixName name Nothing False
+fromString value = PrefixName (mkTextValueFromString value) Nothing False
 
 newtype PrefixAsInfix =
   PrefixAsInfix PrefixName
@@ -62,7 +70,7 @@ instance CommentExtraction PrefixAsInfix where
 
 instance Pretty PrefixAsInfix where
   pretty' (PrefixAsInfix PrefixName {..}) =
-    wrap $ hDotSep $ catMaybes [pretty <$> moduleName, Just $ string name]
+    wrap $ hDotSep $ catMaybes [pretty <$> moduleName, Just $ pretty name]
     where
       wrap =
         if parentheses
@@ -74,7 +82,7 @@ mkPrefixAsInfix = PrefixAsInfix
 
 prefixAsInfixFixity :: PrefixAsInfix -> Fixity.Fixity
 prefixAsInfixFixity (PrefixAsInfix PrefixName {..}) =
-  fromMaybe Fixity.defaultFixity $ lookup name fixities
+  fromMaybe Fixity.defaultFixity $ lookup (Text.unpack $ toText name) fixities
 
 parensNeeded :: GHC.OccName -> Bool
 parensNeeded = GHC.isSymOcc

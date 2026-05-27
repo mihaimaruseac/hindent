@@ -6,18 +6,20 @@ module HIndent.Ast.Expression.OverloadedLabel
   ) where
 
 import qualified GHC.Data.FastString as GHC
+import HIndent.Ast.TextValue
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 newtype OverloadedLabel =
-  OverloadedLabel String
+  OverloadedLabel TextValue
 
 instance CommentExtraction OverloadedLabel where
   nodeComments OverloadedLabel {} = emptyNodeComments
 
 instance Pretty OverloadedLabel where
-  pretty' (OverloadedLabel s) = string "#" >> string s
+  pretty' (OverloadedLabel value) = string "#" >> pretty value
 
 mkOverloadedLabel :: GHC.FastString -> OverloadedLabel
-mkOverloadedLabel fs = OverloadedLabel $ GHC.unpackFS fs
+mkOverloadedLabel value =
+  OverloadedLabel $ mkTextValueFromString $ GHC.unpackFS value

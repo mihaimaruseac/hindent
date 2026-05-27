@@ -5,27 +5,31 @@ module HIndent.Ast.FileHeaderPragma
 
 import Data.Bifunctor
 import Data.Char
-import Data.List (intercalate)
 import Data.List.Split
+import qualified Data.Text as Text
 import qualified GHC.Hs as GHC
 import HIndent.Ast.NodeComments
+import HIndent.Ast.TextValue
 import HIndent.Pragma
 import HIndent.Pretty
-import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 newtype FileHeaderPragma =
-  FileHeaderPragma String
+  FileHeaderPragma TextValue
 
 instance CommentExtraction FileHeaderPragma where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty FileHeaderPragma where
-  pretty' (FileHeaderPragma x) = string x
+  pretty' (FileHeaderPragma value) = pretty value
 
 mkFileHeaderPragma :: GHC.EpaCommentTok -> Maybe FileHeaderPragma
 mkFileHeaderPragma =
-  fmap (FileHeaderPragma . uncurry constructPragma) . extractPragma
+  fmap
+    (FileHeaderPragma
+       . uncurry constructPragma
+       . bimap mkTextValueFromString (fmap mkTextValueFromString))
+    . extractPragma
 
 -- | This function returns a 'Just' value with the pragma
 -- extracted from the passed 'EpaCommentTok' if it has one. Otherwise, it
@@ -38,6 +42,13 @@ extractPragma (GHC.EpaBlockComment c) =
 extractPragma _ = Nothing
 
 -- | Construct a pragma.
-constructPragma :: String -> [String] -> String
+constructPragma :: TextValue -> [TextValue] -> TextValue
 constructPragma optionOrPragma xs =
-  "{-# " ++ fmap toUpper optionOrPragma ++ " " ++ intercalate ", " xs ++ " #-}"
+  mkTextValueFromText
+    $ Text.concat
+        [ Text.pack "{-# "
+        , Text.map toUpper $ toText optionOrPragma
+        , Text.pack " "
+        , Text.intercalate (Text.pack ", ") $ fmap toText xs
+        , Text.pack " #-}"
+        ]
