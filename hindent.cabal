@@ -47,7 +47,9 @@ library
       HIndent.Ast.Declaration.Bind
       HIndent.Ast.Declaration.Bind.GuardedRhs
       HIndent.Ast.Declaration.Class
+      HIndent.Ast.Declaration.Class.Body
       HIndent.Ast.Declaration.Class.FunctionalDependency
+      HIndent.Ast.Declaration.Class.Member
       HIndent.Ast.Declaration.Class.NameAndTypeVariables
       HIndent.Ast.Declaration.Collection
       HIndent.Ast.Declaration.Data
