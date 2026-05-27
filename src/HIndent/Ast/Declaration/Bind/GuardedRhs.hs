@@ -23,8 +23,8 @@ import HIndent.Ast.Guard
   , mkLambdaExprGuard
   , mkMultiWayIfExprGuard
   )
-import HIndent.Ast.LocalBinds (LocalBinds, mkLocalBinds)
 import HIndent.Ast.NodeComments (NodeComments(..))
+import HIndent.Ast.WhereClause (WhereClause, mkWhereClause)
 import HIndent.Ast.WithComments (WithComments, fromGenLocated, prettyWith)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -33,7 +33,7 @@ import HIndent.Pretty.NodeComments
 
 data GuardedRhs = GuardedRhs
   { guards :: [WithComments Guard]
-  , localBinds :: Maybe (WithComments LocalBinds)
+  , whereClause :: Maybe (WithComments WhereClause)
   }
 
 instance CommentExtraction GuardedRhs where
@@ -42,53 +42,51 @@ instance CommentExtraction GuardedRhs where
 instance Pretty GuardedRhs where
   pretty' GuardedRhs {..} = do
     mapM_ pretty guards
-    whenJust localBinds $ \lbs ->
-      indentedBlock
-        $ newlinePrefixed
-            [string "where", prettyWith lbs $ indentedBlock . pretty]
+    whenJust whereClause $ \clause ->
+      indentedBlock $ newlinePrefixed [prettyWith clause pretty]
 
 mkGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
-mkGuardedRhs GHC.GRHSs {..} =
+mkGuardedRhs grhss@GHC.GRHSs {..} =
   GuardedRhs
     { guards = fmap (fmap mkExprGuard . fromGenLocated) (toList grhssGRHSs)
-    , localBinds = mkLocalBinds grhssLocalBinds
+    , whereClause = mkWhereClause grhss
     }
 
 mkCaseGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
-mkCaseGuardedRhs GHC.GRHSs {..} =
+mkCaseGuardedRhs grhss@GHC.GRHSs {..} =
   GuardedRhs
     { guards = fmap (fmap mkCaseExprGuard . fromGenLocated) (toList grhssGRHSs)
-    , localBinds = mkLocalBinds grhssLocalBinds
+    , whereClause = mkWhereClause grhss
     }
 
 mkLambdaGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
-mkLambdaGuardedRhs GHC.GRHSs {..} =
+mkLambdaGuardedRhs grhss@GHC.GRHSs {..} =
   GuardedRhs
     { guards =
         fmap (fmap mkLambdaExprGuard . fromGenLocated) (toList grhssGRHSs)
-    , localBinds = mkLocalBinds grhssLocalBinds
+    , whereClause = mkWhereClause grhss
     }
 
 mkMultiWayIfGuardedRhs ::
      GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
-mkMultiWayIfGuardedRhs GHC.GRHSs {..} =
+mkMultiWayIfGuardedRhs grhss@GHC.GRHSs {..} =
   GuardedRhs
     { guards =
         fmap (fmap mkMultiWayIfExprGuard . fromGenLocated) (toList grhssGRHSs)
-    , localBinds = mkLocalBinds grhssLocalBinds
+    , whereClause = mkWhereClause grhss
     }
 
 mkCaseCmdGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> GuardedRhs
-mkCaseCmdGuardedRhs GHC.GRHSs {..} =
+mkCaseCmdGuardedRhs grhss@GHC.GRHSs {..} =
   GuardedRhs
     { guards = fmap (fmap mkCaseCmdGuard . fromGenLocated) (toList grhssGRHSs)
-    , localBinds = mkLocalBinds grhssLocalBinds
+    , whereClause = mkWhereClause grhss
     }
 
 mkLambdaCmdGuardedRhs ::
      GHC.GRHSs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> GuardedRhs
-mkLambdaCmdGuardedRhs GHC.GRHSs {..} =
+mkLambdaCmdGuardedRhs grhss@GHC.GRHSs {..} =
   GuardedRhs
     { guards = fmap (fmap mkLambdaCmdGuard . fromGenLocated) (toList grhssGRHSs)
-    , localBinds = mkLocalBinds grhssLocalBinds
+    , whereClause = mkWhereClause grhss
     }
