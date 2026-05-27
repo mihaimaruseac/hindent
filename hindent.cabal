@@ -66,6 +66,7 @@ library
       HIndent.Ast.Declaration.Default
       HIndent.Ast.Declaration.Family.Data
       HIndent.Ast.Declaration.Family.Type
+      HIndent.Ast.Declaration.Family.Type.Equation
       HIndent.Ast.Declaration.Family.Type.Injectivity
       HIndent.Ast.Declaration.Family.Type.ResultSignature
       HIndent.Ast.Declaration.Foreign

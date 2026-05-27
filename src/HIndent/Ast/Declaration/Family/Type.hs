@@ -8,6 +8,10 @@ module HIndent.Ast.Declaration.Family.Type
 import Control.Monad
 import qualified GHC.Types.Basic as GHC
 import HIndent.Applicative
+import HIndent.Ast.Declaration.Family.Type.Equation
+  ( TypeEquation
+  , mkTypeEquation
+  )
 import HIndent.Ast.Declaration.Family.Type.Injectivity
 import HIndent.Ast.Declaration.Family.Type.ResultSignature
 import HIndent.Ast.Name.Prefix
@@ -25,7 +29,7 @@ data TypeFamily = TypeFamily
   , typeVariables :: [WithComments TypeVariable]
   , signature :: WithComments ResultSignature
   , injectivity :: Maybe (WithComments Injectivity)
-  , equations :: Maybe [WithComments (GHC.TyFamInstEqn GHC.GhcPs)]
+  , equations :: Maybe [WithComments TypeEquation]
   }
 
 instance CommentExtraction TypeFamily where
@@ -60,4 +64,5 @@ mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
         GHC.DataFamily -> error "Not a TypeFamily"
         GHC.OpenTypeFamily -> Nothing
         GHC.ClosedTypeFamily Nothing -> Just []
-        GHC.ClosedTypeFamily (Just xs) -> Just $ fmap fromGenLocated xs
+        GHC.ClosedTypeFamily (Just xs) ->
+          Just $ fmap (fmap mkTypeEquation . fromGenLocated) xs
