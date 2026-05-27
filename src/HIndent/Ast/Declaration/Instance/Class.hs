@@ -8,6 +8,7 @@ module HIndent.Ast.Declaration.Instance.Class
 
 import Control.Monad
 import HIndent.Applicative
+import HIndent.Ast.Declaration.Instance.Class.Body
 import HIndent.Ast.Declaration.Instance.Class.OverlapMode
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type (InstDeclType, mkInstDeclType)
@@ -16,62 +17,57 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-import HIndent.Pretty.SigBindFamily
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified GHC.Data.Bag as GHC
 #endif
 data ClassInstance = ClassInstance
   { overlapMode :: Maybe (WithComments OverlapMode)
-  , cid_sigs :: [GHC.LSig GHC.GhcPs]
-  , binds :: [GHC.LocatedA (GHC.HsBindLR GHC.GhcPs GHC.GhcPs)]
-  , cid_tyfam_insts :: [GHC.LTyFamInstDecl GHC.GhcPs]
-  , cid_datafam_insts :: [GHC.LDataFamInstDecl GHC.GhcPs]
-  , cid_poly_ty :: WithComments InstDeclType
+  , body :: ClassInstanceBody
+  , instanceType :: WithComments InstDeclType
   }
 
 instance CommentExtraction ClassInstance where
   nodeComments ClassInstance {} = NodeComments [] [] []
 
 instance Pretty ClassInstance where
-  pretty' (ClassInstance {..}) = do
+  pretty' ClassInstance {..} = do
     string "instance " |=> do
       whenJust overlapMode $ \x -> do
         pretty x
         space
-      pretty cid_poly_ty |=> unless (null sigsAndMethods) (string " where")
-    unless (null sigsAndMethods) $ do
+      pretty instanceType |=> when (hasClassInstanceBody body) (string " where")
+    when (hasClassInstanceBody body) $ do
       newline
-      indentedBlock $ lined $ fmap pretty sigsAndMethods
-    where
-      sigsAndMethods =
-        mkSortedLSigBindFamilyList
-          cid_sigs
-          binds
-          []
-          cid_tyfam_insts
-          []
-          cid_datafam_insts
+      indentedBlock $ pretty body
 
 mkClassInstance :: GHC.InstDecl GHC.GhcPs -> Maybe ClassInstance
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkClassInstance GHC.ClsInstD {cid_inst = GHC.ClsInstDecl {..}} =
   Just
     $ ClassInstance
-        { cid_poly_ty =
+        { instanceType =
             flattenComments $ mkInstDeclType <$> fromGenLocated cid_poly_ty
-        , binds = cid_binds
+        , body =
+            mkClassInstanceBody
+              cid_sigs
+              cid_binds
+              cid_tyfam_insts
+              cid_datafam_insts
         , overlapMode = fmap mkOverlapMode . fromGenLocated <$> cid_overlap_mode
-        , ..
         }
 #else
 mkClassInstance GHC.ClsInstD {cid_inst = GHC.ClsInstDecl {..}} =
   Just
     $ ClassInstance
-        { cid_poly_ty =
+        { instanceType =
             flattenComments $ mkInstDeclType <$> fromGenLocated cid_poly_ty
-        , binds = GHC.bagToList cid_binds
+        , body =
+            mkClassInstanceBody
+              cid_sigs
+              (GHC.bagToList cid_binds)
+              cid_tyfam_insts
+              cid_datafam_insts
         , overlapMode = fmap mkOverlapMode . fromGenLocated <$> cid_overlap_mode
-        , ..
         }
 #endif
 mkClassInstance _ = Nothing
