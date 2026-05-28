@@ -10,7 +10,6 @@ import HIndent.Ast.Match (Match, mkCmdMatch, mkExprMatch)
 import HIndent.Ast.WithComments
   ( WithComments
   , fromGenLocated
-  , getComments
   , getNode
   , prettyWith
   )
@@ -22,7 +21,7 @@ newtype MatchGroup =
   MatchGroup (WithComments [WithComments Match])
 
 instance CommentExtraction MatchGroup where
-  nodeComments (MatchGroup alts) = getComments alts
+  nodeComments _ = mempty
 
 instance Pretty MatchGroup where
   pretty' (MatchGroup alts) = prettyWith alts (lined . fmap pretty)

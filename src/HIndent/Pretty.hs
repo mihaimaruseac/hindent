@@ -28,7 +28,7 @@ import GHC.Stack
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Applicative (whenJust)
-import HIndent.Ast.Comment (mkComment)
+import HIndent.Ast.Comment (mkCommentFromToken)
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Data.Body
 import HIndent.Ast.Declaration.Family.Data
@@ -188,7 +188,7 @@ instance Pretty SBF.SigBindFamily where
   pretty' (SBF.DataFamInst x) = pretty $ DataFamInstDeclInsideClassInst x
 
 instance Pretty GHC.EpaComment where
-  pretty' GHC.EpaComment {..} = pretty $ mkComment ac_tok
+  pretty' GHC.EpaComment {..} = pretty $ mkCommentFromToken ac_tok
 #if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
 instance Pretty
            (GHC.HsScaled
