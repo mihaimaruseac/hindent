@@ -59,10 +59,6 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
 #endif
-instance Pretty (GHC.HsLit GHC.GhcPs)
-
-instance Pretty (GHC.HsOverLit GHC.GhcPs)
-
 instance Pretty
            (GHC.StmtLR
               GHC.GhcPs

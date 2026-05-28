@@ -16,6 +16,7 @@ import qualified GHC.Types.Basic as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.Expression.Splice
+import HIndent.Ast.Literal
 import HIndent.Ast.Name.Infix hiding (unlessSpecialOp)
 import qualified HIndent.Ast.Name.Infix as InfixName
 import HIndent.Ast.Name.Prefix
@@ -66,11 +67,10 @@ data Pattern
       , pat :: WithComments Pattern
       }
   | Splice (WithComments Splice)
-  | Literal (GHC.HsLit GHC.GhcPs)
-  | Overloaded (GHC.HsOverLit GHC.GhcPs)
+  | Literal Literal
   | NPlusK
       { n :: WithComments PrefixName
-      , k :: GHC.HsOverLit GHC.GhcPs
+      , k :: Literal
       }
   | Signature
       { pat :: WithComments Pattern
@@ -112,7 +112,6 @@ instance Pretty Pattern where
   pretty' View {..} = spaced [pretty expression, string "->", pretty pat]
   pretty' (Splice splice) = pretty splice
   pretty' (Literal lit) = pretty lit
-  pretty' (Overloaded lit) = pretty lit
   pretty' NPlusK {..} = pretty n >> string "+" >> pretty k
   pretty' Signature {..} = spaced [pretty pat, string "::", pretty sig]
   pretty' (Or pats) = inter (string "; ") $ pretty <$> NE.toList pats
@@ -199,10 +198,13 @@ mkPattern (GHC.ViewPat _ l r) =
     , pat = mkPattern <$> fromGenLocated r
     }
 mkPattern (GHC.SplicePat _ x) = Splice $ mkWithComments $ mkSplice x
-mkPattern (GHC.LitPat _ x) = Literal x
-mkPattern (GHC.NPat _ x _ _) = Overloaded $ GHC.unLoc x
+mkPattern (GHC.LitPat _ x) = Literal $ mkLiteralFromHsLit x
+mkPattern (GHC.NPat _ x _ _) = Literal $ mkLiteralFromHsOverLit $ GHC.unLoc x
 mkPattern (GHC.NPlusKPat _ n k _ _ _) =
-  NPlusK {n = mkPrefixName <$> fromGenLocated n, k = GHC.unLoc k}
+  NPlusK
+    { n = mkPrefixName <$> fromGenLocated n
+    , k = mkLiteralFromHsOverLit $ GHC.unLoc k
+    }
 mkPattern (GHC.SigPat _ l r) =
   Signature
     { pat = mkPattern <$> fromGenLocated l

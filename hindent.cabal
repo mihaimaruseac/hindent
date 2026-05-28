@@ -122,6 +122,7 @@ library
       HIndent.Ast.Import.Entry
       HIndent.Ast.Import.Entry.Collection
       HIndent.Ast.Import.ImportingOrHiding
+      HIndent.Ast.Literal
       HIndent.Ast.LocalBinds
       HIndent.Ast.LocalBinds.Declaration
       HIndent.Ast.LocalBinds.Declaration.Collection
@@ -152,7 +153,6 @@ library
       HIndent.Ast.Type.Bang
       HIndent.Ast.Type.Forall
       HIndent.Ast.Type.ImplicitParameterName
-      HIndent.Ast.Type.Literal
       HIndent.Ast.Type.Multiplicity
       HIndent.Ast.Type.Strictness
       HIndent.Ast.Type.Unpackedness
