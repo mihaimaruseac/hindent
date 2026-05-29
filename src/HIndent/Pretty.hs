@@ -30,7 +30,6 @@ import GHC.Stack
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Applicative (whenJust)
-import HIndent.Ast.Comment (mkComment)
 import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Data.Body
 import HIndent.Ast.Declaration.Family.Data
@@ -190,7 +189,21 @@ instance Pretty SBF.SigBindFamily where
   pretty' (SBF.DataFamInst x) = pretty $ DataFamInstDeclInsideClassInst x
 
 instance Pretty GHC.EpaComment where
-  pretty' GHC.EpaComment {..} = pretty $ mkComment ac_tok
+  pretty' GHC.EpaComment {..} = prettyEpaCommentTok ac_tok
+
+prettyEpaCommentTok :: GHC.EpaCommentTok -> Printer ()
+prettyEpaCommentTok (GHC.EpaLineComment text) = string text
+prettyEpaCommentTok (GHC.EpaBlockComment text) =
+  case lines text of
+    [] -> pure ()
+    [x] -> string x
+    (x:xs) -> do
+      string x
+      newline
+      -- 'indentedWithFixedLevel 0' is used because a 'BlockComment'
+      -- contains indent spaces for all lines except the first one.
+      indentedWithFixedLevel 0 $ lined $ fmap string xs
+prettyEpaCommentTok _ = string ""
 #if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
 instance Pretty
            (GHC.HsScaled
