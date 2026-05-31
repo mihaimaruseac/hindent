@@ -39,6 +39,6 @@ mkDataFamilyInstance ::
 mkDataFamilyInstance GHC.FamEqn {..} = DataFamilyInstance {..}
   where
     newOrData = mkNewOrData feqn_rhs
-    name = fromGenLocated $ fmap mkPrefixName feqn_tycon
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName feqn_tycon
     types = mkTypeArgumentCollection feqn_pats
     body = mkDataBody feqn_rhs

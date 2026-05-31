@@ -35,4 +35,4 @@ instance Pretty Context where
           _ -> vTuple $ fmap pretty xs
 
 mkContext :: GHC.HsContext GHC.GhcPs -> Context
-mkContext = Context . fmap (fmap mkType . fromGenLocated)
+mkContext = Context . fmap (fmap mkType . mkWithCommentsFromGenLocated)

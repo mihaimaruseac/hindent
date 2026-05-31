@@ -41,11 +41,19 @@ mkDeriving :: GHC.HsDerivingClause GHC.GhcPs -> Deriving
 mkDeriving GHC.HsDerivingClause {..} = Deriving {..}
   where
     strategy =
-      fmap (fmap mkDerivingStrategy . fromGenLocated) deriv_clause_strategy
-    classes = fromGenLocated $ fmap (const rawClasses) deriv_clause_tys
+      fmap
+        (fmap mkDerivingStrategy . mkWithCommentsFromGenLocated)
+        deriv_clause_strategy
+    classes =
+      mkWithCommentsFromGenLocated $ fmap (const rawClasses) deriv_clause_tys
     rawClasses =
       case GHC.unLoc deriv_clause_tys of
         GHC.DctSingle _ ty ->
-          [flattenComments $ mkTypeFromHsSigType <$> fromGenLocated ty]
+          [ flattenComments
+              $ mkTypeFromHsSigType <$> mkWithCommentsFromGenLocated ty
+          ]
         GHC.DctMulti _ tys ->
-          flattenComments . fmap mkTypeFromHsSigType . fromGenLocated <$> tys
+          flattenComments
+            . fmap mkTypeFromHsSigType
+            . mkWithCommentsFromGenLocated
+            <$> tys

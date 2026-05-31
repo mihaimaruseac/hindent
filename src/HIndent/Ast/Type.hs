@@ -206,97 +206,110 @@ mkType :: GHC.HsType GHC.GhcPs -> Type
 mkType (GHC.HsForAllTy _ tele body) =
   UniversalType
     { telescope = mkForallFromTelescope tele
-    , body = mkType <$> fromGenLocated body
+    , body = mkType <$> mkWithCommentsFromGenLocated body
     }
 mkType GHC.HsQualTy {..} =
   ConstrainedType
     { context = mkWithComments $ Context hst_ctxt
-    , body = mkType <$> fromGenLocated hst_body
+    , body = mkType <$> mkWithCommentsFromGenLocated hst_body
     }
 mkType (GHC.HsTyVar _ GHC.IsPromoted x) =
-  Variable {isPromoted = True, name = mkPrefixName <$> fromGenLocated x}
+  Variable
+    {isPromoted = True, name = mkPrefixName <$> mkWithCommentsFromGenLocated x}
 mkType (GHC.HsTyVar _ GHC.NotPromoted x) =
-  Variable {isPromoted = False, name = mkPrefixName <$> fromGenLocated x}
+  Variable
+    {isPromoted = False, name = mkPrefixName <$> mkWithCommentsFromGenLocated x}
 mkType (GHC.HsAppTy _ l r) =
   Application
-    { function = mkType <$> fromGenLocated l
-    , argument = mkType <$> fromGenLocated r
+    { function = mkType <$> mkWithCommentsFromGenLocated l
+    , argument = mkType <$> mkWithCommentsFromGenLocated r
     }
 #if MIN_VERSION_ghc_lib_parser(9, 8, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkType (GHC.HsAppKindTy _ l _ r) =
   KindApplication
-    {base = mkType <$> fromGenLocated l, kind = mkType <$> fromGenLocated r}
+    { base = mkType <$> mkWithCommentsFromGenLocated l
+    , kind = mkType <$> mkWithCommentsFromGenLocated r
+    }
 #else
 mkType (GHC.HsAppKindTy _ l r) =
   KindApplication
-    {base = mkType <$> fromGenLocated l, kind = mkType <$> fromGenLocated r}
+    { base = mkType <$> mkWithCommentsFromGenLocated l
+    , kind = mkType <$> mkWithCommentsFromGenLocated r
+    }
 #endif
 mkType (GHC.HsFunTy _ arr a b) =
   Function
     { multiplicity = mkMultiplicity arr
-    , from = mkType <$> fromGenLocated a
-    , to = mkType <$> fromGenLocated b
+    , from = mkType <$> mkWithCommentsFromGenLocated a
+    , to = mkType <$> mkWithCommentsFromGenLocated b
     }
-mkType (GHC.HsListTy _ xs) = List {elementType = mkType <$> fromGenLocated xs}
+mkType (GHC.HsListTy _ xs) =
+  List {elementType = mkType <$> mkWithCommentsFromGenLocated xs}
 mkType (GHC.HsTupleTy _ sort xs) =
   Tuple
     { isUnboxed =
         case sort of
           GHC.HsUnboxedTuple -> True
           _ -> False
-    , elements = fmap (fmap mkType . fromGenLocated) xs
+    , elements = fmap (fmap mkType . mkWithCommentsFromGenLocated) xs
     }
 mkType (GHC.HsSumTy _ xs) =
-  Sum {elements = fmap (fmap mkType . fromGenLocated) xs}
+  Sum {elements = fmap (fmap mkType . mkWithCommentsFromGenLocated) xs}
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkType (GHC.HsOpTy _ _ l op r) =
   InfixType
-    { left = mkType <$> fromGenLocated l
-    , operator = mkInfixName <$> fromGenLocated op
-    , right = mkType <$> fromGenLocated r
+    { left = mkType <$> mkWithCommentsFromGenLocated l
+    , operator = mkInfixName <$> mkWithCommentsFromGenLocated op
+    , right = mkType <$> mkWithCommentsFromGenLocated r
     }
 #else
 mkType (GHC.HsOpTy _ l op r) =
   InfixType
-    { left = mkType <$> fromGenLocated l
-    , operator = mkInfixName <$> fromGenLocated op
-    , right = mkType <$> fromGenLocated r
+    { left = mkType <$> mkWithCommentsFromGenLocated l
+    , operator = mkInfixName <$> mkWithCommentsFromGenLocated op
+    , right = mkType <$> mkWithCommentsFromGenLocated r
     }
 #endif
 mkType (GHC.HsParTy _ inside) =
-  Parenthesized {inner = mkType <$> fromGenLocated inside}
+  Parenthesized {inner = mkType <$> mkWithCommentsFromGenLocated inside}
 mkType (GHC.HsIParamTy _ x ty) =
   ImplicitParameter
-    { ipName = mkImplicitParameterName <$> fromGenLocated x
-    , paramType = mkType <$> fromGenLocated ty
+    { ipName = mkImplicitParameterName <$> mkWithCommentsFromGenLocated x
+    , paramType = mkType <$> mkWithCommentsFromGenLocated ty
     }
 mkType GHC.HsStarTy {} = Star
 mkType (GHC.HsKindSig _ t k) =
   KindSig
-    { annotated = mkType <$> fromGenLocated t
-    , kind = mkType <$> fromGenLocated k
+    { annotated = mkType <$> mkWithCommentsFromGenLocated t
+    , kind = mkType <$> mkWithCommentsFromGenLocated k
     }
 mkType (GHC.HsSpliceTy _ sp) = Splice {splice = mkSplice sp}
 mkType GHC.HsDocTy {} = error "HsDocTy not supported"
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkType (GHC.XHsType (GHC.HsBangTy _ pack x)) =
-  StrictType {bang = mkBang pack, baseType = mkType <$> fromGenLocated x}
+  StrictType
+    {bang = mkBang pack, baseType = mkType <$> mkWithCommentsFromGenLocated x}
 mkType (GHC.XHsType (GHC.HsRecTy _ xs)) =
-  RecordType {fields = fmap (fromGenLocated . fmap mkRecordField) xs}
+  RecordType
+    {fields = fmap (mkWithCommentsFromGenLocated . fmap mkRecordField) xs}
 #else
 mkType (GHC.HsBangTy _ pack x) =
-  StrictType {bang = mkBang pack, baseType = mkType <$> fromGenLocated x}
+  StrictType
+    {bang = mkBang pack, baseType = mkType <$> mkWithCommentsFromGenLocated x}
 mkType (GHC.HsRecTy _ xs) =
-  RecordType {fields = fmap (fromGenLocated . fmap mkRecordField) xs}
+  RecordType
+    {fields = fmap (mkWithCommentsFromGenLocated . fmap mkRecordField) xs}
 #endif
 mkType (GHC.HsExplicitListTy _ _ xs) =
-  PromotedList {elements = fmap (fmap mkType . fromGenLocated) xs}
+  PromotedList {elements = fmap (fmap mkType . mkWithCommentsFromGenLocated) xs}
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkType (GHC.HsExplicitTupleTy _ _ xs) =
-  PromotedTuple {elements = fmap (fmap mkType . fromGenLocated) xs}
+  PromotedTuple
+    {elements = fmap (fmap mkType . mkWithCommentsFromGenLocated) xs}
 #else
 mkType (GHC.HsExplicitTupleTy _ xs) =
-  PromotedTuple {elements = fmap (fmap mkType . fromGenLocated) xs}
+  PromotedTuple
+    {elements = fmap (fmap mkType . mkWithCommentsFromGenLocated) xs}
 #endif
 mkType (GHC.HsTyLit _ x) = Literal {literal = mkLiteralFromHsTyLit x}
 mkType GHC.HsWildCardTy {} = Wildcard
@@ -309,12 +322,12 @@ mkTypeFromConDeclField GHC.CDF {..}
   | otherwise =
     addComments (getComments baseType) (mkWithComments StrictType {..})
   where
-    baseType = mkType <$> fromGenLocated cdf_type
+    baseType = mkType <$> mkWithCommentsFromGenLocated cdf_type
     bang = mkBang (GHC.HsSrcBang GHC.NoSourceText cdf_unpack cdf_bang)
 #else
 mkTypeFromConDeclField :: GHC.ConDeclField GHC.GhcPs -> WithComments Type
 mkTypeFromConDeclField GHC.ConDeclField {..} =
-  mkType <$> fromGenLocated cd_fld_type
+  mkType <$> mkWithCommentsFromGenLocated cd_fld_type
 #endif
 mkTypeFromHsSigType :: GHC.HsSigType GHC.GhcPs -> WithComments Type
 mkTypeFromHsSigType GHC.HsSig {..} =
@@ -322,12 +335,15 @@ mkTypeFromHsSigType GHC.HsSig {..} =
     Just telescope ->
       mkWithComments
         $ UniversalType
-            {telescope = telescope, body = mkType <$> fromGenLocated sig_body}
-    Nothing -> mkType <$> fromGenLocated sig_body
+            { telescope = telescope
+            , body = mkType <$> mkWithCommentsFromGenLocated sig_body
+            }
+    Nothing -> mkType <$> mkWithCommentsFromGenLocated sig_body
 
 mkTypeFromLHsWcType ::
      GHC.LHsWcType (GHC.NoGhcTc GHC.GhcPs) -> WithComments Type
-mkTypeFromLHsWcType GHC.HsWC {..} = mkType <$> fromGenLocated hswc_body
+mkTypeFromLHsWcType GHC.HsWC {..} =
+  mkType <$> mkWithCommentsFromGenLocated hswc_body
 
 newtype VerticalFuncType =
   VerticalFuncType Type

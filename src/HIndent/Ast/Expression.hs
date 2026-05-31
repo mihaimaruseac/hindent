@@ -333,10 +333,10 @@ instance Pretty Expression where
 
 mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
 mkExpression (GHC.HsVar _ name) =
-  Variable $ mkPrefixName <$> fromGenLocated name
+  Variable $ mkPrefixName <$> mkWithCommentsFromGenLocated name
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkExpression (GHC.HsHole (GHC.HoleVar name)) =
-  UnboundVariable $ mkPrefixName <$> fromGenLocated name
+  UnboundVariable $ mkPrefixName <$> mkWithCommentsFromGenLocated name
 mkExpression (GHC.HsHole GHC.HoleError) =
   error "`ghc-lib-parser` never generates this AST node."
 #elif MIN_VERSION_ghc_lib_parser(9, 6, 0)
@@ -385,8 +385,8 @@ mkExpression (GHC.HsApp _ function argument) =
     Application (h :| as) -> Application $ h :| push as
     _ -> Application $ f :| [a]
   where
-    f = mkExpression <$> fromGenLocated function
-    a = mkExpression <$> fromGenLocated argument
+    f = mkExpression <$> mkWithCommentsFromGenLocated function
+    a = mkExpression <$> mkWithCommentsFromGenLocated argument
     push [] = [a]
     push (x:xs) = go x xs
       where
@@ -395,13 +395,13 @@ mkExpression (GHC.HsApp _ function argument) =
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkExpression (GHC.HsAppType _ fun typeArg) =
   TypeApplication
-    { expression = mkExpression <$> fromGenLocated fun
+    { expression = mkExpression <$> mkWithCommentsFromGenLocated fun
     , typeArg = mkTypeFromLHsWcType typeArg
     }
 #else
 mkExpression (GHC.HsAppType _ fun _ typeArg) =
   TypeApplication
-    { expression = mkExpression <$> fromGenLocated fun
+    { expression = mkExpression <$> mkWithCommentsFromGenLocated fun
     , typeArg = mkTypeFromLHsWcType typeArg
     }
 #endif
@@ -416,15 +416,15 @@ mkExpression (GHC.OpApp _ lhs op rhs) = OperatorApplication {..}
           , isSameAssoc o -> build leftChain
           | otherwise -> build rightChain
     operatorFixity = findFixity op
-    build (x:xs) = (mkExpression <$> fromGenLocated x, f xs)
+    build (x:xs) = (mkExpression <$> mkWithCommentsFromGenLocated x, f xs)
       where
         f [l, o] =
           NonEmpty.singleton
-            ( InfixExpr . mkExpression <$> fromGenLocated l
-            , mkExpression <$> fromGenLocated o)
+            ( InfixExpr . mkExpression <$> mkWithCommentsFromGenLocated l
+            , mkExpression <$> mkWithCommentsFromGenLocated o)
         f (l:o:rs) =
-          ( InfixExpr . mkExpression <$> fromGenLocated l
-          , mkExpression <$> fromGenLocated o)
+          ( InfixExpr . mkExpression <$> mkWithCommentsFromGenLocated l
+          , mkExpression <$> mkWithCommentsFromGenLocated o)
             <| f rs
         f _ = error "Malformed operator chain"
     build _ = error "Empty operator chain"
@@ -456,26 +456,26 @@ mkExpression (GHC.OpApp _ lhs op rhs) = OperatorApplication {..}
     fixityDir (GHC.Fixity _ _ direction) = direction
 #endif
 mkExpression (GHC.NegApp _ expr _) =
-  Negation $ mkExpression <$> fromGenLocated expr
+  Negation $ mkExpression <$> mkWithCommentsFromGenLocated expr
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkExpression (GHC.HsPar _ expr) =
-  Parenthesized $ mkExpression <$> fromGenLocated expr
+  Parenthesized $ mkExpression <$> mkWithCommentsFromGenLocated expr
 #elif MIN_VERSION_ghc_lib_parser(9, 8, 1)
 mkExpression (GHC.HsPar _ _ expr _) =
-  Parenthesized $ mkExpression <$> fromGenLocated expr
+  Parenthesized $ mkExpression <$> mkWithCommentsFromGenLocated expr
 #else
 mkExpression (GHC.HsPar _ expr) =
-  Parenthesized $ mkExpression <$> fromGenLocated expr
+  Parenthesized $ mkExpression <$> mkWithCommentsFromGenLocated expr
 #endif
 mkExpression (GHC.SectionL _ l r) =
   LeftSection
-    { left = mkExpression <$> fromGenLocated l
-    , operator = InfixExpr . mkExpression <$> fromGenLocated r
+    { left = mkExpression <$> mkWithCommentsFromGenLocated l
+    , operator = InfixExpr . mkExpression <$> mkWithCommentsFromGenLocated r
     }
 mkExpression (GHC.SectionR _ l r) =
   RightSection
-    { operator = InfixExpr . mkExpression <$> fromGenLocated l
-    , right = mkExpression <$> fromGenLocated r
+    { operator = InfixExpr . mkExpression <$> mkWithCommentsFromGenLocated l
+    , right = mkExpression <$> mkWithCommentsFromGenLocated r
     }
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkExpression (GHC.ExplicitTuple _ tupleArgs boxity) =
@@ -488,7 +488,7 @@ mkExpression (GHC.ExplicitTuple _ tupleArgs boxity) =
     }
   where
     mkTupleArgument (GHC.Present _ expr) =
-      mkWithComments $ Just $ mkExpression <$> fromGenLocated expr
+      mkWithComments $ Just $ mkExpression <$> mkWithCommentsFromGenLocated expr
     mkTupleArgument (GHC.Missing ann) = fromEpAnn ann Nothing
 #else
 mkExpression (GHC.ExplicitTuple _ tupleArgs boxity) =
@@ -501,24 +501,27 @@ mkExpression (GHC.ExplicitTuple _ tupleArgs boxity) =
     }
   where
     mkTupleArgument (GHC.Present ann expr) =
-      fromEpAnn ann $ Just $ mkExpression <$> fromGenLocated expr
+      fromEpAnn ann $ Just $ mkExpression <$> mkWithCommentsFromGenLocated expr
     mkTupleArgument (GHC.Missing ann) = fromEpAnn ann Nothing
 #endif
 mkExpression (GHC.ExplicitSum _ position arity expr) =
-  Sum {expression = mkExpression <$> fromGenLocated expr, ..}
+  Sum {expression = mkExpression <$> mkWithCommentsFromGenLocated expr, ..}
 mkExpression (GHC.HsCase _ scrut matches) =
   CaseExpression
-    { scrutinee = mkExpression <$> fromGenLocated scrut
+    { scrutinee = mkExpression <$> mkWithCommentsFromGenLocated scrut
     , matches = mkExprMatchGroup matches
     }
 mkExpression (GHC.HsIf _ predicateExpr thenExpr elseExpr) =
   IfExpression
-    { predicate = mkExpression <$> fromGenLocated predicateExpr
-    , thenBranch = mkExpression <$> fromGenLocated thenExpr
-    , elseBranch = mkExpression <$> fromGenLocated elseExpr
+    { predicate = mkExpression <$> mkWithCommentsFromGenLocated predicateExpr
+    , thenBranch = mkExpression <$> mkWithCommentsFromGenLocated thenExpr
+    , elseBranch = mkExpression <$> mkWithCommentsFromGenLocated elseExpr
     }
 mkExpression (GHC.HsMultiIf _ clauses) =
-  MultiIf $ fmap (fmap mkMultiWayIfExprGuard . fromGenLocated) (toList clauses)
+  MultiIf
+    $ fmap
+        (fmap mkMultiWayIfExprGuard . mkWithCommentsFromGenLocated)
+        (toList clauses)
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkExpression (GHC.HsLet _ localBinds body) =
   case mkLocalBinds localBinds of
@@ -526,7 +529,8 @@ mkExpression (GHC.HsLet _ localBinds body) =
       error
         "`ghc-lib-parser` never generates a `HsLet` node with empty bindings."
     Just bindings ->
-      LetBinding {expression = mkExpression <$> fromGenLocated body, ..}
+      LetBinding
+        {expression = mkExpression <$> mkWithCommentsFromGenLocated body, ..}
 #elif MIN_VERSION_ghc_lib_parser(9, 8, 1)
 mkExpression (GHC.HsLet _ _ localBinds _ body) =
   case mkLocalBinds localBinds of
@@ -534,7 +538,8 @@ mkExpression (GHC.HsLet _ _ localBinds _ body) =
       error
         "`ghc-lib-parser` never generates a `HsLet` node with empty bindings."
     Just bindings ->
-      LetBinding {expression = mkExpression <$> fromGenLocated body, ..}
+      LetBinding
+        {expression = mkExpression <$> mkWithCommentsFromGenLocated body, ..}
 #else
 mkExpression (GHC.HsLet _ localBinds body) =
   case mkLocalBinds localBinds of
@@ -542,69 +547,75 @@ mkExpression (GHC.HsLet _ localBinds body) =
       error
         "`ghc-lib-parser` never generates a `HsLet` node with empty bindings."
     Just bindings ->
-      LetBinding {expression = mkExpression <$> fromGenLocated body, ..}
+      LetBinding
+        {expression = mkExpression <$> mkWithCommentsFromGenLocated body, ..}
 #endif
 mkExpression (GHC.HsDo _ GHC.ListComp statements) =
   ListComprehension
-    $ LC.mkListComprehension . fmap (fmap mkExprStatement . fromGenLocated)
-        <$> fromGenLocated statements
+    $ LC.mkListComprehension
+        . fmap (fmap mkExprStatement . mkWithCommentsFromGenLocated)
+        <$> mkWithCommentsFromGenLocated statements
 mkExpression (GHC.HsDo _ GHC.MonadComp statements) =
   ListComprehension
-    $ LC.mkListComprehension . fmap (fmap mkExprStatement . fromGenLocated)
-        <$> fromGenLocated statements
+    $ LC.mkListComprehension
+        . fmap (fmap mkExprStatement . mkWithCommentsFromGenLocated)
+        <$> mkWithCommentsFromGenLocated statements
 mkExpression (GHC.HsDo _ stmtContext@(GHC.DoExpr _) statements) =
   DoBlock
     { qualifiedDo = mkQualifiedDo stmtContext
     , statements =
-        fmap (fmap mkExprStatement . fromGenLocated)
-          <$> fromGenLocated statements
+        fmap (fmap mkExprStatement . mkWithCommentsFromGenLocated)
+          <$> mkWithCommentsFromGenLocated statements
     }
 mkExpression (GHC.HsDo _ stmtContext@(GHC.MDoExpr _) statements) =
   DoBlock
     { qualifiedDo = mkQualifiedDo stmtContext
     , statements =
-        fmap (fmap mkExprStatement . fromGenLocated)
-          <$> fromGenLocated statements
+        fmap (fmap mkExprStatement . mkWithCommentsFromGenLocated)
+          <$> mkWithCommentsFromGenLocated statements
     }
 mkExpression (GHC.HsDo _ GHC.GhciStmtCtxt {} _) =
   error "`ghc-lib-parser` never generates this AST node."
 mkExpression (GHC.ExplicitList _ items) =
-  ListLiteral (fmap (fmap mkExpression . fromGenLocated) items)
+  ListLiteral (fmap (fmap mkExpression . mkWithCommentsFromGenLocated) items)
 mkExpression (GHC.RecordCon { GHC.rcon_con = conName
                             , GHC.rcon_flds = recordFields
                             }) =
   RecordConstruction
-    { name = mkPrefixName <$> fromGenLocated conName
+    { name = mkPrefixName <$> mkWithCommentsFromGenLocated conName
     , fields = mkRecordConstructionFields recordFields
     }
 mkExpression (GHC.RecordUpd { GHC.rupd_expr = recordExpr
                             , GHC.rupd_flds = updates
                             }) =
   RecordUpdate
-    $ mkRecordUpdateFields (mkExpression <$> fromGenLocated recordExpr) updates
+    $ mkRecordUpdateFields
+        (mkExpression <$> mkWithCommentsFromGenLocated recordExpr)
+        updates
 mkExpression (GHC.HsGetField {GHC.gf_expr = fieldExpr, GHC.gf_field = selector}) =
   FieldProjection
-    { expression = mkExpression <$> fromGenLocated fieldExpr
-    , selector = fmap mkFieldSelector (fromGenLocated selector)
+    { expression = mkExpression <$> mkWithCommentsFromGenLocated fieldExpr
+    , selector = fmap mkFieldSelector (mkWithCommentsFromGenLocated selector)
     }
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkExpression (GHC.HsProjection {GHC.proj_flds = fields}) =
   Projection $ fmap (mkWithComments . mkFieldSelector) fields
 #else
 mkExpression (GHC.HsProjection {GHC.proj_flds = fields}) =
-  Projection $ fmap (fmap mkFieldSelector . fromGenLocated) fields
+  Projection $ fmap (fmap mkFieldSelector . mkWithCommentsFromGenLocated) fields
 #endif
 mkExpression (GHC.ExprWithTySig _ signatureExpr ty) =
   TypeSignature
-    { expression = mkExpression <$> fromGenLocated signatureExpr
+    { expression = mkExpression <$> mkWithCommentsFromGenLocated signatureExpr
     , signature =
         flattenComments
-          $ mkTypeFromHsSigType <$> fromGenLocated (GHC.hswc_body ty)
+          $ mkTypeFromHsSigType
+              <$> mkWithCommentsFromGenLocated (GHC.hswc_body ty)
     }
 mkExpression (GHC.ArithSeq _ _ info) =
   ArithmeticSequence $ mkRangeExpression info
 mkExpression (GHC.HsTypedBracket _ typedExpr) =
-  TypedQuotation $ mkExpression <$> fromGenLocated typedExpr
+  TypedQuotation $ mkExpression <$> mkWithCommentsFromGenLocated typedExpr
 mkExpression (GHC.HsUntypedBracket _ content) =
   UntypedQuotation $ mkBracket content
 #if MIN_VERSION_ghc_lib_parser(9, 12, 2)
@@ -629,15 +640,19 @@ mkExpression (GHC.HsUntypedSplice _ splice) = Splice $ mkSplice splice
 #endif
 mkExpression (GHC.HsProc _ pat command) =
   case getFirst $ foldMap (First . mkCmdDoBlock) cmd of
-    Just block -> ProcDo {pat = mkPattern <$> fromGenLocated pat, block}
-    Nothing -> ProcExpression {pat = mkPattern <$> fromGenLocated pat, cmd}
+    Just block ->
+      ProcDo {pat = mkPattern <$> mkWithCommentsFromGenLocated pat, block}
+    Nothing ->
+      ProcExpression {pat = mkPattern <$> mkWithCommentsFromGenLocated pat, cmd}
   where
-    cmd = flattenComments $ mkCmdFromHsCmdTop <$> fromGenLocated command
+    cmd =
+      flattenComments
+        $ mkCmdFromHsCmdTop <$> mkWithCommentsFromGenLocated command
 mkExpression (GHC.HsStatic _ staticExpr) =
-  StaticExpression $ mkExpression <$> fromGenLocated staticExpr
+  StaticExpression $ mkExpression <$> mkWithCommentsFromGenLocated staticExpr
 mkExpression (GHC.HsPragE _ pragma pragmaticExpr) =
   PragmaticExpression
-    { expression = mkExpression <$> fromGenLocated pragmaticExpr
+    { expression = mkExpression <$> mkWithCommentsFromGenLocated pragmaticExpr
     , pragma = mkExpressionPragma pragma
     }
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)

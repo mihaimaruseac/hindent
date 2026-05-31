@@ -28,5 +28,5 @@ instance Pretty FunctionalDependency where
 mkFunctionalDependency :: GHC.FunDep GHC.GhcPs -> FunctionalDependency
 mkFunctionalDependency (GHC.FunDep _ f t) = FunctionalDependency {..}
   where
-    from = fmap (fromGenLocated . fmap mkPrefixName) f
-    to = fmap (fromGenLocated . fmap mkPrefixName) t
+    from = fmap (mkWithCommentsFromGenLocated . fmap mkPrefixName) f
+    to = fmap (mkWithCommentsFromGenLocated . fmap mkPrefixName) t

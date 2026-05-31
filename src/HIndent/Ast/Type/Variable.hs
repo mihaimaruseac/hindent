@@ -36,19 +36,19 @@ mkTypeVariable GHC.HsTvb {..} = TypeVariable {..}
   where
     name =
       case tvb_var of
-        GHC.HsBndrVar _ n -> fromGenLocated $ fmap mkPrefixName n
+        GHC.HsBndrVar _ n -> mkWithCommentsFromGenLocated $ fmap mkPrefixName n
         GHC.HsBndrWildCard _ -> mkWithComments (Prefix.fromString "_")
     kind =
       case tvb_kind of
-        GHC.HsBndrKind _ k -> Just $ mkType <$> fromGenLocated k
+        GHC.HsBndrKind _ k -> Just $ mkType <$> mkWithCommentsFromGenLocated k
         GHC.HsBndrNoKind _ -> Nothing
 #else
 mkTypeVariable (GHC.UserTyVar _ _ n) = TypeVariable {..}
   where
-    name = fromGenLocated $ fmap mkPrefixName n
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName n
     kind = Nothing
 mkTypeVariable (GHC.KindedTyVar _ _ n k) = TypeVariable {..}
   where
-    name = fromGenLocated $ fmap mkPrefixName n
-    kind = Just $ mkType <$> fromGenLocated k
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName n
+    kind = Just $ mkType <$> mkWithCommentsFromGenLocated k
 #endif

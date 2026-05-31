@@ -37,29 +37,33 @@ instance Pretty ImportEntry where
 mkImportEntry :: GHC.IE GHC.GhcPs -> ImportEntry
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkImportEntry (GHC.IEVar _ name _) =
-  SingleIdentifier $ mkImportExportName <$> fromGenLocated name
+  SingleIdentifier $ mkImportExportName <$> mkWithCommentsFromGenLocated name
 mkImportEntry (GHC.IEThingAbs _ name _) =
-  SingleIdentifier $ mkImportExportName <$> fromGenLocated name
+  SingleIdentifier $ mkImportExportName <$> mkWithCommentsFromGenLocated name
 mkImportEntry (GHC.IEThingAll _ name _) =
-  WithAllConstructors $ mkImportExportName <$> fromGenLocated name
+  WithAllConstructors $ mkImportExportName <$> mkWithCommentsFromGenLocated name
 mkImportEntry (GHC.IEThingWith _ name _ constructors _) =
   WithSpecificConstructors
-    { name = mkImportExportName <$> fromGenLocated name
+    { name = mkImportExportName <$> mkWithCommentsFromGenLocated name
     , constructors =
-        fmap (fmap mkImportExportName . fromGenLocated) constructors
+        fmap
+          (fmap mkImportExportName . mkWithCommentsFromGenLocated)
+          constructors
     }
 #else
 mkImportEntry (GHC.IEVar _ name) =
-  SingleIdentifier $ mkImportExportName <$> fromGenLocated name
+  SingleIdentifier $ mkImportExportName <$> mkWithCommentsFromGenLocated name
 mkImportEntry (GHC.IEThingAbs _ name) =
-  SingleIdentifier $ mkImportExportName <$> fromGenLocated name
+  SingleIdentifier $ mkImportExportName <$> mkWithCommentsFromGenLocated name
 mkImportEntry (GHC.IEThingAll _ name) =
-  WithAllConstructors $ mkImportExportName <$> fromGenLocated name
+  WithAllConstructors $ mkImportExportName <$> mkWithCommentsFromGenLocated name
 mkImportEntry (GHC.IEThingWith _ name _ constructors) =
   WithSpecificConstructors
-    { name = mkImportExportName <$> fromGenLocated name
+    { name = mkImportExportName <$> mkWithCommentsFromGenLocated name
     , constructors =
-        fmap (fmap mkImportExportName . fromGenLocated) constructors
+        fmap
+          (fmap mkImportExportName . mkWithCommentsFromGenLocated)
+          constructors
     }
 #endif
 mkImportEntry _ = undefined

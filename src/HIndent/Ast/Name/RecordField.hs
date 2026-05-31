@@ -15,7 +15,11 @@ import qualified GHC.Data.FastString as GHC
 import qualified GHC.Hs as GHC
 import HIndent.Ast.Name.Prefix (PrefixName, fromString, mkPrefixName)
 import HIndent.Ast.NodeComments (NodeComments(..))
-import HIndent.Ast.WithComments (WithComments, flattenComments, fromGenLocated)
+import HIndent.Ast.WithComments
+  ( WithComments
+  , flattenComments
+  , mkWithCommentsFromGenLocated
+  )
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators (hDotSep)
 import HIndent.Pretty.NodeComments
@@ -36,10 +40,12 @@ instance Pretty FieldName where
 mkFieldNameFromFieldOcc :: GHC.FieldOcc GHC.GhcPs -> FieldName
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkFieldNameFromFieldOcc GHC.FieldOcc {..} =
-  FieldName $ pure $ mkPrefixName <$> fromGenLocated foLabel
+  FieldName $ pure $ mkPrefixName <$> mkWithCommentsFromGenLocated foLabel
 #else
 mkFieldNameFromFieldOcc GHC.FieldOcc {..} =
-  FieldName $ pure $ mkPrefixName <$> fromGenLocated rdrNameFieldOcc
+  FieldName
+    $ pure
+    $ mkPrefixName <$> mkWithCommentsFromGenLocated rdrNameFieldOcc
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkFieldNameFromAmbiguousFieldOcc :: GHC.FieldOcc GHC.GhcPs -> FieldName
@@ -47,9 +53,9 @@ mkFieldNameFromAmbiguousFieldOcc = mkFieldNameFromFieldOcc
 #else
 mkFieldNameFromAmbiguousFieldOcc :: GHC.AmbiguousFieldOcc GHC.GhcPs -> FieldName
 mkFieldNameFromAmbiguousFieldOcc (GHC.Unambiguous GHC.NoExtField name) =
-  FieldName $ pure $ mkPrefixName <$> fromGenLocated name
+  FieldName $ pure $ mkPrefixName <$> mkWithCommentsFromGenLocated name
 mkFieldNameFromAmbiguousFieldOcc (GHC.Ambiguous GHC.NoExtField name) =
-  FieldName $ pure $ mkPrefixName <$> fromGenLocated name
+  FieldName $ pure $ mkPrefixName <$> mkWithCommentsFromGenLocated name
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkFieldNameFromFieldLabelStrings :: GHC.FieldLabelStrings GHC.GhcPs -> FieldName
@@ -60,9 +66,9 @@ mkFieldNameFromFieldLabelStrings (GHC.FieldLabelStrings labels) =
       flattenComments
         . fmap
             (fmap (fromString . GHC.unpackFS . GHC.field_label)
-               . fromGenLocated
+               . mkWithCommentsFromGenLocated
                . GHC.dfoLabel)
-        . fromGenLocated
+        . mkWithCommentsFromGenLocated
 #else
 mkFieldNameFromFieldLabelStrings :: GHC.FieldLabelStrings GHC.GhcPs -> FieldName
 mkFieldNameFromFieldLabelStrings (GHC.FieldLabelStrings labels) =
@@ -74,7 +80,7 @@ mkFieldNameFromFieldLabelStrings (GHC.FieldLabelStrings labels) =
       flattenComments
         . fmap
             (fmap (fromString . GHC.unpackFS . GHC.field_label)
-               . fromGenLocated
+               . mkWithCommentsFromGenLocated
                . GHC.dfoLabel)
-        . fromGenLocated
+        . mkWithCommentsFromGenLocated
 #endif

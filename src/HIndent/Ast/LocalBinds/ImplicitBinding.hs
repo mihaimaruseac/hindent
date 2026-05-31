@@ -12,7 +12,7 @@ import HIndent.Ast.Type.ImplicitParameterName
   ( ImplicitParameterName
   , mkImplicitParameterName
   )
-import HIndent.Ast.WithComments (WithComments, fromGenLocated)
+import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
@@ -34,14 +34,14 @@ mkImplicitBinding :: GHC.IPBind GHC.GhcPs -> ImplicitBinding
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkImplicitBinding (GHC.IPBind _ lhs rhs) =
   ImplicitBinding
-    { name = mkImplicitParameterName <$> fromGenLocated lhs
-    , expression = mkExpression <$> fromGenLocated rhs
+    { name = mkImplicitParameterName <$> mkWithCommentsFromGenLocated lhs
+    , expression = mkExpression <$> mkWithCommentsFromGenLocated rhs
     }
 #else
 mkImplicitBinding (GHC.IPBind _ (Left lhs) rhs) =
   ImplicitBinding
-    { name = mkImplicitParameterName <$> fromGenLocated lhs
-    , expression = mkExpression <$> fromGenLocated rhs
+    { name = mkImplicitParameterName <$> mkWithCommentsFromGenLocated lhs
+    , expression = mkExpression <$> mkWithCommentsFromGenLocated rhs
     }
 mkImplicitBinding (GHC.IPBind _ (Right _) _) =
   error "`ghc-lib-parser` never generates this AST node."

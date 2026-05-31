@@ -28,7 +28,7 @@ instance Pretty Provenance where
 
 mkProvenance :: GHC.AnnProvenance GHC.GhcPs -> Provenance
 mkProvenance (GHC.ValueAnnProvenance x) =
-  Value $ fromGenLocated $ fmap mkPrefixName x
+  Value $ mkWithCommentsFromGenLocated $ fmap mkPrefixName x
 mkProvenance (GHC.TypeAnnProvenance x) =
-  Type $ fromGenLocated $ fmap mkPrefixName x
+  Type $ mkWithCommentsFromGenLocated $ fmap mkPrefixName x
 mkProvenance GHC.ModuleAnnProvenance = Module

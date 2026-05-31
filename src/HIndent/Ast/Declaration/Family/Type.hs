@@ -55,14 +55,16 @@ mkTypeFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
       case fdTopLevel of
         GHC.TopLevel -> True
         GHC.NotTopLevel -> False
-    name = fromGenLocated $ fmap mkPrefixName fdLName
-    typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
-    signature = mkResultSignature <$> fromGenLocated fdResultSig
-    injectivity = fmap (fmap mkInjectivity . fromGenLocated) fdInjectivityAnn
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName fdLName
+    typeVariables =
+      fmap (fmap mkTypeVariable . mkWithCommentsFromGenLocated) hsq_explicit
+    signature = mkResultSignature <$> mkWithCommentsFromGenLocated fdResultSig
+    injectivity =
+      fmap (fmap mkInjectivity . mkWithCommentsFromGenLocated) fdInjectivityAnn
     equations =
       case fdInfo of
         GHC.DataFamily -> error "Not a TypeFamily"
         GHC.OpenTypeFamily -> Nothing
         GHC.ClosedTypeFamily Nothing -> Just []
         GHC.ClosedTypeFamily (Just xs) ->
-          Just $ fmap (fmap mkTypeEquation . fromGenLocated) xs
+          Just $ fmap (fmap mkTypeEquation . mkWithCommentsFromGenLocated) xs

@@ -48,13 +48,16 @@ mkBracket :: GHC.HsQuote GHC.GhcPs -> Bracket
 mkBracket :: GHC.HsBracket GHC.GhcPs -> Bracket
 #endif
 mkBracket (GHC.ExpBr _ x) =
-  UntypedExpression $ mkExpression <$> fromGenLocated x
-mkBracket (GHC.PatBr _ x) = Pattern $ mkPattern <$> fromGenLocated x
+  UntypedExpression $ mkExpression <$> mkWithCommentsFromGenLocated x
+mkBracket (GHC.PatBr _ x) =
+  Pattern $ mkPattern <$> mkWithCommentsFromGenLocated x
 mkBracket (GHC.DecBrL _ x) =
-  Declaration $ fmap (fmap mkDeclaration . fromGenLocated) x
-mkBracket (GHC.TypBr _ x) = Type $ mkType <$> fromGenLocated x
-mkBracket (GHC.VarBr _ b x) = Variable b $ fromGenLocated $ fmap mkPrefixName x
+  Declaration $ fmap (fmap mkDeclaration . mkWithCommentsFromGenLocated) x
+mkBracket (GHC.TypBr _ x) = Type $ mkType <$> mkWithCommentsFromGenLocated x
+mkBracket (GHC.VarBr _ b x) =
+  Variable b $ mkWithCommentsFromGenLocated $ fmap mkPrefixName x
 mkBracket (GHC.DecBrG {}) = error "This AST node should never appear."
 #if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
-mkBracket (GHC.TExpBr _ x) = TypedExpression $ mkExpression <$> fromGenLocated x
+mkBracket (GHC.TExpBr _ x) =
+  TypedExpression $ mkExpression <$> mkWithCommentsFromGenLocated x
 #endif

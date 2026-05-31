@@ -82,7 +82,8 @@ mkDataBody defn@GHC.HsDataDefn {..} =
     then GADT
            { constructors =
                fromMaybe (error "Some constructors are not GADT ones.")
-                 $ mapM (traverse mkGADTConstructor . fromGenLocated)
+                 $ mapM
+                     (traverse mkGADTConstructor . mkWithCommentsFromGenLocated)
                  $ getConDecls defn
            , ..
            }
@@ -92,12 +93,12 @@ mkDataBody defn@GHC.HsDataDefn {..} =
                  (fromMaybe
                     (error "Some constructors are not in the Haskell 98 style.")
                     . mkHaskell98Constructor)
-                 . fromGenLocated
+                 . mkWithCommentsFromGenLocated
                  <$> getConDecls defn
            , ..
            }
   where
-    kind = fmap mkType . fromGenLocated <$> dd_kindSig
+    kind = fmap mkType . mkWithCommentsFromGenLocated <$> dd_kindSig
     derivings = mkDerivingClause dd_derivs
 
 isGADT :: GHC.HsDataDefn GHC.GhcPs -> Bool

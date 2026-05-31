@@ -61,18 +61,18 @@ mkClassDeclaration x@GHC.ClassDecl {..}
   | Just nameAndTypeVariables <- mkNameAndTypeVariables x =
     Just ClassDeclaration {..}
   where
-    context = fmap (fmap mkContext . fromGenLocated) tcdCtxt
+    context = fmap (fmap mkContext . mkWithCommentsFromGenLocated) tcdCtxt
     functionalDependencies =
-      fmap (fmap mkFunctionalDependency . fromGenLocated) tcdFDs
+      fmap (fmap mkFunctionalDependency . mkWithCommentsFromGenLocated) tcdFDs
     body = mkClassBody tcdSigs tcdMeths tcdATs tcdATDefs
 #else
 mkClassDeclaration x@GHC.ClassDecl {..}
   | Just nameAndTypeVariables <- mkNameAndTypeVariables x =
     Just ClassDeclaration {..}
   where
-    context = fmap (fmap mkContext . fromGenLocated) tcdCtxt
+    context = fmap (fmap mkContext . mkWithCommentsFromGenLocated) tcdCtxt
     functionalDependencies =
-      fmap (fmap mkFunctionalDependency . fromGenLocated) tcdFDs
+      fmap (fmap mkFunctionalDependency . mkWithCommentsFromGenLocated) tcdFDs
     body = mkClassBody tcdSigs (GHC.bagToList tcdMeths) tcdATs tcdATDefs
 #endif
 mkClassDeclaration _ = Nothing

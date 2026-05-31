@@ -29,5 +29,6 @@ instance Pretty StandaloneKind where
 mkStandaloneKind :: GHC.StandaloneKindSig GHC.GhcPs -> StandaloneKind
 mkStandaloneKind (GHC.StandaloneKindSig _ n k) = StandaloneKind {..}
   where
-    name = fromGenLocated $ fmap mkPrefixName n
-    kind = flattenComments $ mkTypeFromHsSigType <$> fromGenLocated k
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName n
+    kind =
+      flattenComments $ mkTypeFromHsSigType <$> mkWithCommentsFromGenLocated k

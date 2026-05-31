@@ -25,4 +25,5 @@ instance Pretty RuleCollection where
 
 mkRuleCollection :: GHC.RuleDecls GHC.GhcPs -> RuleCollection
 mkRuleCollection GHC.HsRules {..} =
-  RuleCollection $ fmap (fmap mkRuleDeclaration . fromGenLocated) rds_rules
+  RuleCollection
+    $ fmap (fmap mkRuleDeclaration . mkWithCommentsFromGenLocated) rds_rules

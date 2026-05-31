@@ -18,7 +18,7 @@ import HIndent.Ast.Statement (CmdStatement, mkCmdStatement)
 import HIndent.Ast.WithComments
   ( WithComments
   , flattenComments
-  , fromGenLocated
+  , mkWithCommentsFromGenLocated
   , prettyWith
   )
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
@@ -134,28 +134,36 @@ mkCmd (GHC.HsCmdArrApp _ f arg appKind isFwd) =
         if isFwd
           then FunctionThenArgument
           else ArgumentThenFunction
-    , function = mkExpression <$> fromGenLocated f
-    , argument = mkExpression <$> fromGenLocated arg
+    , function = mkExpression <$> mkWithCommentsFromGenLocated f
+    , argument = mkExpression <$> mkWithCommentsFromGenLocated arg
     }
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkCmd (GHC.HsCmdArrForm _ f _ args) =
   ArrowForm
-    { function = mkExpression <$> fromGenLocated f
+    { function = mkExpression <$> mkWithCommentsFromGenLocated f
     , arguments =
-        fmap (flattenComments . fmap mkCmdFromHsCmdTop . fromGenLocated) args
+        fmap
+          (flattenComments
+             . fmap mkCmdFromHsCmdTop
+             . mkWithCommentsFromGenLocated)
+          args
     }
 #else
 mkCmd (GHC.HsCmdArrForm _ f _ _ args) =
   ArrowForm
-    { function = mkExpression <$> fromGenLocated f
+    { function = mkExpression <$> mkWithCommentsFromGenLocated f
     , arguments =
-        fmap (flattenComments . fmap mkCmdFromHsCmdTop . fromGenLocated) args
+        fmap
+          (flattenComments
+             . fmap mkCmdFromHsCmdTop
+             . mkWithCommentsFromGenLocated)
+          args
     }
 #endif
 mkCmd (GHC.HsCmdApp _ cmd arg) =
   CmdApp
-    { cmd = mkCmd <$> fromGenLocated cmd
-    , argument = mkExpression <$> fromGenLocated arg
+    { cmd = mkCmd <$> mkWithCommentsFromGenLocated cmd
+    , argument = mkExpression <$> mkWithCommentsFromGenLocated arg
     }
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkCmd (GHC.HsCmdLam _ GHC.LamSingle matches) =
@@ -168,13 +176,15 @@ mkCmd (GHC.HsCmdLam _ GHC.LamCases matches) =
 mkCmd (GHC.HsCmdLam _ matches) = Lambda {matches = mkCmdMatchGroup matches}
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
-mkCmd (GHC.HsCmdPar _ _ cmd _) = Parenthesized $ mkCmd <$> fromGenLocated cmd
+mkCmd (GHC.HsCmdPar _ _ cmd _) =
+  Parenthesized $ mkCmd <$> mkWithCommentsFromGenLocated cmd
 #else
-mkCmd (GHC.HsCmdPar _ cmd) = Parenthesized $ mkCmd <$> fromGenLocated cmd
+mkCmd (GHC.HsCmdPar _ cmd) =
+  Parenthesized $ mkCmd <$> mkWithCommentsFromGenLocated cmd
 #endif
 mkCmd (GHC.HsCmdCase _ expr matches) =
   Case
-    { scrutinee = mkExpression <$> fromGenLocated expr
+    { scrutinee = mkExpression <$> mkWithCommentsFromGenLocated expr
     , matches = mkCmdMatchGroup matches
     }
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
@@ -186,9 +196,9 @@ mkCmd (GHC.HsCmdLamCase _ matches) =
 #endif
 mkCmd (GHC.HsCmdIf _ _ predicate thenCmd elseCmd) =
   If
-    { predicate = mkExpression <$> fromGenLocated predicate
-    , thenBranch = mkCmd <$> fromGenLocated thenCmd
-    , elseBranch = mkCmd <$> fromGenLocated elseCmd
+    { predicate = mkExpression <$> mkWithCommentsFromGenLocated predicate
+    , thenBranch = mkCmd <$> mkWithCommentsFromGenLocated thenCmd
+    , elseBranch = mkCmd <$> mkWithCommentsFromGenLocated elseCmd
     }
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkCmd (GHC.HsCmdLet _ _ binds _ cmd) =
@@ -197,7 +207,7 @@ mkCmd (GHC.HsCmdLet _ _ binds _ cmd) =
         fromMaybe
           (error "`ghc-lib-parser` never generates an empty `HsCmdLet` node.")
           $ mkLocalBinds binds
-    , inCommand = mkCmd <$> fromGenLocated cmd
+    , inCommand = mkCmd <$> mkWithCommentsFromGenLocated cmd
     }
 #else
 mkCmd (GHC.HsCmdLet _ binds cmd) =
@@ -206,17 +216,19 @@ mkCmd (GHC.HsCmdLet _ binds cmd) =
         fromMaybe
           (error "`ghc-lib-parser` never generates an empty `HsCmdLet` node.")
           $ mkLocalBinds binds
-    , inCommand = mkCmd <$> fromGenLocated cmd
+    , inCommand = mkCmd <$> mkWithCommentsFromGenLocated cmd
     }
 #endif
 mkCmd (GHC.HsCmdDo _ stmts) =
   DoBlock
     { statements =
-        fmap (fmap mkCmdStatement . fromGenLocated) <$> fromGenLocated stmts
+        fmap (fmap mkCmdStatement . mkWithCommentsFromGenLocated)
+          <$> mkWithCommentsFromGenLocated stmts
     }
 
 mkCmdFromHsCmdTop :: GHC.HsCmdTop GHC.GhcPs -> WithComments Cmd
-mkCmdFromHsCmdTop (GHC.HsCmdTop _ cmd) = mkCmd <$> fromGenLocated cmd
+mkCmdFromHsCmdTop (GHC.HsCmdTop _ cmd) =
+  mkCmd <$> mkWithCommentsFromGenLocated cmd
 
 newtype CmdDoBlock =
   CmdDoBlock Cmd

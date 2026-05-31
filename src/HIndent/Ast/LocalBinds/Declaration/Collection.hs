@@ -8,7 +8,7 @@ import Data.Function
 import Data.List (sortBy)
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.LocalBinds.Declaration
-import HIndent.Ast.WithComments (WithComments, fromGenLocated)
+import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
@@ -30,7 +30,7 @@ mkLocalDeclarationCollection ::
   -> LocalDeclarationCollection
 mkLocalDeclarationCollection sigs binds =
   LocalDeclarationCollection
-    $ fmap fromGenLocated
+    $ fmap mkWithCommentsFromGenLocated
     $ sortBy (compare `on` GHC.realSrcSpan . GHC.locA . GHC.getLoc)
     $ fmap (fmap mkLocalSignatureDeclaration) sigs
         ++ fmap (fmap mkLocalBindingDeclaration) binds

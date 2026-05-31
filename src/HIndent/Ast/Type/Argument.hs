@@ -34,14 +34,14 @@ mkTypeArgument ::
   -> Maybe TypeArgument
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkTypeArgument (GHC.HsValArg _ argType) =
-  Just TypeArgument {argType = mkType <$> fromGenLocated argType}
+  Just TypeArgument {argType = mkType <$> mkWithCommentsFromGenLocated argType}
 mkTypeArgument (GHC.HsTypeArg _ argKind) =
-  Just KindArgument {argKind = mkType <$> fromGenLocated argKind}
+  Just KindArgument {argKind = mkType <$> mkWithCommentsFromGenLocated argKind}
 mkTypeArgument GHC.HsArgPar {} = Nothing
 #else
 mkTypeArgument (GHC.HsValArg argType) =
-  Just TypeArgument {argType = mkType <$> fromGenLocated argType}
+  Just TypeArgument {argType = mkType <$> mkWithCommentsFromGenLocated argType}
 mkTypeArgument (GHC.HsTypeArg _ argKind) =
-  Just KindArgument {argKind = mkType <$> fromGenLocated argKind}
+  Just KindArgument {argKind = mkType <$> mkWithCommentsFromGenLocated argKind}
 mkTypeArgument GHC.HsArgPar {} = Nothing
 #endif

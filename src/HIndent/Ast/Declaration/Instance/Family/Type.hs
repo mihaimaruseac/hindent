@@ -36,7 +36,7 @@ mkTypeFamilyInstance :: GHC.InstDecl GHC.GhcPs -> Maybe TypeFamilyInstance
 mkTypeFamilyInstance GHC.TyFamInstD {GHC.tfid_inst = GHC.TyFamInstDecl {GHC.tfid_eqn = GHC.FamEqn {..}}} =
   Just $ TypeFamilyInstance {..}
   where
-    name = fromGenLocated $ fmap mkPrefixName feqn_tycon
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName feqn_tycon
     types = mkTypeArgumentCollection feqn_pats
-    bind = mkType <$> fromGenLocated feqn_rhs
+    bind = mkType <$> mkWithCommentsFromGenLocated feqn_rhs
 mkTypeFamilyInstance _ = Nothing

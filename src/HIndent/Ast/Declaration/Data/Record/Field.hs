@@ -30,12 +30,15 @@ instance Pretty RecordField where
 mkRecordField :: GHC.HsConDeclRecField GHC.GhcPs -> RecordField
 mkRecordField GHC.HsConDeclRecField {..} = RecordField {..}
   where
-    names = fmap mkFieldNameFromFieldOcc . fromGenLocated <$> cdrf_names
+    names =
+      fmap mkFieldNameFromFieldOcc . mkWithCommentsFromGenLocated <$> cdrf_names
     ty = mkTypeFromConDeclField cdrf_spec
 #else
 mkRecordField :: GHC.ConDeclField GHC.GhcPs -> RecordField
 mkRecordField GHC.ConDeclField {..} = RecordField {..}
   where
-    names = fmap mkFieldNameFromFieldOcc . fromGenLocated <$> cd_fld_names
-    ty = mkType <$> fromGenLocated cd_fld_type
+    names =
+      fmap mkFieldNameFromFieldOcc . mkWithCommentsFromGenLocated
+        <$> cd_fld_names
+    ty = mkType <$> mkWithCommentsFromGenLocated cd_fld_type
 #endif

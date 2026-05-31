@@ -44,6 +44,6 @@ mkModuleDeclaration m =
     Nothing -> Nothing
     Just name' -> Just ModuleDeclaration {..}
       where
-        name = mkModuleName <$> fromGenLocated name'
+        name = mkModuleName <$> mkWithCommentsFromGenLocated name'
         warning = mkModuleWarning m
         exports = mkExportCollection m

@@ -42,6 +42,10 @@ mkStandAloneDeriving :: GHC.DerivDecl GHC.GhcPs -> StandAloneDeriving
 mkStandAloneDeriving GHC.DerivDecl {deriv_type = GHC.HsWC {..}, ..} =
   StandAloneDeriving {..}
   where
-    strategy = fmap (fmap mkDerivingStrategy . fromGenLocated) deriv_strategy
+    strategy =
+      fmap
+        (fmap mkDerivingStrategy . mkWithCommentsFromGenLocated)
+        deriv_strategy
     className =
-      flattenComments $ mkTypeFromHsSigType <$> fromGenLocated hswc_body
+      flattenComments
+        $ mkTypeFromHsSigType <$> mkWithCommentsFromGenLocated hswc_body

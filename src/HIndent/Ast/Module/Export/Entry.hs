@@ -38,27 +38,29 @@ instance Pretty ExportEntry where
 mkExportEntry :: GHC.IE GHC.GhcPs -> ExportEntry
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkExportEntry (GHC.IEVar _ name _) =
-  SingleIdentifier $ mkImportExportName <$> fromGenLocated name
+  SingleIdentifier $ mkImportExportName <$> mkWithCommentsFromGenLocated name
 mkExportEntry (GHC.IEThingAbs _ name _) =
-  SingleIdentifier $ mkImportExportName <$> fromGenLocated name
+  SingleIdentifier $ mkImportExportName <$> mkWithCommentsFromGenLocated name
 mkExportEntry (GHC.IEThingAll _ name _) =
-  WithAllConstructors $ mkImportExportName <$> fromGenLocated name
+  WithAllConstructors $ mkImportExportName <$> mkWithCommentsFromGenLocated name
 mkExportEntry (GHC.IEThingWith _ name _ constructors _) =
-  WithSpecificConstructors (mkImportExportName <$> fromGenLocated name)
-    $ fmap mkImportExportName . fromGenLocated <$> constructors
+  WithSpecificConstructors
+    (mkImportExportName <$> mkWithCommentsFromGenLocated name)
+    $ fmap mkImportExportName . mkWithCommentsFromGenLocated <$> constructors
 #else
 mkExportEntry (GHC.IEVar _ name) =
-  SingleIdentifier $ mkImportExportName <$> fromGenLocated name
+  SingleIdentifier $ mkImportExportName <$> mkWithCommentsFromGenLocated name
 mkExportEntry (GHC.IEThingAbs _ name) =
-  SingleIdentifier $ mkImportExportName <$> fromGenLocated name
+  SingleIdentifier $ mkImportExportName <$> mkWithCommentsFromGenLocated name
 mkExportEntry (GHC.IEThingAll _ name) =
-  WithAllConstructors $ mkImportExportName <$> fromGenLocated name
+  WithAllConstructors $ mkImportExportName <$> mkWithCommentsFromGenLocated name
 mkExportEntry (GHC.IEThingWith _ name _ constructors) =
-  WithSpecificConstructors (mkImportExportName <$> fromGenLocated name)
-    $ fmap mkImportExportName . fromGenLocated <$> constructors
+  WithSpecificConstructors
+    (mkImportExportName <$> mkWithCommentsFromGenLocated name)
+    $ fmap mkImportExportName . mkWithCommentsFromGenLocated <$> constructors
 #endif
 mkExportEntry (GHC.IEModuleContents _ name) =
-  ByModule $ mkModuleName <$> fromGenLocated name
+  ByModule $ mkModuleName <$> mkWithCommentsFromGenLocated name
 mkExportEntry GHC.IEGroup {} = neverAppears
 mkExportEntry GHC.IEDoc {} = neverAppears
 mkExportEntry GHC.IEDocNamed {} = neverAppears

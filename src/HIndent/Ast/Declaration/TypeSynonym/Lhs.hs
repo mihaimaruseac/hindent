@@ -38,15 +38,16 @@ instance Pretty TypeSynonymLhs where
 mkTypeSynonymLhs :: GHC.TyClDecl GHC.GhcPs -> TypeSynonymLhs
 mkTypeSynonymLhs GHC.SynDecl {tcdFixity = GHC.Prefix, ..} = Prefix {..}
   where
-    pName = fromGenLocated $ fmap mkPrefixName tcdLName
+    pName = mkWithCommentsFromGenLocated $ fmap mkPrefixName tcdLName
     typeVariables =
-      fmap mkTypeVariable . fromGenLocated <$> GHC.hsq_explicit tcdTyVars
+      fmap mkTypeVariable . mkWithCommentsFromGenLocated
+        <$> GHC.hsq_explicit tcdTyVars
 mkTypeSynonymLhs GHC.SynDecl {tcdFixity = GHC.Infix, ..} =
   case GHC.hsq_explicit tcdTyVars of
     [l, r] -> Infix {..}
       where
-        left = mkTypeVariable <$> fromGenLocated l
-        iName = fromGenLocated $ fmap mkInfixName tcdLName
-        right = mkTypeVariable <$> fromGenLocated r
+        left = mkTypeVariable <$> mkWithCommentsFromGenLocated l
+        iName = mkWithCommentsFromGenLocated $ fmap mkInfixName tcdLName
+        right = mkTypeVariable <$> mkWithCommentsFromGenLocated r
     _ -> error "Unexpected number of type variables for infix type synonym."
 mkTypeSynonymLhs _ = error "Not a type synonym."

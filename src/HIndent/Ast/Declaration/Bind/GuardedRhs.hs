@@ -25,7 +25,11 @@ import HIndent.Ast.Guard
   )
 import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.WhereClause (WhereClause, mkWhereClause)
-import HIndent.Ast.WithComments (WithComments, fromGenLocated, prettyWith)
+import HIndent.Ast.WithComments
+  ( WithComments
+  , mkWithCommentsFromGenLocated
+  , prettyWith
+  )
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -48,14 +52,20 @@ instance Pretty GuardedRhs where
 mkGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkGuardedRhs grhss@GHC.GRHSs {..} =
   GuardedRhs
-    { guards = fmap (fmap mkExprGuard . fromGenLocated) (toList grhssGRHSs)
+    { guards =
+        fmap
+          (fmap mkExprGuard . mkWithCommentsFromGenLocated)
+          (toList grhssGRHSs)
     , whereClause = mkWhereClause grhss
     }
 
 mkCaseGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkCaseGuardedRhs grhss@GHC.GRHSs {..} =
   GuardedRhs
-    { guards = fmap (fmap mkCaseExprGuard . fromGenLocated) (toList grhssGRHSs)
+    { guards =
+        fmap
+          (fmap mkCaseExprGuard . mkWithCommentsFromGenLocated)
+          (toList grhssGRHSs)
     , whereClause = mkWhereClause grhss
     }
 
@@ -63,7 +73,9 @@ mkLambdaGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkLambdaGuardedRhs grhss@GHC.GRHSs {..} =
   GuardedRhs
     { guards =
-        fmap (fmap mkLambdaExprGuard . fromGenLocated) (toList grhssGRHSs)
+        fmap
+          (fmap mkLambdaExprGuard . mkWithCommentsFromGenLocated)
+          (toList grhssGRHSs)
     , whereClause = mkWhereClause grhss
     }
 
@@ -72,14 +84,19 @@ mkMultiWayIfGuardedRhs ::
 mkMultiWayIfGuardedRhs grhss@GHC.GRHSs {..} =
   GuardedRhs
     { guards =
-        fmap (fmap mkMultiWayIfExprGuard . fromGenLocated) (toList grhssGRHSs)
+        fmap
+          (fmap mkMultiWayIfExprGuard . mkWithCommentsFromGenLocated)
+          (toList grhssGRHSs)
     , whereClause = mkWhereClause grhss
     }
 
 mkCaseCmdGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> GuardedRhs
 mkCaseCmdGuardedRhs grhss@GHC.GRHSs {..} =
   GuardedRhs
-    { guards = fmap (fmap mkCaseCmdGuard . fromGenLocated) (toList grhssGRHSs)
+    { guards =
+        fmap
+          (fmap mkCaseCmdGuard . mkWithCommentsFromGenLocated)
+          (toList grhssGRHSs)
     , whereClause = mkWhereClause grhss
     }
 
@@ -87,6 +104,9 @@ mkLambdaCmdGuardedRhs ::
      GHC.GRHSs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> GuardedRhs
 mkLambdaCmdGuardedRhs grhss@GHC.GRHSs {..} =
   GuardedRhs
-    { guards = fmap (fmap mkLambdaCmdGuard . fromGenLocated) (toList grhssGRHSs)
+    { guards =
+        fmap
+          (fmap mkLambdaCmdGuard . mkWithCommentsFromGenLocated)
+          (toList grhssGRHSs)
     , whereClause = mkWhereClause grhss
     }

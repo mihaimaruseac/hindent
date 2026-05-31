@@ -14,7 +14,11 @@ import {-# SOURCE #-} HIndent.Ast.Cmd (Cmd, mkCmd)
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.LocalBinds (LocalBinds, mkLocalBinds)
 import HIndent.Ast.Pattern (Pattern, mkPattern)
-import HIndent.Ast.WithComments (WithComments, fromGenLocated, prettyWith)
+import HIndent.Ast.WithComments
+  ( WithComments
+  , mkWithCommentsFromGenLocated
+  , prettyWith
+  )
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments (CommentExtraction(..), emptyNodeComments)
@@ -64,14 +68,14 @@ instance Pretty a => Pretty (Statement a) where
 mkExprStatement ::
      GHC.StmtLR GHC.GhcPs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> ExprStatement
 mkExprStatement (GHC.LastStmt _ expr _ _) =
-  Expression $ mkExpression <$> fromGenLocated expr
+  Expression $ mkExpression <$> mkWithCommentsFromGenLocated expr
 mkExprStatement (GHC.BindStmt _ pat expr) =
   Binding
-    { lhsPattern = mkPattern <$> fromGenLocated pat
-    , rhs = mkExpression <$> fromGenLocated expr
+    { lhsPattern = mkPattern <$> mkWithCommentsFromGenLocated pat
+    , rhs = mkExpression <$> mkWithCommentsFromGenLocated expr
     }
 mkExprStatement (GHC.BodyStmt _ body _ _) =
-  Expression $ mkExpression <$> fromGenLocated body
+  Expression $ mkExpression <$> mkWithCommentsFromGenLocated body
 mkExprStatement (GHC.LetStmt _ binds) =
   case mkLocalBinds binds of
     Just localBinds -> LetBinding localBinds
@@ -82,19 +86,20 @@ mkExprStatement (GHC.ParStmt _ blocks _ _) =
   Parallel
     $ fmap
         (\(GHC.ParStmtBlock _ stmts _ _) ->
-           fmap (fmap mkExprStatement . fromGenLocated) stmts)
+           fmap (fmap mkExprStatement . mkWithCommentsFromGenLocated) stmts)
         (toList blocks)
 mkExprStatement GHC.TransStmt {..} =
   Transform
-    { steps = fmap (fmap mkExprStatement . fromGenLocated) trS_stmts
-    , using = mkExpression <$> fromGenLocated trS_using
+    { steps =
+        fmap (fmap mkExprStatement . mkWithCommentsFromGenLocated) trS_stmts
+    , using = mkExpression <$> mkWithCommentsFromGenLocated trS_using
     }
 mkExprStatement GHC.RecStmt {..} =
   Recursive
     { block =
         fmap
-          (fmap (fmap mkExprStatement . fromGenLocated))
-          (fromGenLocated recS_stmts)
+          (fmap (fmap mkExprStatement . mkWithCommentsFromGenLocated))
+          (mkWithCommentsFromGenLocated recS_stmts)
     }
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkExprStatement GHC.ApplicativeStmt {} =
@@ -103,14 +108,14 @@ mkExprStatement GHC.ApplicativeStmt {} =
 mkCmdStatement ::
      GHC.StmtLR GHC.GhcPs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> CmdStatement
 mkCmdStatement (GHC.LastStmt _ cmd _ _) =
-  Expression $ mkCmd <$> fromGenLocated cmd
+  Expression $ mkCmd <$> mkWithCommentsFromGenLocated cmd
 mkCmdStatement (GHC.BindStmt _ pat cmd) =
   Binding
-    { lhsPattern = mkPattern <$> fromGenLocated pat
-    , rhs = mkCmd <$> fromGenLocated cmd
+    { lhsPattern = mkPattern <$> mkWithCommentsFromGenLocated pat
+    , rhs = mkCmd <$> mkWithCommentsFromGenLocated cmd
     }
 mkCmdStatement (GHC.BodyStmt _ cmd _ _) =
-  Expression $ mkCmd <$> fromGenLocated cmd
+  Expression $ mkCmd <$> mkWithCommentsFromGenLocated cmd
 mkCmdStatement (GHC.LetStmt _ binds) =
   case mkLocalBinds binds of
     Just localBinds -> LetBinding localBinds

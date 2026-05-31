@@ -26,8 +26,8 @@ instance Pretty DefaultDeclaration where
 mkDefaultDeclaration :: GHC.DefaultDecl GHC.GhcPs -> DefaultDeclaration
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkDefaultDeclaration (GHC.DefaultDecl _ _ xs) =
-  DefaultDeclaration $ fmap (fmap mkType . fromGenLocated) xs
+  DefaultDeclaration $ fmap (fmap mkType . mkWithCommentsFromGenLocated) xs
 #else
 mkDefaultDeclaration (GHC.DefaultDecl _ xs) =
-  DefaultDeclaration $ fmap (fmap mkType . fromGenLocated) xs
+  DefaultDeclaration $ fmap (fmap mkType . mkWithCommentsFromGenLocated) xs
 #endif

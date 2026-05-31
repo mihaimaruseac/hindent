@@ -160,74 +160,83 @@ mkSignature (GHC.TypeSig _ ns GHC.HsWC { hswc_ext = GHC.NoExtField
                                        , GHC.hswc_body = params
                                        }) = Type {..}
   where
-    names = fmap (fromGenLocated . fmap mkPrefixName) ns
-    parameters = flattenComments $ mkDeclSigType <$> fromGenLocated params
+    names = fmap (mkWithCommentsFromGenLocated . fmap mkPrefixName) ns
+    parameters =
+      flattenComments $ mkDeclSigType <$> mkWithCommentsFromGenLocated params
 mkSignature (GHC.PatSynSig _ ns s) = Pattern {..}
   where
-    names = fmap (fromGenLocated . fmap mkPrefixName) ns
-    signature = flattenComments $ mkTypeFromHsSigType <$> fromGenLocated s
+    names = fmap (mkWithCommentsFromGenLocated . fmap mkPrefixName) ns
+    signature =
+      flattenComments $ mkTypeFromHsSigType <$> mkWithCommentsFromGenLocated s
 mkSignature (GHC.ClassOpSig _ True ns s) = DefaultClassMethod {..}
   where
-    names = fmap (fromGenLocated . fmap mkPrefixName) ns
-    methodSig = flattenComments $ mkDeclSigType <$> fromGenLocated s
+    names = fmap (mkWithCommentsFromGenLocated . fmap mkPrefixName) ns
+    methodSig =
+      flattenComments $ mkDeclSigType <$> mkWithCommentsFromGenLocated s
 mkSignature (GHC.ClassOpSig _ False ns s) = ClassMethod {..}
   where
-    names = fmap (fromGenLocated . fmap mkPrefixName) ns
-    methodSig = flattenComments $ mkDeclSigType <$> fromGenLocated s
+    names = fmap (mkWithCommentsFromGenLocated . fmap mkPrefixName) ns
+    methodSig =
+      flattenComments $ mkDeclSigType <$> mkWithCommentsFromGenLocated s
 mkSignature (GHC.FixSig _ (GHC.FixitySig _ ops fy)) = Fixity {..}
   where
     fixity = mkFixity fy
-    opNames = fmap (fromGenLocated . fmap mkInfixName) ops
+    opNames = fmap (mkWithCommentsFromGenLocated . fmap mkInfixName) ops
 mkSignature (GHC.InlineSig _ n GHC.InlinePragma {..}) = Inline {..}
   where
-    name = fromGenLocated $ fmap mkPrefixName n
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName n
     spec = mkInlineSpec inl_inline
     phase = mkInlinePhase inl_act
 mkSignature (GHC.SpecSig _ n s _) = Specialise {..}
   where
-    name = fromGenLocated $ fmap mkPrefixName n
-    sigs = flattenComments . fmap mkTypeFromHsSigType . fromGenLocated <$> s
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName n
+    sigs =
+      flattenComments . fmap mkTypeFromHsSigType . mkWithCommentsFromGenLocated
+        <$> s
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkSignature (GHC.SpecSigE _ _ expr _) = SpecialiseExpr {..}
   where
-    expression = mkExpression <$> fromGenLocated expr
+    expression = mkExpression <$> mkWithCommentsFromGenLocated expr
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkSignature (GHC.SCCFunSig _ n _) = Scc name
   where
-    name = fromGenLocated $ fmap mkPrefixName n
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName n
 mkSignature (GHC.CompleteMatchSig _ ns _) = Complete names
   where
-    names = fmap (fromGenLocated . fmap mkPrefixName) ns
+    names = fmap (mkWithCommentsFromGenLocated . fmap mkPrefixName) ns
 #elif MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkSignature (GHC.SCCFunSig _ n _) = Scc name
   where
-    name = fromGenLocated $ fmap mkPrefixName n
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName n
 mkSignature (GHC.CompleteMatchSig _ ns _) = Complete names
   where
-    names = fmap (fromGenLocated . fmap mkPrefixName) $ GHC.unLoc ns
+    names =
+      fmap (mkWithCommentsFromGenLocated . fmap mkPrefixName) $ GHC.unLoc ns
 #elif MIN_VERSION_ghc_lib_parser(9, 4, 0)
 mkSignature (GHC.SCCFunSig _ _ name _) =
-  Scc $ fromGenLocated $ fmap mkPrefixName name
+  Scc $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
 mkSignature (GHC.CompleteMatchSig _ _ names _) =
-  Complete $ fromGenLocated . fmap mkPrefixName <$> GHC.unLoc names
+  Complete
+    $ mkWithCommentsFromGenLocated . fmap mkPrefixName <$> GHC.unLoc names
 #else
 mkSignature (GHC.SCCFunSig _ _ name _) =
-  Scc $ fromGenLocated $ fmap mkPrefixName name
+  Scc $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
 mkSignature (GHC.CompleteMatchSig _ _ names _) =
-  Complete $ fromGenLocated . fmap mkPrefixName <$> GHC.unLoc names
+  Complete
+    $ mkWithCommentsFromGenLocated . fmap mkPrefixName <$> GHC.unLoc names
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 mkSignature (GHC.SpecInstSig _ sig) =
   SpecialiseInstance
     $ flattenComments
-    $ mkTypeFromHsSigType <$> fromGenLocated sig
+    $ mkTypeFromHsSigType <$> mkWithCommentsFromGenLocated sig
 mkSignature (GHC.MinimalSig _ xs) =
-  Minimal $ mkBooleanFormula <$> fromGenLocated xs
+  Minimal $ mkBooleanFormula <$> mkWithCommentsFromGenLocated xs
 #else
 mkSignature (GHC.SpecInstSig _ _ sig) = SpecialiseInstance sig
 mkSignature (GHC.MinimalSig _ _ xs) =
-  Minimal $ mkBooleanFormula <$> fromGenLocated xs
+  Minimal $ mkBooleanFormula <$> mkWithCommentsFromGenLocated xs
 mkSignature GHC.IdSig {} =
   error "`ghc-lib-parser` never generates this AST node."
 #endif

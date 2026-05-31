@@ -45,9 +45,11 @@ mkHaskell98Constructor GHC.ConDeclH98 {..}
   where
     existentialVariables =
       if con_forall
-        then fmap (fmap mkTypeVariable . fromGenLocated) con_ex_tvs
+        then fmap
+               (fmap mkTypeVariable . mkWithCommentsFromGenLocated)
+               con_ex_tvs
         else []
-    context = fmap (fmap mkContext . fromGenLocated) con_mb_cxt
+    context = fmap (fmap mkContext . mkWithCommentsFromGenLocated) con_mb_cxt
 mkHaskell98Constructor _ = Nothing
 
 hasSingleRecordConstructor :: Haskell98Constructor -> Bool

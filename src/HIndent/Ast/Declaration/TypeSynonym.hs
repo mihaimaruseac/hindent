@@ -35,5 +35,5 @@ mkTypeSynonym :: GHC.TyClDecl GHC.GhcPs -> TypeSynonym
 mkTypeSynonym synonym@GHC.SynDecl {..} = TypeSynonym {..}
   where
     lhs = mkTypeSynonymLhs synonym
-    rhs = mkType <$> fromGenLocated tcdRhs
+    rhs = mkType <$> mkWithCommentsFromGenLocated tcdRhs
 mkTypeSynonym _ = error "Not a type synonym."

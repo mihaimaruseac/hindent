@@ -6,6 +6,8 @@
 module HIndent.Ast.WithComments
   ( WithComments
   , prettyWith
+  , mkWithCommentsFromGenLocated
+  , mkWithCommentsFromEpaLocated
   , fromGenLocated
   , fromEpAnn
   , mkWithComments
@@ -17,13 +19,19 @@ module HIndent.Ast.WithComments
 
 import Control.Monad
 import Control.Monad.RWS
-import qualified GHC.Hs as GHC
+import qualified GHC.Parser.Annotation as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Comment (Comment, getColumn, mkComment)
 import HIndent.Ast.IsGenLocatedLocation
   ( CommentGroup(..)
   , mkCommentGroupFromEpAnn
   )
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+import HIndent.Ast.IsGenLocatedLocation
+  ( IsGenLocatedLocation(..)
+  , mkCommentGroupFromEpaLocation
+  )
+#endif
 import qualified HIndent.Ast.NodeComments as NodeComments
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -86,7 +94,26 @@ printCommentsAfter p =
         indentedWithFixedLevel (fromIntegral $ getCommentColumn comment)
           $ pretty comment
         eolCommentsArePrinted
+#if MIN_VERSION_ghc_lib_parser(9, 10, 1)
+mkWithCommentsFromGenLocated ::
+     IsGenLocatedLocation l => GHC.GenLocated l a -> WithComments a
+mkWithCommentsFromGenLocated (GHC.L ann a) =
+  WithComments (mkCommentGroupFromGenLocatedLocation ann) a
 
+mkWithCommentsFromEpaLocated ::
+     GHC.GenLocated GHC.EpaLocation a -> WithComments a
+mkWithCommentsFromEpaLocated (GHC.L ann a) =
+  WithComments (mkCommentGroupFromEpaLocation ann) a
+#else
+mkWithCommentsFromGenLocated ::
+     GHC.GenLocated (GHC.SrcSpanAnn' (GHC.EpAnn ann)) a -> WithComments a
+mkWithCommentsFromGenLocated (GHC.L ann a) =
+  WithComments (mkCommentGroupFromEpAnn $ GHC.ann ann) a
+
+mkWithCommentsFromEpaLocated ::
+     GHC.GenLocated (GHC.SrcSpanAnn' (GHC.EpAnn ann)) a -> WithComments a
+mkWithCommentsFromEpaLocated = mkWithCommentsFromGenLocated
+#endif
 fromGenLocated :: (CommentExtraction l) => GHC.GenLocated l a -> WithComments a
 fromGenLocated (GHC.L l a) = WithComments (fromNodeComments $ nodeComments l) a
 

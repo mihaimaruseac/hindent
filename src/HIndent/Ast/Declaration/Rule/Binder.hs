@@ -31,8 +31,8 @@ mkRuleBinder :: GHC.RuleBndr GHC.GhcPs -> RuleBinder
 mkRuleBinder (GHC.RuleBndr _ n) = RuleBinder {..}
   where
     signature = Nothing
-    name = fromGenLocated $ fmap mkPrefixName n
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName n
 mkRuleBinder (GHC.RuleBndrSig _ n GHC.HsPS {..}) = RuleBinder {..}
   where
-    signature = Just $ fromGenLocated $ fmap mkType hsps_body
-    name = fromGenLocated $ fmap mkPrefixName n
+    signature = Just $ mkWithCommentsFromGenLocated $ fmap mkType hsps_body
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName n

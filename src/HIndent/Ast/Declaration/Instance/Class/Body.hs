@@ -44,5 +44,5 @@ hasClassInstanceBody (ClassInstanceBody members) = not $ null members
 sortMembers ::
      [GHC.LocatedA ClassInstanceMember] -> [WithComments ClassInstanceMember]
 sortMembers =
-  fmap fromGenLocated
+  fmap mkWithCommentsFromGenLocated
     . sortBy (compare `on` GHC.realSrcSpan . GHC.locA . GHC.getLoc)

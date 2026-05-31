@@ -72,13 +72,13 @@ mkGADTConstructor decl@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}
         GHC.L _ GHC.HsOuterImplicit {} -> Nothing
         GHC.L l GHC.HsOuterExplicit {..} ->
           Just
-            $ fromGenLocated
+            $ mkWithCommentsFromGenLocated
             $ fmap
-                (fmap (fmap mkTypeVariable . fromGenLocated))
+                (fmap (fmap mkTypeVariable . mkWithCommentsFromGenLocated))
                 (GHC.L l hso_bndrs)
     signature =
       fromMaybe (error "Couldn't get signature.") $ mkConstructorSignature decl
-    context = fmap (fmap mkContext . fromGenLocated) con_mb_cxt
+    context = fmap (fmap mkContext . mkWithCommentsFromGenLocated) con_mb_cxt
 #else
 mkGADTConstructor decl@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}
   where
@@ -88,22 +88,24 @@ mkGADTConstructor decl@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}
         GHC.L _ GHC.HsOuterImplicit {} -> Nothing
         GHC.L l GHC.HsOuterExplicit {..} ->
           Just
-            $ fromGenLocated
+            $ mkWithCommentsFromGenLocated
             $ fmap
-                (fmap (fmap mkTypeVariable . fromGenLocated))
+                (fmap (fmap mkTypeVariable . mkWithCommentsFromGenLocated))
                 (GHC.L l hso_bndrs)
     signature =
       fromMaybe (error "Couldn't get signature.") $ mkConstructorSignature decl
-    context = fmap (fmap mkContext . fromGenLocated) con_mb_cxt
+    context = fmap (fmap mkContext . mkWithCommentsFromGenLocated) con_mb_cxt
 #endif
 mkGADTConstructor _ = Nothing
 
 getNames :: GHC.ConDecl GHC.GhcPs -> Maybe [WithComments PrefixName]
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 getNames GHC.ConDeclGADT {..} =
-  Just $ NE.toList $ fmap (fromGenLocated . fmap mkPrefixName) con_names
+  Just
+    $ NE.toList
+    $ fmap (mkWithCommentsFromGenLocated . fmap mkPrefixName) con_names
 #else
 getNames GHC.ConDeclGADT {..} =
-  Just $ fmap (fromGenLocated . fmap mkPrefixName) con_names
+  Just $ fmap (mkWithCommentsFromGenLocated . fmap mkPrefixName) con_names
 #endif
 getNames _ = Nothing

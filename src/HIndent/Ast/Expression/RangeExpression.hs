@@ -7,7 +7,7 @@ module HIndent.Ast.Expression.RangeExpression
   ) where
 
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
-import HIndent.Ast.WithComments (WithComments, fromGenLocated)
+import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -45,20 +45,21 @@ instance Pretty RangeExpression where
       $ spaced [pretty from >> comma >> pretty next, string "..", pretty to]
 
 mkRangeExpression :: GHC.ArithSeqInfo GHC.GhcPs -> RangeExpression
-mkRangeExpression (GHC.From f) = From $ mkExpression <$> fromGenLocated f
+mkRangeExpression (GHC.From f) =
+  From $ mkExpression <$> mkWithCommentsFromGenLocated f
 mkRangeExpression (GHC.FromThen f n) =
   FromThen
-    { from = mkExpression <$> fromGenLocated f
-    , next = mkExpression <$> fromGenLocated n
+    { from = mkExpression <$> mkWithCommentsFromGenLocated f
+    , next = mkExpression <$> mkWithCommentsFromGenLocated n
     }
 mkRangeExpression (GHC.FromTo f t) =
   FromTo
-    { from = mkExpression <$> fromGenLocated f
-    , to = mkExpression <$> fromGenLocated t
+    { from = mkExpression <$> mkWithCommentsFromGenLocated f
+    , to = mkExpression <$> mkWithCommentsFromGenLocated t
     }
 mkRangeExpression (GHC.FromThenTo f n t) =
   FromThenTo
-    { from = mkExpression <$> fromGenLocated f
-    , next = mkExpression <$> fromGenLocated n
-    , to = mkExpression <$> fromGenLocated t
+    { from = mkExpression <$> mkWithCommentsFromGenLocated f
+    , next = mkExpression <$> mkWithCommentsFromGenLocated n
+    , to = mkExpression <$> mkWithCommentsFromGenLocated t
     }

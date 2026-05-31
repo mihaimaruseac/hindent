@@ -22,7 +22,8 @@ instance Pretty DerivingClause where
   pretty' (DerivingClause xs) = lined $ fmap pretty xs
 
 mkDerivingClause :: GHC.HsDeriving GHC.GhcPs -> DerivingClause
-mkDerivingClause = DerivingClause . fmap (fmap mkDeriving . fromGenLocated)
+mkDerivingClause =
+  DerivingClause . fmap (fmap mkDeriving . mkWithCommentsFromGenLocated)
 
 hasDerivings :: DerivingClause -> Bool
 hasDerivings (DerivingClause []) = False

@@ -41,13 +41,13 @@ mkImportEntryCollection GHC.ImportDecl {..} =
     Just (GHC.Exactly, xs) ->
       Just
         $ fmap (\entries -> ImportEntryCollection {kind = Importing, ..})
-        $ fromGenLocated
-        $ fmap (fmap (fmap mkImportEntry . fromGenLocated)) xs
+        $ mkWithCommentsFromGenLocated
+        $ fmap (fmap (fmap mkImportEntry . mkWithCommentsFromGenLocated)) xs
     Just (GHC.EverythingBut, xs) ->
       Just
         $ fmap (\entries -> ImportEntryCollection {kind = Hiding, ..})
-        $ fromGenLocated
-        $ fmap (fmap (fmap mkImportEntry . fromGenLocated)) xs
+        $ mkWithCommentsFromGenLocated
+        $ fmap (fmap (fmap mkImportEntry . mkWithCommentsFromGenLocated)) xs
 #else
 mkImportEntryCollection GHC.ImportDecl {..} =
   case ideclHiding of
@@ -55,13 +55,13 @@ mkImportEntryCollection GHC.ImportDecl {..} =
     Just (False, xs) ->
       Just
         $ fmap (\entries -> ImportEntryCollection {kind = Importing, ..})
-        $ fromGenLocated
-        $ fmap (fmap (fmap mkImportEntry . fromGenLocated)) xs
+        $ mkWithCommentsFromGenLocated
+        $ fmap (fmap (fmap mkImportEntry . mkWithCommentsFromGenLocated)) xs
     Just (True, xs) ->
       Just
         $ fmap (\entries -> ImportEntryCollection {kind = Hiding, ..})
-        $ fromGenLocated
-        $ fmap (fmap (fmap mkImportEntry . fromGenLocated)) xs
+        $ mkWithCommentsFromGenLocated
+        $ fmap (fmap (fmap mkImportEntry . mkWithCommentsFromGenLocated)) xs
 #endif
 sortEntriesByName :: ImportEntryCollection -> ImportEntryCollection
 sortEntriesByName ImportEntryCollection {..} =
