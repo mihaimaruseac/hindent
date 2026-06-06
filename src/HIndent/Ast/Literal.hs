@@ -16,7 +16,7 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments (CommentExtraction(..))
-import Text.Show.Unicode
+import HIndent.Text.Show.Unicode
 
 data Literal
   = Inline TextValue
