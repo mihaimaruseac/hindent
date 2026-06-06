@@ -195,6 +195,7 @@ library
       HIndent.Pretty.SigBindFamily
       HIndent.Pretty.Types
       HIndent.Printer
+      HIndent.Text.Show.Unicode
       Paths_hindent
   autogen-modules:
       Paths_hindent
@@ -218,11 +219,11 @@ library
     , path
     , path-io
     , regex-tdfa
+    , safe
     , split
     , syb
     , text
     , transformers
-    , unicode-show
     , utf8-string
     , yaml
   default-language: Haskell2010
@@ -255,11 +256,11 @@ library hindent-internal
     , path
     , path-io
     , regex-tdfa
+    , safe
     , split
     , syb
     , text
     , transformers
-    , unicode-show
     , utf8-string
     , yaml
   default-language: Haskell2010
@@ -291,11 +292,11 @@ executable hindent
     , path
     , path-io
     , regex-tdfa
+    , safe
     , split
     , syb
     , text
     , transformers
-    , unicode-show
     , utf8-string
     , yaml
   default-language: Haskell2010
@@ -331,11 +332,11 @@ test-suite hindent-test
     , path
     , path-io
     , regex-tdfa
+    , safe
     , split
     , syb
     , text
     , transformers
-    , unicode-show
     , utf8-string
     , yaml
   default-language: Haskell2010
@@ -371,11 +372,11 @@ benchmark hindent-bench
     , path
     , path-io
     , regex-tdfa
+    , safe
     , split
     , syb
     , text
     , transformers
-    , unicode-show
     , utf8-string
     , yaml
   default-language: Haskell2010

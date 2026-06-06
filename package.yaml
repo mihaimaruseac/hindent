@@ -43,11 +43,11 @@ dependencies:
   - path
   - path-io
   - regex-tdfa
+  - safe
   - split
   - syb
   - text
   - transformers
-  - unicode-show
   - utf8-string
   - yaml
 
