@@ -37,7 +37,8 @@ instance Pretty DeclarationCollection where
 
 mkDeclarationCollection :: GHC.HsModule' -> DeclarationCollection
 mkDeclarationCollection GHC.HsModule {..} =
-  DeclarationCollection $ fmap mkDeclaration . fromGenLocated <$> hsmodDecls
+  DeclarationCollection
+    $ fmap mkDeclaration . mkWithCommentsFromGenLocated <$> hsmodDecls
 
 hasDeclarations :: DeclarationCollection -> Bool
 hasDeclarations (DeclarationCollection xs) = not $ null xs

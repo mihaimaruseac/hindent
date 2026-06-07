@@ -46,28 +46,34 @@ mkClassInstance GHC.ClsInstD {cid_inst = GHC.ClsInstDecl {..}} =
   Just
     $ ClassInstance
         { instanceType =
-            flattenComments $ mkInstDeclType <$> fromGenLocated cid_poly_ty
+            flattenComments
+              $ mkInstDeclType <$> mkWithCommentsFromGenLocated cid_poly_ty
         , body =
             mkClassInstanceBody
               cid_sigs
               cid_binds
               cid_tyfam_insts
               cid_datafam_insts
-        , overlapMode = fmap mkOverlapMode . fromGenLocated <$> cid_overlap_mode
+        , overlapMode =
+            fmap mkOverlapMode . mkWithCommentsFromGenLocated
+              <$> cid_overlap_mode
         }
 #else
 mkClassInstance GHC.ClsInstD {cid_inst = GHC.ClsInstDecl {..}} =
   Just
     $ ClassInstance
         { instanceType =
-            flattenComments $ mkInstDeclType <$> fromGenLocated cid_poly_ty
+            flattenComments
+              $ mkInstDeclType <$> mkWithCommentsFromGenLocated cid_poly_ty
         , body =
             mkClassInstanceBody
               cid_sigs
               (GHC.bagToList cid_binds)
               cid_tyfam_insts
               cid_datafam_insts
-        , overlapMode = fmap mkOverlapMode . fromGenLocated <$> cid_overlap_mode
+        , overlapMode =
+            fmap mkOverlapMode . mkWithCommentsFromGenLocated
+              <$> cid_overlap_mode
         }
 #endif
 mkClassInstance _ = Nothing

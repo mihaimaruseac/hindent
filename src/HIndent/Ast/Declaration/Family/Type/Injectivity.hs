@@ -27,5 +27,5 @@ instance Pretty Injectivity where
 mkInjectivity :: GHC.InjectivityAnn GHC.GhcPs -> Injectivity
 mkInjectivity (GHC.InjectivityAnn _ f t) = Injectivity {..}
   where
-    from = fromGenLocated $ fmap mkPrefixName f
-    to = fmap (fromGenLocated . fmap mkPrefixName) t
+    from = mkWithCommentsFromGenLocated $ fmap mkPrefixName f
+    to = fmap (mkWithCommentsFromGenLocated . fmap mkPrefixName) t

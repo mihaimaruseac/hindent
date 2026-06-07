@@ -32,10 +32,10 @@ mkAnnotation :: GHC.AnnDecl GHC.GhcPs -> Annotation
 mkAnnotation (GHC.HsAnnotation _ prov expression) = Annotation {..}
   where
     provenance = mkProvenance prov
-    expr = mkExpression <$> fromGenLocated expression
+    expr = mkExpression <$> mkWithCommentsFromGenLocated expression
 #else
 mkAnnotation (GHC.HsAnnotation _ _ prov expression) = Annotation {..}
   where
     provenance = mkProvenance prov
-    expr = mkExpression <$> fromGenLocated expression
+    expr = mkExpression <$> mkWithCommentsFromGenLocated expression
 #endif

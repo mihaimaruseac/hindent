@@ -11,9 +11,13 @@ import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
-import HIndent.Ast.WithComments (WithComments, fromGenLocated)
+import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 #else
-import HIndent.Ast.WithComments (WithComments, fromGenLocated, mkWithComments)
+import HIndent.Ast.WithComments
+  ( WithComments
+  , mkWithComments
+  , mkWithCommentsFromGenLocated
+  )
 #endif
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
@@ -54,11 +58,12 @@ instance Pretty Splice where
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 mkSplice :: GHC.HsUntypedSplice GHC.GhcPs -> Splice
 mkSplice (GHC.HsUntypedSpliceExpr anns x)
-  | hasDollarToken anns = UntypedDollar $ mkExpression <$> fromGenLocated x
-  | otherwise = UntypedBare $ mkExpression <$> fromGenLocated x
+  | hasDollarToken anns =
+    UntypedDollar $ mkExpression <$> mkWithCommentsFromGenLocated x
+  | otherwise = UntypedBare $ mkExpression <$> mkWithCommentsFromGenLocated x
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) =
-  QuasiQuote (mkPrefixName <$> fromGenLocated l) r
+  QuasiQuote (mkPrefixName <$> mkWithCommentsFromGenLocated l) r
 #else
 mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) =
   QuasiQuote (mkPrefixName <$> mkWithComments l) r
@@ -66,11 +71,11 @@ mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) =
 #else
 mkSplice :: GHC.HsSplice GHC.GhcPs -> Splice
 mkSplice (GHC.HsTypedSplice _ _ _ body) =
-  Typed $ mkExpression <$> fromGenLocated body
+  Typed $ mkExpression <$> mkWithCommentsFromGenLocated body
 mkSplice (GHC.HsUntypedSplice _ GHC.DollarSplice _ body) =
-  UntypedDollar $ mkExpression <$> fromGenLocated body
+  UntypedDollar $ mkExpression <$> mkWithCommentsFromGenLocated body
 mkSplice (GHC.HsUntypedSplice _ GHC.BareSplice _ body) =
-  UntypedBare $ mkExpression <$> fromGenLocated body
+  UntypedBare $ mkExpression <$> mkWithCommentsFromGenLocated body
 mkSplice (GHC.HsQuasiQuote _ _ l _ r) = QuasiQuote (mkPrefixName l) r
 mkSplice GHC.HsSpliced {} = error "This AST node should never appear."
 #endif
@@ -94,4 +99,4 @@ hasDollarToken (GHC.EpAnn _ anns _) = any isDollarAnn anns
 hasDollarToken GHC.EpAnnNotUsed = False
 #endif
 mkTypedSplice :: GHC.LHsExpr GHC.GhcPs -> Splice
-mkTypedSplice = Typed . fmap mkExpression . fromGenLocated
+mkTypedSplice = Typed . fmap mkExpression . mkWithCommentsFromGenLocated

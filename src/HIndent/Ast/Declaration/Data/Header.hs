@@ -39,8 +39,9 @@ mkHeader GHC.DataDecl {tcdDataDefn = defn@GHC.HsDataDefn {..}, ..} =
   Just Header {..}
   where
     newOrData = mkNewOrData defn
-    context = fmap (fmap mkContext . fromGenLocated) dd_ctxt
-    name = fromGenLocated $ fmap mkPrefixName tcdLName
+    context = fmap (fmap mkContext . mkWithCommentsFromGenLocated) dd_ctxt
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName tcdLName
     typeVariables =
-      fmap mkTypeVariable . fromGenLocated <$> GHC.hsq_explicit tcdTyVars
+      fmap mkTypeVariable . mkWithCommentsFromGenLocated
+        <$> GHC.hsq_explicit tcdTyVars
 mkHeader _ = Nothing

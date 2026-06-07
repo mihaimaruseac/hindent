@@ -118,103 +118,119 @@ instance Pretty Pattern where
 
 mkPattern :: GHC.Pat GHC.GhcPs -> Pattern
 mkPattern GHC.WildPat {} = WildCard
-mkPattern (GHC.VarPat _ x) = Variable $ mkPrefixName <$> fromGenLocated x
+mkPattern (GHC.VarPat _ x) =
+  Variable $ mkPrefixName <$> mkWithCommentsFromGenLocated x
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkPattern GHC.EmbTyPat {} = notGeneratedByParser
 mkPattern GHC.InvisPat {} = notGeneratedByParser
 #endif
-mkPattern (GHC.LazyPat _ x) = Lazy $ mkPattern <$> fromGenLocated x
+mkPattern (GHC.LazyPat _ x) =
+  Lazy $ mkPattern <$> mkWithCommentsFromGenLocated x
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkPattern (GHC.AsPat _ a _ b) =
   As
-    { name = mkPrefixName <$> fromGenLocated a
-    , pat = mkPattern <$> fromGenLocated b
+    { name = mkPrefixName <$> mkWithCommentsFromGenLocated a
+    , pat = mkPattern <$> mkWithCommentsFromGenLocated b
     }
 #else
 mkPattern (GHC.AsPat _ a b) =
   As
-    { name = mkPrefixName <$> fromGenLocated a
-    , pat = mkPattern <$> fromGenLocated b
+    { name = mkPrefixName <$> mkWithCommentsFromGenLocated a
+    , pat = mkPattern <$> mkWithCommentsFromGenLocated b
     }
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkPattern (GHC.ParPat _ _ inner _) =
-  Parenthesized $ mkPattern <$> fromGenLocated inner
+  Parenthesized $ mkPattern <$> mkWithCommentsFromGenLocated inner
 #else
 mkPattern (GHC.ParPat _ inner) =
-  Parenthesized $ mkPattern <$> fromGenLocated inner
+  Parenthesized $ mkPattern <$> mkWithCommentsFromGenLocated inner
 #endif
-mkPattern (GHC.BangPat _ x) = Bang $ mkPattern <$> fromGenLocated x
-mkPattern (GHC.ListPat _ xs) = List $ fmap (fmap mkPattern . fromGenLocated) xs
+mkPattern (GHC.BangPat _ x) =
+  Bang $ mkPattern <$> mkWithCommentsFromGenLocated x
+mkPattern (GHC.ListPat _ xs) =
+  List $ fmap (fmap mkPattern . mkWithCommentsFromGenLocated) xs
 mkPattern (GHC.TuplePat _ pats GHC.Boxed) =
-  Tuple {boxed = True, patterns = fmap (fmap mkPattern . fromGenLocated) pats}
+  Tuple
+    { boxed = True
+    , patterns = fmap (fmap mkPattern . mkWithCommentsFromGenLocated) pats
+    }
 mkPattern (GHC.TuplePat _ pats GHC.Unboxed) =
-  Tuple {boxed = False, patterns = fmap (fmap mkPattern . fromGenLocated) pats}
+  Tuple
+    { boxed = False
+    , patterns = fmap (fmap mkPattern . mkWithCommentsFromGenLocated) pats
+    }
 mkPattern (GHC.SumPat _ x position numElem) =
   Sum
-    {pat = mkPattern <$> fromGenLocated x, position = position, arity = numElem}
+    { pat = mkPattern <$> mkWithCommentsFromGenLocated x
+    , position = position
+    , arity = numElem
+    }
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkPattern GHC.ConPat {..} =
   case pat_args of
     GHC.PrefixCon as ->
       PrefixConstructor
-        { name = mkPrefixName <$> fromGenLocated pat_con
-        , patterns = fmap (fmap mkPattern . fromGenLocated) as
+        { name = mkPrefixName <$> mkWithCommentsFromGenLocated pat_con
+        , patterns = fmap (fmap mkPattern . mkWithCommentsFromGenLocated) as
         }
     GHC.RecCon rec ->
       RecordConstructor
-        { name = mkPrefixName <$> fromGenLocated pat_con
+        { name = mkPrefixName <$> mkWithCommentsFromGenLocated pat_con
         , fields = mkRecordFieldsPat rec
         }
     GHC.InfixCon a b ->
       InfixConstructor
-        { left = mkPattern <$> fromGenLocated a
-        , operator = mkInfixName <$> fromGenLocated pat_con
-        , right = mkPattern <$> fromGenLocated b
+        { left = mkPattern <$> mkWithCommentsFromGenLocated a
+        , operator = mkInfixName <$> mkWithCommentsFromGenLocated pat_con
+        , right = mkPattern <$> mkWithCommentsFromGenLocated b
         }
 #else
 mkPattern GHC.ConPat {..} =
   case pat_args of
     GHC.PrefixCon _ as ->
       PrefixConstructor
-        { name = mkPrefixName <$> fromGenLocated pat_con
-        , patterns = fmap (fmap mkPattern . fromGenLocated) as
+        { name = mkPrefixName <$> mkWithCommentsFromGenLocated pat_con
+        , patterns = fmap (fmap mkPattern . mkWithCommentsFromGenLocated) as
         }
     GHC.RecCon rec ->
       RecordConstructor
-        { name = mkPrefixName <$> fromGenLocated pat_con
+        { name = mkPrefixName <$> mkWithCommentsFromGenLocated pat_con
         , fields = mkRecordFieldsPat rec
         }
     GHC.InfixCon a b ->
       InfixConstructor
-        { left = mkPattern <$> fromGenLocated a
-        , operator = mkInfixName <$> fromGenLocated pat_con
-        , right = mkPattern <$> fromGenLocated b
+        { left = mkPattern <$> mkWithCommentsFromGenLocated a
+        , operator = mkInfixName <$> mkWithCommentsFromGenLocated pat_con
+        , right = mkPattern <$> mkWithCommentsFromGenLocated b
         }
 #endif
 mkPattern (GHC.ViewPat _ l r) =
   View
-    { expression = mkExpression <$> fromGenLocated l
-    , pat = mkPattern <$> fromGenLocated r
+    { expression = mkExpression <$> mkWithCommentsFromGenLocated l
+    , pat = mkPattern <$> mkWithCommentsFromGenLocated r
     }
 mkPattern (GHC.SplicePat _ x) = Splice $ mkWithComments $ mkSplice x
 mkPattern (GHC.LitPat _ x) = Literal $ mkLiteralFromHsLit x
 mkPattern (GHC.NPat _ x _ _) = Literal $ mkLiteralFromHsOverLit $ GHC.unLoc x
 mkPattern (GHC.NPlusKPat _ n k _ _ _) =
   NPlusK
-    { n = mkPrefixName <$> fromGenLocated n
+    { n = mkPrefixName <$> mkWithCommentsFromGenLocated n
     , k = mkLiteralFromHsOverLit $ GHC.unLoc k
     }
 mkPattern (GHC.SigPat _ l r) =
   Signature
-    { pat = mkPattern <$> fromGenLocated l
+    { pat = mkPattern <$> mkWithCommentsFromGenLocated l
     , sig =
         flattenComments
           $ fmap mkType
-              <$> fromEpAnn (GHC.hsps_ext r) (fromGenLocated $ GHC.hsps_body r)
+              <$> fromEpAnn
+                    (GHC.hsps_ext r)
+                    (mkWithCommentsFromGenLocated $ GHC.hsps_body r)
     }
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
-mkPattern (GHC.OrPat _ pats) = Or $ fmap (fmap mkPattern . fromGenLocated) pats
+mkPattern (GHC.OrPat _ pats) =
+  Or $ fmap (fmap mkPattern . mkWithCommentsFromGenLocated) pats
 #endif
 newtype PatInsidePatDecl =
   PatInsidePatDecl Pattern

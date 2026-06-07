@@ -89,16 +89,17 @@ prettyFieldVertical Field {..} = do
 collectFields :: GHC.LHsRecUpdFields GHC.GhcPs -> [WithComments Field]
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 collectFields GHC.RegularRecUpdFields {..} =
-  fmap (fmap mkRegularField . fromGenLocated) recUpdFields
+  fmap (fmap mkRegularField . mkWithCommentsFromGenLocated) recUpdFields
 collectFields GHC.OverloadedRecUpdFields {..} =
-  fmap (fmap mkOverloadedField . fromGenLocated) olRecUpdFields
+  fmap (fmap mkOverloadedField . mkWithCommentsFromGenLocated) olRecUpdFields
 #elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
 collectFields GHC.RegularRecUpdFields {..} =
-  fmap (fmap mkRegularField . fromGenLocated) recUpdFields
+  fmap (fmap mkRegularField . mkWithCommentsFromGenLocated) recUpdFields
 collectFields GHC.OverloadedRecUpdFields {..} =
-  fmap (fmap mkOverloadedField . fromGenLocated) olRecUpdFields
+  fmap (fmap mkOverloadedField . mkWithCommentsFromGenLocated) olRecUpdFields
 #else
-collectFields = fmap (fmap mkRegularField . fromGenLocated) . either id id
+collectFields =
+  fmap (fmap mkRegularField . mkWithCommentsFromGenLocated) . either id id
 #endif
 
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
@@ -106,11 +107,12 @@ mkRegularField ::
      GHC.HsFieldBind (GHC.LFieldOcc GHC.GhcPs) (GHC.LHsExpr GHC.GhcPs) -> Field
 mkRegularField GHC.HsFieldBind {..} =
   Field
-    { fieldName = mkFieldNameFromFieldOcc <$> fromGenLocated hfbLHS
+    { fieldName =
+        mkFieldNameFromFieldOcc <$> mkWithCommentsFromGenLocated hfbLHS
     , value =
         if hfbPun
           then Nothing
-          else Just $ mkExpression <$> fromGenLocated hfbRHS
+          else Just $ mkExpression <$> mkWithCommentsFromGenLocated hfbRHS
     }
 
 mkOverloadedField ::
@@ -118,11 +120,12 @@ mkOverloadedField ::
   -> Field
 mkOverloadedField GHC.HsFieldBind {..} =
   Field
-    { fieldName = mkFieldNameFromFieldLabelStrings <$> fromGenLocated hfbLHS
+    { fieldName =
+        mkFieldNameFromFieldLabelStrings <$> mkWithCommentsFromGenLocated hfbLHS
     , value =
         if hfbPun
           then Nothing
-          else Just $ mkExpression <$> fromGenLocated hfbRHS
+          else Just $ mkExpression <$> mkWithCommentsFromGenLocated hfbRHS
     }
 #elif MIN_VERSION_ghc_lib_parser(9, 6, 1)
 mkRegularField ::
@@ -130,11 +133,12 @@ mkRegularField ::
   -> Field
 mkRegularField GHC.HsFieldBind {..} =
   Field
-    { fieldName = mkFieldNameFromAmbiguousFieldOcc <$> fromGenLocated hfbLHS
+    { fieldName =
+        mkFieldNameFromAmbiguousFieldOcc <$> mkWithCommentsFromGenLocated hfbLHS
     , value =
         if hfbPun
           then Nothing
-          else Just $ mkExpression <$> fromGenLocated hfbRHS
+          else Just $ mkExpression <$> mkWithCommentsFromGenLocated hfbRHS
     }
 
 mkOverloadedField ::
@@ -142,21 +146,23 @@ mkOverloadedField ::
   -> Field
 mkOverloadedField GHC.HsFieldBind {..} =
   Field
-    { fieldName = mkFieldNameFromFieldLabelStrings <$> fromGenLocated hfbLHS
+    { fieldName =
+        mkFieldNameFromFieldLabelStrings <$> mkWithCommentsFromGenLocated hfbLHS
     , value =
         if hfbPun
           then Nothing
-          else Just $ mkExpression <$> fromGenLocated hfbRHS
+          else Just $ mkExpression <$> mkWithCommentsFromGenLocated hfbRHS
     }
 #else
 mkRegularField ::
      GHC.HsFieldBind (GHC.LFieldOcc GHC.GhcPs) (GHC.LHsExpr GHC.GhcPs) -> Field
 mkRegularField GHC.HsFieldBind {..} =
   Field
-    { fieldName = mkFieldNameFromFieldOcc <$> fromGenLocated hfbLHS
+    { fieldName =
+        mkFieldNameFromFieldOcc <$> mkWithCommentsFromGenLocated hfbLHS
     , value =
         if hfbPun
           then Nothing
-          else Just $ mkExpression <$> fromGenLocated hfbRHS
+          else Just $ mkExpression <$> mkWithCommentsFromGenLocated hfbRHS
     }
 #endif

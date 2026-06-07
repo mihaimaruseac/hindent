@@ -57,27 +57,33 @@ mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.RecConGADT _ xs, ..} =
   Just
     $ Record
         { fields =
-            fromGenLocated
-              $ fmap (fmap (fmap mkRecordField . fromGenLocated)) xs
-        , result = mkType <$> fromGenLocated con_res_ty
+            mkWithCommentsFromGenLocated
+              $ fmap
+                  (fmap (fmap mkRecordField . mkWithCommentsFromGenLocated))
+                  xs
+        , result = mkType <$> mkWithCommentsFromGenLocated con_res_ty
         }
 #elif MIN_VERSION_ghc_lib_parser(9, 4, 0)
 mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.RecConGADT xs _, ..} =
   Just
     $ Record
         { fields =
-            fromGenLocated
-              $ fmap (fmap (fmap mkRecordField . fromGenLocated)) xs
-        , result = mkType <$> fromGenLocated con_res_ty
+            mkWithCommentsFromGenLocated
+              $ fmap
+                  (fmap (fmap mkRecordField . mkWithCommentsFromGenLocated))
+                  xs
+        , result = mkType <$> mkWithCommentsFromGenLocated con_res_ty
         }
 #else
 mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.RecConGADT xs, ..} =
   Just
     $ Record
         { fields =
-            fromGenLocated
-              $ fmap (fmap (fmap mkRecordField . fromGenLocated)) xs
-        , result = mkType <$> fromGenLocated con_res_ty
+            mkWithCommentsFromGenLocated
+              $ fmap
+                  (fmap (fmap mkRecordField . mkWithCommentsFromGenLocated))
+                  xs
+        , result = mkType <$> mkWithCommentsFromGenLocated con_res_ty
         }
 #endif
 mkConstructorSignature GHC.ConDeclH98 {} = Nothing
@@ -87,14 +93,14 @@ buildFunctionType ::
   -> GHC.LHsType GHC.GhcPs
   -> WithComments Type
 buildFunctionType fields resultTy =
-  mkType <$> fromGenLocated (foldr mkFun resultTy fields)
+  mkType <$> mkWithCommentsFromGenLocated (foldr mkFun resultTy fields)
 #else
 buildFunctionType ::
      [GHC.HsScaled GHC.GhcPs (GHC.LHsType GHC.GhcPs)]
   -> GHC.LHsType GHC.GhcPs
   -> WithComments Type
 buildFunctionType scaledTypes resultTy =
-  mkType <$> fromGenLocated (foldr mkFun resultTy scaledTypes)
+  mkType <$> mkWithCommentsFromGenLocated (foldr mkFun resultTy scaledTypes)
 #endif
 
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)

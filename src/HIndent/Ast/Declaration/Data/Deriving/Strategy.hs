@@ -6,7 +6,11 @@ module HIndent.Ast.Declaration.Data.Deriving.Strategy
 
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Type (Type, mkTypeFromHsSigType)
-import HIndent.Ast.WithComments (WithComments, flattenComments, fromGenLocated)
+import HIndent.Ast.WithComments
+  ( WithComments
+  , flattenComments
+  , mkWithCommentsFromGenLocated
+  )
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -35,7 +39,7 @@ mkDerivingStrategy GHC.StockStrategy {} = Stock
 mkDerivingStrategy GHC.AnyclassStrategy {} = Anyclass
 mkDerivingStrategy GHC.NewtypeStrategy {} = Newtype
 mkDerivingStrategy (GHC.ViaStrategy (GHC.XViaStrategyPs _ x)) =
-  Via $ flattenComments $ mkTypeFromHsSigType <$> fromGenLocated x
+  Via $ flattenComments $ mkTypeFromHsSigType <$> mkWithCommentsFromGenLocated x
 
 isViaStrategy :: DerivingStrategy -> Bool
 isViaStrategy Via {} = True

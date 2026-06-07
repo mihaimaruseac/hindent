@@ -36,9 +36,11 @@ mkBooleanFormula :: GHC.BooleanFormula GHC.GhcPs -> BooleanFormula
 #else
 mkBooleanFormula :: GHC.BooleanFormula (GHC.LIdP GHC.GhcPs) -> BooleanFormula
 #endif
-mkBooleanFormula (GHC.Var x) = Var $ fromGenLocated $ fmap mkPrefixName x
+mkBooleanFormula (GHC.Var x) =
+  Var $ mkWithCommentsFromGenLocated $ fmap mkPrefixName x
 mkBooleanFormula (GHC.And xs) =
-  And $ fmap (fmap mkBooleanFormula . fromGenLocated) xs
+  And $ fmap (fmap mkBooleanFormula . mkWithCommentsFromGenLocated) xs
 mkBooleanFormula (GHC.Or xs) =
-  Or $ fmap (fmap mkBooleanFormula . fromGenLocated) xs
-mkBooleanFormula (GHC.Parens x) = Parens $ mkBooleanFormula <$> fromGenLocated x
+  Or $ fmap (fmap mkBooleanFormula . mkWithCommentsFromGenLocated) xs
+mkBooleanFormula (GHC.Parens x) =
+  Parens $ mkBooleanFormula <$> mkWithCommentsFromGenLocated x

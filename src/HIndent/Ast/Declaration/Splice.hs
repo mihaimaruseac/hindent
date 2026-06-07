@@ -21,4 +21,4 @@ instance Pretty SpliceDeclaration where
 
 mkSpliceDeclaration :: GHC.SpliceDecl GHC.GhcPs -> SpliceDeclaration
 mkSpliceDeclaration (GHC.SpliceDecl _ sp _) =
-  SpliceDeclaration $ mkSplice <$> fromGenLocated sp
+  SpliceDeclaration $ mkSplice <$> mkWithCommentsFromGenLocated sp

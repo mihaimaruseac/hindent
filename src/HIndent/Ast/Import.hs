@@ -58,7 +58,7 @@ instance Pretty Import where
 mkImport :: GHC.ImportDecl GHC.GhcPs -> Import
 mkImport decl@GHC.ImportDecl {..} = Import {..}
   where
-    moduleName = mkModuleName <$> fromGenLocated ideclName
+    moduleName = mkModuleName <$> mkWithCommentsFromGenLocated ideclName
     isSafe = ideclSafe
     isBoot = ideclSource == GHC.IsBoot
     qualification =
@@ -66,7 +66,7 @@ mkImport decl@GHC.ImportDecl {..} = Import {..}
         GHC.NotQualified -> Nothing
         GHC.QualifiedPre -> Just Pre
         GHC.QualifiedPost -> Just Post
-    qualifiedAs = fmap mkModuleName . fromGenLocated <$> ideclAs
+    qualifiedAs = fmap mkModuleName . mkWithCommentsFromGenLocated <$> ideclAs
     packageName = mkTextValueFromStringLiteral <$> GHC.getPackageName decl
     importEntries = mkImportEntryCollection decl
 

@@ -35,7 +35,7 @@ instance Pretty AssociatedTypeDefault where
 mkAssociatedTypeDefault :: GHC.TyFamInstDecl GHC.GhcPs -> AssociatedTypeDefault
 mkAssociatedTypeDefault GHC.TyFamInstDecl {GHC.tfid_eqn = GHC.FamEqn {..}} =
   AssociatedTypeDefault
-    { name = fromGenLocated $ fmap mkPrefixName feqn_tycon
+    { name = mkWithCommentsFromGenLocated $ fmap mkPrefixName feqn_tycon
     , types = mkTypeArgumentCollection feqn_pats
-    , bind = mkType <$> fromGenLocated feqn_rhs
+    , bind = mkType <$> mkWithCommentsFromGenLocated feqn_rhs
     }

@@ -25,8 +25,10 @@ instance Pretty WarningCollection where
 mkWarningCollection :: GHC.WarnDecls GHC.GhcPs -> WarningCollection
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 mkWarningCollection (GHC.Warnings _ xs) =
-  WarningCollection $ fmap (fmap mkWarningDeclaration . fromGenLocated) xs
+  WarningCollection
+    $ fmap (fmap mkWarningDeclaration . mkWithCommentsFromGenLocated) xs
 #else
 mkWarningCollection (GHC.Warnings _ _ xs) =
-  WarningCollection $ fmap (fmap mkWarningDeclaration . fromGenLocated) xs
+  WarningCollection
+    $ fmap (fmap mkWarningDeclaration . mkWithCommentsFromGenLocated) xs
 #endif

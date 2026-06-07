@@ -42,7 +42,7 @@ mkBind :: GHC.HsBind GHC.GhcPs -> Bind
 mkBind GHC.FunBind {..} = Function $ mkExprMatchGroup fun_matches
 mkBind GHC.PatBind {..} = Pattern {..}
   where
-    lhs = mkPattern <$> fromGenLocated pat_lhs
+    lhs = mkPattern <$> mkWithCommentsFromGenLocated pat_lhs
     rhs = mkWithComments $ mkGuardedRhs pat_rhs
 mkBind (GHC.PatSynBind _ psb) =
   PatternSynonym $ mkWithComments $ mkPatternSynonym psb

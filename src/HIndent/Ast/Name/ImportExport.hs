@@ -50,14 +50,14 @@ instance Ord ImportExportName where
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 mkImportExportName :: GHC.IEWrappedName GHC.GhcPs -> ImportExportName
 mkImportExportName (GHC.IEName _ name) =
-  Regular $ fromGenLocated $ fmap mkPrefixName name
+  Regular $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
 mkImportExportName (GHC.IEPattern _ name) =
-  Pattern $ fromGenLocated $ fmap mkPrefixName name
+  Pattern $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
 mkImportExportName (GHC.IEType _ name) =
-  Type $ fromGenLocated $ fmap mkPrefixName name
+  Type $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkImportExportName (GHC.IEData _ name) =
-  Data $ fromGenLocated $ fmap mkPrefixName name
+  Data $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkImportExportName GHC.IEDefault {} =
@@ -66,14 +66,14 @@ mkImportExportName GHC.IEDefault {} =
 #else
 mkImportExportName :: GHC.IEWrappedName GHC.RdrName -> ImportExportName
 mkImportExportName (GHC.IEName name) =
-  Regular $ fromGenLocated $ fmap mkPrefixName name
+  Regular $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
 mkImportExportName (GHC.IEPattern _ name) =
-  Pattern $ fromGenLocated $ fmap mkPrefixName name
+  Pattern $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
 mkImportExportName (GHC.IEType _ name) =
-  Type $ fromGenLocated $ fmap mkPrefixName name
+  Type $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkImportExportName (GHC.IEData _ name) =
-  Data $ fromGenLocated $ fmap mkPrefixName name
+  Data $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
 #endif
 #endif
 getNameString :: ImportExportName -> String

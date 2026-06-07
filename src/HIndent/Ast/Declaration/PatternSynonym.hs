@@ -66,9 +66,9 @@ mkPatternSynonym :: GHC.PatSynBind GHC.GhcPs GHC.GhcPs -> PatternSynonym
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkPatternSynonym GHC.PSB {GHC.psb_args = GHC.PrefixCon prefixArgs, ..} =
   Prefix
-    { name = fromGenLocated $ fmap mkPrefixName psb_id
-    , args = map (fromGenLocated . fmap mkPrefixName) prefixArgs
-    , definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
+    { name = mkWithCommentsFromGenLocated $ fmap mkPrefixName psb_id
+    , args = map (mkWithCommentsFromGenLocated . fmap mkPrefixName) prefixArgs
+    , definition = mkPatInsidePatDecl <$> mkWithCommentsFromGenLocated psb_def
     , ..
     }
   where
@@ -81,9 +81,9 @@ mkPatternSynonym GHC.PSB {GHC.psb_args = GHC.PrefixCon prefixArgs, ..} =
 #else
 mkPatternSynonym GHC.PSB {GHC.psb_args = GHC.PrefixCon _ prefixArgs, ..} =
   Prefix
-    { name = fromGenLocated $ fmap mkPrefixName psb_id
-    , args = map (fromGenLocated . fmap mkPrefixName) prefixArgs
-    , definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
+    { name = mkWithCommentsFromGenLocated $ fmap mkPrefixName psb_id
+    , args = map (mkWithCommentsFromGenLocated . fmap mkPrefixName) prefixArgs
+    , definition = mkPatInsidePatDecl <$> mkWithCommentsFromGenLocated psb_def
     , ..
     }
   where
@@ -96,10 +96,10 @@ mkPatternSynonym GHC.PSB {GHC.psb_args = GHC.PrefixCon _ prefixArgs, ..} =
 #endif
 mkPatternSynonym GHC.PSB {GHC.psb_args = GHC.InfixCon leftArg rightArg, ..} =
   Infix
-    { leftArg = fromGenLocated $ fmap mkPrefixName leftArg
-    , operator = fromGenLocated $ fmap mkInfixName psb_id
-    , rightArg = fromGenLocated $ fmap mkPrefixName rightArg
-    , definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
+    { leftArg = mkWithCommentsFromGenLocated $ fmap mkPrefixName leftArg
+    , operator = mkWithCommentsFromGenLocated $ fmap mkInfixName psb_id
+    , rightArg = mkWithCommentsFromGenLocated $ fmap mkPrefixName rightArg
+    , definition = mkPatInsidePatDecl <$> mkWithCommentsFromGenLocated psb_def
     , ..
     }
   where
@@ -111,12 +111,12 @@ mkPatternSynonym GHC.PSB {GHC.psb_args = GHC.InfixCon leftArg rightArg, ..} =
           (False, Just $ mkExprMatchGroup matches)
 mkPatternSynonym GHC.PSB {GHC.psb_args = GHC.RecCon recordFields, ..} =
   Record
-    { name = fromGenLocated $ fmap mkPrefixName psb_id
+    { name = mkWithCommentsFromGenLocated $ fmap mkPrefixName psb_id
     , fields =
         map
           (mkWithComments . mkFieldNameFromFieldOcc . GHC.recordPatSynField)
           recordFields
-    , definition = mkPatInsidePatDecl <$> fromGenLocated psb_def
+    , definition = mkPatInsidePatDecl <$> mkWithCommentsFromGenLocated psb_def
     , ..
     }
   where

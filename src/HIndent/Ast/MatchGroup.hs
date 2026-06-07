@@ -9,8 +9,8 @@ import qualified GHC.Hs as GHC
 import HIndent.Ast.Match (Match, mkCmdMatch, mkExprMatch)
 import HIndent.Ast.WithComments
   ( WithComments
-  , fromGenLocated
   , getNode
+  , mkWithCommentsFromGenLocated
   , prettyWith
   )
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
@@ -30,15 +30,15 @@ mkExprMatchGroup ::
      GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> MatchGroup
 mkExprMatchGroup =
   MatchGroup
-    . fmap (fmap (fmap mkExprMatch . fromGenLocated))
-    . fromGenLocated
+    . fmap (fmap (fmap mkExprMatch . mkWithCommentsFromGenLocated))
+    . mkWithCommentsFromGenLocated
     . GHC.mg_alts
 
 mkCmdMatchGroup :: GHC.MatchGroup GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> MatchGroup
 mkCmdMatchGroup =
   MatchGroup
-    . fmap (fmap (fmap mkCmdMatch . fromGenLocated))
-    . fromGenLocated
+    . fmap (fmap (fmap mkCmdMatch . mkWithCommentsFromGenLocated))
+    . mkWithCommentsFromGenLocated
     . GHC.mg_alts
 
 hasMatches :: MatchGroup -> Bool

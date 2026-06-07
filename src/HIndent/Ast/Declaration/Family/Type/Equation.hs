@@ -32,6 +32,6 @@ instance Pretty TypeEquation where
 mkTypeEquation :: GHC.TyFamInstEqn GHC.GhcPs -> TypeEquation
 mkTypeEquation GHC.FamEqn {..} = TypeEquation {..}
   where
-    name = fromGenLocated $ fmap mkPrefixName feqn_tycon
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName feqn_tycon
     types = mkTypeArgumentCollection feqn_pats
-    bind = mkType <$> fromGenLocated feqn_rhs
+    bind = mkType <$> mkWithCommentsFromGenLocated feqn_rhs

@@ -42,16 +42,17 @@ mkNameAndTypeVariables :: GHC.TyClDecl GHC.GhcPs -> Maybe NameAndTypeVariables
 mkNameAndTypeVariables GHC.ClassDecl {tcdFixity = GHC.Prefix, ..} =
   Just Prefix {..}
   where
-    pName = fromGenLocated $ fmap mkPrefixName tcdLName
+    pName = mkWithCommentsFromGenLocated $ fmap mkPrefixName tcdLName
     typeVariables =
-      fmap mkTypeVariable . fromGenLocated <$> GHC.hsq_explicit tcdTyVars
+      fmap mkTypeVariable . mkWithCommentsFromGenLocated
+        <$> GHC.hsq_explicit tcdTyVars
 mkNameAndTypeVariables GHC.ClassDecl { tcdFixity = GHC.Infix
                                      , tcdTyVars = GHC.HsQTvs {hsq_explicit = h:t:xs}
                                      , ..
                                      } = Just Infix {..}
   where
-    left = mkTypeVariable <$> fromGenLocated h
-    iName = fromGenLocated $ fmap mkInfixName tcdLName
-    right = mkTypeVariable <$> fromGenLocated t
-    remains = fmap (fmap mkTypeVariable . fromGenLocated) xs
+    left = mkTypeVariable <$> mkWithCommentsFromGenLocated h
+    iName = mkWithCommentsFromGenLocated $ fmap mkInfixName tcdLName
+    right = mkTypeVariable <$> mkWithCommentsFromGenLocated t
+    remains = fmap (fmap mkTypeVariable . mkWithCommentsFromGenLocated) xs
 mkNameAndTypeVariables _ = Nothing

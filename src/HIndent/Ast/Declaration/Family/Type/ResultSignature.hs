@@ -29,7 +29,8 @@ instance Pretty ResultSignature where
 
 mkResultSignature :: GHC.FamilyResultSig GHC.GhcPs -> ResultSignature
 mkResultSignature (GHC.NoSig _) = NoSig
-mkResultSignature (GHC.KindSig _ x) = Kind $ mkType <$> fromGenLocated x
+mkResultSignature (GHC.KindSig _ x) =
+  Kind $ mkType <$> mkWithCommentsFromGenLocated x
 mkResultSignature (GHC.TyVarSig _ x) = TypeVariable var
   where
-    var = mkTypeVariable <$> fromGenLocated x
+    var = mkTypeVariable <$> mkWithCommentsFromGenLocated x

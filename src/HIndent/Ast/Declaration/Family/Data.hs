@@ -47,12 +47,14 @@ mkDataFamily GHC.FamilyDecl {fdTyVars = GHC.HsQTvs {..}, ..}
       case fdTopLevel of
         GHC.TopLevel -> True
         GHC.NotTopLevel -> False
-    name = fromGenLocated $ fmap mkPrefixName fdLName
-    typeVariables = fmap (fmap mkTypeVariable . fromGenLocated) hsq_explicit
+    name = mkWithCommentsFromGenLocated $ fmap mkPrefixName fdLName
+    typeVariables =
+      fmap (fmap mkTypeVariable . mkWithCommentsFromGenLocated) hsq_explicit
     signature =
       case GHC.unLoc fdResultSig of
         GHC.NoSig {} -> Nothing
-        GHC.KindSig _ kind -> Just $ mkType <$> fromGenLocated kind
+        GHC.KindSig _ kind ->
+          Just $ mkType <$> mkWithCommentsFromGenLocated kind
         GHC.TyVarSig {} ->
           error
             "Data family should never have this AST node. If you see this error, please report it to the HIndent maintainers."

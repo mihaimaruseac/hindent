@@ -46,7 +46,8 @@ instance Pretty ModuleWarning where
 
 mkModuleWarning :: GHC.HsModule' -> Maybe (WithComments ModuleWarning)
 mkModuleWarning =
-  fmap (fromGenLocated . fmap fromWarningTxt) . GHC.getDeprecMessage
+  fmap (mkWithCommentsFromGenLocated . fmap fromWarningTxt)
+    . GHC.getDeprecMessage
 
 fromWarningTxt :: GHC.WarningTxt' -> ModuleWarning
 #if MIN_VERSION_ghc_lib_parser(9, 8, 1)

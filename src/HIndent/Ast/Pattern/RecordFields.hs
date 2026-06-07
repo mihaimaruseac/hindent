@@ -9,7 +9,7 @@ module HIndent.Ast.Pattern.RecordFields
 import Data.Maybe (isJust)
 import HIndent.Ast.NodeComments
 import HIndent.Ast.Record.Field (PatField, mkPatField)
-import HIndent.Ast.WithComments (WithComments, fromGenLocated)
+import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
@@ -36,6 +36,6 @@ mkRecordFieldsPat ::
      GHC.HsRecFields GHC.GhcPs (GHC.LPat GHC.GhcPs) -> RecordFieldsPat
 mkRecordFieldsPat GHC.HsRecFields {..} =
   RecordFieldsPat
-    { fields = fmap (fmap mkPatField . fromGenLocated) rec_flds
+    { fields = fmap (fmap mkPatField . mkWithCommentsFromGenLocated) rec_flds
     , dotdot = isJust rec_dotdot
     }
