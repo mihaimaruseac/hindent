@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module HIndent.Ast.Type.ImplicitParameterName
   ( ImplicitParameterName
   , mkImplicitParameterName

@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module HIndent.Ast.Declaration.Annotation.Provenance
   ( Provenance
   , mkProvenance

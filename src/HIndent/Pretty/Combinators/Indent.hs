@@ -9,6 +9,7 @@ module HIndent.Pretty.Combinators.Indent
   ) where
 
 import Control.Monad.State
+import qualified Data.Text as Text
 import HIndent.Config
 import HIndent.Pretty.Combinators.String
 import HIndent.Printer
@@ -55,9 +56,9 @@ indentedWithFixedLevel i p = do
 
 -- | Prints the text passed as the first argument before the current
 -- position and then the second argument.
-prefixed :: String -> Printer () -> Printer ()
+prefixed :: Text.Text -> Printer () -> Printer ()
 prefixed s p = do
-  indentedWithSpace (-(length s)) $ string s
+  indentedWithSpace (-(Text.length s)) $ string s
   p
 
 -- | This function returns the current indent level.

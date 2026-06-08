@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- | Printer combinators related to print strings.
 module HIndent.Pretty.Combinators.String
@@ -12,6 +13,8 @@ module HIndent.Pretty.Combinators.String
 
 import Control.Monad.RWS
 import qualified Data.ByteString.Builder as S
+import qualified Data.Text as Text
+import qualified Data.Text.Encoding as Text
 import GHC.Stack
 import HIndent.Config
 import HIndent.Printer
@@ -21,9 +24,9 @@ import Control.Monad
 -- | This function prints the given string.
 --
 -- The string must not include @\n@s. Use @newline@ to print them.
-string :: HasCallStack => String -> Printer ()
+string :: HasCallStack => Text.Text -> Printer ()
 string x
-  | '\n' `elem` x =
+  | "\n" `Text.isInfixOf` x =
     error
       $ "You tried to print " ++ show x ++ ". Use `newline` to print '\\n's."
   | otherwise = do
@@ -33,16 +36,16 @@ string x
     st <- get
     let indentSpaces =
           if psNewline st
-            then replicate (psIndentLevel st) ' '
+            then Text.replicate (psIndentLevel st) " "
             else ""
         out = indentSpaces <> x
-        psColumn' = psColumn st + length out
+        psColumn' = psColumn st + Text.length out
         columnFits = psColumn' <= configMaxColumns (psConfig st)
     when hardFail $ guard columnFits
     modify
       (\s ->
          s
-           { psOutput = psOutput st <> S.stringUtf8 out
+           { psOutput = psOutput st <> S.byteString (Text.encodeUtf8 out)
            , psNewline = False
            , psEolComment = False
            , psColumn = psColumn'

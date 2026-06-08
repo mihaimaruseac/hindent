@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -22,6 +23,7 @@ module HIndent.Pretty
 
 import Control.Monad
 import Control.Monad.RWS
+import qualified Data.Text as Text
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 import qualified GHC.Data.FastString as FS
 #endif
@@ -191,9 +193,9 @@ instance Pretty GHC.EpaComment where
   pretty' GHC.EpaComment {..} = prettyEpaCommentTok ac_tok
 
 prettyEpaCommentTok :: GHC.EpaCommentTok -> Printer ()
-prettyEpaCommentTok (GHC.EpaLineComment text) = string text
+prettyEpaCommentTok (GHC.EpaLineComment text) = string $ Text.pack text
 prettyEpaCommentTok (GHC.EpaBlockComment text) =
-  case lines text of
+  case Text.lines $ Text.pack text of
     [] -> pure ()
     [x] -> string x
     (x:xs) -> do
@@ -212,8 +214,9 @@ instance Pretty
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance Pretty GHC.StringLiteral where
-  pretty' GHC.StringLiteral {sl_st = GHC.SourceText s} = string $ FS.unpackFS s
-  pretty' GHC.StringLiteral {..} = string $ FS.unpackFS sl_fs
+  pretty' GHC.StringLiteral {sl_st = GHC.SourceText s} =
+    string $ Text.pack $ FS.unpackFS s
+  pretty' GHC.StringLiteral {..} = string $ Text.pack $ FS.unpackFS sl_fs
 #else
 instance Pretty GHC.StringLiteral where
   pretty' = output
