@@ -8,7 +8,6 @@ module HIndent.Config
   ) where
 
 import Control.Applicative
-import Data.Int
 import Data.Maybe
 import Data.Yaml
 import qualified Data.Yaml as Y
@@ -21,8 +20,8 @@ import qualified Path.IO as Path
 -- | Configurations shared among the different styles. Styles may pay
 -- attention to or completely disregard this configuration.
 data Config = Config
-  { configMaxColumns :: !Int64 -- ^ Maximum columns to fit code into ideally.
-  , configIndentSpaces :: !Int64 -- ^ How many spaces to indent?
+  { configMaxColumns :: !Int -- ^ Maximum columns to fit code into ideally.
+  , configIndentSpaces :: !Int -- ^ How many spaces to indent?
   , configTrailingNewline :: !Bool -- ^ End with a newline.
   , configSortImports :: !Bool -- ^ Sort imports in groups.
   , configLineBreaks :: [String] -- ^ Break line when meets these operators.
