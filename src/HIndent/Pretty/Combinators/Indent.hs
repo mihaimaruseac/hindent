@@ -9,7 +9,6 @@ module HIndent.Pretty.Combinators.Indent
   ) where
 
 import Control.Monad.State
-import Data.Int
 import HIndent.Config
 import HIndent.Pretty.Combinators.String
 import HIndent.Printer
@@ -23,7 +22,7 @@ indentedBlock p = do
 
 -- | This function runs the given printer with an additional indent. The
 -- indent has the specified number of spaces.
-indentedWithSpace :: Int64 -> Printer a -> Printer a
+indentedWithSpace :: Int -> Printer a -> Printer a
 indentedWithSpace i p = do
   level <- gets psIndentLevel
   indentedWithFixedLevel (level + i) p
@@ -46,7 +45,7 @@ hd |=> p = do
 
 infixl 1 |=>
 -- | This function runs the given printer with the passed indent level.
-indentedWithFixedLevel :: Int64 -> Printer a -> Printer a
+indentedWithFixedLevel :: Int -> Printer a -> Printer a
 indentedWithFixedLevel i p = do
   l <- gets psIndentLevel
   modify (\s -> s {psIndentLevel = i})
@@ -58,9 +57,9 @@ indentedWithFixedLevel i p = do
 -- position and then the second argument.
 prefixed :: String -> Printer () -> Printer ()
 prefixed s p = do
-  indentedWithSpace (-(fromIntegral $ length s)) $ string s
+  indentedWithSpace (-(length s)) $ string s
   p
 
 -- | This function returns the current indent level.
-getIndentSpaces :: Printer Int64
+getIndentSpaces :: Printer Int
 getIndentSpaces = gets (configIndentSpaces . psConfig)

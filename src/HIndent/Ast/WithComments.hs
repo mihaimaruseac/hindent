@@ -65,8 +65,7 @@ prettyWith WithComments {..} f = do
 printCommentsBefore :: CommentGroup -> Printer ()
 printCommentsBefore p =
   forM_ (commentsBefore p) $ \comment -> do
-    indentedWithFixedLevel (fromIntegral $ getCommentColumn comment)
-      $ pretty comment
+    indentedWithFixedLevel (getCommentColumn comment) $ pretty comment
     newline
 
 -- | Prints comments that are on the same line as the given AST node.
@@ -74,7 +73,7 @@ printCommentOnSameLine :: CommentGroup -> Printer ()
 printCommentOnSameLine (commentsOnSameLine -> (c:cs)) = do
   col <- gets psColumn
   if col == 0
-    then indentedWithFixedLevel (fromIntegral $ getCommentColumn c)
+    then indentedWithFixedLevel (getCommentColumn c)
            $ spaced
            $ fmap pretty
            $ c : cs
@@ -91,8 +90,7 @@ printCommentsAfter p =
       isThereCommentsOnSameLine <- gets psEolComment
       unless isThereCommentsOnSameLine newline
       forM_ xs $ \comment -> do
-        indentedWithFixedLevel (fromIntegral $ getCommentColumn comment)
-          $ pretty comment
+        indentedWithFixedLevel (getCommentColumn comment) $ pretty comment
         eolCommentsArePrinted
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkWithCommentsFromGenLocated ::

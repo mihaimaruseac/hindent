@@ -83,7 +83,7 @@ printCommentsAnd (GHC.L l e) f = do
 printCommentsBefore :: CommentExtraction a => a -> Printer ()
 printCommentsBefore p =
   forM_ (commentsBefore $ nodeComments p) $ \(GHC.L loc c) -> do
-    let col = fromIntegral $ GHC.srcSpanStartCol (getAnc loc) - 1
+    let col = GHC.srcSpanStartCol (getAnc loc) - 1
     indentedWithFixedLevel col $ pretty c
     newline
 
@@ -92,8 +92,7 @@ printCommentOnSameLine :: CommentExtraction a => a -> Printer ()
 printCommentOnSameLine (commentsOnSameLine . nodeComments -> (c:cs)) = do
   col <- gets psColumn
   if col == 0
-    then indentedWithFixedLevel
-           (fromIntegral $ GHC.srcSpanStartCol $ getAnc $ GHC.getLoc c)
+    then indentedWithFixedLevel (GHC.srcSpanStartCol $ getAnc $ GHC.getLoc c)
            $ spaced
            $ fmap pretty
            $ c : cs
@@ -110,7 +109,7 @@ printCommentsAfter p =
       isThereCommentsOnSameLine <- gets psEolComment
       unless isThereCommentsOnSameLine newline
       forM_ xs $ \(GHC.L loc c) -> do
-        let col = fromIntegral $ GHC.srcSpanStartCol (getAnc loc) - 1
+        let col = GHC.srcSpanStartCol (getAnc loc) - 1
         indentedWithFixedLevel col $ pretty c
         eolCommentsArePrinted
 
