@@ -4,20 +4,21 @@ module HIndent.Ast.Type.ImplicitParameterName
   ) where
 
 import qualified GHC.Data.FastString as GHC
+import HIndent.Ast.TextValue (TextValue, mkTextValueFromString)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 
 newtype ImplicitParameterName =
-  ImplicitParameterName String
+  ImplicitParameterName TextValue
 
 instance CommentExtraction ImplicitParameterName where
   nodeComments ImplicitParameterName {} = emptyNodeComments
 
 instance Pretty ImplicitParameterName where
-  pretty' (ImplicitParameterName s) = string "?" >> string s
+  pretty' (ImplicitParameterName name) = string "?" >> pretty name
 
 mkImplicitParameterName :: GHC.HsIPName -> ImplicitParameterName
 mkImplicitParameterName (GHC.HsIPName fs) =
-  ImplicitParameterName $ GHC.unpackFS fs
+  ImplicitParameterName $ mkTextValueFromString $ GHC.unpackFS fs
