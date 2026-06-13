@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 -- | Printer combinators for lining up multiple elements.
 module HIndent.Pretty.Combinators.Lineup
   ( -- * Tuples
@@ -44,6 +46,7 @@ module HIndent.Pretty.Combinators.Lineup
 import Control.Monad
 import Data.Foldable (toList)
 import Data.List (intersperse)
+import qualified Data.Text as Text
 import HIndent.Pretty.Combinators.Indent
 import HIndent.Pretty.Combinators.String
 import HIndent.Pretty.Combinators.Switch
@@ -202,13 +205,13 @@ vCommaSep = prefixedLined ", "
 -- | Prints elements separated by comma  in vertical with the given prefix
 -- and suffix.
 vCommaSepWrapped ::
-     Foldable f => (String, String) -> f (Printer ()) -> Printer ()
+     Foldable f => (Text.Text, Text.Text) -> f (Printer ()) -> Printer ()
 vCommaSepWrapped = vWrappedLineup ','
 
 -- | Similar to 'vCommaSepWrapped' but the suffix is in the same line as the last
 -- element.
 vCommaSepWrapped' ::
-     Foldable f => (String, String) -> f (Printer ()) -> Printer ()
+     Foldable f => (Text.Text, Text.Text) -> f (Printer ()) -> Printer ()
 vCommaSepWrapped' = vWrappedLineup' ','
 
 -- | Runs printers with a dot as the separator.
@@ -224,7 +227,7 @@ newlinePrefixed :: Foldable f => f (Printer ()) -> Printer ()
 newlinePrefixed = mapM_ (newline >>)
 
 -- | Runs printers with a prefix. The prefix is printed before the indent.
-prefixedLined :: Foldable f => String -> f (Printer ()) -> Printer ()
+prefixedLined :: Foldable f => Text.Text -> f (Printer ()) -> Printer ()
 prefixedLined pref printers =
   case toList printers of
     [] -> return ()
@@ -237,25 +240,33 @@ prefixedLined pref printers =
 -- | Prints elements in vertical with the given prefix, suffix, and
 -- separator.
 vWrappedLineup ::
-     Foldable f => Char -> (String, String) -> f (Printer ()) -> Printer ()
+     Foldable f
+  => Char
+  -> (Text.Text, Text.Text)
+  -> f (Printer ())
+  -> Printer ()
 vWrappedLineup sep (prefix, suffix) ps =
   string prefix
     >> space |=> do
-         prefixedLined [sep, ' '] ps
+         prefixedLined (Text.pack [sep, ' ']) ps
          newline
-         indentedWithSpace (-(length prefix + 1)) $ string suffix
+         indentedWithSpace (-(Text.length prefix + 1)) $ string suffix
 
 -- | Similar to 'vWrappedLineup' but the suffix is in the same line as the
 -- last element.
 vWrappedLineup' ::
-     Foldable f => Char -> (String, String) -> f (Printer ()) -> Printer ()
+     Foldable f
+  => Char
+  -> (Text.Text, Text.Text)
+  -> f (Printer ())
+  -> Printer ()
 vWrappedLineup' sep (prefix, suffix) printers =
   case toList printers of
     [x] -> spaced [string prefix, x, string suffix]
     ps ->
       string prefix
         >> space |=> do
-             prefixedLined [sep, ' '] ps
+             prefixedLined (Text.pack [sep, ' ']) ps
              string suffix
 
 -- Inserts the first printer between each element of the list passed as the

@@ -7,6 +7,7 @@ module HIndent.Pretty.Combinators.Outputable
   , showOutputable
   ) where
 
+import qualified Data.Text as Text
 import GHC.Driver.Ppr
 import GHC.Driver.Session
 import GHC.Stack
@@ -27,7 +28,7 @@ import Language.Haskell.GhclibParserEx.GHC.Settings.Config
 --
 -- * All comments of the node's children are ignored.
 output :: (HasCallStack, Outputable a) => a -> Printer ()
-output = string . showOutputable
+output = string . Text.pack . showOutputable
 
 -- | Converts the given value to a 'String'.
 showOutputable :: Outputable a => a -> String

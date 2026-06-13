@@ -26,7 +26,7 @@ instance CommentExtraction TextValue where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty TextValue where
-  pretty' (TextValue value) = string $ Text.unpack value
+  pretty' (TextValue value) = string value
 
 mkTextValueFromString :: String -> TextValue
 mkTextValueFromString = TextValue . Text.pack

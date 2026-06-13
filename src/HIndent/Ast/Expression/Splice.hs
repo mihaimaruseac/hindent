@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE CPP #-}
 
 module HIndent.Ast.Expression.Splice
@@ -6,6 +7,7 @@ module HIndent.Ast.Expression.Splice
   , mkTypedSplice
   ) where
 
+import qualified Data.Text as Text
 import qualified GHC.Data.FastString as GHC
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.Name.Prefix
@@ -51,9 +53,9 @@ instance Pretty Splice where
         $ printers [] ""
         $ GHC.unpackFS r
     where
-      printers ps s [] = reverse (string (reverse s) : ps)
+      printers ps s [] = reverse (string (Text.pack $ reverse s) : ps)
       printers ps s ('\n':xs) =
-        printers (newline : string (reverse s) : ps) "" xs
+        printers (newline : string (Text.pack $ reverse s) : ps) "" xs
       printers ps s (x:xs) = printers ps (x : s) xs
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 mkSplice :: GHC.HsUntypedSplice GHC.GhcPs -> Splice

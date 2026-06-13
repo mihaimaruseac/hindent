@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 -- | Getters to fetch current status and printer information.
 module HIndent.Pretty.Combinators.Getter
   ( startingColumn

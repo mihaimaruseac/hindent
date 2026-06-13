@@ -35,13 +35,13 @@ instance Pretty Comment where
   pretty' Block {..} =
     case Text.lines $ toText text of
       [] -> pure ()
-      [x] -> string $ Text.unpack x
+      [x] -> string x
       (x:xs) -> do
-        string $ Text.unpack x
+        string x
         newline
         -- 'indentedWithFixedLevel 0' is used because a 'BlockComment'
         -- contains indent spaces for all lines except the first one.
-        indentedWithFixedLevel 0 $ lined $ fmap (string . Text.unpack) xs
+        indentedWithFixedLevel 0 $ lined $ fmap string xs
 
 mkComment :: GHC.LEpaComment -> Comment
 mkComment comment@(GHC.L _ (GHC.EpaComment (GHC.EpaLineComment text) _)) =

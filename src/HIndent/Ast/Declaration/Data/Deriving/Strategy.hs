@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module HIndent.Ast.Declaration.Data.Deriving.Strategy
   ( DerivingStrategy
   , mkDerivingStrategy

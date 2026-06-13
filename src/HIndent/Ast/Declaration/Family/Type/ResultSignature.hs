@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module HIndent.Ast.Declaration.Family.Type.ResultSignature
   ( ResultSignature(..)
   , mkResultSignature

@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 -- | Printer operators for wrapping texts with a prefix and a suffix.
 module HIndent.Pretty.Combinators.Wrap
   ( parens
@@ -15,6 +17,7 @@ module HIndent.Pretty.Combinators.Wrap
   , unboxedParens
   ) where
 
+import qualified Data.Text as Text
 import GHC.Types.Name
 import HIndent.Pretty.Combinators.Indent
 import HIndent.Pretty.Combinators.String
@@ -81,5 +84,5 @@ unboxedParens :: Printer a -> Printer a
 unboxedParens = wrap "(# " " #)"
 
 -- | This function wraps the printer with the prefix and the suffix.
-wrap :: String -> String -> Printer a -> Printer a
+wrap :: Text.Text -> Text.Text -> Printer a -> Printer a
 wrap open close p = string open |=> p <* string close
