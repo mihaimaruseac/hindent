@@ -47,7 +47,7 @@ lexCode code
         (mkRealSrcLoc (mkFastString "<interactive>") 1 1) = fmap unLoc tokens
   | otherwise = error "Failed to lex the code."
 
--- | This function generates a 'ParserOpts' from te given extension.
+-- | This function generates a 'ParserOpts' from the given extensions.
 --
 -- The 'StarIsType' extension is always enabled to compile a code using
 -- kinds like '* -> *'.

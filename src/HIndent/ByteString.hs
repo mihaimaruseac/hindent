@@ -41,7 +41,7 @@ findCommonPrefix (p:ps) =
   where
     first = S8.head p
 
--- | `unlines'` for `ByteString`.
+-- | @unlines@ for 'ByteString'.
 unlines' :: [ByteString] -> ByteString
 unlines' = S.concat . intersperse "\n"
 

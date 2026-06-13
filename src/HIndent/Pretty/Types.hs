@@ -30,12 +30,12 @@ data DataFamInstDecl' = DataFamInstDecl'
   , dataFamInstDecl :: DataFamInstDecl GhcPs -- ^ The actual value.
   }
 
--- | `DataFamInstDecl'` wrapping a `DataFamInstDecl` representing
+-- | @DataFamInstDecl'@ wrapping a 'DataFamInstDecl' representing
 -- a top-level data family instance.
 pattern DataFamInstDeclTopLevel :: DataFamInstDecl GhcPs -> DataFamInstDecl'
 pattern DataFamInstDeclTopLevel x = DataFamInstDecl' DataFamInstDeclForTopLevel x
 
--- | `DataFamInstDecl'` wrapping a `DataFamInstDecl` representing a data
+-- | @DataFamInstDecl'@ wrapping a 'DataFamInstDecl' representing a data
 -- family instance inside a class instance.
 pattern DataFamInstDeclInsideClassInst :: DataFamInstDecl GhcPs -> DataFamInstDecl'
 pattern DataFamInstDeclInsideClassInst x = DataFamInstDecl' DataFamInstDeclForInsideClassInst x
@@ -46,12 +46,12 @@ data FamEqn' = FamEqn'
   , famEqn :: FamEqn GhcPs (HsDataDefn GhcPs)
   }
 
--- | `FamEqn'` wrapping a `FamEqn` representing a top-level data family
+-- | @FamEqn'@ wrapping a 'FamEqn' representing a top-level data family
 -- instance.
 pattern FamEqnTopLevel :: FamEqn GhcPs (HsDataDefn GhcPs) -> FamEqn'
 pattern FamEqnTopLevel x = FamEqn' DataFamInstDeclForTopLevel x
 
--- | `FamEqn'` wrapping a `FamEqn` representing a data family instance
+-- | @FamEqn'@ wrapping a 'FamEqn' representing a data family instance
 -- inside a class instance.
 pattern FamEqnInsideClassInst :: FamEqn GhcPs (HsDataDefn GhcPs) -> FamEqn'
 pattern FamEqnInsideClassInst x = FamEqn' DataFamInstDeclForInsideClassInst x

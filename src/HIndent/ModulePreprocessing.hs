@@ -218,7 +218,7 @@ closeEpAnnOfFunBindFunId = everywhere (mkT closeEpAnn)
     closeEpAnn x = x
 #endif
 -- | This function replaces the 'EpAnn' of 'm_ext' in 'Match' with
--- 'EpAnnNotUsed.
+-- 'EpAnnNotUsed'.
 --
 -- The field contains the annotation of the match LHS. However, the same
 -- information is also stored inside the 'Match'. This function removes the
