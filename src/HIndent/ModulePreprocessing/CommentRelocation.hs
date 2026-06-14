@@ -50,7 +50,6 @@ import Generics.SYB hiding (GT, typeOf, typeRep)
 import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.GhcLibParserWrapper.GHC.Parser.Annotation
 import HIndent.Pragma
-import HIndent.Pretty.SigBindFamily
 import Type.Reflection
 #if MIN_VERSION_GLASGOW_HASKELL(9, 6, 0, 0)
 import Control.Monad
@@ -69,6 +68,16 @@ data Wrapper =
 
 -- | 'State' with comments.
 type WithComments = State [LEpaComment]
+
+data ClassDeclItem
+  = AssociatedFamilyItem (LFamilyDecl GhcPs)
+  | AssociatedTypeDefaultItem (LTyFamDefltDecl GhcPs)
+  | ClassMethodItem (LHsBindLR GhcPs GhcPs)
+  | ClassSignatureItem (LSig GhcPs)
+
+data LocalDeclarationItem
+  = LocalBindingItem (LHsBindLR GhcPs GhcPs)
+  | LocalSignatureItem (LSig GhcPs)
 
 -- | This function collects all comments from the passed 'HsModule', and
 -- modifies all 'EpAnn's so that all 'EpAnn's have 'EpaCommentsBalanced's.
@@ -206,9 +215,13 @@ relocateCommentsInClass =
     annSetter
     cond
   where
-    elemGetter :: LHsDecl GhcPs -> [LSigBindFamily]
+    elemGetter :: LHsDecl GhcPs -> [ClassDeclItem]
     elemGetter (L _ (TyClD _ ClassDecl {..})) =
-      mkSortedLSigBindFamilyList tcdSigs tcdMeths tcdATs [] tcdATDefs []
+      sortBy (compare `on` itemLoc)
+        $ fmap ClassSignatureItem tcdSigs
+            ++ fmap ClassMethodItem tcdMeths
+            ++ fmap AssociatedFamilyItem tcdATs
+            ++ fmap AssociatedTypeDefaultItem tcdATDefs
     elemGetter _ = []
     elemSetter xs (L sp (TyClD ext ClassDecl {..})) = L sp (TyClD ext newDecl)
       where
@@ -220,15 +233,53 @@ relocateCommentsInClass =
             , tcdATDefs = tyFamDeflts
             , ..
             }
-        (sigs, binds, typeFamilies, _, tyFamDeflts, _) =
-          destructLSigBindFamilyList xs
+        sigs = mapMaybe getSignature xs
+        binds = mapMaybe getMethod xs
+        typeFamilies = mapMaybe getAssociatedFamily xs
+        tyFamDeflts = mapMaybe getAssociatedTypeDefault xs
     elemSetter _ x = x
-    annGetter (L ann _) = ann
-    annSetter newAnn (L _ x) = L newAnn x
-    cond (L EpAnn {entry = EpaSpan (RealSrcSpan classAnchor _)} _) (L EpAnn {entry = EpaSpan (RealSrcSpan elemAnchor _)} _) comAnc =
+    annGetter (ClassSignatureItem (L ann _)) = ann
+    annGetter (ClassMethodItem (L ann _)) = ann
+    annGetter (AssociatedFamilyItem (L ann _)) = ann
+    annGetter (AssociatedTypeDefaultItem (L ann _)) = ann
+    annSetter newAnn (ClassSignatureItem (L _ x)) =
+      ClassSignatureItem (L newAnn x)
+    annSetter newAnn (ClassMethodItem (L _ x)) = ClassMethodItem (L newAnn x)
+    annSetter newAnn (AssociatedFamilyItem (L _ x)) =
+      AssociatedFamilyItem (L newAnn x)
+    annSetter newAnn (AssociatedTypeDefaultItem (L _ x)) =
+      AssociatedTypeDefaultItem (L newAnn x)
+    cond (L EpAnn {entry = EpaSpan (RealSrcSpan classAnchor _)} _) item comAnc =
       srcSpanStartLine comAnc < srcSpanStartLine elemAnchor
         && realSrcSpanStart classAnchor < realSrcSpanStart comAnc
+      where
+        elemAnchor = getElemAnchor item
     cond _ _ _ = False
+    itemLoc (AssociatedFamilyItem familyDecl) =
+      realSrcSpan $ locA $ getLoc familyDecl
+    itemLoc (AssociatedTypeDefaultItem tyFamDeflt) =
+      realSrcSpan $ locA $ getLoc tyFamDeflt
+    itemLoc (ClassMethodItem bind) = realSrcSpan $ locA $ getLoc bind
+    itemLoc (ClassSignatureItem signature) =
+      realSrcSpan $ locA $ getLoc signature
+    getAssociatedFamily (AssociatedFamilyItem familyDecl) = Just familyDecl
+    getAssociatedFamily _ = Nothing
+    getAssociatedTypeDefault (AssociatedTypeDefaultItem tyFamDeflt) =
+      Just tyFamDeflt
+    getAssociatedTypeDefault _ = Nothing
+    getMethod (ClassMethodItem bind) = Just bind
+    getMethod _ = Nothing
+    getSignature (ClassSignatureItem signature) = Just signature
+    getSignature _ = Nothing
+    getElemAnchor (ClassSignatureItem (L EpAnn {entry = EpaSpan (RealSrcSpan elementAnchor _)} _)) =
+      elementAnchor
+    getElemAnchor (ClassMethodItem (L EpAnn {entry = EpaSpan (RealSrcSpan elementAnchor _)} _)) =
+      elementAnchor
+    getElemAnchor (AssociatedFamilyItem (L EpAnn {entry = EpaSpan (RealSrcSpan elementAnchor _)} _)) =
+      elementAnchor
+    getElemAnchor (AssociatedTypeDefaultItem (L EpAnn {entry = EpaSpan (RealSrcSpan elementAnchor _)} _)) =
+      elementAnchor
+    getElemAnchor _ = undefined
 
 -- | Locates comments before each statement in a do expression.
 relocateCommentsInDoExpr :: HsModule' -> WithComments HsModule'
@@ -305,19 +356,37 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       -> WithComments (LHsBindsLR GhcPs GhcPs, [LSig GhcPs])
     relocateCommentsBindsSigs binds sigs = do
       bindsSigs' <- mapM addCommentsBeforeEpAnn bindsSigs
-      pure (filterLBind bindsSigs', filterLSig bindsSigs')
+      pure (mapMaybe getBinding bindsSigs', mapMaybe getSignature bindsSigs')
       where
-        bindsSigs = mkSortedLSigBindFamilyList sigs binds [] [] [] []
-    addCommentsBeforeEpAnn (L epa@EpAnn { entry = EpaSpan (RealSrcSpan anc _)
-                                        , ..
-                                        } x) = do
+        bindsSigs =
+          sortBy (compare `on` itemLoc)
+            $ fmap LocalSignatureItem sigs ++ fmap LocalBindingItem binds
+    addCommentsBeforeEpAnn (LocalSignatureItem (L epa@EpAnn { entry = EpaSpan (RealSrcSpan anc _)
+                                                            , ..
+                                                            } x)) = do
       cs <- get
       let (notAbove, above) =
             partitionAboveNotAbove (sortCommentsByLocation cs) anc
           epa' = epa {comments = insertPriorComments comments above}
       put notAbove
-      pure $ L epa' x
+      pure $ LocalSignatureItem $ L epa' x
+    addCommentsBeforeEpAnn (LocalBindingItem (L epa@EpAnn { entry = EpaSpan (RealSrcSpan anc _)
+                                                          , ..
+                                                          } x)) = do
+      cs <- get
+      let (notAbove, above) =
+            partitionAboveNotAbove (sortCommentsByLocation cs) anc
+          epa' = epa {comments = insertPriorComments comments above}
+      put notAbove
+      pure $ LocalBindingItem $ L epa' x
     addCommentsBeforeEpAnn x = pure x
+    getBinding (LocalBindingItem bind) = Just bind
+    getBinding _ = Nothing
+    getSignature (LocalSignatureItem signature) = Just signature
+    getSignature _ = Nothing
+    itemLoc (LocalBindingItem bind) = realSrcSpan $ locA $ getLoc bind
+    itemLoc (LocalSignatureItem signature) =
+      realSrcSpan $ locA $ getLoc signature
     partitionAboveNotAbove cs sp =
       fst
         $ foldr'
@@ -391,15 +460,13 @@ relocateCommentsInClass =
     annSetter
     cond
   where
-    elemGetter :: LHsDecl GhcPs -> [LSigBindFamily]
+    elemGetter :: LHsDecl GhcPs -> [ClassDeclItem]
     elemGetter (L _ (TyClD _ ClassDecl {..})) =
-      mkSortedLSigBindFamilyList
-        tcdSigs
-        (bagToList tcdMeths)
-        tcdATs
-        []
-        tcdATDefs
-        []
+      sortBy (compare `on` itemLoc)
+        $ fmap ClassSignatureItem tcdSigs
+            ++ fmap ClassMethodItem (bagToList tcdMeths)
+            ++ fmap AssociatedFamilyItem tcdATs
+            ++ fmap AssociatedTypeDefaultItem tcdATDefs
     elemGetter _ = []
     elemSetter xs (L sp (TyClD ext ClassDecl {..})) = L sp (TyClD ext newDecl)
       where
@@ -411,15 +478,53 @@ relocateCommentsInClass =
             , tcdATDefs = tyFamDeflts
             , ..
             }
-        (sigs, binds, typeFamilies, _, tyFamDeflts, _) =
-          destructLSigBindFamilyList xs
+        sigs = mapMaybe getSignature xs
+        binds = mapMaybe getMethod xs
+        typeFamilies = mapMaybe getAssociatedFamily xs
+        tyFamDeflts = mapMaybe getAssociatedTypeDefault xs
     elemSetter _ x = x
-    annGetter (L ann _) = ann
-    annSetter newAnn (L _ x) = L newAnn x
-    cond (L EpAnn {entry = EpaSpan (RealSrcSpan classAnchor _)} _) (L EpAnn {entry = EpaSpan (RealSrcSpan elemAnchor _)} _) comAnc =
+    annGetter (ClassSignatureItem (L ann _)) = ann
+    annGetter (ClassMethodItem (L ann _)) = ann
+    annGetter (AssociatedFamilyItem (L ann _)) = ann
+    annGetter (AssociatedTypeDefaultItem (L ann _)) = ann
+    annSetter newAnn (ClassSignatureItem (L _ x)) =
+      ClassSignatureItem (L newAnn x)
+    annSetter newAnn (ClassMethodItem (L _ x)) = ClassMethodItem (L newAnn x)
+    annSetter newAnn (AssociatedFamilyItem (L _ x)) =
+      AssociatedFamilyItem (L newAnn x)
+    annSetter newAnn (AssociatedTypeDefaultItem (L _ x)) =
+      AssociatedTypeDefaultItem (L newAnn x)
+    cond (L EpAnn {entry = EpaSpan (RealSrcSpan classAnchor _)} _) item comAnc =
       srcSpanStartLine comAnc < srcSpanStartLine elemAnchor
         && realSrcSpanStart classAnchor < realSrcSpanStart comAnc
+      where
+        elemAnchor = getElemAnchor item
     cond _ _ _ = False
+    itemLoc (AssociatedFamilyItem familyDecl) =
+      realSrcSpan $ locA $ getLoc familyDecl
+    itemLoc (AssociatedTypeDefaultItem tyFamDeflt) =
+      realSrcSpan $ locA $ getLoc tyFamDeflt
+    itemLoc (ClassMethodItem bind) = realSrcSpan $ locA $ getLoc bind
+    itemLoc (ClassSignatureItem signature) =
+      realSrcSpan $ locA $ getLoc signature
+    getAssociatedFamily (AssociatedFamilyItem familyDecl) = Just familyDecl
+    getAssociatedFamily _ = Nothing
+    getAssociatedTypeDefault (AssociatedTypeDefaultItem tyFamDeflt) =
+      Just tyFamDeflt
+    getAssociatedTypeDefault _ = Nothing
+    getMethod (ClassMethodItem bind) = Just bind
+    getMethod _ = Nothing
+    getSignature (ClassSignatureItem signature) = Just signature
+    getSignature _ = Nothing
+    getElemAnchor (ClassSignatureItem (L EpAnn {entry = EpaSpan (RealSrcSpan elementAnchor _)} _)) =
+      elementAnchor
+    getElemAnchor (ClassMethodItem (L EpAnn {entry = EpaSpan (RealSrcSpan elementAnchor _)} _)) =
+      elementAnchor
+    getElemAnchor (AssociatedFamilyItem (L EpAnn {entry = EpaSpan (RealSrcSpan elementAnchor _)} _)) =
+      elementAnchor
+    getElemAnchor (AssociatedTypeDefaultItem (L EpAnn {entry = EpaSpan (RealSrcSpan elementAnchor _)} _)) =
+      elementAnchor
+    getElemAnchor _ = undefined
 
 -- | Locates comments before each statement in a do expression.
 relocateCommentsInDoExpr :: HsModule' -> WithComments HsModule'
@@ -496,19 +601,39 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       -> WithComments (LHsBindsLR GhcPs GhcPs, [LSig GhcPs])
     relocateCommentsBindsSigs binds sigs = do
       bindsSigs' <- mapM addCommentsBeforeEpAnn bindsSigs
-      pure (listToBag $ filterLBind bindsSigs', filterLSig bindsSigs')
+      pure
+        ( listToBag $ mapMaybe getBinding bindsSigs'
+        , mapMaybe getSignature bindsSigs')
       where
         bindsSigs =
-          mkSortedLSigBindFamilyList sigs (bagToList binds) [] [] [] []
-    addCommentsBeforeEpAnn (L epa@EpAnn {..} x)
+          sortBy (compare `on` itemLoc)
+            $ fmap LocalSignatureItem sigs
+                ++ fmap LocalBindingItem (bagToList binds)
+    addCommentsBeforeEpAnn (LocalSignatureItem (L epa@EpAnn {..} x))
       | EpaSpan (RealSrcSpan anc _) <- entry = do
         cs <- get
         let (notAbove, above) =
               partitionAboveNotAbove (sortCommentsByLocation cs) anc
             epa' = epa {comments = insertPriorComments comments above}
         put notAbove
-        pure $ L epa' x
+        pure $ LocalSignatureItem $ L epa' x
       | otherwise = undefined
+    addCommentsBeforeEpAnn (LocalBindingItem (L epa@EpAnn {..} x))
+      | EpaSpan (RealSrcSpan anc _) <- entry = do
+        cs <- get
+        let (notAbove, above) =
+              partitionAboveNotAbove (sortCommentsByLocation cs) anc
+            epa' = epa {comments = insertPriorComments comments above}
+        put notAbove
+        pure $ LocalBindingItem $ L epa' x
+      | otherwise = undefined
+    getBinding (LocalBindingItem bind) = Just bind
+    getBinding _ = Nothing
+    getSignature (LocalSignatureItem signature) = Just signature
+    getSignature _ = Nothing
+    itemLoc (LocalBindingItem bind) = realSrcSpan $ locA $ getLoc bind
+    itemLoc (LocalSignatureItem signature) =
+      realSrcSpan $ locA $ getLoc signature
     partitionAboveNotAbove cs sp =
       fst
         $ foldr'
@@ -582,15 +707,13 @@ relocateCommentsInClass =
     annSetter
     cond
   where
-    elemGetter :: LHsDecl GhcPs -> [LSigBindFamily]
+    elemGetter :: LHsDecl GhcPs -> [ClassDeclItem]
     elemGetter (L _ (TyClD _ ClassDecl {..})) =
-      mkSortedLSigBindFamilyList
-        tcdSigs
-        (bagToList tcdMeths)
-        tcdATs
-        []
-        tcdATDefs
-        []
+      sortBy (compare `on` itemLoc)
+        $ fmap ClassSignatureItem tcdSigs
+            ++ fmap ClassMethodItem (bagToList tcdMeths)
+            ++ fmap AssociatedFamilyItem tcdATs
+            ++ fmap AssociatedTypeDefaultItem tcdATDefs
     elemGetter _ = []
     elemSetter xs (L sp (TyClD ext ClassDecl {..})) = L sp (TyClD ext newDecl)
       where
@@ -602,15 +725,54 @@ relocateCommentsInClass =
             , tcdATDefs = tyFamDeflts
             , ..
             }
-        (sigs, binds, typeFamilies, _, tyFamDeflts, _) =
-          destructLSigBindFamilyList xs
+        sigs = mapMaybe getSignature xs
+        binds = mapMaybe getMethod xs
+        typeFamilies = mapMaybe getAssociatedFamily xs
+        tyFamDeflts = mapMaybe getAssociatedTypeDefault xs
     elemSetter _ x = x
-    annGetter (L SrcSpanAnn {..} _) = ann
-    annSetter newAnn (L SrcSpanAnn {..} x) = L SrcSpanAnn {ann = newAnn, ..} x
-    cond (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = classAnchor}}} _) (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = elemAnchor}}} _) comAnc =
+    annGetter (ClassSignatureItem (L SrcSpanAnn {..} _)) = ann
+    annGetter (ClassMethodItem (L SrcSpanAnn {..} _)) = ann
+    annGetter (AssociatedFamilyItem (L SrcSpanAnn {..} _)) = ann
+    annGetter (AssociatedTypeDefaultItem (L SrcSpanAnn {..} _)) = ann
+    annSetter newAnn (ClassSignatureItem (L SrcSpanAnn {..} x)) =
+      ClassSignatureItem $ L SrcSpanAnn {ann = newAnn, ..} x
+    annSetter newAnn (ClassMethodItem (L SrcSpanAnn {..} x)) =
+      ClassMethodItem $ L SrcSpanAnn {ann = newAnn, ..} x
+    annSetter newAnn (AssociatedFamilyItem (L SrcSpanAnn {..} x)) =
+      AssociatedFamilyItem $ L SrcSpanAnn {ann = newAnn, ..} x
+    annSetter newAnn (AssociatedTypeDefaultItem (L SrcSpanAnn {..} x)) =
+      AssociatedTypeDefaultItem $ L SrcSpanAnn {ann = newAnn, ..} x
+    cond (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = classAnchor}}} _) item comAnc =
       srcSpanStartLine comAnc < srcSpanStartLine elemAnchor
         && realSrcSpanStart classAnchor < realSrcSpanStart comAnc
+      where
+        elemAnchor = getElemAnchor item
     cond _ _ _ = False
+    itemLoc (AssociatedFamilyItem familyDecl) =
+      realSrcSpan $ locA $ getLoc familyDecl
+    itemLoc (AssociatedTypeDefaultItem tyFamDeflt) =
+      realSrcSpan $ locA $ getLoc tyFamDeflt
+    itemLoc (ClassMethodItem bind) = realSrcSpan $ locA $ getLoc bind
+    itemLoc (ClassSignatureItem signature) =
+      realSrcSpan $ locA $ getLoc signature
+    getAssociatedFamily (AssociatedFamilyItem familyDecl) = Just familyDecl
+    getAssociatedFamily _ = Nothing
+    getAssociatedTypeDefault (AssociatedTypeDefaultItem tyFamDeflt) =
+      Just tyFamDeflt
+    getAssociatedTypeDefault _ = Nothing
+    getMethod (ClassMethodItem bind) = Just bind
+    getMethod _ = Nothing
+    getSignature (ClassSignatureItem signature) = Just signature
+    getSignature _ = Nothing
+    getElemAnchor (ClassSignatureItem (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = elemAnchor}}} _)) =
+      elemAnchor
+    getElemAnchor (ClassMethodItem (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = elemAnchor}}} _)) =
+      elemAnchor
+    getElemAnchor (AssociatedFamilyItem (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = elemAnchor}}} _)) =
+      elemAnchor
+    getElemAnchor (AssociatedTypeDefaultItem (L SrcSpanAnn {ann = EpAnn {entry = Anchor {anchor = elemAnchor}}} _)) =
+      elemAnchor
+    getElemAnchor _ = undefined
 
 -- | Locates comments before each statement in a do expression.
 relocateCommentsInDoExpr :: HsModule' -> WithComments HsModule'
@@ -688,18 +850,36 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       -> WithComments (LHsBindsLR GhcPs GhcPs, [LSig GhcPs])
     relocateCommentsBindsSigs binds sigs = do
       bindsSigs' <- mapM addCommentsBeforeEpAnn bindsSigs
-      pure (listToBag $ filterLBind bindsSigs', filterLSig bindsSigs')
+      pure
+        ( listToBag $ mapMaybe getBinding bindsSigs'
+        , mapMaybe getSignature bindsSigs')
       where
         bindsSigs =
-          mkSortedLSigBindFamilyList sigs (bagToList binds) [] [] [] []
-    addCommentsBeforeEpAnn (L (SrcSpanAnn epa@EpAnn {..} sp) x) = do
+          sortBy (compare `on` itemLoc)
+            $ fmap LocalSignatureItem sigs
+                ++ fmap LocalBindingItem (bagToList binds)
+    addCommentsBeforeEpAnn (LocalSignatureItem (L (SrcSpanAnn epa@EpAnn {..} sp) x)) = do
       cs <- get
       let (notAbove, above) =
             partitionAboveNotAbove (sortCommentsByLocation cs) entry
           epa' = epa {comments = insertPriorComments comments above}
       put notAbove
-      pure $ L (SrcSpanAnn epa' sp) x
+      pure $ LocalSignatureItem $ L (SrcSpanAnn epa' sp) x
+    addCommentsBeforeEpAnn (LocalBindingItem (L (SrcSpanAnn epa@EpAnn {..} sp) x)) = do
+      cs <- get
+      let (notAbove, above) =
+            partitionAboveNotAbove (sortCommentsByLocation cs) entry
+          epa' = epa {comments = insertPriorComments comments above}
+      put notAbove
+      pure $ LocalBindingItem $ L (SrcSpanAnn epa' sp) x
     addCommentsBeforeEpAnn x = pure x
+    getBinding (LocalBindingItem bind) = Just bind
+    getBinding _ = Nothing
+    getSignature (LocalSignatureItem signature) = Just signature
+    getSignature _ = Nothing
+    itemLoc (LocalBindingItem bind) = realSrcSpan $ locA $ getLoc bind
+    itemLoc (LocalSignatureItem signature) =
+      realSrcSpan $ locA $ getLoc signature
     partitionAboveNotAbove cs sp =
       fst
         $ foldr'
