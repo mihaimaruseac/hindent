@@ -51,7 +51,7 @@ modifyASTForPrettyPrinting m = relocateComments (beforeRelocation m) allComments
     allComments = listify (not . isEofComment . ac_tok . unLoc) m
 
 -- | This function modifies the given module AST to apply fixities of infix
--- operators defined in the 'base' package.
+-- operators defined in the @base@ package.
 fixFixities :: HsModule' -> HsModule'
 fixFixities = applyFixities fixities
 
@@ -133,11 +133,11 @@ sortExprLStmt m@HsModule {hsmodDecls = xs} = m {hsmodDecls = sorted}
 removeComments :: HsModule' -> HsModule'
 removeComments = everywhere (mkT $ const emptyComments)
 
--- | This function replaces all 'EpAnnNotUsed's in 'SrcSpanAnn''s with
--- 'EpAnn's to make it possible to locate comments on them.
+-- | This function replaces all @EpAnnNotUsed@s in @SrcSpanAnn'@s with
+-- @EpAnn@s to make it possible to locate comments on them.
 replaceAllNotUsedAnns :: HsModule' -> HsModule'
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
--- 'EpAnnNotUsed' is not used since 9.10.1.
+-- @EpAnnNotUsed@ is not used since 9.10.1.
 replaceAllNotUsedAnns = id
 #else
 replaceAllNotUsedAnns = everywhere app
@@ -170,7 +170,7 @@ replaceAllNotUsedAnns = everywhere app
     emptyEpaLocation = EpaDelta (SameLine 0) []
 #endif
 -- | This function sets the start column of 'hsmodName' of the given
--- 'HsModule' to 1 to correctly locate comments above the module name.
+-- @HsModule@ to 1 to correctly locate comments above the module name.
 resetModuleNameColumn :: HsModule' -> HsModule'
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 resetModuleNameColumn m@HsModule {hsmodName = Just (L epa@EpAnn {..} name)} =
@@ -198,16 +198,16 @@ resetModuleNameColumn m@HsModule {hsmodName = Just (L (SrcSpanAnn epa@EpAnn {..}
 #endif
 resetModuleNameColumn m = m
 
--- | This function replaces the 'EpAnn' of 'fun_id' in 'FunBind' with
--- 'EpAnnNotUsed'.
+-- | This function replaces the @EpAnn@ of @fun_id@ in @FunBind@ with
+-- @EpAnnNotUsed@.
 --
--- The 'fun_id' contains the function's name. However, 'FunRhs' of 'Match'
+-- The @fun_id@ contains the function's name. However, @FunRhs@ of @Match@
 -- also contains the name, and we use the latter one. This function
--- prevents comments from being located in 'fun_id'.
+-- prevents comments from being located in @fun_id@.
 closeEpAnnOfFunBindFunId :: HsModule' -> HsModule'
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
--- TODO: 'EpAnnNotUsed' is not used since 9.10.1. We need to find another
--- way to close 'EpAnn's.
+-- TODO: @EpAnnNotUsed@ is not used since 9.10.1. We need to find another
+-- way to close @EpAnn@s.
 closeEpAnnOfFunBindFunId = id
 #else
 closeEpAnnOfFunBindFunId = everywhere (mkT closeEpAnn)
@@ -221,12 +221,12 @@ closeEpAnnOfFunBindFunId = everywhere (mkT closeEpAnn)
 -- 'EpAnnNotUsed'.
 --
 -- The field contains the annotation of the match LHS. However, the same
--- information is also stored inside the 'Match'. This function removes the
+-- information is also stored inside @Match@. This function removes the
 -- duplication not to locate comments on a wrong point.
 closeEpAnnOfMatchMExt :: HsModule' -> HsModule'
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
--- TODO: 'EpAnnNotUsed' is not used since 9.10.1. We need to find another
--- way to close 'EpAnn's.
+-- TODO: @EpAnnNotUsed@ is not used since 9.10.1. We need to find another
+-- way to close @EpAnn@s.
 closeEpAnnOfMatchMExt = id
 #else
 closeEpAnnOfMatchMExt = everywhere closeEpAnn
@@ -241,15 +241,15 @@ closeEpAnnOfMatchMExt = everywhere closeEpAnn
       , Just HRefl <- eqTypeRep h (typeRep @GhcPs) = x {m_ext = EpAnnNotUsed}
       | otherwise = x
 #endif
--- | This function replaces the 'EpAnn' of the first argument of 'HsFunTy'
+-- | This function replaces the @EpAnn@ of the first argument of @HsFunTy@
 -- of 'HsType'.
 --
 -- 'HsFunTy' should not have any comments. Instead, its LHS and RHS should
 -- have them.
 closeEpAnnOfHsFunTy :: HsModule' -> HsModule'
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
--- TODO: 'EpAnnNotUsed' is not used since 9.10.1. We need to find another
--- way to close 'EpAnn's.
+-- TODO: @EpAnnNotUsed@ is not used since 9.10.1. We need to find another
+-- way to close @EpAnn@s.
 closeEpAnnOfHsFunTy = id
 #else
 closeEpAnnOfHsFunTy = everywhere (mkT closeEpAnn)
@@ -258,13 +258,13 @@ closeEpAnnOfHsFunTy = everywhere (mkT closeEpAnn)
     closeEpAnn (HsFunTy _ p l r) = HsFunTy EpAnnNotUsed p l r
     closeEpAnn x = x
 #endif
--- | This function replaces all 'EpAnn's that contain placeholder anchors
+-- | This function replaces all @EpAnn@s that contain placeholder anchors
 -- to locate comments correctly. A placeholder anchor is an anchor pointing
 -- on (-1, -1).
 closePlaceHolderEpAnns :: HsModule' -> HsModule'
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
--- TODO: 'EpAnnNotUsed' is not used since 9.10.1. We need to find another
--- way to close 'EpAnn's.
+-- TODO: @EpAnnNotUsed@ is not used since 9.10.1. We need to find another
+-- way to close @EpAnn@s.
 closePlaceHolderEpAnns = id
 #else
 closePlaceHolderEpAnns = everywhere closeEpAnn
