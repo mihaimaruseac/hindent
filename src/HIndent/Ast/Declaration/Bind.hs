@@ -6,7 +6,7 @@ module HIndent.Ast.Declaration.Bind
   , mkBind
   ) where
 
-import HIndent.Ast.Declaration.Bind.GuardedRhs (GuardedRhs, mkPatternGuardedRhs)
+import HIndent.Ast.Declaration.Bind.GuardedRhs (GuardedRhs, mkGuardedRhs)
 import HIndent.Ast.Declaration.PatternSynonym
 import HIndent.Ast.MatchGroup (MatchGroup, mkExprMatchGroup)
 import HIndent.Ast.Pattern
@@ -34,10 +34,10 @@ instance Pretty Bind where
 
 mkBind :: GHC.HsBind GHC.GhcPs -> Bind
 mkBind GHC.FunBind {..} = Function $ mkExprMatchGroup fun_matches
-mkBind bind@GHC.PatBind {..} = Pattern {..}
+mkBind GHC.PatBind {..} = Pattern {..}
   where
     lhs = mkPattern <$> mkWithCommentsFromGenLocated pat_lhs
-    rhs = mkWithComments $ mkPatternGuardedRhs bind
+    rhs = mkWithComments $ mkGuardedRhs pat_rhs
 mkBind (GHC.PatSynBind _ psb) =
   PatternSynonym $ mkWithComments $ mkPatternSynonym psb
 mkBind _ = error "This AST node should not appear."
