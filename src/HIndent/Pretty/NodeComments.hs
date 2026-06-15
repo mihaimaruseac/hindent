@@ -17,7 +17,6 @@ import GHC.Types.SourceText
 import GHC.Types.SrcLoc
 import HIndent.Ast.NodeComments
 import HIndent.Pretty.SigBindFamily
-import HIndent.Pretty.Types
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import GHC.Core.DataCon
 #else
@@ -148,18 +147,6 @@ instance CommentExtraction (FamilyResultSig GhcPs) where
   nodeComments KindSig {} = emptyNodeComments
   nodeComments TyVarSig {} = emptyNodeComments
 
-instance CommentExtraction Context where
-  nodeComments Context {} = emptyNodeComments
-
-instance CommentExtraction HorizontalContext where
-  nodeComments HorizontalContext {} = emptyNodeComments
-
-instance CommentExtraction VerticalContext where
-  nodeComments VerticalContext {} = emptyNodeComments
-
-instance CommentExtraction FamEqn' where
-  nodeComments FamEqn' {..} = nodeComments famEqn
-
 -- | 'Pretty' for 'LHsSigWcType GhcPs'.
 instance CommentExtraction
            (HsWildCardBndrs GhcPs (GenLocated SrcSpanAnnA (HsSigType GhcPs))) where
@@ -173,14 +160,8 @@ instance CommentExtraction
 instance CommentExtraction CExportSpec where
   nodeComments CExportStatic {} = emptyNodeComments
 
-instance CommentExtraction TopLevelTyFamInstDecl where
-  nodeComments (TopLevelTyFamInstDecl x) = nodeComments x
-
 instance CommentExtraction (DataFamInstDecl GhcPs) where
   nodeComments DataFamInstDecl {} = emptyNodeComments
-
-instance CommentExtraction DataFamInstDecl' where
-  nodeComments DataFamInstDecl' {..} = nodeComments dataFamInstDecl
 
 instance CommentExtraction (FixitySig GhcPs) where
   nodeComments FixitySig {} = emptyNodeComments

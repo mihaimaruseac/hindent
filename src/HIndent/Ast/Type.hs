@@ -19,6 +19,7 @@ module HIndent.Ast.Type
   ) where
 
 import Control.Monad.RWS (gets)
+import HIndent.Ast.Context
 import HIndent.Ast.Declaration.Data.Record.Field
 import HIndent.Ast.Expression.Splice
 import HIndent.Ast.Literal
@@ -42,7 +43,6 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-import HIndent.Pretty.Types
 import HIndent.Printer
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 import qualified GHC.Types.SourceText as GHC
@@ -211,7 +211,7 @@ mkType (GHC.HsForAllTy _ tele body) =
     }
 mkType GHC.HsQualTy {..} =
   ConstrainedType
-    { context = mkWithComments $ Context hst_ctxt
+    { context = mkContext <$> mkWithCommentsFromGenLocated hst_ctxt
     , body = mkType <$> mkWithCommentsFromGenLocated hst_body
     }
 mkType (GHC.HsTyVar _ GHC.IsPromoted x) =
