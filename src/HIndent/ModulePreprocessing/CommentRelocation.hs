@@ -60,8 +60,8 @@ import GHC.Data.Bag
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import Data.Maybe
 #endif
--- | A wrapper type used in everywhereMEpAnnsBackwards' to collect all
--- 'EpAnn's to apply a function with them in order their positions.
+-- | A wrapper type used in @everywhereMEpAnnsBackwards'@ to collect all
+-- @EpAnn@s to apply a function with them in order their positions.
 data Wrapper =
   forall a. Typeable (EpAnn a) =>
             Wrapper (EpAnn a)
@@ -958,7 +958,7 @@ relocateCommentsBeforeEachElement elemGetter elemSetter annGetter annSetter cond
             pure $ annSetter newEpa element
           | otherwise = pure element
 #endif
--- | This function applies the given function to all 'EpAnn's.
+-- | This function applies the given function to all @EpAnn@s.
 applyM ::
      forall a. Typeable a
   => (forall b. EpAnn b -> WithComments (EpAnn b))
@@ -1036,8 +1036,8 @@ everywhereMEpAnnsInOrder cmp f hm =
     >>= putModifiedEpAnnsToModule
   where
     collectEpAnnsInOrderEverywhereMTraverses
-      -- This function uses 'everywhereM' to collect 'EpAnn's because they
-      -- should be collected in the same order as 'putModifiedEpAnnsToModule'
+      -- This function uses @everywhereM@ to collect @EpAnn@s because they
+      -- should be collected in the same order as @putModifiedEpAnnsToModule@
       -- puts them to the AST.
      = reverse <$> execStateT (everywhereM collectEpAnnsST hm) []
       where
@@ -1089,7 +1089,7 @@ everywhereMEpAnnsInOrder cmp f hm =
 -- | This function moves comments in `fun_id` of `FunBind` to
 -- `mc_fun` of `HsMatchContext`.
 --
--- This is a workaround for the issue that `EpAnn`s in `mc_fun` cannot be
+-- This is a workaround for the issue that @EpAnn@s in @mc_fun@ cannot be
 -- closed since 9.10.1.
 moveCommentsFromFunIdToMcFun :: HsModule' -> WithComments HsModule'
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
