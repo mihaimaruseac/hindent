@@ -12,7 +12,6 @@ import qualified GHC.Types.SrcLoc as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty.NodeComments
 import HIndent.Pretty.SigBindFamily
-import HIndent.Pretty.Types
 import HIndent.Printer
 
 class CommentExtraction a =>
@@ -38,8 +37,6 @@ instance Pretty
 instance Pretty SigBindFamily
 
 instance Pretty GHC.StringLiteral
-
-instance Pretty Context
 
 #if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
 instance Pretty

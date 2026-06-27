@@ -53,7 +53,6 @@ import HIndent.Ast.WithComments
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
 import qualified HIndent.Pretty.SigBindFamily as SBF
-import HIndent.Pretty.Types
 import HIndent.Printer
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import qualified GHC.Core.DataCon as GHC
@@ -125,6 +124,10 @@ class CommentExtraction a =>
   where
   pretty' :: a -> Printer ()
 
+data DataFamInstDeclFor
+  = DataFamInstDeclForTopLevel
+  | DataFamInstDeclForInsideClassInst
+
 -- Do nothing if there are no pragmas, module headers, imports, or
 -- declarations. Otherwise, extra blank lines will be inserted if only
 -- comments are present in the source code. See
@@ -187,7 +190,8 @@ instance Pretty SBF.SigBindFamily where
     | otherwise = error "Unreachable"
   pretty' (SBF.TyFamInst x) = pretty $ mkAssociatedType x
   pretty' (SBF.TyFamDeflt x) = pretty $ mkAssociatedTypeDefault x
-  pretty' (SBF.DataFamInst x) = pretty $ DataFamInstDeclInsideClassInst x
+  pretty' (SBF.DataFamInst x) =
+    prettyDataFamInstDecl DataFamInstDeclForInsideClassInst x
 
 instance Pretty GHC.EpaComment where
   pretty' GHC.EpaComment {..} = prettyEpaCommentTok ac_tok
@@ -221,48 +225,6 @@ instance Pretty GHC.StringLiteral where
 instance Pretty GHC.StringLiteral where
   pretty' = output
 #endif
-instance Pretty Context where
-  pretty' (Context xs) =
-    pretty (HorizontalContext xs) <-|> pretty (VerticalContext xs)
-#if MIN_VERSION_ghc_lib_parser(9,4,1)
-instance Pretty HorizontalContext where
-  pretty' (HorizontalContext xs) =
-    constraintsParens
-      $ printCommentsAnd xs (hCommaSep . fmap (pretty . fmap mkType))
-    where
-      constraintsParens =
-        case xs of
-          (GHC.L _ []) -> parens
-          (GHC.L _ [_]) -> id
-          _ -> parens
-
-instance Pretty VerticalContext where
-  pretty' (VerticalContext full@(GHC.L _ [])) =
-    printCommentsAnd full (const $ string "()")
-  pretty' (VerticalContext full@(GHC.L _ [x])) =
-    printCommentsAnd full (const $ pretty $ mkType <$> x)
-  pretty' (VerticalContext xs) =
-    printCommentsAnd xs (vTuple . fmap (pretty . fmap mkType))
-#else
-instance Pretty HorizontalContext where
-  pretty' (HorizontalContext xs) =
-    constraintsParens $ mapM_ (`printCommentsAnd` (hCommaSep . fmap pretty)) xs
-    where
-      constraintsParens =
-        case xs of
-          Nothing -> id
-          Just (GHC.L _ []) -> parens
-          Just (GHC.L _ [_]) -> id
-          Just _ -> parens
-
-instance Pretty VerticalContext where
-  pretty' (VerticalContext Nothing) = pure ()
-  pretty' (VerticalContext (Just (GHC.L _ []))) = string "()"
-  pretty' (VerticalContext (Just full@(GHC.L _ [x]))) =
-    printCommentsAnd full (const $ pretty x)
-  pretty' (VerticalContext (Just xs)) =
-    printCommentsAnd xs (vTuple . fmap pretty)
-#endif
 instance Pretty
            (GHC.FamEqn
               GHC.GhcPs
@@ -275,37 +237,43 @@ instance Pretty
 
 -- | Pretty-print a data instance.
 instance Pretty (GHC.FamEqn GHC.GhcPs (GHC.HsDataDefn GHC.GhcPs)) where
-  pretty' = pretty' . FamEqnTopLevel
+  pretty' = prettyFamEqn DataFamInstDeclForTopLevel
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
-instance Pretty FamEqn' where
-  pretty' FamEqn' {famEqn = GHC.FamEqn {..}, ..} = do
-    spaced
-      $ string prefix
-          : pretty (fmap mkPrefixName feqn_tycon)
-          : fmap pretty feqn_pats
-    pretty (mkDataBody feqn_rhs)
-    where
-      prefix =
-        case (famEqnFor, GHC.dd_cons feqn_rhs) of
-          (DataFamInstDeclForTopLevel, GHC.NewTypeCon {}) -> "newtype instance"
-          (DataFamInstDeclForTopLevel, GHC.DataTypeCons {}) -> "data instance"
-          (DataFamInstDeclForInsideClassInst, GHC.NewTypeCon {}) -> "newtype"
-          (DataFamInstDeclForInsideClassInst, GHC.DataTypeCons {}) -> "data"
+prettyFamEqn ::
+     DataFamInstDeclFor
+  -> GHC.FamEqn GHC.GhcPs (GHC.HsDataDefn GHC.GhcPs)
+  -> Printer ()
+prettyFamEqn famEqnFor GHC.FamEqn {..} = do
+  spaced
+    $ string prefix
+        : pretty (fmap mkPrefixName feqn_tycon)
+        : fmap pretty feqn_pats
+  pretty (mkDataBody feqn_rhs)
+  where
+    prefix =
+      case (famEqnFor, GHC.dd_cons feqn_rhs) of
+        (DataFamInstDeclForTopLevel, GHC.NewTypeCon {}) -> "newtype instance"
+        (DataFamInstDeclForTopLevel, GHC.DataTypeCons {}) -> "data instance"
+        (DataFamInstDeclForInsideClassInst, GHC.NewTypeCon {}) -> "newtype"
+        (DataFamInstDeclForInsideClassInst, GHC.DataTypeCons {}) -> "data"
 #else
-instance Pretty FamEqn' where
-  pretty' FamEqn' {famEqn = GHC.FamEqn {..}, ..} = do
-    spaced
-      $ string prefix
-          : pretty (fmap mkPrefixName feqn_tycon)
-          : fmap pretty feqn_pats
-    pretty (mkDataBody feqn_rhs)
-    where
-      prefix =
-        case (famEqnFor, GHC.dd_ND feqn_rhs) of
-          (DataFamInstDeclForTopLevel, GHC.NewType) -> "newtype instance"
-          (DataFamInstDeclForTopLevel, GHC.DataType) -> "data instance"
-          (DataFamInstDeclForInsideClassInst, GHC.NewType) -> "newtype"
-          (DataFamInstDeclForInsideClassInst, GHC.DataType) -> "data"
+prettyFamEqn ::
+     DataFamInstDeclFor
+  -> GHC.FamEqn GHC.GhcPs (GHC.HsDataDefn GHC.GhcPs)
+  -> Printer ()
+prettyFamEqn famEqnFor GHC.FamEqn {..} = do
+  spaced
+    $ string prefix
+        : pretty (fmap mkPrefixName feqn_tycon)
+        : fmap pretty feqn_pats
+  pretty (mkDataBody feqn_rhs)
+  where
+    prefix =
+      case (famEqnFor, GHC.dd_ND feqn_rhs) of
+        (DataFamInstDeclForTopLevel, GHC.NewType) -> "newtype instance"
+        (DataFamInstDeclForTopLevel, GHC.DataType) -> "data instance"
+        (DataFamInstDeclForInsideClassInst, GHC.NewType) -> "newtype"
+        (DataFamInstDeclForInsideClassInst, GHC.DataType) -> "data"
 #endif
 -- | HsArg (LHsType GhcPs) (LHsType GhcPs)
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
@@ -346,16 +314,13 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
   pretty' GHC.HsWC {..} = pretty $ mkType <$> hswc_body
 
-instance Pretty TopLevelTyFamInstDecl where
-  pretty' (TopLevelTyFamInstDecl GHC.TyFamInstDecl {..}) =
-    string "instance " >> pretty tfid_eqn
-
 instance Pretty (GHC.DataFamInstDecl GHC.GhcPs) where
-  pretty' = pretty' . DataFamInstDeclTopLevel
+  pretty' = prettyDataFamInstDecl DataFamInstDeclForTopLevel
 
-instance Pretty DataFamInstDecl' where
-  pretty' DataFamInstDecl' {dataFamInstDecl = GHC.DataFamInstDecl {..}, ..} =
-    pretty $ FamEqn' dataFamInstDeclFor dfid_eqn
+prettyDataFamInstDecl ::
+     DataFamInstDeclFor -> GHC.DataFamInstDecl GHC.GhcPs -> Printer ()
+prettyDataFamInstDecl dataFamInstDeclFor GHC.DataFamInstDecl {..} =
+  prettyFamEqn dataFamInstDeclFor dfid_eqn
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty GHC.FieldLabelString where
   pretty' = output

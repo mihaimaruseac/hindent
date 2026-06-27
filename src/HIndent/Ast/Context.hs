@@ -7,7 +7,7 @@ module HIndent.Ast.Context
   ) where
 
 import HIndent.Ast.NodeComments
-import HIndent.Ast.Type
+import {-# SOURCE #-} HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
