@@ -2,18 +2,18 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
--- | Build 'CommentGroup' values from types that can appear in the
--- location slot of 'GHC.GenLocated'.
+-- | Build @CommentGroup@ values from types that can appear in the
+-- location slot of @GHC.GenLocated@.
 --
--- This module exists so 'mkWithCommentsFromGenLocated' can stay
+-- This module exists so @mkWithCommentsFromGenLocated@ can stay
 -- generic over GHC-side location and annotation types. It is fine for
--- an instance to return empty comments, such as for 'GHC.SrcSpan' and
--- 'GHC.NoEpAnns'.
+-- an instance to return empty comments, such as for @GHC.SrcSpan@ and
+-- @GHC.NoEpAnns@.
 --
 -- Do not implement this class for GHC AST node bodies such as
 -- expressions or declarations. Smart constructors handle those
 -- directly. Do not implement it for Hindent AST types either; Hindent
--- AST values keep comments via 'WithComments'.
+-- AST values keep comments via @WithComments@.
 module HIndent.Ast.IsGenLocatedLocation
   ( CommentGroup(..)
   , IsGenLocatedLocation(..)

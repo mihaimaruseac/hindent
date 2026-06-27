@@ -147,12 +147,12 @@ instance CommentExtraction (FamilyResultSig GhcPs) where
   nodeComments KindSig {} = emptyNodeComments
   nodeComments TyVarSig {} = emptyNodeComments
 
--- | 'Pretty' for 'LHsSigWcType GhcPs'.
+-- | Comment extraction for signature wildcard types.
 instance CommentExtraction
            (HsWildCardBndrs GhcPs (GenLocated SrcSpanAnnA (HsSigType GhcPs))) where
   nodeComments HsWC {} = emptyNodeComments
 
--- | 'Pretty' for 'LHsWcType'
+-- | Comment extraction for wildcard types.
 instance CommentExtraction
            (HsWildCardBndrs GhcPs (GenLocated SrcSpanAnnA (HsType GhcPs))) where
   nodeComments HsWC {} = emptyNodeComments
@@ -1232,6 +1232,6 @@ notUsedInParsedStage =
   error
     "This AST should never appears in an AST. It only appears in the renaming or type checked stages."
 #endif
--- | A 'NodeComment' with no comments.
+-- | Node comments with no comments.
 emptyNodeComments :: NodeComments
 emptyNodeComments = NodeComments [] [] []

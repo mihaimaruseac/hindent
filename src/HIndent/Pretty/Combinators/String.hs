@@ -63,7 +63,7 @@ comma = string ","
 dot :: Printer ()
 dot = string "."
 
--- | This function prints a '\n'.
+-- | This function prints a @\n@.
 --
 -- Always call this function to print it because printing it requires
 -- special treatment. Do not call @string@ instead.

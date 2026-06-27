@@ -87,8 +87,8 @@ collectLanguageExtensionsFromSourceViaOptionsPragma =
     . filter ((`elem` ["OPTIONS", "OPTIONS_GHC"]) . fst)
     . extractPragmasFromCode
 
--- | Extracts the language extensions specified in the '-XFOO' format from
--- the given string
+-- | Extracts the language extensions specified in the @-XFOO@ format from
+-- the given string.
 extractLanguageExtensionsFromOptions :: String -> [String]
 extractLanguageExtensionsFromOptions options =
   fmap
@@ -102,6 +102,7 @@ extractLanguageExtensionsFromOptions options =
 stripSpaces :: String -> String
 stripSpaces = reverse . dropWhile isSpace . reverse . dropWhile isSpace
 
+-- | Default language extensions used when no explicit override is given.
 defaultExtensions :: [Extension]
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 defaultExtensions =

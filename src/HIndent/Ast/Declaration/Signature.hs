@@ -30,7 +30,7 @@ import HIndent.Pretty.NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 import {-# SOURCE #-} HIndent.Ast.Expression (mkExpression)
 #endif
--- We want to use the same name for `parameters` and `signature`, but GHC
+-- We want to use the same name for @parameters@ and @signature@, but GHC
 -- doesn't allow it.
 data Signature
   = Type

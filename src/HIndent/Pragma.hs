@@ -37,7 +37,7 @@ extractPragmasFromCode =
 
 -- | Extracts the pragma's name and its element from the given pragma.
 --
--- This function returns a 'Nothing' if it fails to extract them.
+-- This function returns @Nothing@ if it fails to extract them.
 extractPragmaNameAndElement :: String -> Maybe (String, String) -- ^ [(Pragma's name (e.g., @"LANGUAGE"@), Pragma's element (e.g., @"CPP, DerivingVia"@))]
 extractPragmaNameAndElement l
   | (_, _, _, [name, element]) <-
@@ -45,8 +45,8 @@ extractPragmaNameAndElement l
     Just (name, element)
 extractPragmaNameAndElement _ = Nothing
 
--- | This function returns a 'True' if the passed 'EpaCommentTok' is
--- a pragma. Otherwise, it returns a 'False'.
+-- | This function returns @True@ if the passed @EpaCommentTok@ is
+-- a pragma. Otherwise, it returns @False@.
 isPragma :: EpaCommentTok -> Bool
 isPragma (EpaBlockComment c) = match pragmaRegex c
 isPragma _ = False
@@ -65,7 +65,7 @@ execOption = ExecOption {captureGroups = True}
 
 -- | The option for matching against a pragma.
 --
--- 'multiline' is set to 'False' to match against multiline pragmas, e.g.,
+-- @multiline@ is set to @False@ to match against multiline pragmas, e.g.,
 -- @{-# LANGUAGE CPP\nOverloadedStrings #-}@.
 compOption :: CompOption
 compOption =
@@ -77,13 +77,13 @@ compOption =
     , lastStarGreedy = True
     }
 
--- | This function returns a 'True' if the module has pragmas.
--- Otherwise, it returns a 'False'.
+-- | This function returns @True@ if the module has pragmas.
+-- Otherwise, it returns @False@.
 pragmaExists :: HsModule' -> Bool
 pragmaExists = not . null . collectPragmas
 
 -- | This function collects pragma comments from the
--- given module and modifies them into 'String's.
+-- given module and modifies them into @String@s.
 --
 -- A pragma's name is converted to the @SHOUT_CASE@ (e.g., @lAnGuAgE@ ->
 -- @LANGUAGE@).
@@ -94,9 +94,9 @@ collectPragmas =
     . listify isBlockComment
     . getModuleAnn
 
--- | This function returns a 'Just' value with the pragma
--- extracted from the passed 'EpaCommentTok' if it has one. Otherwise, it
--- returns a 'Nothing'.
+-- | This function returns a @Just@ value with the pragma
+-- extracted from the passed @EpaCommentTok@ if it has one. Otherwise, it
+-- returns @Nothing@.
 extractPragma :: EpaCommentTok -> Maybe (String, [String])
 extractPragma (EpaBlockComment c) =
   second (fmap strip . splitOn ",") <$> extractPragmaNameAndElement c

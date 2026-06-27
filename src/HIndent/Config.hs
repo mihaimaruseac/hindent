@@ -67,7 +67,7 @@ defaultConfig =
     , configExtensions = []
     }
 
--- | Read config from a config file, or return 'defaultConfig'.
+-- | Read config from a config file, or return @defaultConfig@.
 getConfig :: IO Config
 getConfig = do
   cur <- Path.getCurrentDir

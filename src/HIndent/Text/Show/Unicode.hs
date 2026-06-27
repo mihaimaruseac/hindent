@@ -30,7 +30,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -}
--- | A vendored copy of `Text.Show.Unicode` from `unicode-show` with
+-- | A vendored copy of @Text.Show.Unicode@ from @unicode-show@ with
 -- unused functions trimmed.
 module HIndent.Text.Show.Unicode
   ( ushow
@@ -49,7 +49,7 @@ type Parser a = StateT String Maybe a
 
 -- | Show the input, and then replace Haskell character literals
 -- with the character it represents, for any Unicode printable characters except backslash, single and double quotation marks.
--- If something fails, fallback to standard 'show'.
+-- If something fails, fallback to standard @show@.
 ushow :: Show a => a -> String
 ushow = ushowWith shouldRecover
 
@@ -89,7 +89,7 @@ recoverChars p = outsideLiteral
           | otherwise -> (s ++) <$> insideLiteral
     untilDoubleQuote = StateT $ Just . L.break (== '\"')
 
--- | Parse one Haskell character literal expression from a 'String' produced by 'show', and
+-- | Parse one Haskell character literal expression from a @String@ produced by @show@, and
 --   returns the pair of the string before parsed with the parsed character.
 --  * Note that special delimiter sequence "\&" may appear in a string. c.f.  <https://www.haskell.org/onlinereport/haskell2010/haskellch2.html#x7-200002.6 Section 2.6 of the Haskell 2010 specification>.
 recoverCharInLiteral :: Parser (String, Char)

@@ -15,8 +15,8 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.NodeComments
 
--- The difference between `Function` and `Pattern` is the same as the difference
--- between `FunBind` and `PatBind` in GHC AST. See
+-- The difference between @Function@ and @Pattern@ is the same as the difference
+-- between @FunBind@ and @PatBind@ in GHC AST. See
 -- https://hackage.haskell.org/package/ghc-lib-parser-9.8.2.20240223/docs/src/Language.Haskell.Syntax.Binds.html.
 --
 -- TODO: Merge them.
