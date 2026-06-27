@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
--- | Wrapper for 'GHC.Hs'
+-- | Wrapper for @GHC.Hs@.
 module HIndent.GhcLibParserWrapper.GHC.Hs
   ( module GHC.Hs
   , HsModule'
@@ -11,7 +11,7 @@ module HIndent.GhcLibParserWrapper.GHC.Hs
 
 import GHC.Hs
 import HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings
--- | The wrapper for `HsModule`
+-- | The wrapper for @HsModule@.
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 type HsModule' = HsModule GhcPs
 #else

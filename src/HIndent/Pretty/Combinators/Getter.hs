@@ -11,7 +11,7 @@ import HIndent.Pretty.Combinators.String
 import HIndent.Printer
 
 -- | Returns the column from which a new string is printed. It may be
--- different from 'psColumn' immediately after printing a comment.
+-- different from @psColumn@ immediately after printing a comment.
 startingColumn :: Printer Int
 startingColumn = do
   before <- get

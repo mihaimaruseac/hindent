@@ -91,8 +91,8 @@ sortExplicitImports = sortBy (compareImportEntities `on` getNode)
 compareImportEntities :: ImportEntry -> ImportEntry -> Ordering
 compareImportEntities = compare `on` getNode . getModuleName
 
--- | This function returns a 'Just' value with the module name extracted
--- from the import declaration. Otherwise, it returns a 'Nothing'.
+-- | This function returns a @Just@ value with the module name extracted
+-- from the import declaration. Otherwise, it returns @Nothing@.
 getModuleName :: ImportEntry -> WithComments ImportExportName
 getModuleName (SingleIdentifier wrapped) = wrapped
 getModuleName (WithAllConstructors wrapped) = wrapped

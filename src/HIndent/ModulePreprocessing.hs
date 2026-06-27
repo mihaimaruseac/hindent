@@ -55,10 +55,10 @@ modifyASTForPrettyPrinting m = relocateComments (beforeRelocation m) allComments
 fixFixities :: HsModule' -> HsModule'
 fixFixities = applyFixities fixities
 
--- | This function modifies the range of `HsDo` with `ListComp` so that it
+-- | This function modifies the range of @HsDo@ with @ListComp@ so that it
 -- includes the whole list comprehension.
 --
--- This function is necessary for `ghc-lib-parser>=9.10.1<9.12.1` because `HsDo`
+-- This function is necessary for @ghc-lib-parser>=9.10.1<9.12.1@ because @HsDo@
 -- no longer includes brackets of list comprehensions in its range.
 resetListCompRange :: HsModule' -> HsModule'
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
@@ -106,19 +106,19 @@ resetListCompRange = everywhere (mkT resetListCompRange')
 #else
 resetListCompRange = id
 #endif
--- | This function sets an 'LGRHS's end position to the end position of the
--- last RHS in the 'grhssGRHSs'.
+-- | This function sets an @LGRHS@'s end position to the end position of the
+-- last RHS in the @grhssGRHSs@.
 --
--- The source span of an 'L?GRHS' contains the 'where' keyword, which
+-- The source span of an @L?GRHS@ contains the @where@ keyword, which
 -- locates comments in the wrong position in the process of comment
--- relocation. This function prevents it by fixing the 'L?GRHS''s source
+-- relocation. This function prevents it by fixing the @L?GRHS@'s source
 -- span.
 resetLGRHSEndPositionInModule :: HsModule' -> HsModule'
 resetLGRHSEndPositionInModule = everywhere (mkT resetLGRHSEndPosition)
 
 -- | This function sorts lists of statements in order their positions.
 --
--- For example, the last element of 'HsDo' of 'HsExpr' is the element
+-- For example, the last element of @HsDo@ of @HsExpr@ is the element
 -- before a bar, and the elements are not sorted by their locations. This
 -- function fixes the orderings.
 sortExprLStmt :: HsModule' -> HsModule'
@@ -169,7 +169,7 @@ replaceAllNotUsedAnns = everywhere app
     emptyAddEpAnn = AddEpAnn AnnAnyclass emptyEpaLocation
     emptyEpaLocation = EpaDelta (SameLine 0) []
 #endif
--- | This function sets the start column of 'hsmodName' of the given
+-- | This function sets the start column of @hsmodName@ of the given
 -- @HsModule@ to 1 to correctly locate comments above the module name.
 resetModuleNameColumn :: HsModule' -> HsModule'
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
@@ -217,8 +217,8 @@ closeEpAnnOfFunBindFunId = everywhere (mkT closeEpAnn)
       bind {fun_id = L (SrcSpanAnn EpAnnNotUsed l) name}
     closeEpAnn x = x
 #endif
--- | This function replaces the 'EpAnn' of 'm_ext' in 'Match' with
--- 'EpAnnNotUsed'.
+-- | This function replaces the @EpAnn@ of @m_ext@ in @Match@ with
+-- @EpAnnNotUsed@.
 --
 -- The field contains the annotation of the match LHS. However, the same
 -- information is also stored inside @Match@. This function removes the
@@ -242,9 +242,9 @@ closeEpAnnOfMatchMExt = everywhere closeEpAnn
       | otherwise = x
 #endif
 -- | This function replaces the @EpAnn@ of the first argument of @HsFunTy@
--- of 'HsType'.
+-- of @HsType@.
 --
--- 'HsFunTy' should not have any comments. Instead, its LHS and RHS should
+-- @HsFunTy@ should not have any comments. Instead, its LHS and RHS should
 -- have them.
 closeEpAnnOfHsFunTy :: HsModule' -> HsModule'
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
@@ -280,8 +280,8 @@ closePlaceHolderEpAnns = everywhere closeEpAnn
       , srcSpanEndLine sp == -1 && srcSpanEndCol sp == -1 = EpAnnNotUsed
       | otherwise = x
 #endif
--- | This function removes all 'DocD's from the given module. They have
--- haddocks, but the same information is stored in 'EpaCommentTok's. Thus,
+-- | This function removes all @DocD@s from the given module. They have
+-- haddocks, but the same information is stored in @EpaCommentTok@s. Thus,
 -- we need to remove the duplication.
 removeAllDocDs :: HsModule' -> HsModule'
 removeAllDocDs x@HsModule {hsmodDecls = decls} =
@@ -290,10 +290,10 @@ removeAllDocDs x@HsModule {hsmodDecls = decls} =
     isDocD DocD {} = True
     isDocD _ = False
 
--- | This function sets the position of the given 'LGRHS' to the end
+-- | This function sets the position of the given @LGRHS@ to the end
 -- position of the last RHS in it.
 --
--- See the documentation of 'resetLGRHSEndPositionInModule' for the reason.
+-- See the documentation of @resetLGRHSEndPositionInModule@ for the reason.
 resetLGRHSEndPosition ::
      LGRHS GhcPs (LHsExpr GhcPs) -> LGRHS GhcPs (LHsExpr GhcPs)
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)

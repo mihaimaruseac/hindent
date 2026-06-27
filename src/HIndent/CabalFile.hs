@@ -44,7 +44,7 @@ toRelative parent child =
         then Nothing
         else Just rel
 
--- | Create a Stanza from `BuildInfo` and names of modules and paths
+-- | Create a @Stanza@ from @BuildInfo@ and names of modules and paths.
 mkStanza :: BuildInfo -> [ModuleName] -> [FilePath] -> Stanza
 mkStanza bi mnames fpaths =
   MkStanza bi $ \path ->
@@ -63,7 +63,7 @@ mkStanza bi mnames fpaths =
 #else
         hsSourceDirs' = hsSourceDirs
 #endif
--- | Extract `Stanza`s from a package
+-- | Extract @Stanza@s from a package.
 packageStanzas :: PackageDescription -> [Stanza]
 #if MIN_VERSION_Cabal(3, 14, 0)
 packageStanzas pd =
@@ -147,7 +147,7 @@ getGenericPackageDescription cabalPath = do
     ParseOk _ gpd -> return $ Just gpd
     _ -> return Nothing
 #endif
--- | Find the `Stanza` that refers to this source path
+-- | Find the @Stanza@ that refers to this source path.
 getCabalStanza :: FilePath -> IO (Maybe Stanza)
 getCabalStanza srcpath = do
   abssrcpath <- canonicalizePath srcpath

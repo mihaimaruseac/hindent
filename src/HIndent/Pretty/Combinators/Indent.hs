@@ -15,7 +15,7 @@ import HIndent.Pretty.Combinators.String
 import HIndent.Printer
 
 -- | This function runs the given printer with an additional indent. The
--- indent has 'configIndentSpaces' spaces.
+-- indent has @configIndentSpaces@ spaces.
 indentedBlock :: Printer a -> Printer a
 indentedBlock p = do
   indentSpaces <- getIndentSpaces

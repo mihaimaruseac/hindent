@@ -53,11 +53,11 @@ import HIndent.Pretty.Combinators.Switch
 import HIndent.Pretty.Combinators.Wrap
 import HIndent.Printer
 
--- | Applies 'hTuple' if the result fits in a line or 'vTuple' otherwise.
+-- | Applies @hTuple@ if the result fits in a line or @vTuple@ otherwise.
 hvTuple :: Foldable f => f (Printer ()) -> Printer ()
 hvTuple = (<-|>) <$> hTuple <*> vTuple
 
--- | Applies 'hTuple'' if the result fits in a line or 'vTuple'' otherwise.
+-- | Applies @hTuple'@ if the result fits in a line or @vTuple'@ otherwise.
 hvTuple' :: Foldable f => f (Printer ()) -> Printer ()
 hvTuple' = (<-|>) <$> hTuple <*> vTuple'
 
@@ -68,9 +68,9 @@ hTuple = parens . hCommaSep
 -- | Runs printers to construct a tuple in a line, but inserts newlines if
 -- the result doesn't fit in a line.
 --
--- The difference between this function and 'vTuple' is that the number of elements
+-- The difference between this function and @vTuple@ is that the number of elements
 -- in a row in this function is not limited to 1 while the number of elements in
--- a row in 'vTuple' is limited to 1.
+-- a row in @vTuple@ is limited to 1.
 hFillingTuple :: Foldable f => f (Printer ()) -> Printer ()
 hFillingTuple = parens . inter (comma >> (space <-|> newline))
 
@@ -79,7 +79,7 @@ hFillingTuple = parens . inter (comma >> (space <-|> newline))
 vTuple :: Foldable f => f (Printer ()) -> Printer ()
 vTuple = vCommaSepWrapped ("(", ")")
 
--- | Similar to 'vTuple', but the closing parenthesis is in the last
+-- | Similar to @vTuple@, but the closing parenthesis is in the last
 -- element.
 vTuple' :: Foldable f => f (Printer ()) -> Printer ()
 vTuple' = vCommaSepWrapped' ("(", ")")
@@ -122,7 +122,7 @@ hUnboxedSum = unboxedParens . hBarSep
 vUnboxedSum' :: Foldable f => f (Printer ()) -> Printer ()
 vUnboxedSum' = vWrappedLineup' '|' ("(#", " #)")
 
--- | Applies 'hFields' if the result fits in a line or 'vFields' otherwise.
+-- | Applies @hFields@ if the result fits in a line or @vFields@ otherwise.
 hvFields :: Foldable f => f (Printer ()) -> Printer ()
 hvFields = (<-|>) <$> hFields <*> vFields
 
@@ -135,7 +135,7 @@ hFields = braces . hCommaSep
 vFields :: Foldable f => f (Printer ()) -> Printer ()
 vFields = vCommaSepWrapped ("{", "}")
 
--- | Similar to 'vFields', but the closing brace is in the same line as the
+-- | Similar to @vFields@, but the closing brace is in the same line as the
 -- last element.
 vFields' :: Foldable f => f (Printer ()) -> Printer ()
 vFields' = vCommaSepWrapped' ("{", "}")
@@ -175,7 +175,7 @@ lined = inter newline
 blanklined :: Foldable f => f (Printer ()) -> Printer ()
 blanklined = inter blankline
 
--- | Applies 'hBarSep' if the result fits in a line or 'vBarSep' otherwise.
+-- | Applies @hBarSep@ if the result fits in a line or @vBarSep@ otherwise.
 hvBarSep :: Foldable f => f (Printer ()) -> Printer ()
 hvBarSep = (<-|>) <$> hBarSep <*> vBarSep
 
@@ -188,7 +188,7 @@ hBarSep = inter (string " | ")
 vBarSep :: Foldable f => f (Printer ()) -> Printer ()
 vBarSep = prefixedLined "| "
 
--- | Applies 'hCommaSep' if the result fits in a line or 'vCommaSep'
+-- | Applies @hCommaSep@ if the result fits in a line or @vCommaSep@
 -- otherwise.
 hvCommaSep :: Foldable f => f (Printer ()) -> Printer ()
 hvCommaSep = (<-|>) <$> hCommaSep <*> vCommaSep
@@ -208,7 +208,7 @@ vCommaSepWrapped ::
      Foldable f => (Text.Text, Text.Text) -> f (Printer ()) -> Printer ()
 vCommaSepWrapped = vWrappedLineup ','
 
--- | Similar to 'vCommaSepWrapped' but the suffix is in the same line as the last
+-- | Similar to @vCommaSepWrapped@ but the suffix is in the same line as the last
 -- element.
 vCommaSepWrapped' ::
      Foldable f => (Text.Text, Text.Text) -> f (Printer ()) -> Printer ()
@@ -252,7 +252,7 @@ vWrappedLineup sep (prefix, suffix) ps =
          newline
          indentedWithSpace (-(Text.length prefix + 1)) $ string suffix
 
--- | Similar to 'vWrappedLineup' but the suffix is in the same line as the
+-- | Similar to @vWrappedLineup@ but the suffix is in the same line as the
 -- last element.
 vWrappedLineup' ::
      Foldable f

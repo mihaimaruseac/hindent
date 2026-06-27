@@ -84,7 +84,7 @@ sortImportsByLocation = sortBy (flip compare `on` lineIdx)
   where
     lineIdx = startLine . GHC.locA . GHC.getLoc
 
--- | This function returns the start line of the given 'SrcSpan'. If it is
+-- | This function returns the start line of the given @SrcSpan@. If it is
 -- not available, it raises an error.
 startLine :: HasCallStack => GHC.SrcSpan -> Int
 startLine (GHC.RealSrcSpan x _) = GHC.srcSpanStartLine x

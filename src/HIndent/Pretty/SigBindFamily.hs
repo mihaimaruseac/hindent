@@ -18,7 +18,7 @@ import Data.Maybe
 import GHC.Hs
 import GHC.Types.SrcLoc
 
--- | A sum type containing one of those: function signature, function
+-- | A sum type containing one of these: function signature, function
 -- binding, family declaration (type or data), type family instance, and data family instance.
 data SigBindFamily
   = Sig (Sig GhcPs)
@@ -80,7 +80,7 @@ destructLSigBindFamilyList =
     <*> filterLTyFamDeflt
     <*> filterLDataFamInst
 
--- | Filters out 'Sig's and extract the wrapped values.
+-- | Filters out signature values and extract the wrapped values.
 filterLSig :: [LSigBindFamily] -> [LSig GhcPs]
 filterLSig =
   mapMaybe

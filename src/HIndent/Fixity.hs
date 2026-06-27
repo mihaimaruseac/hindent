@@ -1,8 +1,8 @@
 -- | Operator fixities.
 --
 -- It is very difficult to take operators' fixities into account as fixity
--- information is not stored in an AST. While `ghc-lib-parser-ex` provides
--- `fixitiesFromModule`, it is almost useless as operators are usually imported
+-- information is not stored in an AST. While @ghc-lib-parser-ex@ provides
+-- @fixitiesFromModule@, it is almost useless as operators are usually imported
 -- from other modules.
 --
 -- Ormolu is trying to resolve this issue by examing Hackage, but doing the same

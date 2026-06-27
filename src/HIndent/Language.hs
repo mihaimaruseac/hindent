@@ -9,11 +9,11 @@ import qualified GHC.Driver.Session as GLP
 import GHC.Stack
 import qualified Language.Haskell.Extension as Cabal
 
--- | This function converts a value of 'Language' defined in the 'Cabal'
--- package to the same value of 'Language' defined in the 'ghc-lib-parser'
+-- | This function converts a value of @Language@ defined in the @Cabal@
+-- package to the same value of @Language@ defined in the @ghc-lib-parser@
 -- package.
 --
--- This function raises an error if a 'UnknownLanguage' value is passed.
+-- This function raises an error if an @UnknownLanguage@ value is passed.
 convertLanguage :: HasCallStack => Cabal.Language -> GLP.Language
 convertLanguage Cabal.Haskell98 = GLP.Haskell98
 convertLanguage Cabal.Haskell2010 = GLP.Haskell2010

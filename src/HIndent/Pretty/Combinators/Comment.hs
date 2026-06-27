@@ -6,7 +6,7 @@ module HIndent.Pretty.Combinators.Comment
 import Control.Monad.State
 import HIndent.Printer
 
--- | Claims that comments were printed. Next time calling 'string' will
+-- | Claims that comments were printed. Next time calling @string@ will
 -- print a newline before printing a text.
 eolCommentsArePrinted :: Printer ()
 eolCommentsArePrinted = modify (\s -> s {psEolComment = True})

@@ -13,7 +13,7 @@ data ParseError = ParseError
   , errorFile :: FilePath -- ^ The filename HIndent failed to parse.
   } deriving (Eq, Ord, Show, Read)
 
--- | Pretty-print `ParseError`.
+-- | Pretty-print @ParseError@.
 prettyParseError :: ParseError -> String
 prettyParseError ParseError {..} =
   "Parse failed at ("
