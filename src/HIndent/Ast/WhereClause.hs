@@ -4,8 +4,6 @@
 module HIndent.Ast.WhereClause
   ( WhereClause
   , mkWhereClause
-  , mkMatchWhereClause
-  , mkPatternWhereClause
   ) where
 
 import HIndent.Ast.LocalBinds (LocalBinds, mkLocalBinds)
@@ -26,14 +24,6 @@ instance CommentExtraction WhereClause where
 instance Pretty WhereClause where
   pretty' WhereClause {..} =
     lined [string "where", prettyWith binds $ indentedBlock . pretty]
-
-mkMatchWhereClause ::
-     GHC.Match GHC.GhcPs body -> Maybe (WithComments WhereClause)
-mkMatchWhereClause GHC.Match {..} = mkWhereClause m_grhss
-
-mkPatternWhereClause :: GHC.HsBind GHC.GhcPs -> Maybe (WithComments WhereClause)
-mkPatternWhereClause GHC.PatBind {..} = mkWhereClause pat_rhs
-mkPatternWhereClause _ = error "This AST node should not appear."
 
 mkWhereClause :: GHC.GRHSs GHC.GhcPs body -> Maybe (WithComments WhereClause)
 mkWhereClause GHC.GRHSs {..} = do
