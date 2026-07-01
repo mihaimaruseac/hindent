@@ -12,9 +12,8 @@ import qualified GHC.Hs as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.TextValue
 import qualified HIndent.GhcLibParserWrapper.GHC.Parser.Annotation as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments (CommentExtraction(..))
 
 data Comment
   = Line
@@ -27,12 +26,9 @@ data Comment
       }
   deriving (Eq, Show)
 
-instance CommentExtraction Comment where
-  nodeComments _ = mempty
-
 instance Pretty Comment where
-  pretty' Line {..} = pretty text
-  pretty' Block {..} =
+  pretty Line {..} = pretty text
+  pretty Block {..} =
     case Text.lines $ toText text of
       [] -> pure ()
       [x] -> string x

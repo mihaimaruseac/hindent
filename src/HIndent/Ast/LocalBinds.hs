@@ -16,8 +16,7 @@ import HIndent.Ast.LocalBinds.ImplicitBindings
   , mkImplicitBindings
   )
 import HIndent.Ast.WithComments (WithComments, fromEpAnn)
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..))
-import HIndent.Pretty.NodeComments (CommentExtraction(..), emptyNodeComments)
+import HIndent.Pretty (Pretty(..))
 
 data LocalBinds
   = Value
@@ -27,12 +26,9 @@ data LocalBinds
       { implicitBindings :: ImplicitBindings
       }
 
-instance CommentExtraction LocalBinds where
-  nodeComments _ = emptyNodeComments
-
 instance Pretty LocalBinds where
-  pretty' Value {..} = pretty' declarations
-  pretty' ImplicitParameters {..} = pretty' implicitBindings
+  pretty Value {..} = pretty declarations
+  pretty ImplicitParameters {..} = pretty implicitBindings
 
 mkLocalBinds :: GHC.HsLocalBinds GHC.GhcPs -> Maybe (WithComments LocalBinds)
 mkLocalBinds (GHC.HsValBinds ann binds) =

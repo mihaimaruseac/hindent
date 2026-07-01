@@ -13,22 +13,17 @@ import Control.Monad
 import qualified GHC.Hs as GHC
 import HIndent.Ast.Import.Entry
 import HIndent.Ast.Import.ImportingOrHiding
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data ImportEntryCollection = ImportEntryCollection
   { entries :: [WithComments ImportEntry]
   , kind :: ImportingOrHiding
   }
 
-instance CommentExtraction ImportEntryCollection where
-  nodeComments ImportEntryCollection {} = NodeComments [] [] []
-
 instance Pretty ImportEntryCollection where
-  pretty' ImportEntryCollection {..} = do
+  pretty ImportEntryCollection {..} = do
     when (kind == Hiding) $ string " hiding"
     (space >> hTuple (fmap pretty entries))
       <-|> (newline >> indentedBlock (vTuple $ fmap pretty entries))

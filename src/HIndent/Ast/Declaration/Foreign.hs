@@ -14,14 +14,12 @@ import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Declaration.Foreign.CallingConvention
 import HIndent.Ast.Declaration.Foreign.Safety
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.TextValue (TextValue, mkTextValueFromString)
 import HIndent.Ast.Type (Type, mkTypeFromHsSigType)
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 8, 0)
 import qualified GHC.Data.FastString as GHC
 #endif
@@ -40,17 +38,13 @@ data ForeignDeclaration
       , signature :: WithComments Type
       }
 
-instance CommentExtraction ForeignDeclaration where
-  nodeComments ForeignImport {} = NodeComments [] [] []
-  nodeComments ForeignExport {} = NodeComments [] [] []
-
 instance Pretty ForeignDeclaration where
-  pretty' ForeignImport {..} =
+  pretty ForeignImport {..} =
     spaced
       $ [string "foreign import", pretty convention, pretty safety]
           ++ maybeToList (fmap pretty srcIdent)
           ++ [pretty dstIdent, string "::", pretty signature]
-  pretty' ForeignExport {..} =
+  pretty ForeignExport {..} =
     spaced
       $ [string "foreign export", pretty convention]
           ++ maybeToList (fmap pretty srcIdent)

@@ -9,12 +9,10 @@ module HIndent.Ast.Type.Variable
 
 import qualified GHC.Hs as GHC
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Ast.Type
 import HIndent.Ast.WithComments
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified HIndent.Ast.Name.Prefix as Prefix
 #endif
@@ -23,13 +21,10 @@ data TypeVariable = TypeVariable
   , kind :: Maybe (WithComments Type)
   }
 
-instance CommentExtraction TypeVariable where
-  nodeComments TypeVariable {} = NodeComments [] [] []
-
 instance Pretty TypeVariable where
-  pretty' TypeVariable {kind = Just kind, ..} =
+  pretty TypeVariable {kind = Just kind, ..} =
     parens $ pretty name >> string " :: " >> pretty kind
-  pretty' TypeVariable {kind = Nothing, ..} = pretty name
+  pretty TypeVariable {kind = Nothing, ..} = pretty name
 
 mkTypeVariable :: GHC.HsTyVarBndr a GHC.GhcPs -> TypeVariable
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)

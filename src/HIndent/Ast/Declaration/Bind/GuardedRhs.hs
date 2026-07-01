@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Bind.GuardedRhs
@@ -23,31 +22,22 @@ import HIndent.Ast.Guard
   , mkLambdaExprGuard
   , mkMultiWayIfExprGuard
   )
-import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.WhereClause (WhereClause, mkWhereClause)
-import HIndent.Ast.WithComments
-  ( WithComments
-  , mkWithCommentsFromGenLocated
-  , prettyWith
-  )
+import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data GuardedRhs = GuardedRhs
   { guards :: [WithComments Guard]
   , whereClause :: Maybe (WithComments WhereClause)
   }
 
-instance CommentExtraction GuardedRhs where
-  nodeComments _ = NodeComments [] [] []
-
 instance Pretty GuardedRhs where
-  pretty' GuardedRhs {..} = do
+  pretty GuardedRhs {..} = do
     mapM_ pretty guards
-    whenJust whereClause $ \clause ->
-      indentedBlock $ newlinePrefixed [prettyWith clause pretty]
+    whenJust whereClause $ \whereClause' ->
+      indentedBlock $ newlinePrefixed [pretty whereClause']
 
 mkGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkGuardedRhs grhss@GHC.GRHSs {..} =

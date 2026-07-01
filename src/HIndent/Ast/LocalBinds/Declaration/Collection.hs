@@ -8,20 +8,16 @@ import Data.Function
 import Data.List (sortBy)
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.LocalBinds.Declaration
-import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
+import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments (CommentExtraction(..), emptyNodeComments)
 
 newtype LocalDeclarationCollection =
   LocalDeclarationCollection [WithComments LocalDeclaration]
 
-instance CommentExtraction LocalDeclarationCollection where
-  nodeComments _ = emptyNodeComments
-
 instance Pretty LocalDeclarationCollection where
-  pretty' (LocalDeclarationCollection declarations) =
+  pretty (LocalDeclarationCollection declarations) =
     lined $ fmap pretty declarations
 
 mkLocalDeclarationCollection ::

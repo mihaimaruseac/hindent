@@ -10,14 +10,12 @@ module HIndent.Ast.Declaration.Warning
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Declaration.Warning.Kind
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.TextValue
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data WarningDeclaration = WarningDeclaration
   { names :: [WithComments PrefixName]
@@ -25,11 +23,8 @@ data WarningDeclaration = WarningDeclaration
   , reasons :: [TextValue]
   }
 
-instance CommentExtraction WarningDeclaration where
-  nodeComments _ = NodeComments [] [] []
-
 instance Pretty WarningDeclaration where
-  pretty' WarningDeclaration {..} = do
+  pretty WarningDeclaration {..} = do
     lined
       [ string "{-# " >> pretty kind
       , spaced [hCommaSep $ fmap pretty names, hCommaSep $ fmap pretty reasons]

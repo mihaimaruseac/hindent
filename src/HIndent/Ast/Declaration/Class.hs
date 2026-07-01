@@ -14,12 +14,10 @@ import HIndent.Ast.Context
 import HIndent.Ast.Declaration.Class.Body
 import HIndent.Ast.Declaration.Class.FunctionalDependency
 import HIndent.Ast.Declaration.Class.NameAndTypeVariables
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified GHC.Data.Bag as GHC
 #endif
@@ -30,11 +28,8 @@ data ClassDeclaration = ClassDeclaration
   , body :: ClassBody
   }
 
-instance CommentExtraction ClassDeclaration where
-  nodeComments ClassDeclaration {} = NodeComments [] [] []
-
 instance Pretty ClassDeclaration where
-  pretty' ClassDeclaration {..} = do
+  pretty ClassDeclaration {..} = do
     if isJust context
       then verHead
       else horHead <-|> verHead

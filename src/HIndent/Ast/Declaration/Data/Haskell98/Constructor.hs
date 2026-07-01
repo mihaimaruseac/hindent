@@ -11,13 +11,11 @@ module HIndent.Ast.Declaration.Data.Haskell98.Constructor
 import HIndent.Applicative
 import HIndent.Ast.Context
 import HIndent.Ast.Declaration.Data.Haskell98.Constructor.Body
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data Haskell98Constructor = Haskell98Constructor
   { existentialVariables :: [WithComments TypeVariable]
@@ -25,14 +23,11 @@ data Haskell98Constructor = Haskell98Constructor
   , body :: Haskell98ConstructorBody
   }
 
-instance CommentExtraction Haskell98Constructor where
-  nodeComments Haskell98Constructor {} = NodeComments [] [] []
-
 instance Pretty Haskell98Constructor where
-  pretty' Haskell98Constructor {existentialVariables = [], ..} = do
+  pretty Haskell98Constructor {existentialVariables = [], ..} = do
     whenJust context $ \c -> pretty c >> string " => "
     pretty body
-  pretty' Haskell98Constructor {..} = do
+  pretty Haskell98Constructor {..} = do
     string "forall "
     spaced (fmap pretty existentialVariables)
     string ". " |=> do

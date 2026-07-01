@@ -2,14 +2,12 @@
 
 module HIndent.Ast.Type where
 
-import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Ast.WithComments (WithComments)
-import HIndent.Pretty.NodeComments
-import {-# SOURCE #-} HIndent.Pretty
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+import HIndent.Pretty
 
 data Type
 
-instance CommentExtraction Type
 instance Pretty Type
 
 mkType :: GHC.HsType GHC.GhcPs -> Type

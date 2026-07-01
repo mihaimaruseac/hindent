@@ -27,10 +27,8 @@ import HIndent.Ast.Declaration.Splice
 import HIndent.Ast.Declaration.StandAloneDeriving
 import HIndent.Ast.Declaration.TypeSynonym
 import HIndent.Ast.Declaration.Warning.Collection
-import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
-import HIndent.Pretty.NodeComments
+import HIndent.Pretty
 
 data Declaration
   = DataFamily DataFamily
@@ -53,47 +51,26 @@ data Declaration
   | Splice SpliceDeclaration
   | RoleAnnotDecl RoleAnnotation
 
-instance CommentExtraction Declaration where
-  nodeComments DataFamily {} = NodeComments [] [] []
-  nodeComments TypeFamily {} = NodeComments [] [] []
-  nodeComments DataDeclaration {} = NodeComments [] [] []
-  nodeComments ClassDeclaration {} = NodeComments [] [] []
-  nodeComments TypeSynonym {} = NodeComments [] [] []
-  nodeComments ClassInstance {} = NodeComments [] [] []
-  nodeComments DataFamilyInstance {} = NodeComments [] [] []
-  nodeComments TypeFamilyInstance {} = NodeComments [] [] []
-  nodeComments StandAloneDeriving {} = NodeComments [] [] []
-  nodeComments Bind {} = NodeComments [] [] []
-  nodeComments Signature {} = NodeComments [] [] []
-  nodeComments StandaloneKindSignature {} = NodeComments [] [] []
-  nodeComments Default {} = NodeComments [] [] []
-  nodeComments Foreign {} = NodeComments [] [] []
-  nodeComments Warnings {} = NodeComments [] [] []
-  nodeComments Annotation {} = NodeComments [] [] []
-  nodeComments RuleDecl {} = NodeComments [] [] []
-  nodeComments Splice {} = NodeComments [] [] []
-  nodeComments RoleAnnotDecl {} = NodeComments [] [] []
-
 instance Pretty Declaration where
-  pretty' (DataFamily x) = pretty x
-  pretty' (TypeFamily x) = pretty x
-  pretty' (DataDeclaration x) = pretty x
-  pretty' (ClassDeclaration x) = pretty x
-  pretty' (TypeSynonym x) = pretty x
-  pretty' (ClassInstance x) = pretty x
-  pretty' (DataFamilyInstance x) = pretty x
-  pretty' (TypeFamilyInstance x) = pretty x
-  pretty' (StandAloneDeriving x) = pretty x
-  pretty' (Bind x) = pretty x
-  pretty' (Signature x) = pretty x
-  pretty' (StandaloneKindSignature x) = pretty x
-  pretty' (Default x) = pretty x
-  pretty' (Foreign x) = pretty x
-  pretty' (Warnings x) = pretty x
-  pretty' (Annotation x) = pretty x
-  pretty' (RuleDecl x) = pretty x
-  pretty' (Splice x) = pretty x
-  pretty' (RoleAnnotDecl x) = pretty x
+  pretty (DataFamily x) = pretty x
+  pretty (TypeFamily x) = pretty x
+  pretty (DataDeclaration x) = pretty x
+  pretty (ClassDeclaration x) = pretty x
+  pretty (TypeSynonym x) = pretty x
+  pretty (ClassInstance x) = pretty x
+  pretty (DataFamilyInstance x) = pretty x
+  pretty (TypeFamilyInstance x) = pretty x
+  pretty (StandAloneDeriving x) = pretty x
+  pretty (Bind x) = pretty x
+  pretty (Signature x) = pretty x
+  pretty (StandaloneKindSignature x) = pretty x
+  pretty (Default x) = pretty x
+  pretty (Foreign x) = pretty x
+  pretty (Warnings x) = pretty x
+  pretty (Annotation x) = pretty x
+  pretty (RuleDecl x) = pretty x
+  pretty (Splice x) = pretty x
+  pretty (RoleAnnotDecl x) = pretty x
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
 mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) =
