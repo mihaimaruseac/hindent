@@ -9,6 +9,7 @@ module HIndent.Config
 
 import Control.Applicative
 import Data.Maybe
+import Data.Text (Text)
 import Data.Yaml
 import qualified Data.Yaml as Y
 import HIndent.LanguageExtension.Conversion
@@ -24,7 +25,7 @@ data Config = Config
   , configIndentSpaces :: !Int -- ^ How many spaces to indent?
   , configTrailingNewline :: !Bool -- ^ End with a newline.
   , configSortImports :: !Bool -- ^ Sort imports in groups.
-  , configLineBreaks :: [String] -- ^ Break line when meets these operators.
+  , configLineBreaks :: [Text] -- ^ Break line when meets these operators.
   , configExtensions :: [Extension]
       -- ^ Extra language extensions enabled by default.
   }

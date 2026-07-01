@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Name.Infix
@@ -9,7 +10,7 @@ module HIndent.Ast.Name.Infix
 
 import Control.Monad
 import Data.Maybe
-import qualified Data.Text as Text
+import Data.Text (Text)
 import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import HIndent.Ast.Module.Name
@@ -57,12 +58,12 @@ mkInfixName (GHC.Exact name) =
     Nothing
     (backticksNeeded $ GHC.occName name)
 
-getInfixName :: InfixName -> String
-getInfixName = Text.unpack . toText . name
+getInfixName :: InfixName -> Text
+getInfixName = toText . name
 
 unlessSpecialOp :: InfixName -> Printer () -> Printer ()
 unlessSpecialOp InfixName {..} =
-  unless $ Text.unpack (toText name) `elem` ["()", "[]", "->", ":"]
+  unless $ toText name `elem` ["()", "[]", "->", ":"]
 
 backticksNeeded :: GHC.OccName -> Bool
 backticksNeeded = not . GHC.isSymOcc
