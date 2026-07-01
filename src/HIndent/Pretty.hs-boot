@@ -11,7 +11,6 @@ import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty.NodeComments
-import HIndent.Pretty.SigBindFamily
 import HIndent.Printer
 
 class CommentExtraction a =>
@@ -33,8 +32,6 @@ instance Pretty
            (GHC.FamEqn
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
-
-instance Pretty SigBindFamily
 
 instance Pretty GHC.StringLiteral
 

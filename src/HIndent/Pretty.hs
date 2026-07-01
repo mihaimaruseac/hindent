@@ -32,17 +32,7 @@ import GHC.Stack
 import qualified GHC.Types.SourceText as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Applicative (whenJust)
-import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Data.Body
-import HIndent.Ast.Declaration.Family.Data
-import HIndent.Ast.Declaration.Family.Type
-import HIndent.Ast.Declaration.Instance.Family.Type.Associated
-  ( mkAssociatedType
-  )
-import HIndent.Ast.Declaration.Instance.Family.Type.Associated.Default
-  ( mkAssociatedTypeDefault
-  )
-import HIndent.Ast.Declaration.Signature
 import HIndent.Ast.Expression (mkExpression)
 import HIndent.Ast.LocalBinds (mkLocalBinds)
 import HIndent.Ast.Name.Prefix
@@ -52,7 +42,6 @@ import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import HIndent.Pretty.Combinators
 import HIndent.Pretty.NodeComments
-import qualified HIndent.Pretty.SigBindFamily as SBF
 import HIndent.Printer
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import qualified GHC.Core.DataCon as GHC
@@ -180,18 +169,6 @@ prettyStmtLRExpr GHC.RecStmt {..} =
 
 instance Pretty (GHC.ParStmtBlock GHC.GhcPs GHC.GhcPs) where
   pretty' (GHC.ParStmtBlock _ xs _ _) = hvCommaSep $ fmap pretty xs
-
-instance Pretty SBF.SigBindFamily where
-  pretty' (SBF.Sig x) = pretty $ mkSignature x
-  pretty' (SBF.Bind x) = pretty $ mkBind x
-  pretty' (SBF.Family x)
-    | Just fam <- mkTypeFamily x = pretty fam
-    | Just fam <- mkDataFamily x = pretty fam
-    | otherwise = error "Unreachable"
-  pretty' (SBF.TyFamInst x) = pretty $ mkAssociatedType x
-  pretty' (SBF.TyFamDeflt x) = pretty $ mkAssociatedTypeDefault x
-  pretty' (SBF.DataFamInst x) =
-    prettyDataFamInstDecl DataFamInstDeclForInsideClassInst x
 
 instance Pretty GHC.EpaComment where
   pretty' GHC.EpaComment {..} = prettyEpaCommentTok ac_tok
