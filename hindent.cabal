@@ -192,7 +192,6 @@ library
       HIndent.Pretty.Combinators.Switch
       HIndent.Pretty.Combinators.Wrap
       HIndent.Pretty.NodeComments
-      HIndent.Pretty.SigBindFamily
       HIndent.Printer
       HIndent.Text.Show.Unicode
       Paths_hindent
