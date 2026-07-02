@@ -25,7 +25,7 @@ instance CommentExtraction RecordConstructionFields where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty RecordConstructionFields where
-  pretty' RecordConstructionFields {..} =
+  pretty RecordConstructionFields {..} =
     hvFields (fmap pretty fields ++ [string ".." | dotdot])
 
 mkRecordConstructionFields ::

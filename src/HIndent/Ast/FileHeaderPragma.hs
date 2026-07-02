@@ -21,7 +21,7 @@ instance CommentExtraction FileHeaderPragma where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty FileHeaderPragma where
-  pretty' (FileHeaderPragma value) = pretty value
+  pretty (FileHeaderPragma value) = pretty value
 
 mkFileHeaderPragma :: GHC.EpaCommentTok -> Maybe FileHeaderPragma
 mkFileHeaderPragma =

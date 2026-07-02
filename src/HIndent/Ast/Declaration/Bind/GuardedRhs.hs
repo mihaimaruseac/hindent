@@ -44,7 +44,7 @@ instance CommentExtraction GuardedRhs where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty GuardedRhs where
-  pretty' GuardedRhs {..} = do
+  pretty GuardedRhs {..} = do
     mapM_ pretty guards
     whenJust whereClause $ \clause ->
       indentedBlock $ newlinePrefixed [prettyWith clause pretty]

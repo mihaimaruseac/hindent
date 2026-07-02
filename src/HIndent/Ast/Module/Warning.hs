@@ -37,7 +37,7 @@ instance CommentExtraction ModuleWarning where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty ModuleWarning where
-  pretty' ModuleWarning {..} =
+  pretty ModuleWarning {..} =
     spaced [string "{-#", pretty kind, prettyMsgs, string "#-}"]
     where
       prettyMsgs =

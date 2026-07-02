@@ -27,7 +27,7 @@ instance CommentExtraction ExpressionPragma where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty ExpressionPragma where
-  pretty' SccPragma {..} = spaced [string "{-# SCC", pretty label, string "#-}"]
+  pretty SccPragma {..} = spaced [string "{-# SCC", pretty label, string "#-}"]
 
 mkExpressionPragma :: GHC.HsPragE GHC.GhcPs -> WithComments ExpressionPragma
 #if MIN_VERSION_ghc_lib_parser(9, 8, 1)

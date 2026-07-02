@@ -22,7 +22,7 @@ instance CommentExtraction ClassInstanceBody where
   nodeComments ClassInstanceBody {} = NodeComments [] [] []
 
 instance Pretty ClassInstanceBody where
-  pretty' (ClassInstanceBody members) = lined $ fmap pretty members
+  pretty (ClassInstanceBody members) = lined $ fmap pretty members
 
 mkClassInstanceBody ::
      [GHC.LSig GHC.GhcPs]

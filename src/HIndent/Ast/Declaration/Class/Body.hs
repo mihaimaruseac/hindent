@@ -22,7 +22,7 @@ instance CommentExtraction ClassBody where
   nodeComments ClassBody {} = NodeComments [] [] []
 
 instance Pretty ClassBody where
-  pretty' (ClassBody members) = newlinePrefixed $ fmap pretty members
+  pretty (ClassBody members) = newlinePrefixed $ fmap pretty members
 
 mkClassBody ::
      [GHC.LSig GHC.GhcPs]

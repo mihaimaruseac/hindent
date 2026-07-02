@@ -31,8 +31,8 @@ instance CommentExtraction Comment where
   nodeComments _ = mempty
 
 instance Pretty Comment where
-  pretty' Line {..} = pretty text
-  pretty' Block {..} =
+  pretty Line {..} = pretty text
+  pretty Block {..} =
     case Text.lines $ toText text of
       [] -> pure ()
       [x] -> string x

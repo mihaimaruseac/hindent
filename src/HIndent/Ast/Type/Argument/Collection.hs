@@ -19,7 +19,7 @@ instance CommentExtraction TypeArgumentCollection where
     mconcat $ fmap nodeComments arguments
 
 instance Pretty TypeArgumentCollection where
-  pretty' (TypeArgumentCollection arguments) = spaced $ fmap pretty arguments
+  pretty (TypeArgumentCollection arguments) = spaced $ fmap pretty arguments
 
 mkTypeArgumentCollection ::
      [GHC.HsArg GHC.GhcPs (GHC.LHsType GHC.GhcPs) (GHC.LHsType GHC.GhcPs)]

@@ -18,8 +18,8 @@ instance CommentExtraction DoOrMdo where
   nodeComments = const emptyNodeComments
 
 instance Pretty DoOrMdo where
-  pretty' Do = string "do"
-  pretty' Mdo = string "mdo"
+  pretty Do = string "do"
+  pretty Mdo = string "mdo"
 
 mkDoOrMdo :: GHC.HsDoFlavour -> DoOrMdo
 mkDoOrMdo (GHC.DoExpr _) = Do

@@ -34,7 +34,7 @@ instance CommentExtraction ClassDeclaration where
   nodeComments ClassDeclaration {} = NodeComments [] [] []
 
 instance Pretty ClassDeclaration where
-  pretty' ClassDeclaration {..} = do
+  pretty ClassDeclaration {..} = do
     if isJust context
       then verHead
       else horHead <-|> verHead

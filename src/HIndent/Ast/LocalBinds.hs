@@ -31,8 +31,8 @@ instance CommentExtraction LocalBinds where
   nodeComments _ = emptyNodeComments
 
 instance Pretty LocalBinds where
-  pretty' Value {..} = pretty' declarations
-  pretty' ImplicitParameters {..} = pretty' implicitBindings
+  pretty Value {..} = pretty declarations
+  pretty ImplicitParameters {..} = pretty implicitBindings
 
 mkLocalBinds :: GHC.HsLocalBinds GHC.GhcPs -> Maybe (WithComments LocalBinds)
 mkLocalBinds (GHC.HsValBinds ann binds) =

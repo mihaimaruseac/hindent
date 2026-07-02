@@ -27,7 +27,7 @@ instance CommentExtraction AssociatedDataFamilyInstance where
   nodeComments AssociatedDataFamilyInstance {} = NodeComments [] [] []
 
 instance Pretty AssociatedDataFamilyInstance where
-  pretty' AssociatedDataFamilyInstance {..} = do
+  pretty AssociatedDataFamilyInstance {..} = do
     lhs
     pretty body
     where

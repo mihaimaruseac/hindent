@@ -37,11 +37,11 @@ instance CommentExtraction RangeExpression where
   nodeComments FromThenTo {} = emptyNodeComments
 
 instance Pretty RangeExpression where
-  pretty' (From f) = brackets $ spaced [pretty f, string ".."]
-  pretty' FromThen {..} =
+  pretty (From f) = brackets $ spaced [pretty f, string ".."]
+  pretty FromThen {..} =
     brackets $ spaced [pretty from >> comma >> pretty next, string ".."]
-  pretty' FromTo {..} = brackets $ spaced [pretty from, string "..", pretty to]
-  pretty' FromThenTo {..} =
+  pretty FromTo {..} = brackets $ spaced [pretty from, string "..", pretty to]
+  pretty FromThenTo {..} =
     brackets
       $ spaced [pretty from >> comma >> pretty next, string "..", pretty to]
 

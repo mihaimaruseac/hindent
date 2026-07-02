@@ -18,7 +18,7 @@ instance CommentExtraction ExportCollection where
   nodeComments (ExportCollection _) = NodeComments [] [] []
 
 instance Pretty ExportCollection where
-  pretty' (ExportCollection xs) = vTuple $ fmap pretty xs
+  pretty (ExportCollection xs) = vTuple $ fmap pretty xs
 
 mkExportCollection :: GHC.HsModule' -> Maybe (WithComments ExportCollection)
 mkExportCollection =

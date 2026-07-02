@@ -23,7 +23,7 @@ instance CommentExtraction Injectivity where
   nodeComments Injectivity {} = NodeComments [] [] []
 
 instance Pretty Injectivity where
-  pretty' Injectivity {..} = spaced $ pretty from : string "->" : fmap pretty to
+  pretty Injectivity {..} = spaced $ pretty from : string "->" : fmap pretty to
 
 mkInjectivity :: GHC.InjectivityAnn GHC.GhcPs -> Injectivity
 mkInjectivity (GHC.InjectivityAnn _ f t) = Injectivity {..}

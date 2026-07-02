@@ -27,10 +27,10 @@ instance CommentExtraction BooleanFormula where
   nodeComments Parens {} = NodeComments [] [] []
 
 instance Pretty BooleanFormula where
-  pretty' (Var x) = pretty x
-  pretty' (And xs) = hvCommaSep $ fmap pretty xs
-  pretty' (Or xs) = hvBarSep $ fmap pretty xs
-  pretty' (Parens x) = parens $ pretty x
+  pretty (Var x) = pretty x
+  pretty (And xs) = hvCommaSep $ fmap pretty xs
+  pretty (Or xs) = hvBarSep $ fmap pretty xs
+  pretty (Parens x) = parens $ pretty x
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkBooleanFormula :: GHC.BooleanFormula GHC.GhcPs -> BooleanFormula
 #else

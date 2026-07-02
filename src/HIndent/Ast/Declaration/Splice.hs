@@ -17,7 +17,7 @@ instance CommentExtraction SpliceDeclaration where
   nodeComments SpliceDeclaration {} = NodeComments [] [] []
 
 instance Pretty SpliceDeclaration where
-  pretty' (SpliceDeclaration splice) = pretty splice
+  pretty (SpliceDeclaration splice) = pretty splice
 
 mkSpliceDeclaration :: GHC.SpliceDecl GHC.GhcPs -> SpliceDeclaration
 mkSpliceDeclaration (GHC.SpliceDecl _ sp _) =

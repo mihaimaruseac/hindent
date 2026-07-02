@@ -21,7 +21,7 @@ instance CommentExtraction LocalDeclarationCollection where
   nodeComments _ = emptyNodeComments
 
 instance Pretty LocalDeclarationCollection where
-  pretty' (LocalDeclarationCollection declarations) =
+  pretty (LocalDeclarationCollection declarations) =
     lined $ fmap pretty declarations
 
 mkLocalDeclarationCollection ::

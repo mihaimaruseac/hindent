@@ -22,9 +22,9 @@ instance CommentExtraction Role where
   nodeComments Phantom = NodeComments [] [] []
 
 instance Pretty Role where
-  pretty' Nominal = string "nominal"
-  pretty' Representational = string "representational"
-  pretty' Phantom = string "phantom"
+  pretty Nominal = string "nominal"
+  pretty Representational = string "representational"
+  pretty Phantom = string "phantom"
 
 mkRole :: GHC.Role -> Role
 mkRole GHC.Nominal = Nominal

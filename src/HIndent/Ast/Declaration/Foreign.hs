@@ -45,12 +45,12 @@ instance CommentExtraction ForeignDeclaration where
   nodeComments ForeignExport {} = NodeComments [] [] []
 
 instance Pretty ForeignDeclaration where
-  pretty' ForeignImport {..} =
+  pretty ForeignImport {..} =
     spaced
       $ [string "foreign import", pretty convention, pretty safety]
           ++ maybeToList (fmap pretty srcIdent)
           ++ [pretty dstIdent, string "::", pretty signature]
-  pretty' ForeignExport {..} =
+  pretty ForeignExport {..} =
     spaced
       $ [string "foreign export", pretty convention]
           ++ maybeToList (fmap pretty srcIdent)

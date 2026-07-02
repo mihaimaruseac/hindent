@@ -26,9 +26,9 @@ instance CommentExtraction Multiplicity where
   nodeComments (MkExplicit mult) = nodeComments mult
 
 instance Pretty Multiplicity where
-  pretty' MkUnrestricted = pure ()
-  pretty' MkLinear = string "%1"
-  pretty' (MkExplicit mult) = string "%" >> pretty mult
+  pretty MkUnrestricted = pure ()
+  pretty MkLinear = string "%1"
+  pretty (MkExplicit mult) = string "%" >> pretty mult
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkMultiplicity :: GHC.HsMultAnn GHC.GhcPs -> Multiplicity
 mkMultiplicity GHC.HsUnannotated {} = MkUnrestricted

@@ -19,11 +19,11 @@ instance CommentExtraction QualifiedDo where
   nodeComments = const emptyNodeComments
 
 instance Pretty QualifiedDo where
-  pretty' (QualifiedDo (Just moduleName) doOrMdo) = do
+  pretty (QualifiedDo (Just moduleName) doOrMdo) = do
     pretty moduleName
     string "."
     pretty doOrMdo
-  pretty' (QualifiedDo Nothing doOrMdo) = pretty doOrMdo
+  pretty (QualifiedDo Nothing doOrMdo) = pretty doOrMdo
 
 mkQualifiedDo :: GHC.HsDoFlavour -> QualifiedDo
 mkQualifiedDo stmtContext@(GHC.DoExpr moduleName) =

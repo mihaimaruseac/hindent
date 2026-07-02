@@ -25,9 +25,9 @@ instance CommentExtraction InlinePhase where
   nodeComments InlinePhase {} = NodeComments [] [] []
 
 instance Pretty InlinePhase where
-  pretty' InlinePhase {beforeOrAfter = Before, ..} =
+  pretty InlinePhase {beforeOrAfter = Before, ..} =
     brackets (string $ Text.pack $ '~' : show phase)
-  pretty' InlinePhase {beforeOrAfter = After, ..} =
+  pretty InlinePhase {beforeOrAfter = After, ..} =
     brackets (string $ Text.pack $ show phase)
 
 mkInlinePhase :: GHC.Activation -> Maybe InlinePhase

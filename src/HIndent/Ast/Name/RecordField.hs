@@ -35,7 +35,7 @@ instance CommentExtraction FieldName where
   nodeComments FieldName {} = NodeComments [] [] []
 
 instance Pretty FieldName where
-  pretty' (FieldName labels) = hDotSep $ pretty <$> NonEmpty.toList labels
+  pretty (FieldName labels) = hDotSep $ pretty <$> NonEmpty.toList labels
 
 mkFieldNameFromFieldOcc :: GHC.FieldOcc GHC.GhcPs -> FieldName
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)

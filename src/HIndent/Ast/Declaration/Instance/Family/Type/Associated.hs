@@ -26,7 +26,7 @@ instance CommentExtraction AssociatedType where
   nodeComments AssociatedType {} = NodeComments [] [] []
 
 instance Pretty AssociatedType where
-  pretty' AssociatedType {..} = spaced [lhs, string "=", pretty bind]
+  pretty AssociatedType {..} = spaced [lhs, string "=", pretty bind]
     where
       lhs =
         spaced

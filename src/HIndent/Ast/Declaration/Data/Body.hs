@@ -41,7 +41,7 @@ instance CommentExtraction DataBody where
   nodeComments Haskell98 {} = NodeComments [] [] []
 
 instance Pretty DataBody where
-  pretty' GADT {..} = do
+  pretty GADT {..} = do
     whenJust kind $ \x -> string " :: " >> pretty x
     string " where"
     case constructors of
@@ -55,7 +55,7 @@ instance Pretty DataBody where
           when (hasDerivings derivings) $ do
             newline
             pretty derivings
-  pretty' Haskell98 {..} = do
+  pretty Haskell98 {..} = do
     whenJust kind $ \x -> string " :: " >> pretty x
     case constructorsH98 of
       [] -> indentedBlock derivingsAfterNewline

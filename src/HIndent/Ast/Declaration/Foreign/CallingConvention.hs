@@ -22,11 +22,11 @@ instance CommentExtraction CallingConvention where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty CallingConvention where
-  pretty' CCall = string "ccall"
-  pretty' CApi = string "capi"
-  pretty' StdCall = string "stdcall"
-  pretty' Prim = string "prim"
-  pretty' JavaScript = string "javascript"
+  pretty CCall = string "ccall"
+  pretty CApi = string "capi"
+  pretty StdCall = string "stdcall"
+  pretty Prim = string "prim"
+  pretty JavaScript = string "javascript"
 
 mkCallingConvention :: GHC.CCallConv -> CallingConvention
 mkCallingConvention GHC.CCallConv = CCall

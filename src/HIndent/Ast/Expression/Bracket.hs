@@ -35,14 +35,14 @@ instance CommentExtraction Bracket where
   nodeComments Variable {} = NodeComments [] [] []
 
 instance Pretty Bracket where
-  pretty' (TypedExpression x) = typedBrackets $ pretty x
-  pretty' (UntypedExpression x) = brackets $ wrapWithBars $ pretty x
-  pretty' (Pattern x) = brackets $ string "p" >> wrapWithBars (pretty x)
-  pretty' (Declaration decls) =
+  pretty (TypedExpression x) = typedBrackets $ pretty x
+  pretty (UntypedExpression x) = brackets $ wrapWithBars $ pretty x
+  pretty (Pattern x) = brackets $ string "p" >> wrapWithBars (pretty x)
+  pretty (Declaration decls) =
     brackets $ string "d| " |=> lined (fmap pretty decls) >> string " |"
-  pretty' (Type x) = brackets $ string "t" >> wrapWithBars (pretty x)
-  pretty' (Variable True var) = string "'" >> pretty var
-  pretty' (Variable False var) = string "''" >> pretty var
+  pretty (Type x) = brackets $ string "t" >> wrapWithBars (pretty x)
+  pretty (Variable True var) = string "'" >> pretty var
+  pretty (Variable False var) = string "''" >> pretty var
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkBracket :: GHC.HsQuote GHC.GhcPs -> Bracket
 #else

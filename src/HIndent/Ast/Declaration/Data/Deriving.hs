@@ -26,14 +26,14 @@ instance CommentExtraction Deriving where
   nodeComments Deriving {} = NodeComments [] [] []
 
 instance Pretty Deriving where
-  pretty' Deriving {strategy = Just strategy, ..}
+  pretty Deriving {strategy = Just strategy, ..}
     | isViaStrategy (getNode strategy) = do
       spaced
         [ string "deriving"
         , prettyWith classes (hvTuple . fmap pretty)
         , pretty strategy
         ]
-  pretty' Deriving {..} = do
+  pretty Deriving {..} = do
     string "deriving "
     whenJust strategy $ \x -> pretty x >> space
     prettyWith classes (hvTuple . fmap pretty)

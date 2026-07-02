@@ -31,10 +31,10 @@ instance CommentExtraction DerivingStrategy where
   nodeComments Via {} = NodeComments [] [] []
 
 instance Pretty DerivingStrategy where
-  pretty' Stock = string "stock"
-  pretty' Anyclass = string "anyclass"
-  pretty' Newtype = string "newtype"
-  pretty' (Via x) = string "via " >> pretty x
+  pretty Stock = string "stock"
+  pretty Anyclass = string "anyclass"
+  pretty Newtype = string "newtype"
+  pretty (Via x) = string "via " >> pretty x
 
 mkDerivingStrategy :: GHC.DerivStrategy GHC.GhcPs -> DerivingStrategy
 mkDerivingStrategy GHC.StockStrategy {} = Stock

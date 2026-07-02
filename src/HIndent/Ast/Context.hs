@@ -21,7 +21,7 @@ instance CommentExtraction Context where
   nodeComments (Context _) = NodeComments [] [] []
 
 instance Pretty Context where
-  pretty' (Context xs) = hor <-|> ver
+  pretty (Context xs) = hor <-|> ver
     where
       hor = parensConditional $ hCommaSep $ fmap pretty xs
         where

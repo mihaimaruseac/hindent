@@ -31,7 +31,7 @@ instance CommentExtraction ClassInstance where
   nodeComments ClassInstance {} = NodeComments [] [] []
 
 instance Pretty ClassInstance where
-  pretty' ClassInstance {..} = do
+  pretty ClassInstance {..} = do
     string "instance " |=> do
       whenJust overlapMode $ \x -> do
         pretty x

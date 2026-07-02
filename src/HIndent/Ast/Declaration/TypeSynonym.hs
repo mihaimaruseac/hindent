@@ -24,7 +24,7 @@ instance CommentExtraction TypeSynonym where
   nodeComments TypeSynonym {} = NodeComments [] [] []
 
 instance Pretty TypeSynonym where
-  pretty' TypeSynonym {..} = do
+  pretty TypeSynonym {..} = do
     string "type "
     pretty lhs
     hor <-|> ver

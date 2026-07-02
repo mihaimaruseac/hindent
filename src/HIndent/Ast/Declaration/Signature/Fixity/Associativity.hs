@@ -22,9 +22,9 @@ instance CommentExtraction Associativity where
   nodeComments None = NodeComments [] [] []
 
 instance Pretty Associativity where
-  pretty' LeftAssoc = string "infixl"
-  pretty' RightAssoc = string "infixr"
-  pretty' None = string "infix"
+  pretty LeftAssoc = string "infixl"
+  pretty RightAssoc = string "infixr"
+  pretty None = string "infix"
 
 mkAssociativity :: GHC.FixityDirection -> Associativity
 mkAssociativity GHC.InfixL = LeftAssoc

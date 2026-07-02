@@ -38,10 +38,10 @@ instance CommentExtraction ImportExportName where
   nodeComments Data {} = NodeComments [] [] []
 
 instance Pretty ImportExportName where
-  pretty' (Regular name) = pretty name
-  pretty' (Pattern name) = spaced [string "pattern", pretty name]
-  pretty' (Type name) = string "type " >> pretty name
-  pretty' (Data name) = string "data " >> pretty name
+  pretty (Regular name) = pretty name
+  pretty (Pattern name) = spaced [string "pattern", pretty name]
+  pretty (Type name) = string "type " >> pretty name
+  pretty (Data name) = string "data " >> pretty name
 
 instance Eq ImportExportName where
   a == b = compare a b == EQ
@@ -79,7 +79,7 @@ mkImportExportName (GHC.IEData _ name) =
 #endif
 getNameString :: ImportExportName -> String
 getNameString n =
-  L.unpack $ S.toLazyByteString $ runPrinterStyle defaultConfig $ pretty' n
+  L.unpack $ S.toLazyByteString $ runPrinterStyle defaultConfig $ pretty n
 
 compareIdentifier :: String -> String -> Ordering
 compareIdentifier as@(a:_) bs@(b:_) =

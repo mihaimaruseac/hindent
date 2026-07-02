@@ -44,7 +44,7 @@ instance CommentExtraction RecordUpdateFields where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty RecordUpdateFields where
-  pretty' RecordUpdateFields {..} = horizontal <-|> vertical
+  pretty RecordUpdateFields {..} = horizontal <-|> vertical
     where
       horizontal =
         spaced

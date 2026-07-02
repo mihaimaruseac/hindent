@@ -23,7 +23,7 @@ instance CommentExtraction Fixity where
   nodeComments Fixity {} = NodeComments [] [] []
 
 instance Pretty Fixity where
-  pretty' Fixity {..} =
+  pretty Fixity {..} =
     spaced [pretty associativity, string $ Text.pack $ show level]
 
 mkFixity :: GHC.Fixity -> Fixity

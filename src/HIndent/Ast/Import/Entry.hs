@@ -30,9 +30,9 @@ instance CommentExtraction ImportEntry where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty ImportEntry where
-  pretty' (SingleIdentifier wrapped) = pretty wrapped
-  pretty' (WithAllConstructors wrapped) = pretty wrapped >> string "(..)"
-  pretty' WithSpecificConstructors {..} =
+  pretty (SingleIdentifier wrapped) = pretty wrapped
+  pretty (WithAllConstructors wrapped) = pretty wrapped >> string "(..)"
+  pretty WithSpecificConstructors {..} =
     pretty name >> hFillingTuple (fmap pretty constructors)
 
 mkImportEntry :: GHC.IE GHC.GhcPs -> ImportEntry

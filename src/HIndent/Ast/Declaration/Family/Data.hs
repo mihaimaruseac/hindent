@@ -31,7 +31,7 @@ instance CommentExtraction DataFamily where
   nodeComments DataFamily {} = NodeComments [] [] []
 
 instance Pretty DataFamily where
-  pretty' DataFamily {..} = do
+  pretty DataFamily {..} = do
     string "data "
     when isTopLevel $ string "family "
     pretty name

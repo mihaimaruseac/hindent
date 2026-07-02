@@ -22,7 +22,7 @@ instance CommentExtraction DataDeclaration where
   nodeComments DataDeclaration {} = NodeComments [] [] []
 
 instance Pretty DataDeclaration where
-  pretty' DataDeclaration {..} = pretty header >> pretty body
+  pretty DataDeclaration {..} = pretty header >> pretty body
 
 mkDataDeclaration :: GHC.TyClDecl GHC.GhcPs -> Maybe DataDeclaration
 mkDataDeclaration decl@GHC.DataDecl {..} =

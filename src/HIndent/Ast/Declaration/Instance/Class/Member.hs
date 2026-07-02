@@ -28,12 +28,12 @@ instance CommentExtraction ClassInstanceMember where
   nodeComments Signature {} = NodeComments [] [] []
 
 instance Pretty ClassInstanceMember where
-  pretty' (AssociatedDataInstance associatedDataInstance) =
+  pretty (AssociatedDataInstance associatedDataInstance) =
     pretty associatedDataInstance
-  pretty' (AssociatedTypeInstance associatedTypeInstance) =
+  pretty (AssociatedTypeInstance associatedTypeInstance) =
     pretty associatedTypeInstance
-  pretty' (Method bind) = pretty bind
-  pretty' (Signature signature) = pretty signature
+  pretty (Method bind) = pretty bind
+  pretty (Signature signature) = pretty signature
 
 mkAssociatedDataInstanceMember ::
      GHC.DataFamInstDecl GHC.GhcPs -> ClassInstanceMember

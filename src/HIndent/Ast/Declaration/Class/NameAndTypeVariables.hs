@@ -33,8 +33,8 @@ instance CommentExtraction NameAndTypeVariables where
   nodeComments Infix {} = NodeComments [] [] []
 
 instance Pretty NameAndTypeVariables where
-  pretty' Prefix {..} = spaced $ pretty pName : fmap pretty typeVariables
-  pretty' Infix {..} = do
+  pretty Prefix {..} = spaced $ pretty pName : fmap pretty typeVariables
+  pretty Infix {..} = do
     parens $ spaced [pretty left, pretty iName, pretty right]
     spacePrefixed $ fmap pretty remains
 

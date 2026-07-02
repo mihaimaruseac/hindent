@@ -29,7 +29,7 @@ instance CommentExtraction DataFamilyInstance where
   nodeComments DataFamilyInstance {} = NodeComments [] [] []
 
 instance Pretty DataFamilyInstance where
-  pretty' DataFamilyInstance {..} = do
+  pretty DataFamilyInstance {..} = do
     spaced
       $ [pretty newOrData, string "instance", pretty name]
           <> [pretty types | hasTypeArguments types]

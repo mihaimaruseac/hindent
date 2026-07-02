@@ -21,7 +21,7 @@ instance CommentExtraction RuleCollection where
   nodeComments RuleCollection {} = NodeComments [] [] []
 
 instance Pretty RuleCollection where
-  pretty' (RuleCollection xs) =
+  pretty (RuleCollection xs) =
     lined $ string "{-# RULES" : fmap pretty xs ++ [string " #-}"]
 
 mkRuleCollection :: GHC.RuleDecls GHC.GhcPs -> RuleCollection

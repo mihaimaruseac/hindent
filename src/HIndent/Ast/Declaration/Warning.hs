@@ -29,7 +29,7 @@ instance CommentExtraction WarningDeclaration where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty WarningDeclaration where
-  pretty' WarningDeclaration {..} = do
+  pretty WarningDeclaration {..} = do
     lined
       [ string "{-# " >> pretty kind
       , spaced [hCommaSep $ fmap pretty names, hCommaSep $ fmap pretty reasons]

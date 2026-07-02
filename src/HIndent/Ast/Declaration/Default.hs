@@ -21,7 +21,7 @@ instance CommentExtraction DefaultDeclaration where
   nodeComments DefaultDeclaration {} = NodeComments [] [] []
 
 instance Pretty DefaultDeclaration where
-  pretty' (DefaultDeclaration xs) =
+  pretty (DefaultDeclaration xs) =
     spaced [string "default", hTuple $ fmap pretty xs]
 
 mkDefaultDeclaration :: GHC.DefaultDecl GHC.GhcPs -> DefaultDeclaration

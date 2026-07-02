@@ -25,10 +25,10 @@ instance CommentExtraction OverlapMode where
   nodeComments Incoherent = NodeComments [] [] []
 
 instance Pretty OverlapMode where
-  pretty' Overlappable = string "{-# OVERLAPPABLE #-}"
-  pretty' Overlapping = string "{-# OVERLAPPING #-}"
-  pretty' Overlaps = string "{-# OVERLAPS #-}"
-  pretty' Incoherent = string "{-# INCOHERENT #-}"
+  pretty Overlappable = string "{-# OVERLAPPABLE #-}"
+  pretty Overlapping = string "{-# OVERLAPPING #-}"
+  pretty Overlaps = string "{-# OVERLAPS #-}"
+  pretty Incoherent = string "{-# INCOHERENT #-}"
 
 mkOverlapMode :: GHC.OverlapMode -> OverlapMode
 mkOverlapMode GHC.NoOverlap {} =

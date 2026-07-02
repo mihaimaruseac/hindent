@@ -32,7 +32,7 @@ instance CommentExtraction PrefixName where
   nodeComments PrefixName {} = NodeComments [] [] []
 
 instance Pretty PrefixName where
-  pretty' PrefixName {..} =
+  pretty PrefixName {..} =
     wrap $ hDotSep $ catMaybes [pretty <$> moduleName, Just $ pretty name]
     where
       wrap =
@@ -69,7 +69,7 @@ instance CommentExtraction PrefixAsInfix where
   nodeComments (PrefixAsInfix prefix) = nodeComments prefix
 
 instance Pretty PrefixAsInfix where
-  pretty' (PrefixAsInfix PrefixName {..}) =
+  pretty (PrefixAsInfix PrefixName {..}) =
     wrap $ hDotSep $ catMaybes [pretty <$> moduleName, Just $ pretty name]
     where
       wrap =

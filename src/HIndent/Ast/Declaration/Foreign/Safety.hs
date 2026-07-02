@@ -20,9 +20,9 @@ instance CommentExtraction Safety where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty Safety where
-  pretty' Safe = string "safe"
-  pretty' Interruptible = string "interruptible"
-  pretty' Unsafe = string "unsafe"
+  pretty Safe = string "safe"
+  pretty Interruptible = string "interruptible"
+  pretty Unsafe = string "unsafe"
 
 mkSafety :: GHC.Safety -> Safety
 mkSafety GHC.PlaySafe = Safe

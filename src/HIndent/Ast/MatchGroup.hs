@@ -24,7 +24,7 @@ instance CommentExtraction MatchGroup where
   nodeComments _ = mempty
 
 instance Pretty MatchGroup where
-  pretty' (MatchGroup alts) = prettyWith alts (lined . fmap pretty)
+  pretty (MatchGroup alts) = prettyWith alts (lined . fmap pretty)
 
 mkExprMatchGroup ::
      GHC.MatchGroup GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> MatchGroup

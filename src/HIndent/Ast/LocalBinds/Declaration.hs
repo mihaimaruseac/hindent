@@ -18,8 +18,8 @@ instance CommentExtraction LocalDeclaration where
   nodeComments _ = emptyNodeComments
 
 instance Pretty LocalDeclaration where
-  pretty' (Binding bind) = pretty bind
-  pretty' (Signature signature) = pretty signature
+  pretty (Binding bind) = pretty bind
+  pretty (Signature signature) = pretty signature
 
 mkLocalSignatureDeclaration :: GHC.Sig GHC.GhcPs -> LocalDeclaration
 mkLocalSignatureDeclaration = Signature . mkSignature

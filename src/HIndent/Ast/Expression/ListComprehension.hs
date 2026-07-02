@@ -26,7 +26,7 @@ instance CommentExtraction ListComprehension where
   nodeComments _ = emptyNodeComments
 
 instance Pretty ListComprehension where
-  pretty' ListComprehension {..} = horizontal <-|> vertical
+  pretty ListComprehension {..} = horizontal <-|> vertical
     where
       horizontal =
         brackets

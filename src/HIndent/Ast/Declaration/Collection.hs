@@ -24,7 +24,7 @@ instance CommentExtraction DeclarationCollection where
   nodeComments DeclarationCollection {} = NodeComments [] [] []
 
 instance Pretty DeclarationCollection where
-  pretty' (DeclarationCollection decls) =
+  pretty (DeclarationCollection decls) =
     mapM_ (\(x, sp) -> pretty x >> fromMaybe (return ()) sp)
       $ addDeclSeparator decls
     where

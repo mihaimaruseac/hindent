@@ -40,14 +40,14 @@ instance CommentExtraction (Field rhs) where
   nodeComments Field {} = NodeComments [] [] []
 
 instance Pretty ExprField where
-  pretty' Field {..} = do
+  pretty Field {..} = do
     pretty name
     whenJust value $ \val -> do
       string " ="
       (space >> pretty val) <-|> (newline >> indentedBlock (pretty val))
 
 instance Pretty PatField where
-  pretty' Field {..} = do
+  pretty Field {..} = do
     pretty name
     whenJust value $ \val -> do
       string " = "

@@ -23,7 +23,7 @@ instance CommentExtraction FunctionalDependency where
   nodeComments FunctionalDependency {} = NodeComments [] [] []
 
 instance Pretty FunctionalDependency where
-  pretty' (FunctionalDependency {..}) =
+  pretty (FunctionalDependency {..}) =
     spaced $ fmap pretty from ++ [string "->"] ++ fmap pretty to
 
 mkFunctionalDependency :: GHC.FunDep GHC.GhcPs -> FunctionalDependency

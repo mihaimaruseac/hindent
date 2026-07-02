@@ -27,8 +27,8 @@ instance CommentExtraction TypeArgument where
   nodeComments KindArgument {..} = nodeComments argKind
 
 instance Pretty TypeArgument where
-  pretty' TypeArgument {..} = pretty argType
-  pretty' KindArgument {..} = string "@" >> pretty argKind
+  pretty TypeArgument {..} = pretty argType
+  pretty KindArgument {..} = string "@" >> pretty argKind
 
 mkTypeArgument ::
      GHC.HsArg GHC.GhcPs (GHC.LHsType GHC.GhcPs) (GHC.LHsType GHC.GhcPs)

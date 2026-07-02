@@ -39,12 +39,12 @@ instance CommentExtraction Haskell98ConstructorBody where
   nodeComments Record {} = NodeComments [] [] []
 
 instance Pretty Haskell98ConstructorBody where
-  pretty' Infix {..} = spaced [pretty left, pretty iName, pretty right]
-  pretty' Prefix {..} = pretty pName >> hor <-|> ver
+  pretty Infix {..} = spaced [pretty left, pretty iName, pretty right]
+  pretty Prefix {..} = pretty pName >> hor <-|> ver
     where
       hor = spacePrefixed $ fmap pretty types
       ver = indentedBlock $ newlinePrefixed $ fmap pretty types
-  pretty' Record {..} = do
+  pretty Record {..} = do
     pretty rName
     prettyWith records $ \r ->
       newline >> indentedBlock (vFields $ fmap pretty r)

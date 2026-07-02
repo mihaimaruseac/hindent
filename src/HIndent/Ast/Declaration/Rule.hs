@@ -29,7 +29,7 @@ instance CommentExtraction RuleDeclaration where
   nodeComments RuleDeclaration {} = NodeComments [] [] []
 
 instance Pretty RuleDeclaration where
-  pretty' (RuleDeclaration {..}) =
+  pretty (RuleDeclaration {..}) =
     spaced [pretty name, prettyLhs, string "=", pretty rhs]
     where
       prettyLhs =

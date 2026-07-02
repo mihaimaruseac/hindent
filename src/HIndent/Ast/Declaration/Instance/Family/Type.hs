@@ -26,7 +26,7 @@ instance CommentExtraction TypeFamilyInstance where
   nodeComments TypeFamilyInstance {} = NodeComments [] [] []
 
 instance Pretty TypeFamilyInstance where
-  pretty' TypeFamilyInstance {..} = do
+  pretty TypeFamilyInstance {..} = do
     spaced
       $ [string "type instance", pretty name]
           <> [pretty types | hasTypeArguments types]

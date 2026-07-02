@@ -21,7 +21,7 @@ instance CommentExtraction ImplicitBindings where
   nodeComments _ = emptyNodeComments
 
 instance Pretty ImplicitBindings where
-  pretty' (ImplicitBindings xs) = lined $ fmap pretty xs
+  pretty (ImplicitBindings xs) = lined $ fmap pretty xs
 
 mkImplicitBindings :: GHC.HsIPBinds GHC.GhcPs -> ImplicitBindings
 mkImplicitBindings (GHC.IPBinds _ xs) =

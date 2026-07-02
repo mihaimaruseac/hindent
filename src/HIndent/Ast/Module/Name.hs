@@ -17,7 +17,7 @@ instance CommentExtraction ModuleName where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty ModuleName where
-  pretty' (ModuleName value) = pretty value
+  pretty (ModuleName value) = pretty value
 
 mkModuleName :: GHC.ModuleName -> ModuleName
 mkModuleName = ModuleName . mkTextValueFromString . GHC.moduleNameString

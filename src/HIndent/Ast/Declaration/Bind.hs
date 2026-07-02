@@ -34,9 +34,9 @@ instance CommentExtraction Bind where
   nodeComments PatternSynonym {} = emptyNodeComments
 
 instance Pretty Bind where
-  pretty' (Function matches) = pretty matches
-  pretty' Pattern {..} = pretty lhs >> pretty rhs
-  pretty' (PatternSynonym ps) = pretty ps
+  pretty (Function matches) = pretty matches
+  pretty Pattern {..} = pretty lhs >> pretty rhs
+  pretty (PatternSynonym ps) = pretty ps
 
 mkBind :: GHC.HsBind GHC.GhcPs -> Bind
 mkBind GHC.FunBind {..} = Function $ mkExprMatchGroup fun_matches

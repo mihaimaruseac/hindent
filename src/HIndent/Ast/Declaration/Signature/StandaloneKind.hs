@@ -24,7 +24,7 @@ instance CommentExtraction StandaloneKind where
   nodeComments StandaloneKind {} = NodeComments [] [] []
 
 instance Pretty StandaloneKind where
-  pretty' StandaloneKind {..} =
+  pretty StandaloneKind {..} =
     spaced [string "type", pretty name, string "::", pretty kind]
 
 mkStandaloneKind :: GHC.StandaloneKindSig GHC.GhcPs -> StandaloneKind

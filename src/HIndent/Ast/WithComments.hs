@@ -50,7 +50,7 @@ instance CommentExtraction (WithComments a) where
   nodeComments _ = mempty
 
 instance (Pretty a) => Pretty (WithComments a) where
-  pretty' withComments = prettyWith withComments pretty
+  pretty withComments = prettyWith withComments pretty
 
 -- | Prints comments included in the location information and then the
 -- AST node body.

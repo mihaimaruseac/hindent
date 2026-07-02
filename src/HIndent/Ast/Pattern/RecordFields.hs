@@ -25,7 +25,7 @@ instance CommentExtraction RecordFieldsPat where
   nodeComments RecordFieldsPat {} = NodeComments [] [] []
 
 instance Pretty RecordFieldsPat where
-  pretty' (RecordFieldsPat fs dd) =
+  pretty (RecordFieldsPat fs dd) =
     case fieldPrinters of
       [] -> string "{}"
       [x] -> braces x

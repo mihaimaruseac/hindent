@@ -25,7 +25,7 @@ instance CommentExtraction StandAloneDeriving where
   nodeComments StandAloneDeriving {} = NodeComments [] [] []
 
 instance Pretty StandAloneDeriving where
-  pretty' StandAloneDeriving {strategy = Just strategy, ..}
+  pretty StandAloneDeriving {strategy = Just strategy, ..}
     | isViaStrategy (getNode strategy) =
       spaced
         [ string "deriving"
@@ -33,7 +33,7 @@ instance Pretty StandAloneDeriving where
         , string "instance"
         , pretty className
         ]
-  pretty' StandAloneDeriving {..} = do
+  pretty StandAloneDeriving {..} = do
     string "deriving "
     whenJust strategy $ \x -> pretty x >> space
     string "instance "

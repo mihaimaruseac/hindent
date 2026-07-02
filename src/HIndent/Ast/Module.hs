@@ -29,7 +29,7 @@ instance CommentExtraction Module where
   nodeComments Module {} = NodeComments [] [] []
 
 instance Pretty Module where
-  pretty' Module {..}
+  pretty Module {..}
     | isEmpty = pure ()
     | otherwise = blanklined printers >> newline
     where

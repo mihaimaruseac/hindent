@@ -22,7 +22,7 @@ instance CommentExtraction WhereClause where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty WhereClause where
-  pretty' WhereClause {..} =
+  pretty WhereClause {..} =
     lined [string "where", prettyWith binds $ indentedBlock . pretty]
 
 mkWhereClause :: GHC.GRHSs GHC.GhcPs body -> Maybe (WithComments WhereClause)

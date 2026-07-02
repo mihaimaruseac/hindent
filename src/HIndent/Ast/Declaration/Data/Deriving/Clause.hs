@@ -19,7 +19,7 @@ instance CommentExtraction DerivingClause where
   nodeComments DerivingClause {} = NodeComments [] [] []
 
 instance Pretty DerivingClause where
-  pretty' (DerivingClause xs) = lined $ fmap pretty xs
+  pretty (DerivingClause xs) = lined $ fmap pretty xs
 
 mkDerivingClause :: GHC.HsDeriving GHC.GhcPs -> DerivingClause
 mkDerivingClause =

@@ -29,10 +29,10 @@ instance CommentExtraction Haskell98Constructor where
   nodeComments Haskell98Constructor {} = NodeComments [] [] []
 
 instance Pretty Haskell98Constructor where
-  pretty' Haskell98Constructor {existentialVariables = [], ..} = do
+  pretty Haskell98Constructor {existentialVariables = [], ..} = do
     whenJust context $ \c -> pretty c >> string " => "
     pretty body
-  pretty' Haskell98Constructor {..} = do
+  pretty Haskell98Constructor {..} = do
     string "forall "
     spaced (fmap pretty existentialVariables)
     string ". " |=> do

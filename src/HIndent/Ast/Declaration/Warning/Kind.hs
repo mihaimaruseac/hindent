@@ -17,5 +17,5 @@ instance CommentExtraction Kind where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty Kind where
-  pretty' Warning = string "WARNING"
-  pretty' Deprecated = string "DEPRECATED"
+  pretty Warning = string "WARNING"
+  pretty Deprecated = string "DEPRECATED"

@@ -28,7 +28,7 @@ instance CommentExtraction ImplicitBinding where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty ImplicitBinding where
-  pretty' ImplicitBinding {..} =
+  pretty ImplicitBinding {..} =
     spaced [pretty name, string "=", pretty expression]
 
 mkImplicitBinding :: GHC.IPBind GHC.GhcPs -> ImplicitBinding

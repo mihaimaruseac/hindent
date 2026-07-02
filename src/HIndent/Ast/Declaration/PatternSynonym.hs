@@ -50,15 +50,15 @@ instance CommentExtraction PatternSynonym where
   nodeComments Record {} = emptyNodeComments
 
 instance Pretty PatternSynonym where
-  pretty' Prefix {..} = do
+  pretty Prefix {..} = do
     string "pattern "
     spaced $ pretty name : fmap pretty args
     prettySuffix isImplicitBidirectional definition explicitMatches
-  pretty' Infix {..} = do
+  pretty Infix {..} = do
     string "pattern "
     spaced [pretty leftArg, pretty operator, pretty rightArg]
     prettySuffix isImplicitBidirectional definition explicitMatches
-  pretty' Record {..} = do
+  pretty Record {..} = do
     string "pattern "
     spaced [pretty name, hFields $ fmap pretty fields]
     prettySuffix isImplicitBidirectional definition explicitMatches

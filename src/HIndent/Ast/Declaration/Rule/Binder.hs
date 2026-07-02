@@ -24,8 +24,8 @@ instance CommentExtraction RuleBinder where
   nodeComments RuleBinder {} = NodeComments [] [] []
 
 instance Pretty RuleBinder where
-  pretty' RuleBinder {signature = Nothing, ..} = pretty name
-  pretty' RuleBinder {signature = Just sig, ..} =
+  pretty RuleBinder {signature = Nothing, ..} = pretty name
+  pretty RuleBinder {signature = Just sig, ..} =
     parens $ spaced [pretty name, string "::", pretty sig]
 
 mkRuleBinder :: GHC.RuleBndr GHC.GhcPs -> RuleBinder

@@ -41,10 +41,10 @@ instance CommentExtraction Splice where
   nodeComments QuasiQuote {} = NodeComments [] [] []
 
 instance Pretty Splice where
-  pretty' (Typed x) = string "$$" >> pretty x
-  pretty' (UntypedDollar x) = string "$" >> pretty x
-  pretty' (UntypedBare x) = pretty x
-  pretty' (QuasiQuote l r) =
+  pretty (Typed x) = string "$$" >> pretty x
+  pretty (UntypedDollar x) = string "$" >> pretty x
+  pretty (UntypedBare x) = pretty x
+  pretty (QuasiQuote l r) =
     brackets $ do
       pretty l
       wrapWithBars

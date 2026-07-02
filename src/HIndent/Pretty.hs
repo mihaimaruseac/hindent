@@ -17,7 +17,6 @@
 -- constructors only in remaining and type checking.
 module HIndent.Pretty
   ( Pretty(..)
-  , pretty
   , printCommentsAnd
   ) where
 
@@ -48,14 +47,6 @@ import qualified GHC.Core.DataCon as GHC
 #else
 import qualified GHC.Unit as GHC
 #endif
--- | This function pretty-prints the given AST node with comments.
-pretty :: Pretty a => a -> Printer ()
-pretty p = do
-  printCommentsBefore p
-  pretty' p
-  printCommentOnSameLine p
-  printCommentsAfter p
-
 -- | Prints comments included in the location information and then the
 -- AST node body.
 printCommentsAnd ::
@@ -103,15 +94,13 @@ printCommentsAfter p =
         indentedWithFixedLevel col $ pretty c
         eolCommentsArePrinted
 
--- | Pretty print including comments.
+-- | Pretty print.
 --
 -- @FastString@ does not implement this class because it may contain @\n@s
 -- and each type that may contain a @FastString@ value needs their own
 -- handlings.
-class CommentExtraction a =>
-      Pretty a
-  where
-  pretty' :: a -> Printer ()
+class Pretty a where
+  pretty :: a -> Printer ()
 
 data DataFamInstDeclFor
   = DataFamInstDeclForTopLevel
@@ -122,14 +111,14 @@ data DataFamInstDeclFor
 -- comments are present in the source code. See
 -- https://github.com/mihaimaruseac/hindent/issues/586#issuecomment-1374992624.
 instance (CommentExtraction l, Pretty e) => Pretty (GHC.GenLocated l e) where
-  pretty' (GHC.L _ e) = pretty e
+  pretty loc = printCommentsAnd loc pretty
 
 instance Pretty
            (GHC.StmtLR
               GHC.GhcPs
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsExpr GHC.GhcPs))) where
-  pretty' = prettyStmtLRExpr
+  pretty = prettyStmtLRExpr
 
 prettyStmtLRExpr ::
      GHC.StmtLR
@@ -168,10 +157,10 @@ prettyStmtLRExpr GHC.RecStmt {..} =
   string "rec " |=> printCommentsAnd recS_stmts (lined . fmap pretty)
 
 instance Pretty (GHC.ParStmtBlock GHC.GhcPs GHC.GhcPs) where
-  pretty' (GHC.ParStmtBlock _ xs _ _) = hvCommaSep $ fmap pretty xs
+  pretty (GHC.ParStmtBlock _ xs _ _) = hvCommaSep $ fmap pretty xs
 
 instance Pretty GHC.EpaComment where
-  pretty' GHC.EpaComment {..} = prettyEpaCommentTok ac_tok
+  pretty GHC.EpaComment {..} = prettyEpaCommentTok ac_tok
 
 prettyEpaCommentTok :: GHC.EpaCommentTok -> Printer ()
 prettyEpaCommentTok (GHC.EpaLineComment text) = string $ Text.pack text
@@ -191,22 +180,22 @@ instance Pretty
            (GHC.HsScaled
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
-  pretty' (GHC.HsScaled _ ty) = pretty $ fmap mkType ty
+  pretty (GHC.HsScaled _ ty) = pretty $ fmap mkType ty
 #endif
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance Pretty GHC.StringLiteral where
-  pretty' GHC.StringLiteral {sl_st = GHC.SourceText s} =
+  pretty GHC.StringLiteral {sl_st = GHC.SourceText s} =
     string $ Text.pack $ FS.unpackFS s
-  pretty' GHC.StringLiteral {..} = string $ Text.pack $ FS.unpackFS sl_fs
+  pretty GHC.StringLiteral {..} = string $ Text.pack $ FS.unpackFS sl_fs
 #else
 instance Pretty GHC.StringLiteral where
-  pretty' = output
+  pretty = output
 #endif
 instance Pretty
            (GHC.FamEqn
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
-  pretty' GHC.FamEqn {..} = do
+  pretty GHC.FamEqn {..} = do
     pretty $ fmap mkPrefixName feqn_tycon
     spacePrefixed $ fmap pretty feqn_pats
     string " = "
@@ -214,7 +203,7 @@ instance Pretty
 
 -- | Pretty-print a data instance.
 instance Pretty (GHC.FamEqn GHC.GhcPs (GHC.HsDataDefn GHC.GhcPs)) where
-  pretty' = prettyFamEqn DataFamInstDeclForTopLevel
+  pretty = prettyFamEqn DataFamInstDeclForTopLevel
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 prettyFamEqn ::
      DataFamInstDeclFor
@@ -259,40 +248,40 @@ instance Pretty
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
-  pretty' (GHC.HsValArg _ x) = pretty $ mkType <$> x
-  pretty' (GHC.HsTypeArg _ x) = string "@" >> pretty (mkType <$> x)
-  pretty' GHC.HsArgPar {} = notUsedInParsedStage
+  pretty (GHC.HsValArg _ x) = pretty $ mkType <$> x
+  pretty (GHC.HsTypeArg _ x) = string "@" >> pretty (mkType <$> x)
+  pretty GHC.HsArgPar {} = notUsedInParsedStage
 #elif MIN_VERSION_ghc_lib_parser(9, 8, 1)
 instance Pretty
            (GHC.HsArg
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
-  pretty' (GHC.HsValArg x) = pretty $ mkType <$> x
-  pretty' (GHC.HsTypeArg _ x) = string "@" >> pretty (mkType <$> x)
-  pretty' GHC.HsArgPar {} = notUsedInParsedStage
+  pretty (GHC.HsValArg x) = pretty $ mkType <$> x
+  pretty (GHC.HsTypeArg _ x) = string "@" >> pretty (mkType <$> x)
+  pretty GHC.HsArgPar {} = notUsedInParsedStage
 #else
 instance Pretty
            (GHC.HsArg
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
-  pretty' (GHC.HsValArg x) = pretty $ mkType <$> x
-  pretty' (GHC.HsTypeArg _ x) = string "@" >> pretty (mkType <$> x)
-  pretty' GHC.HsArgPar {} = notUsedInParsedStage
+  pretty (GHC.HsValArg x) = pretty $ mkType <$> x
+  pretty (GHC.HsTypeArg _ x) = string "@" >> pretty (mkType <$> x)
+  pretty GHC.HsArgPar {} = notUsedInParsedStage
 #endif
 #if MIN_VERSION_ghc_lib_parser(9,4,1)
 instance Pretty (GHC.WithHsDocIdentifiers GHC.StringLiteral GHC.GhcPs) where
-  pretty' GHC.WithHsDocIdentifiers {..} = pretty hsDocString
+  pretty GHC.WithHsDocIdentifiers {..} = pretty hsDocString
 #endif
 -- | Instance for wildcard types.
 instance Pretty
            (GHC.HsWildCardBndrs
               GHC.GhcPs
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs))) where
-  pretty' GHC.HsWC {..} = pretty $ mkType <$> hswc_body
+  pretty GHC.HsWC {..} = pretty $ mkType <$> hswc_body
 
 instance Pretty (GHC.DataFamInstDecl GHC.GhcPs) where
-  pretty' = prettyDataFamInstDecl DataFamInstDeclForTopLevel
+  pretty = prettyDataFamInstDecl DataFamInstDeclForTopLevel
 
 prettyDataFamInstDecl ::
      DataFamInstDeclFor -> GHC.DataFamInstDecl GHC.GhcPs -> Printer ()
@@ -300,7 +289,7 @@ prettyDataFamInstDecl dataFamInstDeclFor GHC.DataFamInstDecl {..} =
   prettyFamEqn dataFamInstDeclFor dfid_eqn
 #if MIN_VERSION_ghc_lib_parser(9,6,1)
 instance Pretty GHC.FieldLabelString where
-  pretty' = output
+  pretty = output
 #endif
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 -- | Marks an AST node as never appearing in an AST.

@@ -31,7 +31,7 @@ instance CommentExtraction InfixName where
   nodeComments InfixName {} = NodeComments [] [] []
 
 instance Pretty InfixName where
-  pretty' InfixName {..} =
+  pretty InfixName {..} =
     wrap $ hDotSep $ catMaybes [pretty <$> moduleName, Just $ pretty name]
     where
       wrap =

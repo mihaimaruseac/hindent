@@ -31,12 +31,12 @@ instance CommentExtraction ClassMember where
   nodeComments AssociatedTypeFamily {} = NodeComments [] [] []
 
 instance Pretty ClassMember where
-  pretty' (Signature signature) = pretty signature
-  pretty' (Method bind) = pretty bind
-  pretty' (AssociatedDataFamily dataFamily) = pretty dataFamily
-  pretty' (AssociatedTypeDefault associatedTypeDefault) =
+  pretty (Signature signature) = pretty signature
+  pretty (Method bind) = pretty bind
+  pretty (AssociatedDataFamily dataFamily) = pretty dataFamily
+  pretty (AssociatedTypeDefault associatedTypeDefault) =
     pretty associatedTypeDefault
-  pretty' (AssociatedTypeFamily typeFamily) = pretty typeFamily
+  pretty (AssociatedTypeFamily typeFamily) = pretty typeFamily
 
 mkClassSignatureMember :: GHC.Sig GHC.GhcPs -> ClassMember
 mkClassSignatureMember = Signature . mkSignature

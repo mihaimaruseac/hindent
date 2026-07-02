@@ -85,7 +85,7 @@ instance CommentExtraction Signature where
   nodeComments Complete {} = NodeComments [] [] []
 
 instance Pretty Signature where
-  pretty' Type {..} = do
+  pretty Type {..} = do
     printFunName
     string " ::"
     horizontal <-|> vertical
@@ -102,14 +102,14 @@ instance Pretty Signature where
             newline
             indentedBlock $ indentedWithSpace 3 $ pretty parameters
       printFunName = hCommaSep $ fmap pretty names
-  pretty' Pattern {..} =
+  pretty Pattern {..} =
     spaced
       [ string "pattern"
       , hCommaSep $ fmap pretty names
       , string "::"
       , pretty signature
       ]
-  pretty' DefaultClassMethod {..} = do
+  pretty DefaultClassMethod {..} = do
     string "default "
     hCommaSep $ fmap pretty names
     string " ::"
@@ -119,7 +119,7 @@ instance Pretty Signature where
       ver = do
         newline
         indentedBlock $ indentedWithSpace 3 $ pretty methodSig
-  pretty' ClassMethod {..} = do
+  pretty ClassMethod {..} = do
     hCommaSep $ fmap pretty names
     string " ::"
     hor <-|> ver
@@ -128,15 +128,15 @@ instance Pretty Signature where
       ver = do
         newline
         indentedBlock $ indentedWithSpace 3 $ pretty methodSig
-  pretty' Fixity {..} = spaced [pretty fixity, hCommaSep $ fmap pretty opNames]
-  pretty' Inline {..} = do
+  pretty Fixity {..} = spaced [pretty fixity, hCommaSep $ fmap pretty opNames]
+  pretty Inline {..} = do
     string "{-# "
     pretty spec
     whenJust phase $ \x -> space >> pretty x
     space
     pretty name
     string " #-}"
-  pretty' Specialise {..} =
+  pretty Specialise {..} =
     spaced
       [ string "{-# SPECIALISE"
       , pretty name
@@ -144,16 +144,16 @@ instance Pretty Signature where
       , hCommaSep $ fmap pretty sigs
       , string "#-}"
       ]
-  pretty' SpecialiseExpr {..} =
+  pretty SpecialiseExpr {..} =
     spaced [string "{-# SPECIALISE", pretty expression, string "#-}"]
-  pretty' (SpecialiseInstance sig) =
+  pretty (SpecialiseInstance sig) =
     spaced [string "{-# SPECIALISE instance", pretty sig, string "#-}"]
-  pretty' (Minimal xs) =
+  pretty (Minimal xs) =
     string "{-# MINIMAL " |=> do
       pretty xs
       string " #-}"
-  pretty' (Scc name) = spaced [string "{-# SCC", pretty name, string "#-}"]
-  pretty' (Complete names) =
+  pretty (Scc name) = spaced [string "{-# SCC", pretty name, string "#-}"]
+  pretty (Complete names) =
     spaced [string "{-# COMPLETE", hCommaSep $ fmap pretty names, string "#-}"]
 
 mkSignature :: GHC.Sig GHC.GhcPs -> Signature

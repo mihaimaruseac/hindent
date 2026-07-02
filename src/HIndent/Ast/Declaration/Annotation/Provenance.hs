@@ -24,9 +24,9 @@ instance CommentExtraction Provenance where
   nodeComments Module = NodeComments [] [] []
 
 instance Pretty Provenance where
-  pretty' (Value x) = pretty x
-  pretty' (Type x) = string "type " >> pretty x
-  pretty' Module = string "module"
+  pretty (Value x) = pretty x
+  pretty (Type x) = string "type " >> pretty x
+  pretty Module = string "module"
 
 mkProvenance :: GHC.AnnProvenance GHC.GhcPs -> Provenance
 mkProvenance (GHC.ValueAnnProvenance x) =

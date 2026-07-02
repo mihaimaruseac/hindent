@@ -52,7 +52,7 @@ instance CommentExtraction Guard where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty Guard where
-  pretty' ExprGuard {..}
+  pretty ExprGuard {..}
     | null conditions = do
       space
       string (contextSeparator guardContext)
@@ -66,7 +66,7 @@ instance Pretty Guard where
         space
         string (contextSeparator guardContext)
         pretty expr
-  pretty' CmdGuard {..}
+  pretty CmdGuard {..}
     | null conditions = do
       space
       string (contextSeparator guardContext)

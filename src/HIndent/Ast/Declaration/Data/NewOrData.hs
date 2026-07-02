@@ -22,8 +22,8 @@ instance CommentExtraction NewOrData where
   nodeComments Data = NodeComments [] [] []
 
 instance Pretty NewOrData where
-  pretty' Newtype = string "newtype"
-  pretty' Data = string "data"
+  pretty Newtype = string "newtype"
+  pretty Data = string "data"
 
 mkNewOrData :: GHC.HsDataDefn GHC.GhcPs -> NewOrData
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)

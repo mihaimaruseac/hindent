@@ -26,7 +26,7 @@ instance CommentExtraction TypeEquation where
   nodeComments TypeEquation {} = NodeComments [] [] []
 
 instance Pretty TypeEquation where
-  pretty' TypeEquation {..} = spaced [lhs, string "=", pretty bind]
+  pretty TypeEquation {..} = spaced [lhs, string "=", pretty bind]
     where
       lhs = spaced $ [pretty name] <> [pretty types | hasTypeArguments types]
 

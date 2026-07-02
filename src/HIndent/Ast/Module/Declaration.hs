@@ -27,7 +27,7 @@ instance CommentExtraction ModuleDeclaration where
   nodeComments ModuleDeclaration {} = NodeComments [] [] []
 
 instance Pretty ModuleDeclaration where
-  pretty' ModuleDeclaration {..} = do
+  pretty ModuleDeclaration {..} = do
     prettyWith name $ \n -> do
       string "module "
       pretty n

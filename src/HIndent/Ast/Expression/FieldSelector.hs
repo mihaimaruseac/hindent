@@ -22,7 +22,7 @@ instance CommentExtraction FieldSelector where
   nodeComments FieldSelector {} = NodeComments [] [] []
 
 instance Pretty FieldSelector where
-  pretty' FieldSelector {..} = pretty name
+  pretty FieldSelector {..} = pretty name
 
 mkFieldSelector :: GHC.DotFieldOcc GHC.GhcPs -> FieldSelector
 mkFieldSelector GHC.DotFieldOcc {..} =

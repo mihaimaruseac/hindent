@@ -3,7 +3,6 @@
 
 module HIndent.Pretty
   ( Pretty(..)
-  , pretty
   , printCommentsAnd
   ) where
 
@@ -13,12 +12,9 @@ import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty.NodeComments
 import HIndent.Printer
 
-class CommentExtraction a =>
-      Pretty a
-  where
-  pretty' :: a -> Printer ()
+class Pretty a where
+  pretty :: a -> Printer ()
 
-pretty :: Pretty a => a -> Printer ()
 printCommentsAnd ::
      (CommentExtraction l)
   => GHC.GenLocated l e

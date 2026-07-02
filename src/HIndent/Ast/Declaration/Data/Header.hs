@@ -29,7 +29,7 @@ instance CommentExtraction Header where
   nodeComments Header {} = NodeComments [] [] []
 
 instance Pretty Header where
-  pretty' Header {..} = do
+  pretty Header {..} = do
     (pretty newOrData >> space) |=> do
       whenJust context $ \c -> pretty c >> string " =>" >> newline
       pretty name

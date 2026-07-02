@@ -32,8 +32,8 @@ instance CommentExtraction TypeSynonymLhs where
   nodeComments Infix {} = NodeComments [] [] []
 
 instance Pretty TypeSynonymLhs where
-  pretty' Prefix {..} = spaced $ pretty pName : fmap pretty typeVariables
-  pretty' Infix {..} = spaced [pretty left, pretty iName, pretty right]
+  pretty Prefix {..} = spaced $ pretty pName : fmap pretty typeVariables
+  pretty Infix {..} = spaced [pretty left, pretty iName, pretty right]
 
 mkTypeSynonymLhs :: GHC.TyClDecl GHC.GhcPs -> TypeSynonymLhs
 mkTypeSynonymLhs GHC.SynDecl {tcdFixity = GHC.Prefix, ..} = Prefix {..}

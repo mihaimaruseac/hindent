@@ -31,10 +31,10 @@ instance CommentExtraction ExportEntry where
   nodeComments ByModule {} = NodeComments [] [] []
 
 instance Pretty ExportEntry where
-  pretty' (SingleIdentifier s) = pretty s
-  pretty' (WithSpecificConstructors s xs) = pretty s >> hTuple (fmap pretty xs)
-  pretty' (WithAllConstructors s) = pretty s >> string "(..)"
-  pretty' (ByModule s) = string "module " >> pretty s
+  pretty (SingleIdentifier s) = pretty s
+  pretty (WithSpecificConstructors s xs) = pretty s >> hTuple (fmap pretty xs)
+  pretty (WithAllConstructors s) = pretty s >> string "(..)"
+  pretty (ByModule s) = string "module " >> pretty s
 
 mkExportEntry :: GHC.IE GHC.GhcPs -> ExportEntry
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)

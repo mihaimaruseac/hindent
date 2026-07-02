@@ -19,7 +19,7 @@ instance CommentExtraction ImplicitParameterName where
   nodeComments ImplicitParameterName {} = emptyNodeComments
 
 instance Pretty ImplicitParameterName where
-  pretty' (ImplicitParameterName name) = string "?" >> pretty name
+  pretty (ImplicitParameterName name) = string "?" >> pretty name
 
 mkImplicitParameterName :: GHC.HsIPName -> ImplicitParameterName
 mkImplicitParameterName (GHC.HsIPName fs) =

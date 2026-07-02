@@ -75,25 +75,25 @@ instance CommentExtraction Declaration where
   nodeComments RoleAnnotDecl {} = NodeComments [] [] []
 
 instance Pretty Declaration where
-  pretty' (DataFamily x) = pretty x
-  pretty' (TypeFamily x) = pretty x
-  pretty' (DataDeclaration x) = pretty x
-  pretty' (ClassDeclaration x) = pretty x
-  pretty' (TypeSynonym x) = pretty x
-  pretty' (ClassInstance x) = pretty x
-  pretty' (DataFamilyInstance x) = pretty x
-  pretty' (TypeFamilyInstance x) = pretty x
-  pretty' (StandAloneDeriving x) = pretty x
-  pretty' (Bind x) = pretty x
-  pretty' (Signature x) = pretty x
-  pretty' (StandaloneKindSignature x) = pretty x
-  pretty' (Default x) = pretty x
-  pretty' (Foreign x) = pretty x
-  pretty' (Warnings x) = pretty x
-  pretty' (Annotation x) = pretty x
-  pretty' (RuleDecl x) = pretty x
-  pretty' (Splice x) = pretty x
-  pretty' (RoleAnnotDecl x) = pretty x
+  pretty (DataFamily x) = pretty x
+  pretty (TypeFamily x) = pretty x
+  pretty (DataDeclaration x) = pretty x
+  pretty (ClassDeclaration x) = pretty x
+  pretty (TypeSynonym x) = pretty x
+  pretty (ClassInstance x) = pretty x
+  pretty (DataFamilyInstance x) = pretty x
+  pretty (TypeFamilyInstance x) = pretty x
+  pretty (StandAloneDeriving x) = pretty x
+  pretty (Bind x) = pretty x
+  pretty (Signature x) = pretty x
+  pretty (StandaloneKindSignature x) = pretty x
+  pretty (Default x) = pretty x
+  pretty (Foreign x) = pretty x
+  pretty (Warnings x) = pretty x
+  pretty (Annotation x) = pretty x
+  pretty (RuleDecl x) = pretty x
+  pretty (Splice x) = pretty x
+  pretty (RoleAnnotDecl x) = pretty x
 
 mkDeclaration :: GHC.HsDecl GHC.GhcPs -> Declaration
 mkDeclaration (GHC.TyClD _ (GHC.FamDecl _ x)) =

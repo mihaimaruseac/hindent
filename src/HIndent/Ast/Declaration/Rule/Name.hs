@@ -18,7 +18,7 @@ instance CommentExtraction RuleName where
   nodeComments _ = emptyNodeComments
 
 instance Pretty RuleName where
-  pretty' (RuleName name) = doubleQuotes $ pretty name
+  pretty (RuleName name) = doubleQuotes $ pretty name
 
 mkRuleName :: GHC.RuleName -> RuleName
 mkRuleName = RuleName . mkTextValueFromString . GHC.unpackFS

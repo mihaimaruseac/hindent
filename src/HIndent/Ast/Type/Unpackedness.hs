@@ -21,8 +21,8 @@ instance CommentExtraction Unpackedness where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty Unpackedness where
-  pretty' Unpack = string "{-# UNPACK #-}"
-  pretty' NoUnpack = string "{-# NOUNPACK #-}"
+  pretty Unpack = string "{-# UNPACK #-}"
+  pretty NoUnpack = string "{-# NOUNPACK #-}"
 
 mkUnpackedness :: GHC.SrcUnpackedness -> Maybe Unpackedness
 mkUnpackedness GHC.SrcUnpack = Just Unpack

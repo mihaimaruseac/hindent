@@ -25,10 +25,10 @@ instance CommentExtraction InlineSpec where
   nodeComments Opaque = NodeComments [] [] []
 
 instance Pretty InlineSpec where
-  pretty' Inline = string "INLINE"
-  pretty' Inlinable = string "INLINABLE"
-  pretty' NoInline = string "NOINLINE"
-  pretty' Opaque = string "OPAQUE"
+  pretty Inline = string "INLINE"
+  pretty Inlinable = string "INLINABLE"
+  pretty NoInline = string "NOINLINE"
+  pretty Opaque = string "OPAQUE"
 
 mkInlineSpec :: GHC.InlineSpec -> InlineSpec
 mkInlineSpec GHC.Inline {} = Inline

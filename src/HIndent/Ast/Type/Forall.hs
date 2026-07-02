@@ -23,11 +23,11 @@ instance CommentExtraction Forall where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty Forall where
-  pretty' (Visible vars) = do
+  pretty (Visible vars) = do
     string "forall "
     spaced $ fmap pretty vars
     string " ->"
-  pretty' (Invisible vars) = do
+  pretty (Invisible vars) = do
     string "forall "
     spaced $ fmap pretty vars
     dot

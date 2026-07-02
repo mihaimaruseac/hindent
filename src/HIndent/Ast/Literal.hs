@@ -26,10 +26,10 @@ instance CommentExtraction Literal where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty Literal where
-  pretty' (Inline value) = pretty value
-  pretty' (MultilineString []) = pure ()
-  pretty' (MultilineString [value]) = pretty value
-  pretty' (MultilineString (value:values)) = do
+  pretty (Inline value) = pretty value
+  pretty (MultilineString []) = pure ()
+  pretty (MultilineString [value]) = pretty value
+  pretty (MultilineString (value:values)) = do
     pretty value
     newline
     indentedWithFixedLevel 0 $ lined $ fmap pretty values

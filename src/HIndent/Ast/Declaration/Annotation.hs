@@ -25,7 +25,7 @@ instance CommentExtraction Annotation where
   nodeComments Annotation {} = NodeComments [] [] []
 
 instance Pretty Annotation where
-  pretty' Annotation {..} =
+  pretty Annotation {..} =
     spaced [string "{-# ANN", pretty provenance, pretty expr, string "#-}"]
 
 mkAnnotation :: GHC.AnnDecl GHC.GhcPs -> Annotation

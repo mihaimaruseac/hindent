@@ -24,7 +24,7 @@ instance CommentExtraction RoleAnnotation where
   nodeComments RoleAnnotation {} = NodeComments [] [] []
 
 instance Pretty RoleAnnotation where
-  pretty' RoleAnnotation {..} =
+  pretty RoleAnnotation {..} =
     spaced
       $ [string "type role", pretty name]
           ++ fmap (`prettyWith` maybe (string "_") pretty) roles

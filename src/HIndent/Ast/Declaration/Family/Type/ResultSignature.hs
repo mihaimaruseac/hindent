@@ -25,9 +25,9 @@ instance CommentExtraction ResultSignature where
   nodeComments TypeVariable {} = NodeComments [] [] []
 
 instance Pretty ResultSignature where
-  pretty' NoSig = return ()
-  pretty' (Kind x) = string " :: " >> pretty x
-  pretty' (TypeVariable x) = string " = " >> pretty x
+  pretty NoSig = return ()
+  pretty (Kind x) = string " :: " >> pretty x
+  pretty (TypeVariable x) = string " = " >> pretty x
 
 mkResultSignature :: GHC.FamilyResultSig GHC.GhcPs -> ResultSignature
 mkResultSignature (GHC.NoSig _) = NoSig

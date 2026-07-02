@@ -148,16 +148,16 @@ instance CommentExtraction Type where
   nodeComments Wildcard = NodeComments [] [] []
 
 instance Pretty Type where
-  pretty' UniversalType {..} = (pretty telescope >> space) |=> pretty body
-  pretty' ConstrainedType {..} = hor <-|> ver
+  pretty UniversalType {..} = (pretty telescope >> space) |=> pretty body
+  pretty ConstrainedType {..} = hor <-|> ver
     where
       hor = spaced [pretty context, string "=>", pretty body]
       ver = do
         pretty context
         lined [string " =>", indentedBlock $ pretty body]
-  pretty' Variable {isPromoted = False, ..} = pretty name
-  pretty' Variable {isPromoted = True, ..} = string "'" >> pretty name
-  pretty' Application {..} = hor <-|> ver
+  pretty Variable {isPromoted = False, ..} = pretty name
+  pretty Variable {isPromoted = True, ..} = string "'" >> pretty name
+  pretty Application {..} = hor <-|> ver
     where
       hor = spaced [pretty function, pretty argument]
       ver = verticalApp function argument
@@ -166,20 +166,20 @@ instance Pretty Type where
           Application {function = l', argument = r'} ->
             verticalApp l' r' >> newline >> indentedBlock (pretty right)
           _ -> pretty left >> newline >> indentedBlock (pretty right)
-  pretty' KindApplication {..} = pretty base >> string " @" >> pretty kind
-  pretty' Function {..} =
+  pretty KindApplication {..} = pretty base >> string " @" >> pretty kind
+  pretty Function {..} =
     (pretty from
        >> if isUnrestricted multiplicity
             then string " -> "
             else space >> pretty multiplicity >> string " -> ")
       |=> pretty to
-  pretty' List {..} = brackets $ pretty elementType
-  pretty' Tuple {isUnboxed = True, elements = []} = string "(# #)"
-  pretty' Tuple {isUnboxed = False, elements = []} = string "()"
-  pretty' Tuple {isUnboxed = True, ..} = hvUnboxedTuple' $ fmap pretty elements
-  pretty' Tuple {isUnboxed = False, ..} = hvTuple' $ fmap pretty elements
-  pretty' Sum {..} = hvUnboxedSum' $ fmap pretty elements
-  pretty' InfixType {..} = do
+  pretty List {..} = brackets $ pretty elementType
+  pretty Tuple {isUnboxed = True, elements = []} = string "(# #)"
+  pretty Tuple {isUnboxed = False, elements = []} = string "()"
+  pretty Tuple {isUnboxed = True, ..} = hvUnboxedTuple' $ fmap pretty elements
+  pretty Tuple {isUnboxed = False, ..} = hvTuple' $ fmap pretty elements
+  pretty Sum {..} = hvUnboxedSum' $ fmap pretty elements
+  pretty InfixType {..} = do
     lineBreak <- gets (configLineBreaks . psConfig)
     if getInfixName (getNode operator) `elem` lineBreak
       then do
@@ -189,19 +189,19 @@ instance Pretty Type where
         space
         pretty right
       else spaced [pretty left, pretty operator, pretty right]
-  pretty' Parenthesized {..} = parens $ pretty inner
-  pretty' ImplicitParameter {..} =
+  pretty Parenthesized {..} = parens $ pretty inner
+  pretty ImplicitParameter {..} =
     spaced [pretty ipName, string "::", pretty paramType]
-  pretty' Star = string "*"
-  pretty' KindSig {..} = spaced [pretty annotated, string "::", pretty kind]
-  pretty' Splice {..} = pretty splice
-  pretty' StrictType {..} = pretty bang >> pretty baseType
-  pretty' RecordType {..} = hvFields $ fmap pretty fields
-  pretty' PromotedList {elements = []} = string "'[]"
-  pretty' PromotedList {..} = hvPromotedList $ fmap pretty elements
-  pretty' PromotedTuple {..} = hPromotedTuple $ fmap pretty elements
-  pretty' Literal {..} = pretty literal
-  pretty' Wildcard = string "_"
+  pretty Star = string "*"
+  pretty KindSig {..} = spaced [pretty annotated, string "::", pretty kind]
+  pretty Splice {..} = pretty splice
+  pretty StrictType {..} = pretty bang >> pretty baseType
+  pretty RecordType {..} = hvFields $ fmap pretty fields
+  pretty PromotedList {elements = []} = string "'[]"
+  pretty PromotedList {..} = hvPromotedList $ fmap pretty elements
+  pretty PromotedTuple {..} = hPromotedTuple $ fmap pretty elements
+  pretty Literal {..} = pretty literal
+  pretty Wildcard = string "_"
 
 mkType :: GHC.HsType GHC.GhcPs -> Type
 mkType (GHC.HsForAllTy _ tele body) =
@@ -353,7 +353,7 @@ instance CommentExtraction VerticalFuncType where
   nodeComments (VerticalFuncType t) = nodeComments t
 
 instance Pretty VerticalFuncType where
-  pretty' (VerticalFuncType Function {..}) = do
+  pretty (VerticalFuncType Function {..}) = do
     pretty $ fmap mkVerticalFuncType from
     newline
     if isUnrestricted multiplicity
@@ -362,7 +362,7 @@ instance Pretty VerticalFuncType where
         pretty multiplicity
         string " -> "
         pretty $ fmap mkVerticalFuncType to
-  pretty' (VerticalFuncType t) = pretty t
+  pretty (VerticalFuncType t) = pretty t
 
 mkVerticalFuncType :: Type -> VerticalFuncType
 mkVerticalFuncType = VerticalFuncType
@@ -374,7 +374,7 @@ instance CommentExtraction DeclSigType where
   nodeComments (DeclSigType t) = nodeComments t
 
 instance Pretty DeclSigType where
-  pretty' (DeclSigType UniversalType {..}) = do
+  pretty (DeclSigType UniversalType {..}) = do
     pretty telescope
     case getNode body of
       ConstrainedType ctxt b ->
@@ -388,14 +388,14 @@ instance Pretty DeclSigType where
         let hor = space >> pretty (DeclSigType <$> body)
             ver = newline >> pretty (DeclSigType <$> body)
          in hor <-|> ver
-  pretty' (DeclSigType ConstrainedType {..}) = hor <-|> ver
+  pretty (DeclSigType ConstrainedType {..}) = hor <-|> ver
     where
       hor = spaced [pretty context, string "=>", pretty body]
       ver = do
         pretty context
         newline
         prefixed "=> " $ pretty $ fmap mkVerticalFuncType body
-  pretty' (DeclSigType Function {..}) = hor <-|> ver
+  pretty (DeclSigType Function {..}) = hor <-|> ver
     where
       hor = do
         pretty from
@@ -412,7 +412,7 @@ instance Pretty DeclSigType where
             pretty multiplicity
             string " -> "
             pretty $ mkVerticalFuncType <$> to
-  pretty' (DeclSigType t) = pretty t
+  pretty (DeclSigType t) = pretty t
 
 mkDeclSigType :: GHC.HsSigType GHC.GhcPs -> WithComments DeclSigType
 mkDeclSigType hsSigType = DeclSigType <$> mkTypeFromHsSigType hsSigType
@@ -424,18 +424,18 @@ instance CommentExtraction InstDeclType where
   nodeComments (InstDeclType t) = nodeComments t
 
 instance Pretty InstDeclType where
-  pretty' (InstDeclType UniversalType {..}) = do
+  pretty (InstDeclType UniversalType {..}) = do
     pretty telescope
     space
     pretty $ InstDeclType <$> body
-  pretty' (InstDeclType ConstrainedType {..}) = hor <-|> ver
+  pretty (InstDeclType ConstrainedType {..}) = hor <-|> ver
     where
       hor = spaced [pretty context, string "=>", pretty body]
       ver = do
         pretty context >> string " =>"
         newline
         indentedWithFixedLevel 9 $ pretty body
-  pretty' (InstDeclType t) = pretty t
+  pretty (InstDeclType t) = pretty t
 
 mkInstDeclType :: GHC.HsSigType GHC.GhcPs -> WithComments InstDeclType
 mkInstDeclType hsSigType = InstDeclType <$> mkTypeFromHsSigType hsSigType

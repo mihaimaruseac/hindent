@@ -19,7 +19,7 @@ instance CommentExtraction OverloadedLabel where
   nodeComments OverloadedLabel {} = emptyNodeComments
 
 instance Pretty OverloadedLabel where
-  pretty' (OverloadedLabel value) = string "#" >> pretty value
+  pretty (OverloadedLabel value) = string "#" >> pretty value
 
 mkOverloadedLabel :: GHC.FastString -> OverloadedLabel
 mkOverloadedLabel value =

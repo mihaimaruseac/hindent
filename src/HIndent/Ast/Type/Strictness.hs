@@ -21,8 +21,8 @@ instance CommentExtraction Strictness where
   nodeComments _ = NodeComments [] [] []
 
 instance Pretty Strictness where
-  pretty' Lazy = string "~"
-  pretty' Strict = string "!"
+  pretty Lazy = string "~"
+  pretty Strict = string "!"
 
 mkStrictness :: GHC.SrcStrictness -> Maybe Strictness
 mkStrictness GHC.SrcLazy = Just Lazy
