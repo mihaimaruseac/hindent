@@ -42,21 +42,24 @@ instance Pretty InfixName where
 mkInfixName :: GHC.RdrName -> InfixName
 mkInfixName (GHC.Unqual name) =
   InfixName
-    (mkTextValueFromString $ showOutputable name)
-    Nothing
-    (backticksNeeded name)
+    { name = mkTextValueFromString $ showOutputable name
+    , moduleName = Nothing
+    , backtick = backticksNeeded name
+    }
 mkInfixName (GHC.Qual modName name) =
   InfixName
-    (mkTextValueFromString $ showOutputable name)
-    (Just $ mkModuleName modName)
-    (backticksNeeded name)
+    { name = mkTextValueFromString $ showOutputable name
+    , moduleName = Just $ mkModuleName modName
+    , backtick = backticksNeeded name
+    }
 mkInfixName (GHC.Orig {}) =
   error "This AST node should not appear in the parser output."
 mkInfixName (GHC.Exact name) =
   InfixName
-    (mkTextValueFromString $ showOutputable $ GHC.occName name)
-    Nothing
-    (backticksNeeded $ GHC.occName name)
+    { name = mkTextValueFromString $ showOutputable $ GHC.occName name
+    , moduleName = Nothing
+    , backtick = backticksNeeded $ GHC.occName name
+    }
 
 getInfixName :: InfixName -> Text
 getInfixName = toText . name

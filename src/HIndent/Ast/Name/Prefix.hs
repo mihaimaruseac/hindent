@@ -43,24 +43,32 @@ instance Pretty PrefixName where
 mkPrefixName :: GHC.RdrName -> PrefixName
 mkPrefixName (GHC.Unqual name) =
   PrefixName
-    (mkTextValueFromString $ showOutputable name)
-    Nothing
-    (parensNeeded name)
+    { name = mkTextValueFromString $ showOutputable name
+    , moduleName = Nothing
+    , parentheses = parensNeeded name
+    }
 mkPrefixName (GHC.Qual modName name) =
   PrefixName
-    (mkTextValueFromString $ showOutputable name)
-    (Just $ mkModuleName modName)
-    (parensNeeded name)
+    { name = mkTextValueFromString $ showOutputable name
+    , moduleName = Just $ mkModuleName modName
+    , parentheses = parensNeeded name
+    }
 mkPrefixName (GHC.Orig {}) =
   error "This AST node should not appear in the parser output."
 mkPrefixName (GHC.Exact name) =
   PrefixName
-    (mkTextValueFromString $ showOutputable name)
-    Nothing
-    (parensNeeded $ GHC.occName name)
+    { name = mkTextValueFromString $ showOutputable name
+    , moduleName = Nothing
+    , parentheses = parensNeeded $ GHC.occName name
+    }
 
 fromString :: String -> PrefixName
-fromString value = PrefixName (mkTextValueFromString value) Nothing False
+fromString name =
+  PrefixName
+    { name = mkTextValueFromString name
+    , moduleName = Nothing
+    , parentheses = False
+    }
 
 newtype PrefixAsInfix =
   PrefixAsInfix PrefixName
