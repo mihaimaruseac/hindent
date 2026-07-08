@@ -13,17 +13,12 @@ import qualified Data.Text as Text
 import qualified GHC.Data.FastString as GHC
 #endif
 import qualified GHC.Types.SourceText as GHC
-import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 newtype TextValue =
   TextValue Text.Text
   deriving (Eq, Ord, Show)
-
-instance CommentExtraction TextValue where
-  nodeComments _ = NodeComments [] [] []
 
 instance Pretty TextValue where
   pretty (TextValue value) = string value

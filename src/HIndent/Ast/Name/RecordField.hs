@@ -14,7 +14,6 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified GHC.Data.FastString as GHC
 import qualified GHC.Hs as GHC
 import HIndent.Ast.Name.Prefix (PrefixName, fromString, mkPrefixName)
-import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.WithComments
   ( WithComments
   , flattenComments
@@ -22,7 +21,6 @@ import HIndent.Ast.WithComments
   )
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators (hDotSep)
-import HIndent.Pretty.NodeComments
 import qualified Language.Haskell.Syntax.Basic as GHC
 
 newtype FieldName =
@@ -30,9 +28,6 @@ newtype FieldName =
 
 mkFieldNameFromLabels :: NonEmpty (WithComments PrefixName) -> FieldName
 mkFieldNameFromLabels = FieldName
-
-instance CommentExtraction FieldName where
-  nodeComments FieldName {} = NodeComments [] [] []
 
 instance Pretty FieldName where
   pretty (FieldName labels) = hDotSep $ pretty <$> NonEmpty.toList labels

@@ -9,17 +9,12 @@ import Data.Char
 import Data.List.Split
 import qualified Data.Text as Text
 import qualified GHC.Hs as GHC
-import HIndent.Ast.NodeComments
 import HIndent.Ast.TextValue
 import HIndent.Pragma
 import HIndent.Pretty
-import HIndent.Pretty.NodeComments
 
 newtype FileHeaderPragma =
   FileHeaderPragma TextValue
-
-instance CommentExtraction FileHeaderPragma where
-  nodeComments _ = NodeComments [] [] []
 
 instance Pretty FileHeaderPragma where
   pretty (FileHeaderPragma value) = pretty value

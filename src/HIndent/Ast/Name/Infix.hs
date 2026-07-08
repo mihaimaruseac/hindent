@@ -14,11 +14,9 @@ import Data.Text (Text)
 import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import HIndent.Ast.Module.Name
-import HIndent.Ast.NodeComments
 import HIndent.Ast.TextValue
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators hiding (unlessSpecialOp)
-import HIndent.Pretty.NodeComments
 import HIndent.Printer
 
 data InfixName = InfixName
@@ -26,9 +24,6 @@ data InfixName = InfixName
   , moduleName :: Maybe ModuleName
   , backtick :: Bool
   }
-
-instance CommentExtraction InfixName where
-  nodeComments InfixName {} = NodeComments [] [] []
 
 instance Pretty InfixName where
   pretty InfixName {..} =

@@ -15,21 +15,16 @@ import qualified GHC.Types.Fixity as Fixity
 import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import HIndent.Ast.Module.Name
-import HIndent.Ast.NodeComments
 import HIndent.Ast.TextValue (TextValue, mkTextValueFromString, toText)
 import HIndent.Fixity (fixities)
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data PrefixName = PrefixName
   { name :: TextValue
   , moduleName :: Maybe ModuleName
   , parentheses :: Bool
   }
-
-instance CommentExtraction PrefixName where
-  nodeComments PrefixName {} = NodeComments [] [] []
 
 instance Pretty PrefixName where
   pretty PrefixName {..} =
@@ -72,9 +67,6 @@ fromString name =
 
 newtype PrefixAsInfix =
   PrefixAsInfix PrefixName
-
-instance CommentExtraction PrefixAsInfix where
-  nodeComments (PrefixAsInfix prefix) = nodeComments prefix
 
 instance Pretty PrefixAsInfix where
   pretty (PrefixAsInfix PrefixName {..}) =

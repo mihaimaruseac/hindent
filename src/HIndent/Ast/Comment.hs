@@ -14,7 +14,6 @@ import HIndent.Ast.TextValue
 import qualified HIndent.GhcLibParserWrapper.GHC.Parser.Annotation as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments (CommentExtraction(..))
 
 data Comment
   = Line
@@ -26,9 +25,6 @@ data Comment
       , column :: Int
       }
   deriving (Eq, Show)
-
-instance CommentExtraction Comment where
-  nodeComments _ = mempty
 
 instance Pretty Comment where
   pretty Line {..} = pretty text
