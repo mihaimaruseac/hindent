@@ -7,10 +7,8 @@ module HIndent.Ast.Declaration.Signature.Inline.Phase
 
 import qualified Data.Text as Text
 import qualified GHC.Types.Basic as GHC
-import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data BeforeOrAfter
   = Before
@@ -20,9 +18,6 @@ data InlinePhase = InlinePhase
   { beforeOrAfter :: BeforeOrAfter
   , phase :: Int
   }
-
-instance CommentExtraction InlinePhase where
-  nodeComments InlinePhase {} = NodeComments [] [] []
 
 instance Pretty InlinePhase where
   pretty InlinePhase {beforeOrAfter = Before, ..} =

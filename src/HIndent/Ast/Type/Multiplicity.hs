@@ -7,23 +7,16 @@ module HIndent.Ast.Type.Multiplicity
   , isUnrestricted
   ) where
 
-import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data Multiplicity
   = MkUnrestricted
   | MkLinear
   | MkExplicit (WithComments Type)
-
-instance CommentExtraction Multiplicity where
-  nodeComments MkUnrestricted = NodeComments [] [] []
-  nodeComments MkLinear = NodeComments [] [] []
-  nodeComments (MkExplicit mult) = nodeComments mult
 
 instance Pretty Multiplicity where
   pretty MkUnrestricted = pure ()

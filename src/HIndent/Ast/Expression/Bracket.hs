@@ -9,14 +9,12 @@ module HIndent.Ast.Expression.Bracket
 import HIndent.Ast.Declaration
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Pattern
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data Bracket
   = TypedExpression (WithComments Expression)
@@ -25,14 +23,6 @@ data Bracket
   | Declaration [WithComments Declaration]
   | Type (WithComments Type)
   | Variable Bool (WithComments PrefixName)
-
-instance CommentExtraction Bracket where
-  nodeComments (TypedExpression expr) = nodeComments expr
-  nodeComments (UntypedExpression expr) = nodeComments expr
-  nodeComments Pattern {} = NodeComments [] [] []
-  nodeComments Declaration {} = NodeComments [] [] []
-  nodeComments Type {} = NodeComments [] [] []
-  nodeComments Variable {} = NodeComments [] [] []
 
 instance Pretty Bracket where
   pretty (TypedExpression x) = typedBrackets $ pretty x

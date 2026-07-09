@@ -7,23 +7,18 @@ module HIndent.Ast.Declaration.Instance.Family.Type
   ) where
 
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type
 import HIndent.Ast.Type.Argument.Collection
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data TypeFamilyInstance = TypeFamilyInstance
   { name :: WithComments PrefixName
   , types :: TypeArgumentCollection
   , bind :: WithComments Type
   }
-
-instance CommentExtraction TypeFamilyInstance where
-  nodeComments TypeFamilyInstance {} = NodeComments [] [] []
 
 instance Pretty TypeFamilyInstance where
   pretty TypeFamilyInstance {..} = do

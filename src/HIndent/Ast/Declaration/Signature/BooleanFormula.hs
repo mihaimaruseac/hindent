@@ -7,24 +7,16 @@ module HIndent.Ast.Declaration.Signature.BooleanFormula
 
 import qualified GHC.Data.BooleanFormula as GHC
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data BooleanFormula
   = Var (WithComments PrefixName)
   | And [WithComments BooleanFormula]
   | Or [WithComments BooleanFormula]
   | Parens (WithComments BooleanFormula)
-
-instance CommentExtraction BooleanFormula where
-  nodeComments Var {} = NodeComments [] [] []
-  nodeComments And {} = NodeComments [] [] []
-  nodeComments Or {} = NodeComments [] [] []
-  nodeComments Parens {} = NodeComments [] [] []
 
 instance Pretty BooleanFormula where
   pretty (Var x) = pretty x

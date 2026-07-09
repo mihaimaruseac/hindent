@@ -11,7 +11,6 @@ import qualified Data.Text as Text
 import qualified GHC.Data.FastString as GHC
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 #else
@@ -24,7 +23,6 @@ import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import qualified GHC.Types.SrcLoc as GHC
 #endif
@@ -33,12 +31,6 @@ data Splice
   | UntypedDollar (WithComments Expression)
   | UntypedBare (WithComments Expression)
   | QuasiQuote (WithComments PrefixName) GHC.FastString
-
-instance CommentExtraction Splice where
-  nodeComments (Typed expr) = nodeComments expr
-  nodeComments (UntypedDollar expr) = nodeComments expr
-  nodeComments (UntypedBare expr) = nodeComments expr
-  nodeComments QuasiQuote {} = NodeComments [] [] []
 
 instance Pretty Splice where
   pretty (Typed x) = string "$$" >> pretty x

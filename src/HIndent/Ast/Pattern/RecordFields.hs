@@ -8,21 +8,16 @@ module HIndent.Ast.Pattern.RecordFields
   ) where
 
 import Data.Maybe (isJust)
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Record.Field (PatField, mkPatField)
 import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data RecordFieldsPat = RecordFieldsPat
   { fields :: [WithComments PatField]
   , dotdot :: Bool
   }
-
-instance CommentExtraction RecordFieldsPat where
-  nodeComments RecordFieldsPat {} = NodeComments [] [] []
 
 instance Pretty RecordFieldsPat where
   pretty (RecordFieldsPat fs dd) =

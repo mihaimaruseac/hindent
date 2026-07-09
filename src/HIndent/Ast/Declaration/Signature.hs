@@ -20,13 +20,11 @@ import HIndent.Ast.Declaration.Signature.Inline.Spec
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression)
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type (DeclSigType, Type, mkDeclSigType, mkTypeFromHsSigType)
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 import {-# SOURCE #-} HIndent.Ast.Expression (mkExpression)
 #endif
@@ -69,20 +67,6 @@ data Signature
   | Minimal (WithComments BooleanFormula)
   | Scc (WithComments PrefixName)
   | Complete [WithComments PrefixName]
-
-instance CommentExtraction Signature where
-  nodeComments Type {} = NodeComments [] [] []
-  nodeComments Pattern {} = NodeComments [] [] []
-  nodeComments DefaultClassMethod {} = NodeComments [] [] []
-  nodeComments ClassMethod {} = NodeComments [] [] []
-  nodeComments Fixity {} = NodeComments [] [] []
-  nodeComments Inline {} = NodeComments [] [] []
-  nodeComments Specialise {} = NodeComments [] [] []
-  nodeComments SpecialiseExpr {} = NodeComments [] [] []
-  nodeComments SpecialiseInstance {} = NodeComments [] [] []
-  nodeComments Minimal {} = NodeComments [] [] []
-  nodeComments Scc {} = NodeComments [] [] []
-  nodeComments Complete {} = NodeComments [] [] []
 
 instance Pretty Signature where
   pretty Type {..} = do

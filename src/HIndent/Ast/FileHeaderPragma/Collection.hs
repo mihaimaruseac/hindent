@@ -9,17 +9,12 @@ module HIndent.Ast.FileHeaderPragma.Collection
 import Data.Maybe
 import Generics.SYB
 import HIndent.Ast.FileHeaderPragma
-import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 newtype FileHeaderPragmaCollection =
   FileHeaderPragmaCollection [FileHeaderPragma]
-
-instance CommentExtraction FileHeaderPragmaCollection where
-  nodeComments _ = NodeComments [] [] []
 
 instance Pretty FileHeaderPragmaCollection where
   pretty (FileHeaderPragmaCollection xs) = lined $ fmap pretty xs

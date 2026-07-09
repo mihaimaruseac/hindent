@@ -10,13 +10,9 @@ import HIndent.Ast.TextValue (TextValue, mkTextValueFromString)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 newtype ImplicitParameterName =
   ImplicitParameterName TextValue
-
-instance CommentExtraction ImplicitParameterName where
-  nodeComments ImplicitParameterName {} = emptyNodeComments
 
 instance Pretty ImplicitParameterName where
   pretty (ImplicitParameterName name) = string "?" >> pretty name

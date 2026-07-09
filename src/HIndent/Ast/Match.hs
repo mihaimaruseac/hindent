@@ -27,7 +27,6 @@ import HIndent.Ast.Declaration.Bind.GuardedRhs
   )
 import HIndent.Ast.Name.Infix (InfixName, mkInfixName)
 import HIndent.Ast.Name.Prefix (PrefixName, mkPrefixName)
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Pattern (Pattern, mkPattern)
 import HIndent.Ast.Type.Strictness (Strictness, mkStrictness)
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
@@ -47,7 +46,6 @@ import HIndent.Ast.WithComments
 #endif
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments (CommentExtraction(..))
 
 data InfixOperands = InfixOperands
   { left :: WithComments Pattern
@@ -55,9 +53,6 @@ data InfixOperands = InfixOperands
   , right :: WithComments Pattern
   , rest :: [WithComments Pattern]
   }
-
-instance CommentExtraction InfixOperands where
-  nodeComments _ = NodeComments [] [] []
 
 instance Pretty InfixOperands where
   pretty InfixOperands {..} =
@@ -83,9 +78,6 @@ data Match
       { operands :: WithComments InfixOperands
       , rhs :: GuardedRhs
       }
-
-instance CommentExtraction Match where
-  nodeComments _ = NodeComments [] [] []
 
 instance Pretty Match where
   pretty Lambda {..} = do

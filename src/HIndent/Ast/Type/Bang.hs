@@ -7,19 +7,14 @@ module HIndent.Ast.Type.Bang
 
 import Control.Monad
 import Data.Maybe
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type.Strictness
 import HIndent.Ast.Type.Unpackedness
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data Bang =
   Bang (Maybe Unpackedness) (Maybe Strictness)
-
-instance CommentExtraction Bang where
-  nodeComments _ = NodeComments [] [] []
 
 instance Pretty Bang where
   pretty (Bang unpack strictness) = do

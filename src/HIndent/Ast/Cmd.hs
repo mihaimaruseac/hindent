@@ -24,7 +24,6 @@ import HIndent.Ast.WithComments
   )
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments (CommentExtraction(..), emptyNodeComments)
 
 data ArrowKind
   = Higher
@@ -73,9 +72,6 @@ data Cmd
       { statements :: WithComments [WithComments CmdStatement]
       }
   | Parenthesized (WithComments Cmd)
-
-instance CommentExtraction Cmd where
-  nodeComments _ = emptyNodeComments
 
 instance Pretty Cmd where
   pretty ArrowApp {..} =
@@ -233,9 +229,6 @@ mkCmdFromHsCmdTop (GHC.HsCmdTop _ cmd) =
 
 newtype CmdDoBlock =
   CmdDoBlock Cmd
-
-instance CommentExtraction CmdDoBlock where
-  nodeComments _ = emptyNodeComments
 
 instance Pretty CmdDoBlock where
   pretty (CmdDoBlock DoBlock {statements = stmts}) =

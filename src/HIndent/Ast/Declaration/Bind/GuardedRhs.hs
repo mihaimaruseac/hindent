@@ -23,7 +23,6 @@ import HIndent.Ast.Guard
   , mkLambdaExprGuard
   , mkMultiWayIfExprGuard
   )
-import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.WhereClause (WhereClause, mkWhereClause)
 import HIndent.Ast.WithComments
   ( WithComments
@@ -33,15 +32,11 @@ import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data GuardedRhs = GuardedRhs
   { guards :: [WithComments Guard]
   , whereClause :: Maybe (WithComments WhereClause)
   }
-
-instance CommentExtraction GuardedRhs where
-  nodeComments _ = NodeComments [] [] []
 
 instance Pretty GuardedRhs where
   pretty GuardedRhs {..} = do

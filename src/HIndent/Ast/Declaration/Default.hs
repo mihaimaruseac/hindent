@@ -7,18 +7,13 @@ module HIndent.Ast.Declaration.Default
   ) where
 
 import qualified GHC.Hs as GHC
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 newtype DefaultDeclaration =
   DefaultDeclaration [WithComments Type]
-
-instance CommentExtraction DefaultDeclaration where
-  nodeComments DefaultDeclaration {} = NodeComments [] [] []
 
 instance Pretty DefaultDeclaration where
   pretty (DefaultDeclaration xs) =

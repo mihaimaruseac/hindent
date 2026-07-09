@@ -10,20 +10,15 @@ module HIndent.Ast.Literal
 import qualified Data.Text as Text
 import qualified GHC.Data.FastString as GHC
 import qualified GHC.Types.SourceText as GHC
-import HIndent.Ast.NodeComments
 import HIndent.Ast.TextValue
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments (CommentExtraction(..))
 import HIndent.Text.Show.Unicode
 
 data Literal
   = Inline TextValue
   | MultilineString [TextValue]
-
-instance CommentExtraction Literal where
-  nodeComments _ = NodeComments [] [] []
 
 instance Pretty Literal where
   pretty (Inline value) = pretty value

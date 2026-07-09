@@ -8,18 +8,13 @@ import Data.Function
 import Data.List (sortBy)
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Declaration.Class.Member
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 newtype ClassBody =
   ClassBody [WithComments ClassMember]
-
-instance CommentExtraction ClassBody where
-  nodeComments ClassBody {} = NodeComments [] [] []
 
 instance Pretty ClassBody where
   pretty (ClassBody members) = newlinePrefixed $ fmap pretty members

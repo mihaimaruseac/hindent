@@ -8,14 +8,10 @@ import {-# SOURCE #-} HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Signature
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
-import HIndent.Pretty.NodeComments (CommentExtraction(..), emptyNodeComments)
 
 data LocalDeclaration
   = Binding Bind
   | Signature Signature
-
-instance CommentExtraction LocalDeclaration where
-  nodeComments _ = emptyNodeComments
 
 instance Pretty LocalDeclaration where
   pretty (Binding bind) = pretty bind

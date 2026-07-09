@@ -6,20 +6,13 @@ module HIndent.Ast.Role
   ) where
 
 import qualified GHC.Core.TyCon as GHC
-import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data Role
   = Nominal
   | Representational
   | Phantom
-
-instance CommentExtraction Role where
-  nodeComments Nominal = NodeComments [] [] []
-  nodeComments Representational = NodeComments [] [] []
-  nodeComments Phantom = NodeComments [] [] []
 
 instance Pretty Role where
   pretty Nominal = string "nominal"

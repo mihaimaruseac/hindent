@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoFieldSelectors #-}
 
 module HIndent.Ast.Type
@@ -25,7 +24,6 @@ import HIndent.Ast.Expression.Splice
 import HIndent.Ast.Literal
 import HIndent.Ast.Name.Infix
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type.Bang
 import HIndent.Ast.Type.Forall
   ( Forall
@@ -42,7 +40,6 @@ import HIndent.Config
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 import HIndent.Printer
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 import qualified GHC.Types.SourceText as GHC
@@ -120,32 +117,6 @@ data Type
       { literal :: Literal
       }
   | Wildcard
-
-instance CommentExtraction Type where
-  nodeComments (UniversalType {}) = NodeComments [] [] []
-  nodeComments (ConstrainedType {}) = NodeComments [] [] []
-  nodeComments (Variable {}) = NodeComments [] [] []
-  nodeComments (Application {}) = NodeComments [] [] []
-  nodeComments (KindApplication {}) = NodeComments [] [] []
-  nodeComments (Function {}) = NodeComments [] [] []
-  nodeComments (List (getNode -> List {})) = NodeComments [] [] []
-  nodeComments (List x) = nodeComments x
-  nodeComments (Tuple _ xs) = mconcat $ nodeComments <$> xs
-  nodeComments (Sum xs) = mconcat $ nodeComments <$> xs
-  nodeComments (InfixType {}) = NodeComments [] [] []
-  nodeComments (Parenthesized (getNode -> Parenthesized {})) =
-    NodeComments [] [] []
-  nodeComments (Parenthesized x) = nodeComments x
-  nodeComments (ImplicitParameter {}) = NodeComments [] [] []
-  nodeComments Star = NodeComments [] [] []
-  nodeComments (KindSig {}) = NodeComments [] [] []
-  nodeComments (Splice {}) = NodeComments [] [] []
-  nodeComments (StrictType {}) = NodeComments [] [] []
-  nodeComments (RecordType xs) = mconcat $ nodeComments <$> xs
-  nodeComments (PromotedList xs) = mconcat $ nodeComments <$> xs
-  nodeComments (PromotedTuple xs) = mconcat $ nodeComments <$> xs
-  nodeComments (Literal {}) = NodeComments [] [] []
-  nodeComments Wildcard = NodeComments [] [] []
 
 instance Pretty Type where
   pretty UniversalType {..} = (pretty telescope >> space) |=> pretty body
@@ -349,9 +320,6 @@ mkTypeFromLHsWcType GHC.HsWC {..} =
 newtype VerticalFuncType =
   VerticalFuncType Type
 
-instance CommentExtraction VerticalFuncType where
-  nodeComments (VerticalFuncType t) = nodeComments t
-
 instance Pretty VerticalFuncType where
   pretty (VerticalFuncType Function {..}) = do
     pretty $ fmap mkVerticalFuncType from
@@ -369,9 +337,6 @@ mkVerticalFuncType = VerticalFuncType
 
 newtype DeclSigType =
   DeclSigType Type
-
-instance CommentExtraction DeclSigType where
-  nodeComments (DeclSigType t) = nodeComments t
 
 instance Pretty DeclSigType where
   pretty (DeclSigType UniversalType {..}) = do
@@ -419,9 +384,6 @@ mkDeclSigType hsSigType = DeclSigType <$> mkTypeFromHsSigType hsSigType
 
 newtype InstDeclType =
   InstDeclType Type
-
-instance CommentExtraction InstDeclType where
-  nodeComments (InstDeclType t) = nodeComments t
 
 instance Pretty InstDeclType where
   pretty (InstDeclType UniversalType {..}) = do

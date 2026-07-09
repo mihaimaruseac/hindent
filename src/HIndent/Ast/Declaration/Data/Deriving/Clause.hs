@@ -5,18 +5,13 @@ module HIndent.Ast.Declaration.Data.Deriving.Clause
   ) where
 
 import HIndent.Ast.Declaration.Data.Deriving
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 newtype DerivingClause =
   DerivingClause [WithComments Deriving]
-
-instance CommentExtraction DerivingClause where
-  nodeComments DerivingClause {} = NodeComments [] [] []
 
 instance Pretty DerivingClause where
   pretty (DerivingClause xs) = lined $ fmap pretty xs

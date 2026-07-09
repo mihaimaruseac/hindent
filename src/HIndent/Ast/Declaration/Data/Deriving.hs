@@ -9,21 +9,16 @@ module HIndent.Ast.Declaration.Data.Deriving
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Applicative
 import HIndent.Ast.Declaration.Data.Deriving.Strategy
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type (Type, mkTypeFromHsSigType)
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data Deriving = Deriving
   { strategy :: Maybe (WithComments DerivingStrategy)
   , classes :: WithComments [WithComments Type]
   }
-
-instance CommentExtraction Deriving where
-  nodeComments Deriving {} = NodeComments [] [] []
 
 instance Pretty Deriving where
   pretty Deriving {strategy = Just strategy, ..}

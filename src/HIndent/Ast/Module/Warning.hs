@@ -9,22 +9,17 @@ module HIndent.Ast.Module.Warning
 
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Declaration.Warning.Kind
-import HIndent.Ast.NodeComments
 import HIndent.Ast.TextValue
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import qualified HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data ModuleWarning = ModuleWarning
   { messages :: [TextValue]
   , kind :: Kind
   }
-
-instance CommentExtraction ModuleWarning where
-  nodeComments _ = NodeComments [] [] []
 
 instance Pretty ModuleWarning where
   pretty ModuleWarning {..} =

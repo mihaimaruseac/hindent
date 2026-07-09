@@ -10,13 +10,9 @@ import HIndent.Ast.Module.Name (ModuleName, mkModuleName)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data QualifiedDo =
   QualifiedDo (Maybe ModuleName) DoOrMdo
-
-instance CommentExtraction QualifiedDo where
-  nodeComments = const emptyNodeComments
 
 instance Pretty QualifiedDo where
   pretty (QualifiedDo (Just moduleName) doOrMdo) = do

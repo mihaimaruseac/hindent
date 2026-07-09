@@ -6,20 +6,13 @@ module HIndent.Ast.Declaration.Signature.Fixity.Associativity
   ) where
 
 import qualified GHC.Types.Fixity as GHC
-import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data Associativity
   = LeftAssoc
   | RightAssoc
   | None
-
-instance CommentExtraction Associativity where
-  nodeComments LeftAssoc = NodeComments [] [] []
-  nodeComments RightAssoc = NodeComments [] [] []
-  nodeComments None = NodeComments [] [] []
 
 instance Pretty Associativity where
   pretty LeftAssoc = string "infixl"

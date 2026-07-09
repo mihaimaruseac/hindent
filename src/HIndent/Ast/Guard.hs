@@ -21,13 +21,11 @@ import {-# SOURCE #-} HIndent.Ast.Expression
   , mkExpression
   , mkGuardExpression
   )
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Statement (ExprStatement, mkExprStatement)
 import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data GuardContext
   = PlainGuard
@@ -47,9 +45,6 @@ data Guard
       , conditions :: [WithComments ExprStatement]
       , cmd :: WithComments Cmd
       }
-
-instance CommentExtraction Guard where
-  nodeComments _ = NodeComments [] [] []
 
 instance Pretty Guard where
   pretty ExprGuard {..}

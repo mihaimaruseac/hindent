@@ -11,10 +11,8 @@ import HIndent.Ast.Declaration.Family.Data
 import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Instance.Family.Type.Associated.Default
 import HIndent.Ast.Declaration.Signature
-import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
-import HIndent.Pretty.NodeComments
 
 data ClassMember
   = Signature Signature
@@ -22,13 +20,6 @@ data ClassMember
   | AssociatedDataFamily DataFamily
   | AssociatedTypeDefault AssociatedTypeDefault
   | AssociatedTypeFamily TypeFamily
-
-instance CommentExtraction ClassMember where
-  nodeComments Signature {} = NodeComments [] [] []
-  nodeComments Method {} = NodeComments [] [] []
-  nodeComments AssociatedDataFamily {} = NodeComments [] [] []
-  nodeComments AssociatedTypeDefault {} = NodeComments [] [] []
-  nodeComments AssociatedTypeFamily {} = NodeComments [] [] []
 
 instance Pretty ClassMember where
   pretty (Signature signature) = pretty signature

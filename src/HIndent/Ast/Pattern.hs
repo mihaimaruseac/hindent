@@ -21,14 +21,12 @@ import HIndent.Ast.Literal
 import HIndent.Ast.Name.Infix hiding (unlessSpecialOp)
 import qualified HIndent.Ast.Name.Infix as InfixName
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments hiding (fromEpAnn)
 import HIndent.Ast.Pattern.RecordFields
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments (CommentExtraction(..))
 
 data Pattern
   = WildCard
@@ -78,9 +76,6 @@ data Pattern
       , sig :: WithComments Type
       }
   | Or (NonEmpty (WithComments Pattern))
-
-instance CommentExtraction Pattern where
-  nodeComments _ = NodeComments [] [] []
 
 instance Pretty Pattern where
   pretty WildCard = string "_"
@@ -235,9 +230,6 @@ mkPattern (GHC.OrPat _ pats) =
 #endif
 newtype PatInsidePatDecl =
   PatInsidePatDecl Pattern
-
-instance CommentExtraction PatInsidePatDecl where
-  nodeComments (PatInsidePatDecl p) = nodeComments p
 
 instance Pretty PatInsidePatDecl where
   pretty (PatInsidePatDecl InfixConstructor {..}) =

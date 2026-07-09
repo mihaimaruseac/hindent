@@ -17,7 +17,6 @@ import HIndent.Ast.LocalBinds.ImplicitBindings
   )
 import HIndent.Ast.WithComments (WithComments, fromEpAnn)
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..))
-import HIndent.Pretty.NodeComments (CommentExtraction(..), emptyNodeComments)
 
 data LocalBinds
   = Value
@@ -26,9 +25,6 @@ data LocalBinds
   | ImplicitParameters
       { implicitBindings :: ImplicitBindings
       }
-
-instance CommentExtraction LocalBinds where
-  nodeComments _ = emptyNodeComments
 
 instance Pretty LocalBinds where
   pretty Value {..} = pretty declarations

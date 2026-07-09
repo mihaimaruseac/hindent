@@ -27,10 +27,8 @@ import HIndent.Ast.Declaration.Splice
 import HIndent.Ast.Declaration.StandAloneDeriving
 import HIndent.Ast.Declaration.TypeSynonym
 import HIndent.Ast.Declaration.Warning.Collection
-import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
-import HIndent.Pretty.NodeComments
 
 data Declaration
   = DataFamily DataFamily
@@ -52,27 +50,6 @@ data Declaration
   | RuleDecl RuleCollection
   | Splice SpliceDeclaration
   | RoleAnnotDecl RoleAnnotation
-
-instance CommentExtraction Declaration where
-  nodeComments DataFamily {} = NodeComments [] [] []
-  nodeComments TypeFamily {} = NodeComments [] [] []
-  nodeComments DataDeclaration {} = NodeComments [] [] []
-  nodeComments ClassDeclaration {} = NodeComments [] [] []
-  nodeComments TypeSynonym {} = NodeComments [] [] []
-  nodeComments ClassInstance {} = NodeComments [] [] []
-  nodeComments DataFamilyInstance {} = NodeComments [] [] []
-  nodeComments TypeFamilyInstance {} = NodeComments [] [] []
-  nodeComments StandAloneDeriving {} = NodeComments [] [] []
-  nodeComments Bind {} = NodeComments [] [] []
-  nodeComments Signature {} = NodeComments [] [] []
-  nodeComments StandaloneKindSignature {} = NodeComments [] [] []
-  nodeComments Default {} = NodeComments [] [] []
-  nodeComments Foreign {} = NodeComments [] [] []
-  nodeComments Warnings {} = NodeComments [] [] []
-  nodeComments Annotation {} = NodeComments [] [] []
-  nodeComments RuleDecl {} = NodeComments [] [] []
-  nodeComments Splice {} = NodeComments [] [] []
-  nodeComments RoleAnnotDecl {} = NodeComments [] [] []
 
 instance Pretty Declaration where
   pretty (DataFamily x) = pretty x

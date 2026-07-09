@@ -13,7 +13,6 @@ import HIndent.Ast.Pattern
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
-import HIndent.Pretty.NodeComments
 
 -- The difference between @Function@ and @Pattern@ is the same as the difference
 -- between @FunBind@ and @PatBind@ in GHC AST. See
@@ -27,11 +26,6 @@ data Bind
       , rhs :: WithComments GuardedRhs
       }
   | PatternSynonym (WithComments PatternSynonym)
-
-instance CommentExtraction Bind where
-  nodeComments Function {} = emptyNodeComments
-  nodeComments Pattern {} = emptyNodeComments
-  nodeComments PatternSynonym {} = emptyNodeComments
 
 instance Pretty Bind where
   pretty (Function matches) = pretty matches

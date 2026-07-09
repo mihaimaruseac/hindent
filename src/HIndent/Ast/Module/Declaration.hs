@@ -10,21 +10,16 @@ import HIndent.Applicative
 import HIndent.Ast.Module.Export.Collection
 import HIndent.Ast.Module.Name
 import HIndent.Ast.Module.Warning
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data ModuleDeclaration = ModuleDeclaration
   { name :: WithComments ModuleName
   , warning :: Maybe (WithComments ModuleWarning)
   , exports :: Maybe (WithComments ExportCollection)
   }
-
-instance CommentExtraction ModuleDeclaration where
-  nodeComments ModuleDeclaration {} = NodeComments [] [] []
 
 instance Pretty ModuleDeclaration where
   pretty ModuleDeclaration {..} = do

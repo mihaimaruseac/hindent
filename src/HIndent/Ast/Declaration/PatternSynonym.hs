@@ -17,7 +17,6 @@ import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 import HIndent.Printer
 
 data PatternSynonym
@@ -43,11 +42,6 @@ data PatternSynonym
       , explicitMatches :: Maybe MatchGroup
       , definition :: WithComments PatInsidePatDecl
       }
-
-instance CommentExtraction PatternSynonym where
-  nodeComments Prefix {} = emptyNodeComments
-  nodeComments Infix {} = emptyNodeComments
-  nodeComments Record {} = emptyNodeComments
 
 instance Pretty PatternSynonym where
   pretty Prefix {..} = do

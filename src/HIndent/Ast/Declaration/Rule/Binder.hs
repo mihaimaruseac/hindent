@@ -7,21 +7,16 @@ module HIndent.Ast.Declaration.Rule.Binder
   ) where
 
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data RuleBinder = RuleBinder
   { name :: WithComments PrefixName
   , signature :: Maybe (WithComments Type)
   }
-
-instance CommentExtraction RuleBinder where
-  nodeComments RuleBinder {} = NodeComments [] [] []
 
 instance Pretty RuleBinder where
   pretty RuleBinder {signature = Nothing, ..} = pretty name

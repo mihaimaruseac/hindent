@@ -8,13 +8,11 @@ module HIndent.Ast.Declaration.Instance.Family.Data.Associated
 import HIndent.Ast.Declaration.Data.Body
 import HIndent.Ast.Declaration.Data.NewOrData
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type.Argument.Collection
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data AssociatedDataFamilyInstance = AssociatedDataFamilyInstance
   { newOrData :: NewOrData
@@ -22,9 +20,6 @@ data AssociatedDataFamilyInstance = AssociatedDataFamilyInstance
   , types :: TypeArgumentCollection
   , body :: DataBody
   }
-
-instance CommentExtraction AssociatedDataFamilyInstance where
-  nodeComments AssociatedDataFamilyInstance {} = NodeComments [] [] []
 
 instance Pretty AssociatedDataFamilyInstance where
   pretty AssociatedDataFamilyInstance {..} = do

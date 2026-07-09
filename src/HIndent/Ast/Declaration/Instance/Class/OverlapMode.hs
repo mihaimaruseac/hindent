@@ -7,22 +7,14 @@ module HIndent.Ast.Declaration.Instance.Class.OverlapMode
   ) where
 
 import qualified GHC.Types.Basic as GHC
-import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators.String
-import HIndent.Pretty.NodeComments
 
 data OverlapMode
   = Overlappable
   | Overlapping
   | Overlaps
   | Incoherent
-
-instance CommentExtraction OverlapMode where
-  nodeComments Overlappable = NodeComments [] [] []
-  nodeComments Overlapping = NodeComments [] [] []
-  nodeComments Overlaps = NodeComments [] [] []
-  nodeComments Incoherent = NodeComments [] [] []
 
 instance Pretty OverlapMode where
   pretty Overlappable = string "{-# OVERLAPPABLE #-}"

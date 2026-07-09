@@ -16,13 +16,11 @@ import HIndent.Applicative
 import HIndent.Ast.Declaration.Data.Deriving.Clause
 import HIndent.Ast.Declaration.Data.GADT.Constructor
 import HIndent.Ast.Declaration.Data.Haskell98.Constructor
-import HIndent.Ast.NodeComments hiding (fromEpAnn)
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data DataBody
   = GADT
@@ -35,10 +33,6 @@ data DataBody
       , constructorsH98 :: [WithComments Haskell98Constructor]
       , derivings :: DerivingClause
       }
-
-instance CommentExtraction DataBody where
-  nodeComments GADT {} = NodeComments [] [] []
-  nodeComments Haskell98 {} = NodeComments [] [] []
 
 instance Pretty DataBody where
   pretty GADT {..} = do

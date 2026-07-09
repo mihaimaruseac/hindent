@@ -54,7 +54,6 @@ import HIndent.Ast.Literal
 import HIndent.Ast.LocalBinds (LocalBinds, mkLocalBinds)
 import HIndent.Ast.MatchGroup (MatchGroup, hasMatches, mkExprMatchGroup)
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.Pattern
 import HIndent.Ast.Statement (ExprStatement, mkExprStatement)
 import HIndent.Ast.Type
@@ -66,7 +65,6 @@ import HIndent.Ast.WithComments
 import HIndent.CabalFile ()
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 import HIndent.Printer
 import qualified Language.Haskell.Syntax.Basic as HS
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
@@ -169,9 +167,6 @@ data Expression
       { pragma :: WithComments ExpressionPragma
       , expression :: WithComments Expression
       }
-
-instance CommentExtraction Expression where
-  nodeComments _ = NodeComments [] [] []
 
 instance Pretty Expression where
   pretty (Variable name) = pretty name
@@ -663,9 +658,6 @@ mkExpression (GHC.HsRecSel _ _) =
 newtype InfixExpr =
   InfixExpr Expression
 
-instance CommentExtraction InfixExpr where
-  nodeComments _ = NodeComments [] [] []
-
 instance Pretty InfixExpr where
   pretty (InfixExpr (Variable name)) = pretty $ mkPrefixAsInfix <$> name
   pretty (InfixExpr (UnboundVariable name)) = pretty $ mkPrefixAsInfix <$> name
@@ -676,11 +668,6 @@ data GuardExpression
   = GuardWithDo Expression
   | GuardWithAppAndDo Expression
   | GuardExpression Expression
-
-instance CommentExtraction GuardExpression where
-  nodeComments (GuardWithDo expr) = nodeComments expr
-  nodeComments (GuardWithAppAndDo expr) = nodeComments expr
-  nodeComments (GuardExpression expr) = nodeComments expr
 
 instance Pretty GuardExpression where
   pretty (GuardWithDo expr) = space >> pretty expr

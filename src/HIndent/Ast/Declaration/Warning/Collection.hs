@@ -6,18 +6,13 @@ module HIndent.Ast.Declaration.Warning.Collection
   ) where
 
 import HIndent.Ast.Declaration.Warning
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 newtype WarningCollection =
   WarningCollection [WithComments WarningDeclaration]
-
-instance CommentExtraction WarningCollection where
-  nodeComments WarningCollection {} = NodeComments [] [] []
 
 instance Pretty WarningCollection where
   pretty (WarningCollection xs) = lined $ fmap pretty xs

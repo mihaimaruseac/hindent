@@ -9,18 +9,13 @@ module HIndent.Ast.Declaration.Signature.Fixity
 import qualified Data.Text as Text
 import qualified GHC.Types.Fixity as GHC
 import HIndent.Ast.Declaration.Signature.Fixity.Associativity
-import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data Fixity = Fixity
   { level :: Int
   , associativity :: Associativity
   }
-
-instance CommentExtraction Fixity where
-  nodeComments Fixity {} = NodeComments [] [] []
 
 instance Pretty Fixity where
   pretty Fixity {..} =

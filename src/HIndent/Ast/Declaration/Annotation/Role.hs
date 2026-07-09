@@ -7,21 +7,16 @@ module HIndent.Ast.Declaration.Annotation.Role
   ) where
 
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Role
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data RoleAnnotation = RoleAnnotation
   { name :: WithComments PrefixName
   , roles :: [WithComments (Maybe Role)]
   }
-
-instance CommentExtraction RoleAnnotation where
-  nodeComments RoleAnnotation {} = NodeComments [] [] []
 
 instance Pretty RoleAnnotation where
   pretty RoleAnnotation {..} =

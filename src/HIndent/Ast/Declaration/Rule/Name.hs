@@ -8,14 +8,10 @@ import qualified GHC.Types.Basic as GHC
 import HIndent.Ast.TextValue (TextValue, mkTextValueFromString)
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 newtype RuleName =
   RuleName TextValue
   deriving (Eq, Show)
-
-instance CommentExtraction RuleName where
-  nodeComments _ = emptyNodeComments
 
 instance Pretty RuleName where
   pretty (RuleName name) = doubleQuotes $ pretty name

@@ -10,22 +10,14 @@ import HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Instance.Family.Data.Associated
 import HIndent.Ast.Declaration.Instance.Family.Type.Associated
 import HIndent.Ast.Declaration.Signature
-import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
-import HIndent.Pretty.NodeComments
 
 data ClassInstanceMember
   = AssociatedDataInstance AssociatedDataFamilyInstance
   | AssociatedTypeInstance AssociatedType
   | Method Bind
   | Signature Signature
-
-instance CommentExtraction ClassInstanceMember where
-  nodeComments AssociatedDataInstance {} = NodeComments [] [] []
-  nodeComments AssociatedTypeInstance {} = NodeComments [] [] []
-  nodeComments Method {} = NodeComments [] [] []
-  nodeComments Signature {} = NodeComments [] [] []
 
 instance Pretty ClassInstanceMember where
   pretty (AssociatedDataInstance associatedDataInstance) =

@@ -7,19 +7,13 @@ module HIndent.Ast.Declaration.Data.NewOrData
   , mkNewOrData
   ) where
 
-import HIndent.Ast.NodeComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data NewOrData
   = Newtype
   | Data
-
-instance CommentExtraction NewOrData where
-  nodeComments Newtype = NodeComments [] [] []
-  nodeComments Data = NodeComments [] [] []
 
 instance Pretty NewOrData where
   pretty Newtype = string "newtype"

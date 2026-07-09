@@ -10,13 +10,11 @@ import qualified Data.ByteString.Builder as S
 import qualified Data.ByteString.Lazy.Char8 as L
 import Data.Char (isLower, isUpper)
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import HIndent.Config
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 import HIndent.Printer
 
 data ImportExportName
@@ -30,12 +28,6 @@ data LetterType
   | Symbol
   | Lower
   deriving (Eq, Ord)
-
-instance CommentExtraction ImportExportName where
-  nodeComments Regular {} = NodeComments [] [] []
-  nodeComments Pattern {} = NodeComments [] [] []
-  nodeComments Type {} = NodeComments [] [] []
-  nodeComments Data {} = NodeComments [] [] []
 
 instance Pretty ImportExportName where
   pretty (Regular name) = pretty name

@@ -22,7 +22,6 @@ import HIndent.Ast.WithComments
   )
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments (CommentExtraction(..), emptyNodeComments)
 
 type ExprStatement = Statement Expression
 
@@ -43,9 +42,6 @@ data Statement a
   | Recursive
       { block :: WithComments [WithComments (Statement a)]
       }
-
-instance CommentExtraction (Statement a) where
-  nodeComments _ = emptyNodeComments
 
 instance Pretty a => Pretty (Statement a) where
   pretty (Expression expr) = pretty expr

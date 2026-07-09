@@ -9,12 +9,10 @@ module HIndent.Ast.Module.Export.Entry
 import GHC.Stack
 import HIndent.Ast.Module.Name
 import HIndent.Ast.Name.ImportExport
-import HIndent.Ast.NodeComments
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data ExportEntry
   = SingleIdentifier (WithComments ImportExportName)
@@ -23,12 +21,6 @@ data ExportEntry
       [WithComments ImportExportName]
   | WithAllConstructors (WithComments ImportExportName)
   | ByModule (WithComments ModuleName)
-
-instance CommentExtraction ExportEntry where
-  nodeComments SingleIdentifier {} = NodeComments [] [] []
-  nodeComments WithSpecificConstructors {} = NodeComments [] [] []
-  nodeComments WithAllConstructors {} = NodeComments [] [] []
-  nodeComments ByModule {} = NodeComments [] [] []
 
 instance Pretty ExportEntry where
   pretty (SingleIdentifier s) = pretty s

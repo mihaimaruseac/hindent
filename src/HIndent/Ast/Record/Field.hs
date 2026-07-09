@@ -13,7 +13,6 @@ module HIndent.Ast.Record.Field
 import HIndent.Applicative (whenJust)
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.Name.RecordField (FieldName, mkFieldNameFromFieldOcc)
-import HIndent.Ast.NodeComments (NodeComments(..))
 import {-# SOURCE #-} HIndent.Ast.Pattern (Pattern, mkPattern)
 import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
@@ -25,7 +24,6 @@ import HIndent.Pretty.Combinators
   , space
   , string
   )
-import HIndent.Pretty.NodeComments (CommentExtraction(..))
 
 type ExprField = Field Expression
 
@@ -35,9 +33,6 @@ data Field rhs = Field
   { name :: WithComments FieldName
   , value :: Maybe (WithComments rhs)
   }
-
-instance CommentExtraction (Field rhs) where
-  nodeComments Field {} = NodeComments [] [] []
 
 instance Pretty ExprField where
   pretty Field {..} = do

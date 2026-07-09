@@ -6,7 +6,6 @@ module HIndent.Ast.Declaration.Data.Deriving.Strategy
   , isViaStrategy
   ) where
 
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type (Type, mkTypeFromHsSigType)
 import HIndent.Ast.WithComments
   ( WithComments
@@ -16,19 +15,12 @@ import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data DerivingStrategy
   = Stock
   | Anyclass
   | Newtype
   | Via (WithComments Type)
-
-instance CommentExtraction DerivingStrategy where
-  nodeComments Stock {} = NodeComments [] [] []
-  nodeComments Anyclass {} = NodeComments [] [] []
-  nodeComments Newtype {} = NodeComments [] [] []
-  nodeComments Via {} = NodeComments [] [] []
 
 instance Pretty DerivingStrategy where
   pretty Stock = string "stock"

@@ -7,18 +7,13 @@ module HIndent.Ast.Type.Strictness
   ) where
 
 import qualified GHC.Hs as GHC
-import HIndent.Ast.NodeComments
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data Strictness
   = Lazy
   | Strict
   deriving (Eq)
-
-instance CommentExtraction Strictness where
-  nodeComments _ = NodeComments [] [] []
 
 instance Pretty Strictness where
   pretty Lazy = string "~"

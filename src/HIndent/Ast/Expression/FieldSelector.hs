@@ -8,18 +8,13 @@ module HIndent.Ast.Expression.FieldSelector
 import qualified GHC.Data.FastString as GHC
 import qualified GHC.Hs as GHC
 import HIndent.Ast.Name.Prefix (PrefixName, fromString)
-import HIndent.Ast.NodeComments (NodeComments(..))
 import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
-import HIndent.Pretty.NodeComments (CommentExtraction(..))
 import qualified Language.Haskell.Syntax.Basic as GHC
 
 newtype FieldSelector = FieldSelector
   { name :: WithComments PrefixName
   }
-
-instance CommentExtraction FieldSelector where
-  nodeComments FieldSelector {} = NodeComments [] [] []
 
 instance Pretty FieldSelector where
   pretty FieldSelector {..} = pretty name

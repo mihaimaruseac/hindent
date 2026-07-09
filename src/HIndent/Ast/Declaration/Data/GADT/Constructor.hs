@@ -12,13 +12,11 @@ import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Context
 import HIndent.Ast.Declaration.Data.GADT.Constructor.Signature
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 import qualified Data.List.NonEmpty as NE
 #endif
@@ -28,9 +26,6 @@ data GADTConstructor = GADTConstructor
   , context :: Maybe (WithComments Context)
   , signature :: ConstructorSignature
   }
-
-instance CommentExtraction GADTConstructor where
-  nodeComments GADTConstructor {} = NodeComments [] [] []
 
 instance Pretty GADTConstructor where
   pretty (GADTConstructor {..}) = do

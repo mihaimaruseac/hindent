@@ -7,21 +7,16 @@ module HIndent.Ast.Declaration.TypeSynonym
   ) where
 
 import HIndent.Ast.Declaration.TypeSynonym.Lhs
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data TypeSynonym = TypeSynonym
   { lhs :: TypeSynonymLhs
   , rhs :: WithComments Type
   }
-
-instance CommentExtraction TypeSynonym where
-  nodeComments TypeSynonym {} = NodeComments [] [] []
 
 instance Pretty TypeSynonym where
   pretty TypeSynonym {..} = do

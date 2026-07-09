@@ -15,15 +15,11 @@ import HIndent.Ast.Statement (ExprStatement)
 import HIndent.Ast.WithComments (WithComments)
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments (CommentExtraction(..), emptyNodeComments)
 
 data ListComprehension = ListComprehension
   { leading :: WithComments ExprStatement
   , clauses :: NonEmpty (WithComments ExprStatement)
   }
-
-instance CommentExtraction ListComprehension where
-  nodeComments _ = emptyNodeComments
 
 instance Pretty ListComprehension where
   pretty ListComprehension {..} = horizontal <-|> vertical

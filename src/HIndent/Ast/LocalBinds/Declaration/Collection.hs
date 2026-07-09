@@ -12,13 +12,9 @@ import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments (CommentExtraction(..), emptyNodeComments)
 
 newtype LocalDeclarationCollection =
   LocalDeclarationCollection [WithComments LocalDeclaration]
-
-instance CommentExtraction LocalDeclarationCollection where
-  nodeComments _ = emptyNodeComments
 
 instance Pretty LocalDeclarationCollection where
   pretty (LocalDeclarationCollection declarations) =

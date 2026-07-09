@@ -10,13 +10,11 @@ import HIndent.Applicative
 import HIndent.Ast.Context
 import HIndent.Ast.Declaration.Data.NewOrData
 import HIndent.Ast.Name.Prefix
-import HIndent.Ast.NodeComments
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
-import HIndent.Pretty.NodeComments
 
 data Header = Header
   { newOrData :: NewOrData
@@ -24,9 +22,6 @@ data Header = Header
   , context :: Maybe (WithComments Context)
   , typeVariables :: [WithComments TypeVariable]
   }
-
-instance CommentExtraction Header where
-  nodeComments Header {} = NodeComments [] [] []
 
 instance Pretty Header where
   pretty Header {..} = do
