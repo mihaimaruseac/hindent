@@ -10,6 +10,8 @@
 
 ### Fixed
 
+- Preserve parentheses around infix function left-hand sides with extra arguments ([#1243])
+
 ### Removed
 
 ## [6.3.0] - 2026-01-24
@@ -428,6 +430,7 @@ This version is accidentally pushlished, and is the same as 5.3.3.
 [@uhbif19]: https://github.com/uhbif19
 [@toku-sa-n]: https://github.com/toku-sa-n
 
+[#1243]: https://github.com/mihaimaruseac/hindent/pull/1243
 [#1163]: https://github.com/mihaimaruseac/hindent/pull/1163
 [#1143]: https://github.com/mihaimaruseac/hindent/pull/1143
 [#1140]: https://github.com/mihaimaruseac/hindent/pull/1140

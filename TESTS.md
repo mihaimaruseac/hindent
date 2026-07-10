@@ -1341,6 +1341,13 @@ Pattern matching against a infix constructor with a module name prefix
 foo (a FOO.:@: b) = undefined
 ```
 
+Infix function with an extra argument
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/539
+(f >=> g) k = f k >>= g
+```
+
 ##### Pattern matchings against record
 
 Short
