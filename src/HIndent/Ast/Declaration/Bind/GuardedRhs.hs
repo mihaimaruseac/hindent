@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HIndent.Ast.Declaration.Bind.GuardedRhs
@@ -24,11 +23,7 @@ import HIndent.Ast.Guard
   , mkMultiWayIfExprGuard
   )
 import HIndent.Ast.WhereClause (WhereClause, mkWhereClause)
-import HIndent.Ast.WithComments
-  ( WithComments
-  , mkWithCommentsFromGenLocated
-  , prettyWith
-  )
+import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import {-# SOURCE #-} HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -42,7 +37,7 @@ instance Pretty GuardedRhs where
   pretty GuardedRhs {..} = do
     mapM_ pretty guards
     whenJust whereClause $ \clause ->
-      indentedBlock $ newlinePrefixed [prettyWith clause pretty]
+      indentedBlock $ newlinePrefixed [pretty clause]
 
 mkGuardedRhs :: GHC.GRHSs GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> GuardedRhs
 mkGuardedRhs grhss@GHC.GRHSs {..} =
