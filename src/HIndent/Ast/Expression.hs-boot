@@ -16,7 +16,5 @@ instance Pretty Expression
 
 instance Pretty GuardExpression
 
-
-
 mkExpression :: GHC.HsExpr GHC.GhcPs -> Expression
 mkGuardExpression :: Expression -> GuardExpression

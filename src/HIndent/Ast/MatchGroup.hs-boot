@@ -10,6 +10,4 @@ data MatchGroup
 
 instance Pretty MatchGroup
 
-
-mkCmdMatchGroup ::
-     GHC.MatchGroup GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> MatchGroup
+mkCmdMatchGroup :: GHC.MatchGroup GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> MatchGroup

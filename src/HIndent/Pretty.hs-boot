@@ -30,7 +30,6 @@ instance Pretty
               (GHC.GenLocated GHC.SrcSpanAnnA (GHC.HsType GHC.GhcPs)))
 
 instance Pretty GHC.StringLiteral
-
 #if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
 instance Pretty
            (GHC.HsScaled
