@@ -66,7 +66,6 @@ import HIndent.CabalFile ()
 import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 import HIndent.Printer
-import qualified Language.Haskell.Syntax.Basic as HS
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import Data.Maybe
 import HIndent.Ast.Expression.Splice (Splice, mkSplice, mkTypedSplice)
@@ -112,8 +111,8 @@ data Expression
       , isBoxed :: Bool
       }
   | Sum
-      { position :: GHC.ConTag
-      , arity :: HS.SumWidth
+      { position :: Int
+      , arity :: Int
       , expression :: WithComments Expression
       }
   | CaseExpression
