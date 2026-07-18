@@ -6,7 +6,7 @@ module HIndent.Ast.Declaration.Foreign.CallingConvention
   ) where
 
 import qualified GHC.Types.ForeignCall as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data CallingConvention

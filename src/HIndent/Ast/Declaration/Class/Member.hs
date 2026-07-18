@@ -12,7 +12,7 @@ import HIndent.Ast.Declaration.Family.Type
 import HIndent.Ast.Declaration.Instance.Family.Type.Associated.Default
 import HIndent.Ast.Declaration.Signature
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 
 data ClassMember
   = Signature Signature

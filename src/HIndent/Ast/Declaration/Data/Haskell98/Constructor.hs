@@ -14,7 +14,7 @@ import HIndent.Ast.Declaration.Data.Haskell98.Constructor.Body
 import HIndent.Ast.Type.Variable
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data Haskell98Constructor = Haskell98Constructor

@@ -38,7 +38,7 @@ import HIndent.Ast.Type.Multiplicity
 import HIndent.Ast.WithComments
 import HIndent.Config
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Printer
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)

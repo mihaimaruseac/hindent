@@ -6,7 +6,7 @@ module HIndent.Ast.Expression
   ) where
 
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty (Pretty)
+import HIndent.Pretty (Pretty)
 
 data Expression
 

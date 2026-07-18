@@ -4,7 +4,7 @@ module HIndent.Ast.Declaration.Rule
   ) where
 
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 
 data RuleDeclaration
 

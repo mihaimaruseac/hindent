@@ -23,7 +23,7 @@ import HIndent.Ast.Name.Prefix
 import HIndent.Ast.Type (DeclSigType, Type, mkDeclSigType, mkTypeFromHsSigType)
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 import {-# SOURCE #-} HIndent.Ast.Expression (mkExpression)

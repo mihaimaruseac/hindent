@@ -6,7 +6,7 @@ module HIndent.Ast.Declaration.Signature.Fixity.Associativity
   ) where
 
 import qualified GHC.Types.Fixity as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data Associativity

@@ -12,7 +12,7 @@ import qualified GHC.Hs as GHC
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.TextValue
 import qualified HIndent.GhcLibParserWrapper.GHC.Parser.Annotation as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data Comment

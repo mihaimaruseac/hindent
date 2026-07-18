@@ -8,7 +8,7 @@ module HIndent.Ast.Expression.QualifiedDo
 import HIndent.Ast.Expression.DoOrMdo (DoOrMdo, mkDoOrMdo)
 import HIndent.Ast.Module.Name (ModuleName, mkModuleName)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 
 data QualifiedDo =

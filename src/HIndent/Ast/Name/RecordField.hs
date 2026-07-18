@@ -19,7 +19,7 @@ import HIndent.Ast.WithComments
   , flattenComments
   , mkWithCommentsFromGenLocated
   )
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators (hDotSep)
 import qualified Language.Haskell.Syntax.Basic as GHC
 

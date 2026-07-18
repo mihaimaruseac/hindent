@@ -10,7 +10,7 @@ module HIndent.Ast.Type.Argument
 import HIndent.Ast.Type (Type, mkType)
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data TypeArgument

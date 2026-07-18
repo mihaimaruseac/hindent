@@ -9,7 +9,7 @@ module HIndent.Ast.Declaration.Rule.Collection
 import {-# SOURCE #-} HIndent.Ast.Declaration.Rule
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 newtype RuleCollection =

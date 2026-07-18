@@ -8,7 +8,7 @@ module HIndent.Ast.Type.ImplicitParameterName
 import qualified GHC.Data.FastString as GHC
 import HIndent.Ast.TextValue (TextValue, mkTextValueFromString)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 newtype ImplicitParameterName =

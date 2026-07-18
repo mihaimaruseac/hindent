@@ -9,7 +9,7 @@ import HIndent.Ast.LocalBinds.ImplicitBinding
   )
 import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 
 newtype ImplicitBindings = ImplicitBindings

@@ -10,7 +10,7 @@ import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.LocalBinds.Declaration
 import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 
 newtype LocalDeclarationCollection =

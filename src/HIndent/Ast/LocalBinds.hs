@@ -16,7 +16,7 @@ import HIndent.Ast.LocalBinds.ImplicitBindings
   , mkImplicitBindings
   )
 import HIndent.Ast.WithComments (WithComments, fromEpAnn)
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..))
+import HIndent.Pretty (Pretty(..))
 
 data LocalBinds
   = Value

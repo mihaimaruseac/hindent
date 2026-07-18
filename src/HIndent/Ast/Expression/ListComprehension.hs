@@ -13,7 +13,7 @@ import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NonEmpty
 import HIndent.Ast.Statement (ExprStatement)
 import HIndent.Ast.WithComments (WithComments)
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 
 data ListComprehension = ListComprehension

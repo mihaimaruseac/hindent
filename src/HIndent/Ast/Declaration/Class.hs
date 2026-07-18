@@ -16,7 +16,7 @@ import HIndent.Ast.Declaration.Class.FunctionalDependency
 import HIndent.Ast.Declaration.Class.NameAndTypeVariables
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified GHC.Data.Bag as GHC

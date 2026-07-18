@@ -11,7 +11,7 @@ import HIndent.Ast.Name.RecordField (FieldName, mkFieldNameFromFieldOcc)
 import {-# SOURCE #-} HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data RecordField = RecordField

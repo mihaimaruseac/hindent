@@ -7,7 +7,7 @@ module HIndent.Ast.Type.Strictness
   ) where
 
 import qualified GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data Strictness

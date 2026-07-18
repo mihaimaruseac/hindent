@@ -11,7 +11,7 @@ import HIndent.Ast.Type
 import HIndent.Ast.Type.Argument.Collection
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data AssociatedTypeDefault = AssociatedTypeDefault

@@ -11,7 +11,7 @@ import Data.Maybe (isJust)
 import qualified GHC.Hs as GHC
 import HIndent.Ast.Record.Field (ExprField, mkExprField)
 import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 
 data RecordConstructionFields = RecordConstructionFields

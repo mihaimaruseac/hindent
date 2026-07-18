@@ -4,7 +4,7 @@ module HIndent.Ast.Declaration.Warning.Kind
   ( Kind(..)
   ) where
 
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data Kind

@@ -15,7 +15,7 @@ import qualified GHC.Types.Name as GHC
 import qualified GHC.Types.Name.Reader as GHC
 import HIndent.Ast.Module.Name
 import HIndent.Ast.TextValue
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators hiding (unlessSpecialOp)
 import HIndent.Printer
 

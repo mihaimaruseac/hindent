@@ -21,7 +21,7 @@ import HIndent.Ast.WithComments
   )
 #endif
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import qualified GHC.Types.SrcLoc as GHC

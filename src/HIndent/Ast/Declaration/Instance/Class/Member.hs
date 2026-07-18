@@ -11,7 +11,7 @@ import HIndent.Ast.Declaration.Instance.Family.Data.Associated
 import HIndent.Ast.Declaration.Instance.Family.Type.Associated
 import HIndent.Ast.Declaration.Signature
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 
 data ClassInstanceMember
   = AssociatedDataInstance AssociatedDataFamilyInstance

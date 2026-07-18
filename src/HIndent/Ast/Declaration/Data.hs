@@ -9,7 +9,7 @@ module HIndent.Ast.Declaration.Data
 import HIndent.Ast.Declaration.Data.Body
 import HIndent.Ast.Declaration.Data.Header
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 
 data DataDeclaration = DataDeclaration
   { header :: Header

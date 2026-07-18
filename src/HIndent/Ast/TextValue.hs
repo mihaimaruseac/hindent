@@ -13,7 +13,7 @@ import qualified Data.Text as Text
 import qualified GHC.Data.FastString as GHC
 #endif
 import qualified GHC.Types.SourceText as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 newtype TextValue =

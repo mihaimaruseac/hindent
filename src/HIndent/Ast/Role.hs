@@ -6,7 +6,7 @@ module HIndent.Ast.Role
   ) where
 
 import qualified GHC.Core.TyCon as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data Role

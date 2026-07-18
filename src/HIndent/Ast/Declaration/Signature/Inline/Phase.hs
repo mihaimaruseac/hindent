@@ -7,7 +7,7 @@ module HIndent.Ast.Declaration.Signature.Inline.Phase
 
 import qualified Data.Text as Text
 import qualified GHC.Types.Basic as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data BeforeOrAfter

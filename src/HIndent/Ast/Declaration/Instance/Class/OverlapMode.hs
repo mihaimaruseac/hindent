@@ -7,7 +7,7 @@ module HIndent.Ast.Declaration.Instance.Class.OverlapMode
   ) where
 
 import qualified GHC.Types.Basic as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators.String
 
 data OverlapMode

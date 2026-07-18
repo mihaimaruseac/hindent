@@ -7,7 +7,7 @@ module HIndent.Ast.LocalBinds.Declaration
 import {-# SOURCE #-} HIndent.Ast.Declaration.Bind
 import HIndent.Ast.Declaration.Signature
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty (Pretty(..), pretty)
 
 data LocalDeclaration
   = Binding Bind

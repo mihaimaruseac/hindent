@@ -9,7 +9,7 @@ module HIndent.Ast.Declaration.Data.Constructor.Field
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 
 newtype ConstructorField = ConstructorField
   { ty :: WithComments Type

@@ -10,7 +10,7 @@ import Data.Maybe
 import HIndent.Ast.Type.Strictness
 import HIndent.Ast.Type.Unpackedness
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data Bang =

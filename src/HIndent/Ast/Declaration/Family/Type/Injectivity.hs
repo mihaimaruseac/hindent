@@ -9,7 +9,7 @@ module HIndent.Ast.Declaration.Family.Type.Injectivity
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data Injectivity = Injectivity

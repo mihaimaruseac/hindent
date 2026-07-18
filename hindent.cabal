@@ -141,7 +141,6 @@ library
       HIndent.Ast.Name.Infix
       HIndent.Ast.Name.Prefix
       HIndent.Ast.Name.RecordField
-      HIndent.Ast.NodeComments
       HIndent.Ast.Pattern
       HIndent.Ast.Pattern.RecordFields
       HIndent.Ast.Record.Field
@@ -191,7 +190,6 @@ library
       HIndent.Pretty.Combinators.String
       HIndent.Pretty.Combinators.Switch
       HIndent.Pretty.Combinators.Wrap
-      HIndent.Pretty.NodeComments
       HIndent.Printer
       HIndent.Text.Show.Unicode
       Paths_hindent

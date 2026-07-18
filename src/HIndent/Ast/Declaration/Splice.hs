@@ -6,7 +6,7 @@ module HIndent.Ast.Declaration.Splice
 import HIndent.Ast.Expression.Splice
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 
 newtype SpliceDeclaration =
   SpliceDeclaration (WithComments Splice)

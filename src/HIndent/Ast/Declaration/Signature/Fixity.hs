@@ -9,7 +9,7 @@ module HIndent.Ast.Declaration.Signature.Fixity
 import qualified Data.Text as Text
 import qualified GHC.Types.Fixity as GHC
 import HIndent.Ast.Declaration.Signature.Fixity.Associativity
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data Fixity = Fixity

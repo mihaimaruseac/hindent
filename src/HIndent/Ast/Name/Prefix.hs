@@ -17,7 +17,7 @@ import qualified GHC.Types.Name.Reader as GHC
 import HIndent.Ast.Module.Name
 import HIndent.Ast.TextValue (TextValue, mkTextValueFromString, toText)
 import HIndent.Fixity (fixities)
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data PrefixName = PrefixName

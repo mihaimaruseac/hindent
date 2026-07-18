@@ -14,7 +14,7 @@ import HIndent.Ast.WithComments (WithComments, mkWithComments)
 #else
 import HIndent.Ast.WithComments (WithComments, fromEpAnn)
 #endif
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators (spaced, string)
 
 newtype ExpressionPragma = SccPragma

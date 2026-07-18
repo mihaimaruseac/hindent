@@ -9,7 +9,7 @@ module HIndent.Ast.Declaration.Default
 import qualified GHC.Hs as GHC
 import HIndent.Ast.Type
 import HIndent.Ast.WithComments
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 newtype DefaultDeclaration =

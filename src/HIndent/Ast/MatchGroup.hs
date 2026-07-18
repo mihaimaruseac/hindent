@@ -13,7 +13,7 @@ import HIndent.Ast.WithComments
   , mkWithCommentsFromGenLocated
   , prettyWith
   )
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators (lined)
 
 newtype MatchGroup =

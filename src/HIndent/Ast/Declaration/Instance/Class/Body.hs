@@ -10,7 +10,7 @@ import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast.Declaration.Instance.Class.Member
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 newtype ClassInstanceBody =

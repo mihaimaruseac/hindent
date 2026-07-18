@@ -6,7 +6,7 @@ module HIndent.Ast.Pattern
   ) where
 
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 
 data Pattern
 

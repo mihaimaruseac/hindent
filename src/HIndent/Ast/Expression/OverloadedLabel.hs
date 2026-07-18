@@ -8,7 +8,7 @@ module HIndent.Ast.Expression.OverloadedLabel
 
 import qualified GHC.Data.FastString as GHC
 import HIndent.Ast.TextValue
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 newtype OverloadedLabel =

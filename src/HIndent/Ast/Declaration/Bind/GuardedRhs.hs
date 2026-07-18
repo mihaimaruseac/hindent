@@ -25,7 +25,7 @@ import HIndent.Ast.Guard
 import HIndent.Ast.WhereClause (WhereClause, mkWhereClause)
 import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data GuardedRhs = GuardedRhs

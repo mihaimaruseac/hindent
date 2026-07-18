@@ -16,7 +16,7 @@ import HIndent.Ast.Name.RecordField (FieldName, mkFieldNameFromFieldOcc)
 import {-# SOURCE #-} HIndent.Ast.Pattern (Pattern, mkPattern)
 import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
   ( (<-|>)
   , indentedBlock

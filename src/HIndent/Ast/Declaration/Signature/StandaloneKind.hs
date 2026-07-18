@@ -10,7 +10,7 @@ import qualified GHC.Hs as GHC
 import HIndent.Ast.Name.Prefix
 import HIndent.Ast.Type (Type, mkTypeFromHsSigType)
 import HIndent.Ast.WithComments
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data StandaloneKind = StandaloneKind

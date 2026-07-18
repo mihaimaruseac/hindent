@@ -5,7 +5,7 @@ module HIndent.Ast.Module.Name
 
 import qualified GHC.Unit as GHC
 import HIndent.Ast.TextValue
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 
 newtype ModuleName =
   ModuleName TextValue

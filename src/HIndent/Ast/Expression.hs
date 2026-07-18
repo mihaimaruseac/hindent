@@ -63,7 +63,7 @@ import HIndent.Ast.Type.ImplicitParameterName
   )
 import HIndent.Ast.WithComments
 import HIndent.CabalFile ()
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 import HIndent.Printer
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)

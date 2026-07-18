@@ -9,7 +9,7 @@ module HIndent.Ast.WhereClause
 import HIndent.Ast.LocalBinds (LocalBinds, mkLocalBinds)
 import HIndent.Ast.WithComments (WithComments, mkWithComments, prettyWith)
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 newtype WhereClause = WhereClause

@@ -44,7 +44,7 @@ import HIndent.Ast.WithComments
   , prettyWith
   )
 #endif
-import {-# SOURCE #-} HIndent.Pretty (Pretty(..), pretty)
+import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 
 data InfixOperands = InfixOperands

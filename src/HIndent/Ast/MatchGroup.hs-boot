@@ -4,7 +4,7 @@ module HIndent.Ast.MatchGroup
   ) where
 
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty (Pretty)
+import HIndent.Pretty (Pretty)
 
 data MatchGroup
 

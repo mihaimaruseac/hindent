@@ -13,7 +13,7 @@ import HIndent.Ast.Declaration.Rule.Name
 import HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 data RuleDeclaration = RuleDeclaration

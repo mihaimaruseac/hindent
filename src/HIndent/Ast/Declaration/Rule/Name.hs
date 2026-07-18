@@ -6,7 +6,7 @@ module HIndent.Ast.Declaration.Rule.Name
 import qualified GHC.Data.FastString as GHC
 import qualified GHC.Types.Basic as GHC
 import HIndent.Ast.TextValue (TextValue, mkTextValueFromString)
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 import HIndent.Pretty.Combinators
 
 newtype RuleName =

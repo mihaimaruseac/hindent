@@ -28,7 +28,7 @@ import HIndent.Ast.Declaration.StandAloneDeriving
 import HIndent.Ast.Declaration.TypeSynonym
 import HIndent.Ast.Declaration.Warning.Collection
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 
 data Declaration
   = DataFamily DataFamily

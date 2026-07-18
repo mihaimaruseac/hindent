@@ -12,7 +12,7 @@ import HIndent.Ast.MatchGroup (MatchGroup, mkExprMatchGroup)
 import HIndent.Ast.Pattern
 import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
-import {-# SOURCE #-} HIndent.Pretty
+import HIndent.Pretty
 
 -- The difference between @Function@ and @Pattern@ is the same as the difference
 -- between @FunBind@ and @PatBind@ in GHC AST. See
