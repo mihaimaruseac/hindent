@@ -20,6 +20,7 @@ import HIndent.Fixity
 import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.ModulePreprocessing.CommentRelocation
 import Language.Haskell.GhclibParserEx.Fixity
+
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 import qualified GHC.Data.Strict as Strict
 import HIndent.GhcLibParserWrapper.GHC.Parser.Annotation
@@ -28,6 +29,7 @@ import Control.Applicative
 import Data.Maybe
 import Type.Reflection
 #endif
+
 -- | This function modifies the given module AST for pretty-printing.
 --
 -- Pretty-printing a module without calling this function for it before may
@@ -106,6 +108,7 @@ resetListCompRange = everywhere (mkT resetListCompRange')
 #else
 resetListCompRange = id
 #endif
+
 -- | This function sets an @LGRHS@'s end position to the end position of the
 -- last RHS in the @grhssGRHSs@.
 --
@@ -169,6 +172,7 @@ replaceAllNotUsedAnns = everywhere app
     emptyAddEpAnn = AddEpAnn AnnAnyclass emptyEpaLocation
     emptyEpaLocation = EpaDelta (SameLine 0) []
 #endif
+
 -- | This function sets the start column of @hsmodName@ of the given
 -- @HsModule@ to 1 to correctly locate comments above the module name.
 resetModuleNameColumn :: HsModule' -> HsModule'
@@ -196,6 +200,7 @@ resetModuleNameColumn m@HsModule {hsmodName = Just (L (SrcSpanAnn epa@EpAnn {..}
         (realSrcSpanEnd anc)
     anc = anchor entry
 #endif
+
 resetModuleNameColumn m = m
 
 -- | This function replaces the @EpAnn@ of @fun_id@ in @FunBind@ with
@@ -217,6 +222,7 @@ closeEpAnnOfFunBindFunId = everywhere (mkT closeEpAnn)
       bind {fun_id = L (SrcSpanAnn EpAnnNotUsed l) name}
     closeEpAnn x = x
 #endif
+
 -- | This function replaces the @EpAnn@ of @m_ext@ in @Match@ with
 -- @EpAnnNotUsed@.
 --
@@ -241,6 +247,7 @@ closeEpAnnOfMatchMExt = everywhere closeEpAnn
       , Just HRefl <- eqTypeRep h (typeRep @GhcPs) = x {m_ext = EpAnnNotUsed}
       | otherwise = x
 #endif
+
 -- | This function replaces the @EpAnn@ of the first argument of @HsFunTy@
 -- of @HsType@.
 --
@@ -258,6 +265,7 @@ closeEpAnnOfHsFunTy = everywhere (mkT closeEpAnn)
     closeEpAnn (HsFunTy _ p l r) = HsFunTy EpAnnNotUsed p l r
     closeEpAnn x = x
 #endif
+
 -- | This function replaces all @EpAnn@s that contain placeholder anchors
 -- to locate comments correctly. A placeholder anchor is an anchor pointing
 -- on (-1, -1).
@@ -280,6 +288,7 @@ closePlaceHolderEpAnns = everywhere closeEpAnn
       , srcSpanEndLine sp == -1 && srcSpanEndCol sp == -1 = EpAnnNotUsed
       | otherwise = x
 #endif
+
 -- | This function removes all @DocD@s from the given module. They have
 -- haddocks, but the same information is stored in @EpaCommentTok@s. Thus,
 -- we need to remove the duplication.
@@ -338,8 +347,10 @@ resetLGRHSEndPosition (L _ (GRHS ext@EpAnn {..} stmt body)) =
     collectAnchor _ = True
 resetLGRHSEndPosition x = x
 #endif
+
 isEofComment :: EpaCommentTok -> Bool
 #if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 isEofComment EpaEofComment = True
 #endif
+
 isEofComment _ = False

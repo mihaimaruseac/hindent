@@ -9,9 +9,11 @@ module HIndent.Ast.Declaration.Signature
   ) where
 
 import qualified GHC.Types.Basic as GHC
+
 #if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 import qualified GHC.Types.SrcLoc as GHC
 #endif
+
 import HIndent.Applicative
 import HIndent.Ast.Declaration.Signature.BooleanFormula
 import HIndent.Ast.Declaration.Signature.Fixity
@@ -25,9 +27,11 @@ import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
+
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 import {-# SOURCE #-} HIndent.Ast.Expression (mkExpression)
 #endif
+
 -- We want to use the same name for @parameters@ and @signature@, but GHC
 -- doesn't allow it.
 data Signature
@@ -178,6 +182,7 @@ mkSignature (GHC.SpecSig _ n s _) = Specialise {..}
     sigs =
       flattenComments . fmap mkTypeFromHsSigType . mkWithCommentsFromGenLocated
         <$> s
+
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkSignature (GHC.SpecSigE _ _ expr _) = SpecialiseExpr {..}
   where
