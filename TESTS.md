@@ -78,6 +78,67 @@ module X
 
 ### Module-level pragmas
 
+#### `LINE` pragmas
+
+`LINE` pragmas are normalized.
+
+```haskell given
+-- https://github.com/mihaimaruseac/hindent/issues/641
+{-#     LINE     1     "foo/bar.hs"    #-}
+```
+
+```haskell expect
+-- https://github.com/mihaimaruseac/hindent/issues/641
+{-# LINE 1 "foo/bar.hs" #-}
+```
+
+The indentation of `LINE` pragmas is preserved.
+
+```haskell given
+-- https://github.com/mihaimaruseac/hindent/issues/641
+  {-# lInE 2 "foo/bar.hs" #-}
+```
+
+```haskell expect
+-- https://github.com/mihaimaruseac/hindent/issues/641
+  {-# LINE 2 "foo/bar.hs" #-}
+```
+
+`LINE` pragmas are preserved while surrounding Haskell is formatted.
+
+```haskell given
+-- https://github.com/mihaimaruseac/hindent/issues/641
+{-# LINE 1 "foo/bar.hs" #-}
+foo   =   1
+```
+
+```haskell expect
+-- https://github.com/mihaimaruseac/hindent/issues/641
+{-# LINE 1 "foo/bar.hs" #-}
+foo = 1
+```
+
+Leading zeroes are removed from a `LINE` pragma's line number.
+
+```haskell given
+-- https://github.com/mihaimaruseac/hindent/issues/641
+{-# LINE 00012 "foo/bar.hs" #-}
+```
+
+```haskell expect
+-- https://github.com/mihaimaruseac/hindent/issues/641
+{-# LINE 12 "foo/bar.hs" #-}
+```
+
+The spelling of valid escapes in a `LINE` pragma's file name is preserved.
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/641
+{-# LINE 1 "foo\x2f\&bar.hs" #-}
+```
+
+#### Other pragmas
+
 A pragma's name is converted to the SHOUT_CASE.
 
 ```haskell given

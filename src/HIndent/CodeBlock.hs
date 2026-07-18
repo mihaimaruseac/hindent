@@ -5,15 +5,18 @@ module HIndent.CodeBlock
   , cppSplitBlocks
   ) where
 
+import Control.Monad (guard)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as S8
-import Data.Char (isSpace)
+import Data.Char (isDigit, isSpace, toUpper)
+import Text.Read (readMaybe)
 
 -- | A block of code.
 data CodeBlock
   = Shebang ByteString
   | HaskellSource Int ByteString
     -- ^ Includes the starting line (indexed from 0) for error reporting
+  | LinePragma ByteString
   | CPPDirectives ByteString
   deriving (Show, Eq)
 
@@ -96,8 +99,54 @@ cppSplitBlocks inp =
               (S8.intercalate "\n" (normalizedSrc : map snd (drop 1 cppLines)))
               : classifyLines nextLines'
       | shebangLine src = Shebang src : classifyLines nextLines
+      | Just normalized <- linePragmaLine src =
+        LinePragma normalized : classifyLines nextLines
       | otherwise = HaskellSource lineIndex src : classifyLines nextLines
     classifyLines [] = []
+    linePragmaLine :: ByteString -> Maybe ByteString
+    linePragmaLine src = do
+      let (indent, afterIndent) = S8.span isSpace src
+      afterOpen <- S8.stripPrefix "{-#" afterIndent
+      afterOpenSpace <- dropRequiredSpace afterOpen
+      let (name, afterName) = S8.span (not . isSpace) afterOpenSpace
+      guard $ S8.map toUpper name == "LINE"
+      afterNameSpace <- dropRequiredSpace afterName
+      let (lineNumber, afterLineNumber) = S8.span isDigit afterNameSpace
+      guard $ not $ S8.null lineNumber
+      afterLineNumberSpace <- dropRequiredSpace afterLineNumber
+      (fileName, afterFileName) <- stringLiteral afterLineNumberSpace
+      afterFileNameSpace <- dropRequiredSpace afterFileName
+      if S8.dropWhile isSpace afterFileNameSpace == "#-}"
+        then pure
+               $ indent
+                   <> "{-# LINE "
+                   <> S8.pack (show (read (S8.unpack lineNumber) :: Integer))
+                   <> " "
+                   <> fileName
+                   <> " #-}"
+        else Nothing
+      where
+        dropRequiredSpace text =
+          case S8.uncons text of
+            Just (char, _)
+              | isSpace char -> Just $ S8.dropWhile isSpace text
+            _ -> Nothing
+        stringLiteral text = do
+          (literal, remaining) <- takeStringLiteral text
+          _ <- readMaybe (S8.unpack literal) :: Maybe String
+          pure (literal, remaining)
+        takeStringLiteral text = do
+          ('"', remaining) <- S8.uncons text
+          go "\"" remaining
+          where
+            go literal remaining = do
+              (char, next) <- S8.uncons remaining
+              case char of
+                '"' -> Just (literal <> "\"", next)
+                '\\' -> do
+                  (escaped, afterEscaped) <- S8.uncons next
+                  go (literal <> S8.pack ['\\', escaped]) afterEscaped
+                _ -> go (S8.snoc literal char) next
     spanCPPLines ::
          [(Int, ByteString)] -> ([(Int, ByteString)], [(Int, ByteString)])
     spanCPPLines (line@(_, src):nextLines)

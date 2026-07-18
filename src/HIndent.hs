@@ -121,6 +121,7 @@ reformat config mexts mfilepath rawCode =
   where
     processBlock :: CodeBlock -> Either ParseError ByteString
     processBlock (Shebang text) = Right text
+    processBlock (LinePragma text) = Right text
     processBlock (CPPDirectives text) = Right text
     processBlock (HaskellSource yPos text) =
       let ls = S8.lines text
