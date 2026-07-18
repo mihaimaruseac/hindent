@@ -7,6 +7,7 @@ module HIndent.CodeBlock
 
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as S8
+import Data.Char (isSpace)
 
 -- | A block of code.
 data CodeBlock
@@ -55,28 +56,44 @@ cppSplitBlocks inp =
     mergeLines _ _ = Nothing
     shebangLine :: ByteString -> Bool
     shebangLine = S8.isPrefixOf "#!"
-    cppLine :: ByteString -> Bool
+    cppLine :: ByteString -> Maybe ByteString
     cppLine src =
-      any
-        (`S8.isPrefixOf` src)
-        [ "#if"
-        , "#end"
-        , "#else"
-        , "#define"
-        , "#undef"
-        , "#elif"
-        , "#include"
-        , "#error"
-        , "#warning"
-        ]
-        -- Note: #ifdef and #ifndef are handled by #if
+      case S8.uncons src of
+        Just ('#', rest) -> normalizeCPPDirective rest
+        _ -> Nothing
+    normalizeCPPDirective :: ByteString -> Maybe ByteString
+    normalizeCPPDirective src
+      | directive `elem` cppDirectives =
+        Just
+          $ if S8.null payload
+              then "#" <> directive
+              else "#" <> directive <> " " <> payload
+      | otherwise = Nothing
+      where
+        (directive, rest) = S8.break isSpace (S8.dropWhile isSpace src)
+        payload = S8.dropWhile isSpace rest
+    cppDirectives :: [ByteString]
+    cppDirectives =
+      [ "if"
+      , "ifdef"
+      , "ifndef"
+      , "endif"
+      , "else"
+      , "define"
+      , "undef"
+      , "elif"
+      , "include"
+      , "error"
+      , "warning"
+      ]
     hasEscapedTrailingNewline :: ByteString -> Bool
     hasEscapedTrailingNewline src = "\\" `S8.isSuffixOf` src
     classifyLines :: [(Int, ByteString)] -> [CodeBlock]
     classifyLines allLines@((lineIndex, src):nextLines)
-      | cppLine src =
+      | Just normalizedSrc <- cppLine src =
         let (cppLines, nextLines') = spanCPPLines allLines
-         in CPPDirectives (S8.intercalate "\n" (map snd cppLines))
+         in CPPDirectives
+              (S8.intercalate "\n" (normalizedSrc : map snd (drop 1 cppLines)))
               : classifyLines nextLines'
       | shebangLine src = Shebang src : classifyLines nextLines
       | otherwise = HaskellSource lineIndex src : classifyLines nextLines

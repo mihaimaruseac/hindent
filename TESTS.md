@@ -3676,6 +3676,23 @@ isDebug = False
 #endif
 ```
 
+Conditionals with spaces inside CPP directives
+
+```haskell given
+-- https://github.com/mihaimaruseac/hindent/issues/650
+{-# LANGUAGE CPP #-}
+
+#      if          0
+#   endif
+```
+
+```haskell expect
+-- https://github.com/mihaimaruseac/hindent/issues/650
+{-# LANGUAGE CPP #-}
+#if 0
+#endif
+```
+
 Conditionals inside a `where` with empty lines and CPP
 
 ```haskell
