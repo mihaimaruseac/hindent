@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Haskell indenter.
@@ -62,6 +63,17 @@ import qualified System.Directory as IO
 import System.Exit
 import qualified System.IO as IO
 
+data IndentationState = IndentationState
+  { adjustment :: Int
+  , branches :: [Int]
+  }
+
+data CPPBoundary
+  = BranchStart
+  | BranchAlternative
+  | BranchEnd
+  | OtherDirective
+
 -- | Runs HIndent with the given commandline options.
 hindent :: [String] -> IO ()
 hindent args = do
@@ -116,28 +128,46 @@ reformat ::
   -> Either ParseError ByteString
 reformat config mexts mfilepath rawCode =
   preserveTrailingNewline
-    (fmap unlines' . mapM processBlock . cppSplitBlocks)
+    (fmap unlines' . processBlocks (IndentationState 0 []) . cppSplitBlocks)
     rawCode
   where
-    processBlock :: CodeBlock -> Either ParseError ByteString
-    processBlock (Shebang text) = Right text
-    processBlock (LinePragma text) = Right text
-    processBlock (CPPDirectives text) = Right text
-    processBlock (HaskellSource yPos text) =
+    processBlocks ::
+         IndentationState -> [CodeBlock] -> Either ParseError [ByteString]
+    processBlocks _ [] = Right []
+    processBlocks state (block:blocks) = do
+      (formatted, nextState) <- processBlock state block
+      remaining <- processBlocks nextState blocks
+      Right (formatted : remaining)
+    processBlock ::
+         IndentationState
+      -> CodeBlock
+      -> Either ParseError (ByteString, IndentationState)
+    processBlock state (Shebang text) = Right (text, state)
+    processBlock state (LinePragma text) = Right (text, state)
+    processBlock state (CPPDirectives text) =
+      Right (text, foldl updateIndentationState state (S8.lines text))
+    processBlock state@IndentationState {..} (HaskellSource yPos text) =
       let ls = S8.lines text
-          prefix = findPrefix ls
+          originalPrefix = findPrefix ls
+          prefix = adjustPrefix adjustment originalPrefix
           code = unlines' (map stripPrefixIfNotNull ls)
           stripPrefixIfNotNull s =
             if S.null s
               then s
-              else stripPrefix prefix s
+              else stripPrefix originalPrefix s
        in case parseModule mfilepath allExts (UTF8.toString code) of
             POk _ m ->
-              Right
-                $ addPrefix prefix
-                $ L.toStrict
-                $ S.toLazyByteString
-                $ prettyPrint config m
+              let formatted =
+                    addPrefix prefix
+                      $ L.toStrict
+                      $ S.toLazyByteString
+                      $ prettyPrint config m
+                  nextAdjustment =
+                    fromMaybe adjustment
+                      $ (-)
+                          <$> lastIndentation formatted
+                          <*> lastIndentation text
+               in Right (formatted, state {adjustment = nextAdjustment})
             PFailed st ->
               let rawErrLoc = psRealLoc $ loc st
                in Left
@@ -146,6 +176,57 @@ reformat config mexts mfilepath rawCode =
                         , errorCol = srcLocCol rawErrLoc
                         , errorFile = fromMaybe "<interactive>" mfilepath
                         }
+    updateIndentationState :: IndentationState -> ByteString -> IndentationState
+    updateIndentationState state@IndentationState {..} directive =
+      case classifyCPPBoundary directive of
+        BranchStart -> state {branches = adjustment : branches}
+        BranchAlternative ->
+          state {adjustment = fromMaybe adjustment (listToMaybe branches)}
+        BranchEnd ->
+          case branches of
+            branchAdjustment:remainingBranches ->
+              IndentationState branchAdjustment remainingBranches
+            [] -> state
+        OtherDirective -> state
+    classifyCPPBoundary :: ByteString -> CPPBoundary
+    classifyCPPBoundary directive =
+      case S8.takeWhile
+             (not . isSpace)
+             (S8.dropWhile isSpace (S8.drop 1 directive)) of
+        "if" -> BranchStart
+        "ifdef" -> BranchStart
+        "ifndef" -> BranchStart
+        "else" -> BranchAlternative
+        "elif" -> BranchAlternative
+        "endif" -> BranchEnd
+        _ -> OtherDirective
+    adjustPrefix :: Int -> ByteString -> ByteString
+    adjustPrefix indentationAdjustment prefix = marker <> adjustedWhitespace
+      where
+        (marker, whitespace) =
+          if ">" `S8.isPrefixOf` prefix
+            then (">", S8.drop 1 prefix)
+            else ("", prefix)
+        adjustedLength = max 0 (S8.length whitespace + indentationAdjustment)
+        adjustedWhitespace =
+          if adjustedLength <= S8.length whitespace
+            then S8.take adjustedLength whitespace
+            else whitespace
+                   <> S8.replicate (adjustedLength - S8.length whitespace) ' '
+    lastIndentation :: ByteString -> Maybe Int
+    lastIndentation =
+      fmap indentation
+        . listToMaybe
+        . reverse
+        . filter (not . S8.all isSpace)
+        . S8.lines
+      where
+        indentation line =
+          S8.length
+            $ S8.takeWhile (\character -> character == ' ' || character == '\t')
+            $ if ">" `S8.isPrefixOf` line
+                then S8.drop 1 line
+                else line
     preserveTrailingNewline f x
       | S8.null x || S8.all isSpace x = return mempty
       | hasTrailingLine x || configTrailingNewline config =

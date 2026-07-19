@@ -3781,6 +3781,55 @@ foo = bar + baz
 #endif
 ```
 
+Indentation changes are preserved across CPP branches
+
+```haskell given
+-- https://github.com/mihaimaruseac/hindent/issues/532
+{-# LANGUAGE CPP #-}
+main = print (g && f1)
+  where
+        f1 = h
+          where
+            h = True
+#ifdef C1
+g = g1
+  where
+    g1 = g2
+      where
+        g2 = False
+#else
+        g = True
+#endif
+
+#ifndef C1
+g = False
+#endif
+```
+
+```haskell expect
+-- https://github.com/mihaimaruseac/hindent/issues/532
+{-# LANGUAGE CPP #-}
+
+main = print (g && f1)
+  where
+    f1 = h
+      where
+        h = True
+#ifdef C1
+g = g1
+  where
+    g1 = g2
+      where
+        g2 = False
+#else
+    g = True
+#endif
+
+#ifndef C1
+g = False
+#endif
+```
+
 Macro definitions (`#define`)
 
 ```haskell
