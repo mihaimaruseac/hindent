@@ -6,6 +6,7 @@
 module HIndent.Ast.Declaration.Signature
   ( Signature
   , mkSignature
+  , isInline
   ) where
 
 import qualified GHC.Types.Basic as GHC
@@ -225,3 +226,6 @@ mkSignature (GHC.MinimalSig _ _ xs) =
 mkSignature GHC.IdSig {} =
   error "`ghc-lib-parser` never generates this AST node."
 #endif
+isInline :: Signature -> Bool
+isInline Inline {} = True
+isInline _ = False

@@ -4,6 +4,7 @@ module HIndent.Ast.Declaration
   ( Declaration(..)
   , mkDeclaration
   , isSignature
+  , isInlinePragma
   ) where
 
 import Control.Applicative
@@ -106,3 +107,7 @@ isSignature :: Declaration -> Bool
 isSignature Signature {} = True
 isSignature StandaloneKindSignature {} = True
 isSignature _ = False
+
+isInlinePragma :: Declaration -> Bool
+isInlinePragma (Signature signature) = isInline signature
+isInlinePragma _ = False
