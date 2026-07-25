@@ -3791,6 +3791,20 @@ Escaped newlines
   x
 ```
 
+Escaped newlines in CPP directives
+
+```haskell given
+-- https://github.com/mihaimaruseac/hindent/issues/651
+#  define FOO 3+ \
+        5
+```
+
+```haskell expect
+-- https://github.com/mihaimaruseac/hindent/issues/651
+#define FOO 3+ \
+        5
+```
+
 Language extensions are effective across CPP boundaries.
 
 ```haskell

@@ -11,7 +11,7 @@
 ### Fixed
 
 - Preserve parentheses around infix function left-hand sides with extra arguments ([#1243])
-- Recognize and normalize CPP directives with spaces after `#` ([#1249])
+- Recognize and normalize CPP directives with spaces after `#`, including multiline directives ([#1249])
 
 ### Removed
 
