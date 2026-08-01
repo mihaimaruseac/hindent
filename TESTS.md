@@ -1740,6 +1740,15 @@ type family Closed (a :: k) :: Bool where
   Closed x = 'True
 ```
 
+Indent line breaks in type family right-hand sides
+
+```haskell line-breaks :>
+-- https://github.com/mihaimaruseac/hindent/issues/490
+type family F a where
+  F a = a
+        :> a
+```
+
 ### Type family instance declarations
 
 Without holes
