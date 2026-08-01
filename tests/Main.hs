@@ -13,6 +13,7 @@ import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.Lazy.UTF8 as LUTF8
 import qualified Data.ByteString.UTF8 as UTF8
 import Data.Function
+import qualified Data.Text as T
 import Data.Version
 import qualified HIndent
 import HIndent (Config(..))
@@ -55,6 +56,13 @@ toSpec = go
           it (UTF8.toString desc)
             $ shouldBeReadable (reformat cfg' code) (L.fromStrict code)
           go next
+        s
+          | "haskell":"line-breaks":operators <- words $ UTF8.toString s
+          , not $ null operators -> do
+            let cfg' = cfg {configLineBreaks = T.pack <$> operators}
+            it (UTF8.toString desc)
+              $ shouldBeReadable (reformat cfg' code) (L.fromStrict code)
+            go next
         "haskell given" ->
           case skipEmptyLines next of
             CodeFence "haskell expect" codeExpect:next' -> do
