@@ -25,10 +25,12 @@ instance Pretty DeclarationCollection where
     where
       addDeclSeparator [] = []
       addDeclSeparator [x] = [(x, Nothing)]
-      addDeclSeparator (x:xs) =
-        (x, Just $ declSeparator $ getNode x) : addDeclSeparator xs
-      declSeparator (isSignature -> True) = newline
-      declSeparator _ = blankline
+      addDeclSeparator (x:y:xs) =
+        (x, Just $ declSeparator (getNode x) (getNode y))
+          : addDeclSeparator (y : xs)
+      declSeparator (isSignature -> True) _ = newline
+      declSeparator _ (isInlinePragma -> True) = newline
+      declSeparator _ _ = blankline
 
 mkDeclarationCollection :: GHC.HsModule' -> DeclarationCollection
 mkDeclarationCollection GHC.HsModule {..} =

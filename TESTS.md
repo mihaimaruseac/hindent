@@ -1572,6 +1572,14 @@ pattern x :| xs <- x : xs
 
 ### Pragma declarations
 
+An `INLINE` pragma immediately after its value definition
+
+```haskell
+-- https://github.com/mihaimaruseac/hindent/issues/483
+x = ()
+{-# INLINE x #-}
+```
+
 `INLINE`
 
 ```haskell
