@@ -51,6 +51,7 @@ import HIndent.GhcLibParserWrapper.GHC.Hs
 import HIndent.GhcLibParserWrapper.GHC.Parser.Annotation
 import HIndent.Pragma
 import Type.Reflection
+
 #if MIN_VERSION_GLASGOW_HASKELL(9, 6, 0, 0)
 import Control.Monad
 #endif
@@ -60,6 +61,7 @@ import GHC.Data.Bag
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import Data.Maybe
 #endif
+
 -- | A wrapper type used in @everywhereMEpAnnsBackwards'@ to collect all
 -- @EpAnn@s to apply a function with them in order their positions.
 data Wrapper =
@@ -101,6 +103,7 @@ relocateComments = evalState . relocate
       cs <- get
       assert (null cs) (pure x)
 -- | This function locates pragmas to the module's EPA.
+
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 relocatePragmas :: HsModule GhcPs -> WithComments (HsModule GhcPs)
 relocatePragmas m@HsModule {hsmodExt = xmod@XModulePs {hsmodAnn = epa@EpAnn {}}} = do
@@ -115,8 +118,10 @@ relocatePragmas m@HsModule {hsmodAnn = epa@EpAnn {}} = do
 #if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 relocatePragmas m = pure m
 #endif
+
 -- | This function locates comments that are located before pragmas to the
 -- module's EPA.
+
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 relocateCommentsBeforePragmas :: HsModule GhcPs -> WithComments (HsModule GhcPs)
 relocateCommentsBeforePragmas m@HsModule {hsmodExt = xmod@XModulePs {hsmodAnn = ann}}
@@ -893,6 +898,7 @@ relocateCommentsTopLevelWhereClause m@HsModule {..} = do
       srcSpanStartCol comAnc == srcSpanStartCol anc
         && srcSpanEndLine comAnc + 1 == srcSpanStartLine anc
 #endif
+
 -- | This function scans the given AST from bottom to top and locates
 -- comments in the comment pool after each node on it.
 relocateCommentsAfter :: HsModule' -> WithComments HsModule'
@@ -916,6 +922,7 @@ relocateCommentsAfter = everywhereMEpAnnsBackwards f
     f EpAnnNotUsed = pure EpAnnNotUsed
     isAfter anc comAnc = srcSpanEndLine anc <= srcSpanStartLine comAnc
 #endif
+
 -- | Locates comments before each element in a parent.
 relocateCommentsBeforeEachElement ::
      forall a b c. Typeable a
@@ -958,6 +965,7 @@ relocateCommentsBeforeEachElement elemGetter elemSetter annGetter annSetter cond
             pure $ annSetter newEpa element
           | otherwise = pure element
 #endif
+
 -- | This function applies the given function to all @EpAnn@s.
 applyM ::
      forall a. Typeable a
@@ -988,9 +996,11 @@ insertComments ::
 insertComments cond inserter epa@EpAnn {..} = do
   coms <- drainComments cond
   pure $ epa {comments = inserter comments coms}
+
 #if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 insertComments _ _ EpAnnNotUsed = pure EpAnnNotUsed
 #endif
+
 -- | This function inserts comments to @priorComments@.
 insertPriorComments :: EpAnnComments -> [LEpaComment] -> EpAnnComments
 insertPriorComments (EpaComments prior) cs =
@@ -1121,6 +1131,7 @@ moveCommentsFromFunIdToMcFun = pure . everywhere (mkT f)
 #else
 moveCommentsFromFunIdToMcFun = pure
 #endif
+
 -- | This function sorts comments by its location.
 sortCommentsByLocation :: [LEpaComment] -> [LEpaComment]
 sortCommentsByLocation = sortBy (compare `on` epaLocationToRealSrcSpan . getLoc)

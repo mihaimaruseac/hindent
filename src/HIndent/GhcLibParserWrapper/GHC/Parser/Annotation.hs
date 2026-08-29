@@ -7,6 +7,7 @@ module HIndent.GhcLibParserWrapper.GHC.Parser.Annotation
 
 import GHC.Parser.Annotation
 import GHC.Types.SrcLoc
+
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 epaLocationToRealSrcSpan :: EpaLocation' a -> RealSrcSpan
 epaLocationToRealSrcSpan = epaLocationRealSrcSpan

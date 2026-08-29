@@ -21,6 +21,7 @@ instance Pretty Bang where
     maybe (pure ()) pretty unpack
     unless (isNothing unpack) space
     maybe (pure ()) pretty strictness
+
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkBang :: GHC.HsSrcBang -> Bang
 mkBang (GHC.HsSrcBang _ unpack strictness) =

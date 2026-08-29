@@ -8,6 +8,8 @@
 
 ### Changed
 
+- Separate CPP conditional blocks from surrounding Haskell code with blank lines ([#484])
+
 ### Fixed
 
 - Preserve parentheses around infix function left-hand sides with extra arguments ([#1243])
