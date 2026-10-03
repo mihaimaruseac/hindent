@@ -33,6 +33,7 @@ instance Pretty Bracket where
   pretty (Type x) = brackets $ string "t" >> wrapWithBars (pretty x)
   pretty (Variable True var) = string "'" >> pretty var
   pretty (Variable False var) = string "''" >> pretty var
+
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkBracket :: GHC.HsQuote GHC.GhcPs -> Bracket
 #else
@@ -48,6 +49,7 @@ mkBracket (GHC.TypBr _ x) = Type $ mkType <$> mkWithCommentsFromGenLocated x
 mkBracket (GHC.VarBr _ b x) =
   Variable b $ mkWithCommentsFromGenLocated $ fmap mkPrefixName x
 mkBracket (GHC.DecBrG {}) = error "This AST node should never appear."
+
 #if !MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkBracket (GHC.TExpBr _ x) =
   TypedExpression $ mkExpression <$> mkWithCommentsFromGenLocated x

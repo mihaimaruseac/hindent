@@ -53,6 +53,7 @@ mkRuleBinders GHC.HsRule {rd_bndrs = GHC.RuleBndrs {..}} =
 mkRuleBinders GHC.HsRule {..} =
   fmap (fmap mkRuleBinder . mkWithCommentsFromGenLocated) rd_tmvs
 #endif
+
 getName :: GHC.RuleDecl GHC.GhcPs -> WithComments GHC.RuleName
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 getName = mkWithCommentsFromGenLocated . GHC.rd_name

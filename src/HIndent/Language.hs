@@ -17,6 +17,7 @@ import qualified Language.Haskell.Extension as Cabal
 convertLanguage :: HasCallStack => Cabal.Language -> GLP.Language
 convertLanguage Cabal.Haskell98 = GLP.Haskell98
 convertLanguage Cabal.Haskell2010 = GLP.Haskell2010
+
 #if MIN_VERSION_Cabal(3, 6, 0)
 convertLanguage Cabal.GHC2021 = GLP.GHC2021
 #endif
@@ -29,4 +30,5 @@ convertLanguage Cabal.GHC2024 =
     "GHC2024 language is not supported. Hindent was built with GHC < 9.10. Please rebuild Hindent with GHC 9.10 or later."
 #endif
 #endif
+
 convertLanguage (Cabal.UnknownLanguage s) = error $ "Unknown language: " ++ s

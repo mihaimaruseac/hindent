@@ -62,6 +62,7 @@ mkImportEntry (GHC.IEThingWith _ name _ constructors) =
           constructors
     }
 #endif
+
 mkImportEntry _ = undefined
 
 sortVariantsAndExplicitImports ::

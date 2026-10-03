@@ -11,6 +11,7 @@ import qualified Data.Text as Text
 import qualified GHC.Data.FastString as GHC
 import {-# SOURCE #-} HIndent.Ast.Expression (Expression, mkExpression)
 import HIndent.Ast.Name.Prefix
+
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 import HIndent.Ast.WithComments (WithComments, mkWithCommentsFromGenLocated)
 #else
@@ -20,12 +21,15 @@ import HIndent.Ast.WithComments
   , mkWithCommentsFromGenLocated
   )
 #endif
+
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
+
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 import qualified GHC.Types.SrcLoc as GHC
 #endif
+
 data Splice
   = Typed (WithComments Expression)
   | UntypedDollar (WithComments Expression)
@@ -49,12 +53,14 @@ instance Pretty Splice where
       printers ps s ('\n':xs) =
         printers (newline : string (Text.pack $ reverse s) : ps) "" xs
       printers ps s (x:xs) = printers ps (x : s) xs
+
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 mkSplice :: GHC.HsUntypedSplice GHC.GhcPs -> Splice
 mkSplice (GHC.HsUntypedSpliceExpr anns x)
   | hasDollarToken anns =
     UntypedDollar $ mkExpression <$> mkWithCommentsFromGenLocated x
   | otherwise = UntypedBare $ mkExpression <$> mkWithCommentsFromGenLocated x
+
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkSplice (GHC.HsQuasiQuote _ l (GHC.L _ r)) =
   QuasiQuote (mkPrefixName <$> mkWithCommentsFromGenLocated l) r
@@ -74,6 +80,8 @@ mkSplice (GHC.HsQuasiQuote _ _ l _ r) = QuasiQuote (mkPrefixName l) r
 mkSplice GHC.HsSpliced {} = error "This AST node should never appear."
 #endif
 
+
+
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 hasDollarToken :: GHC.XUntypedSpliceExpr GHC.GhcPs -> Bool
 hasDollarToken (GHC.EpTok _) = True
@@ -92,5 +100,6 @@ hasDollarToken (GHC.EpAnn _ anns _) = any isDollarAnn anns
     isDollarAnn _ = False
 hasDollarToken GHC.EpAnnNotUsed = False
 #endif
+
 mkTypedSplice :: GHC.LHsExpr GHC.GhcPs -> Splice
 mkTypedSplice = Typed . fmap mkExpression . mkWithCommentsFromGenLocated

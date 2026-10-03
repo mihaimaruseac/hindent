@@ -17,9 +17,11 @@ import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
+
 #if MIN_VERSION_ghc_lib_parser(9, 6, 0)
 import qualified Data.List.NonEmpty as NE
 #endif
+
 data GADTConstructor = GADTConstructor
   { names :: [WithComments PrefixName]
   , bindings :: Maybe (WithComments [WithComments TypeVariable])
@@ -92,6 +94,7 @@ mkGADTConstructor decl@GHC.ConDeclGADT {..} = Just $ GADTConstructor {..}
       fromMaybe (error "Couldn't get signature.") $ mkConstructorSignature decl
     context = fmap (fmap mkContext . mkWithCommentsFromGenLocated) con_mb_cxt
 #endif
+
 mkGADTConstructor _ = Nothing
 
 getNames :: GHC.ConDecl GHC.GhcPs -> Maybe [WithComments PrefixName]
@@ -104,4 +107,5 @@ getNames GHC.ConDeclGADT {..} =
 getNames GHC.ConDeclGADT {..} =
   Just $ fmap (mkWithCommentsFromGenLocated . fmap mkPrefixName) con_names
 #endif
+
 getNames _ = Nothing

@@ -40,13 +40,16 @@ mkLiteralFromHsLit (GHC.HsIntPrim _ value) =
 mkLiteralFromHsLit GHC.HsWordPrim {} = notGeneratedByParser
 mkLiteralFromHsLit GHC.HsInt64Prim {} = notGeneratedByParser
 mkLiteralFromHsLit GHC.HsWord64Prim {} = notGeneratedByParser
+
 #if !MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkLiteralFromHsLit GHC.HsInteger {} = notGeneratedByParser
 mkLiteralFromHsLit GHC.HsRat {} = notGeneratedByParser
 #endif
+
 mkLiteralFromHsLit (GHC.HsFloatPrim _ value) =
   Inline $ mkTextValueFromString $ showOutputable value ++ "#"
 mkLiteralFromHsLit GHC.HsDoublePrim {} = notGeneratedByParser
+
 #if MIN_VERSION_ghc_lib_parser(9, 8, 1)
 mkLiteralFromHsLit GHC.HsInt8Prim {} = notGeneratedByParser
 mkLiteralFromHsLit GHC.HsInt16Prim {} = notGeneratedByParser
@@ -58,6 +61,7 @@ mkLiteralFromHsLit GHC.HsWord32Prim {} = notGeneratedByParser
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkLiteralFromHsLit GHC.HsMultilineString {} = notGeneratedByParser
 #endif
+
 mkLiteralFromHsLit x =
   case lines $ showOutputable x of
     [] -> Inline $ mkTextValueFromString ""
@@ -88,6 +92,7 @@ mkLiteralFromIntegralLit GHC.IL {GHC.il_text = GHC.SourceText value} =
 mkLiteralFromIntegralLit GHC.IL {GHC.il_text = GHC.SourceText value} =
   Inline $ mkTextValueFromString value
 #endif
+
 mkLiteralFromIntegralLit GHC.IL {GHC.il_value = value} =
   Inline $ mkTextValueFromString $ show value
 

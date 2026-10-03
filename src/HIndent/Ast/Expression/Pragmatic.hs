@@ -9,11 +9,13 @@ module HIndent.Ast.Expression.Pragmatic
 
 import qualified GHC.Hs as GHC
 import HIndent.Ast.TextValue
+
 #if MIN_VERSION_ghc_lib_parser(9, 8, 1)
 import HIndent.Ast.WithComments (WithComments, mkWithComments)
 #else
 import HIndent.Ast.WithComments (WithComments, fromEpAnn)
 #endif
+
 import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators (spaced, string)
 

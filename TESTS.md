@@ -3767,8 +3767,138 @@ Conditionals with spaces inside CPP directives
 ```haskell expect
 -- https://github.com/mihaimaruseac/hindent/issues/650
 {-# LANGUAGE CPP #-}
+
 #if 0
 #endif
+```
+
+Keep a shared type signature next to conditional definitions
+
+```haskell given
+-- https://github.com/mihaimaruseac/hindent/issues/484
+foo :: Int
+
+#if FOO
+foo = 1
+#else
+foo = 2
+#endif
+
+bar :: Int
+
+#ifdef BAR
+bar = 1
+#else
+bar = 2
+#endif
+
+baz :: Int
+
+#ifndef BAZ
+baz = 1
+#else
+baz = 2
+#endif
+```
+
+```haskell expect
+-- https://github.com/mihaimaruseac/hindent/issues/484
+foo :: Int
+#if FOO
+foo = 1
+#else
+foo = 2
+#endif
+
+bar :: Int
+#ifdef BAR
+bar = 1
+#else
+bar = 2
+#endif
+
+baz :: Int
+#ifndef BAZ
+baz = 1
+#else
+baz = 2
+#endif
+```
+
+Keep a conditional type signature next to a shared definition
+
+```haskell given
+#if FOO
+-- https://github.com/mihaimaruseac/hindent/issues/484
+foo :: Int
+#elif BAR
+foo :: Int
+#else
+foo :: Int
+#endif
+
+foo = 1
+```
+
+```haskell expect
+#if FOO
+-- https://github.com/mihaimaruseac/hindent/issues/484
+foo :: Int
+#elif BAR
+foo :: Int
+#else
+foo :: Int
+#endif
+foo = 1
+```
+
+Separate unrelated signatures and conditional definitions
+
+```haskell given
+-- https://github.com/mihaimaruseac/hindent/issues/484
+foo :: Int
+#if BAR
+bar = 1
+#else
+bar = 2
+#endif
+```
+
+```haskell expect
+-- https://github.com/mihaimaruseac/hindent/issues/484
+foo :: Int
+
+#if BAR
+bar = 1
+#else
+bar = 2
+#endif
+```
+
+Keep conditionals separated from surrounding Haskell code
+
+```haskell given
+-- https://github.com/mihaimaruseac/hindent/issues/484
+import Text.Read (readMaybe)
+#ifdef HACKAGE
+import Hackage
+#else
+testHackage _ = pure ()
+#endif
+getPackage = ()
+```
+
+```haskell expect
+-- https://github.com/mihaimaruseac/hindent/issues/484
+import Text.Read (readMaybe)
+
+#ifdef HACKAGE
+import Hackage
+#else
+testHackage _ = pure ()
+#endif
+
+getPackage = ()
 ```
 
 Conditionals inside a `where` with empty lines and CPP
@@ -3826,6 +3956,7 @@ Language extensions are effective across CPP boundaries.
 
 ```haskell
 {-# LANGUAGE PatternSynonyms #-}
+
 #if 1
 pattern Foo :: Int -> Bar
 #else

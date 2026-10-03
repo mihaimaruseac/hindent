@@ -17,6 +17,7 @@ newtype ConstructorField = ConstructorField
 
 instance Pretty ConstructorField where
   pretty ConstructorField {..} = pretty ty
+
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkConstructorField :: GHC.HsConDeclField GHC.GhcPs -> ConstructorField
 mkConstructorField field = ConstructorField {ty = mkTypeFromConDeclField field}

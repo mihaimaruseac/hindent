@@ -59,6 +59,7 @@ mkImportEntryCollection GHC.ImportDecl {..} =
         $ mkWithCommentsFromGenLocated
         $ fmap (fmap (fmap mkImportEntry . mkWithCommentsFromGenLocated)) xs
 #endif
+
 sortEntriesByName :: ImportEntryCollection -> ImportEntryCollection
 sortEntriesByName ImportEntryCollection {..} =
   ImportEntryCollection {entries = sortVariantsAndExplicitImports entries, ..}

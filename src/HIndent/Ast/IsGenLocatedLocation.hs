@@ -50,10 +50,12 @@ instance Monoid CommentGroup where
 
 instance IsGenLocatedLocation GHC.EpAnnComments where
   mkCommentGroupFromGenLocatedLocation = mkCommentGroupFromEpAnnComments
+
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 instance IsGenLocatedLocation (GHC.EpAnn ann) where
   mkCommentGroupFromGenLocatedLocation = mkCommentGroupFromEpAnn
 #endif
+
 instance IsGenLocatedLocation GHC.SrcSpan where
   mkCommentGroupFromGenLocatedLocation _ = mempty
 
@@ -71,9 +73,11 @@ mkCommentGroupFromEpAnnComments comments = CommentGroup {..}
     commentsOnSameLine = []
     commentsAfter = mkComment <$> GHC.getFollowingComments filteredComments
     filteredComments = filterOutEofAndPragmasFromComments comments
+
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkCommentGroupFromEpaLocation :: GHC.EpaLocation -> CommentGroup
 mkCommentGroupFromEpaLocation GHC.EpaSpan {} = mempty
+
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkCommentGroupFromEpaLocation (GHC.EpaDelta _ _ trailing) =
   foldMap mkCommentGroupFromTrailingComment trailing
@@ -82,12 +86,15 @@ mkCommentGroupFromEpaLocation (GHC.EpaDelta _ trailing) =
   foldMap mkCommentGroupFromTrailingComment trailing
 #endif
 #endif
+
 filterOutEofAndPragmasFromAnn :: GHC.EpAnn ann -> GHC.EpAnn ann
 filterOutEofAndPragmasFromAnn GHC.EpAnn {..} =
   GHC.EpAnn {comments = filterOutEofAndPragmasFromComments comments, ..}
+
 #if !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 filterOutEofAndPragmasFromAnn GHC.EpAnnNotUsed = GHC.EpAnnNotUsed
 #endif
+
 mkCommentGroupFromEpAnn' :: GHC.EpAnn a -> CommentGroup
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkCommentGroupFromEpAnn' GHC.EpAnn {..} =
@@ -123,6 +130,7 @@ mkCommentGroupFromEpAnn' GHC.EpAnn {..} =
         == GHC.srcSpanStartLine (epaLocationToRealSrcSpan commentLoc)
 mkCommentGroupFromEpAnn' GHC.EpAnnNotUsed = mempty
 #endif
+
 filterOutEofAndPragmasFromComments :: GHC.EpAnnComments -> GHC.EpAnnComments
 filterOutEofAndPragmasFromComments comments =
   GHC.EpaCommentsBalanced
@@ -140,8 +148,10 @@ isNeitherEofNorPragmaComment :: GHC.GenLocated l GHC.EpaComment -> Bool
 isNeitherEofNorPragmaComment (GHC.L _ (GHC.EpaComment GHC.EpaEofComment _)) =
   False
 #endif
+
 isNeitherEofNorPragmaComment (GHC.L _ (GHC.EpaComment token _)) =
   not $ isPragma token
+
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkCommentGroupFromTrailingComment :: GHC.LEpaComment -> CommentGroup
 mkCommentGroupFromTrailingComment comment =
@@ -156,6 +166,8 @@ mkCommentGroupFromEpaLocation _ = mempty
 mkCommentGroupFromEntry :: GHC.Anchor -> CommentGroup
 mkCommentGroupFromEntry = mkCommentGroupFromEpaLocation
 #endif
+
+
 
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 epaLocationToRealSrcSpan :: GHC.EpaLocation' a -> GHC.RealSrcSpan
