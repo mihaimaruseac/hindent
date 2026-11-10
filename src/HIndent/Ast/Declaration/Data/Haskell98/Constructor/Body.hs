@@ -51,6 +51,7 @@ mkHaskell98ConstructorBody GHC.ConDeclH98 { con_args = GHC.InfixCon leftField ri
     iName = mkWithCommentsFromGenLocated $ fmap mkInfixName con_name
     left = mkConstructorField leftField
     right = mkConstructorField rightField
+
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkHaskell98ConstructorBody GHC.ConDeclH98 { con_args = GHC.PrefixCon rawTypes
                                           , ..
@@ -66,6 +67,7 @@ mkHaskell98ConstructorBody GHC.ConDeclH98 { con_args = GHC.PrefixCon _ rawTypes
     pName = mkWithCommentsFromGenLocated $ fmap mkPrefixName con_name
     types = fmap mkConstructorField rawTypes
 #endif
+
 mkHaskell98ConstructorBody GHC.ConDeclH98 {con_args = GHC.RecCon rs, ..} =
   Just Record {..}
   where

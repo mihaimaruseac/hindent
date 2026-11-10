@@ -89,6 +89,7 @@ mkPatternSynonym GHC.PSB {GHC.psb_args = GHC.PrefixCon _ prefixArgs, ..} =
         GHC.ExplicitBidirectional matches ->
           (False, Just $ mkExprMatchGroup matches)
 #endif
+
 mkPatternSynonym GHC.PSB {GHC.psb_args = GHC.InfixCon leftArg rightArg, ..} =
   Infix
     { leftArg = mkWithCommentsFromGenLocated $ fmap mkPrefixName leftArg

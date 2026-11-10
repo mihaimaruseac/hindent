@@ -29,6 +29,7 @@ mkOverlapMode GHC.Overlappable {} = Overlappable
 mkOverlapMode GHC.Overlapping {} = Overlapping
 mkOverlapMode GHC.Overlaps {} = Overlaps
 mkOverlapMode GHC.Incoherent {} = Incoherent
+
 #if MIN_VERSION_ghc_lib_parser(9, 8, 0)
 -- From https://hackage-content.haskell.org/package/ghc-9.12.2/docs/GHC-Core-InstEnv.html#v:NonCanonical
 -- > We don't have surface syntax for the distinction between Incoherent and NonCanonical instances; instead,

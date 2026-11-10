@@ -25,12 +25,14 @@ import HIndent.Ast.IsGenLocatedLocation
   ( CommentGroup(..)
   , mkCommentGroupFromEpAnn
   )
+
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 import HIndent.Ast.IsGenLocatedLocation
   ( IsGenLocatedLocation(..)
   , mkCommentGroupFromEpaLocation
   )
 #endif
+
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
 import HIndent.Printer
@@ -86,6 +88,7 @@ printCommentsAfter p =
       forM_ xs $ \comment -> do
         indentedWithFixedLevel (getCommentColumn comment) $ pretty comment
         eolCommentsArePrinted
+
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkWithCommentsFromGenLocated ::
      IsGenLocatedLocation l => GHC.GenLocated l a -> WithComments a
@@ -106,6 +109,7 @@ mkWithCommentsFromEpaLocated ::
      GHC.GenLocated (GHC.SrcSpanAnn' (GHC.EpAnn ann)) a -> WithComments a
 mkWithCommentsFromEpaLocated = mkWithCommentsFromGenLocated
 #endif
+
 fromEpAnn :: GHC.EpAnn a -> b -> WithComments b
 fromEpAnn ann = WithComments (mkCommentGroupFromEpAnn ann)
 

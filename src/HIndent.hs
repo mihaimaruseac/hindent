@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Haskell indenter.
@@ -40,7 +41,9 @@ import Data.Version
 import Foreign.C
 import GHC.IO.Exception
 import GHC.Parser.Lexer hiding (buffer, options)
+import qualified GHC.Types.Name.Reader as GHC
 import GHC.Types.SrcLoc
+import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Ast
 import HIndent.ByteString
 import HIndent.CabalFile
@@ -61,6 +64,17 @@ import Paths_hindent
 import qualified System.Directory as IO
 import System.Exit
 import qualified System.IO as IO
+
+import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+
+-- | An internally formatted block and the declaration names needed when
+-- joining it to adjacent CPP blocks.
+data FormattedBlock = FormattedBlock
+  { block :: CodeBlock
+  , text :: ByteString
+  , firstDefinition :: Maybe GHC.RdrName
+  , lastSignature :: [GHC.RdrName]
+  }
 
 -- | Runs HIndent with the given commandline options.
 hindent :: [String] -> IO ()
@@ -115,16 +129,19 @@ reformat ::
   -> ByteString
   -> Either ParseError ByteString
 reformat config mexts mfilepath rawCode =
-  preserveTrailingNewline
-    (fmap unlines' . mapM processBlock . cppSplitBlocks)
-    rawCode
+  preserveTrailingNewline (processBlocks . cppSplitBlocks) rawCode
   where
-    processBlock :: CodeBlock -> Either ParseError ByteString
-    processBlock (Shebang text) = Right text
-    processBlock (LinePragma text) = Right text
-    processBlock (CPPDirectives text) = Right text
-    processBlock (HaskellSource yPos text) =
-      let ls = S8.lines text
+    processBlocks :: [CodeBlock] -> Either ParseError ByteString
+    processBlocks blocks = joinBlocks <$> mapM processBlock blocks
+    processBlock :: CodeBlock -> Either ParseError FormattedBlock
+    processBlock block@(Shebang text) =
+      Right FormattedBlock {firstDefinition = Nothing, lastSignature = [], ..}
+    processBlock block@(LinePragma text) =
+      Right FormattedBlock {firstDefinition = Nothing, lastSignature = [], ..}
+    processBlock block@(CPPDirectives text) =
+      Right FormattedBlock {firstDefinition = Nothing, lastSignature = [], ..}
+    processBlock block@(HaskellSource yPos source) =
+      let ls = S8.lines source
           prefix = findPrefix ls
           code = unlines' (map stripPrefixIfNotNull ls)
           stripPrefixIfNotNull s =
@@ -133,11 +150,14 @@ reformat config mexts mfilepath rawCode =
               else stripPrefix prefix s
        in case parseModule mfilepath allExts (UTF8.toString code) of
             POk _ m ->
-              Right
-                $ addPrefix prefix
-                $ L.toStrict
-                $ S.toLazyByteString
-                $ prettyPrint config m
+              let text =
+                    addPrefix prefix
+                      $ L.toStrict
+                      $ S.toLazyByteString
+                      $ prettyPrint config m
+                  firstDefinition = moduleFirstDefinition m
+                  lastSignature = moduleLastSignature m
+               in Right FormattedBlock {..}
             PFailed st ->
               let rawErrLoc = psRealLoc $ loc st
                in Left
@@ -146,6 +166,57 @@ reformat config mexts mfilepath rawCode =
                         , errorCol = srcLocCol rawErrLoc
                         , errorFile = fromMaybe "<interactive>" mfilepath
                         }
+    joinBlocks :: [FormattedBlock] -> ByteString
+    joinBlocks blocks = S.concat $ zipWith3 output before after blocks
+      where
+        boundaries = collectBoundaries Nothing blocks
+        before = Nothing : map Just boundaries
+        after = map Just boundaries ++ [Nothing]
+        output previousBoundary nextBoundary FormattedBlock {..} =
+          normalize
+            (previousBoundary == Just True)
+            (nextBoundary == Just True)
+            text
+            <> case nextBoundary of
+                 Just True -> "\n\n"
+                 Just False -> "\n"
+                 Nothing -> mempty
+        normalize stripStart stripEnd =
+          (if stripEnd
+             then S8.dropWhileEnd (== '\n')
+             else id)
+            . (if stripStart
+                 then S8.dropWhile (== '\n')
+                 else id)
+        collectBoundaries _ [] = []
+        collectBoundaries _ [_] = []
+        collectBoundaries previous (current:remaining@(_:_)) =
+          needsBlankLine previous current remaining
+            : collectBoundaries (Just current) remaining
+    needsBlankLine ::
+         Maybe FormattedBlock -> FormattedBlock -> [FormattedBlock] -> Bool
+    needsBlankLine _ FormattedBlock { block = HaskellSource {}
+                                    , lastSignature = signature
+                                    } (FormattedBlock {block = CPPDirectives directives}:following)
+      | startsConditional directives =
+        not
+          $ signaturesMatchDefinition signature
+          $ listToMaybe following >>= firstDefinition
+    needsBlankLine (Just FormattedBlock {lastSignature = signature}) FormattedBlock {block = CPPDirectives directives} (FormattedBlock { block = HaskellSource {}
+                                                                                                                                       , firstDefinition = definition
+                                                                                                                                       }:_)
+      | endsConditional directives =
+        not $ signaturesMatchDefinition signature definition
+    needsBlankLine _ _ _ = False
+    signaturesMatchDefinition signatures (Just definition) =
+      definition `elem` signatures
+    signaturesMatchDefinition _ _ = False
+    startsConditional :: ByteString -> Bool
+    startsConditional =
+      maybe False ("#if" `S8.isPrefixOf`) . listToMaybe . S8.lines
+    endsConditional :: ByteString -> Bool
+    endsConditional =
+      maybe False ("#endif" `S8.isPrefixOf`) . listToMaybe . reverse . S8.lines
     preserveTrailingNewline f x
       | S8.null x || S8.all isSpace x = return mempty
       | hasTrailingLine x || configTrailingNewline config =
@@ -187,3 +258,21 @@ testAst x =
 prettyPrint :: Config -> HsModule' -> Builder
 prettyPrint config =
   runPrinterStyle config . pretty . mkModule . modifyASTForPrettyPrinting
+
+moduleFirstDefinition :: GHC.HsModule' -> Maybe GHC.RdrName
+moduleFirstDefinition m =
+  case GHC.hsmodDecls m of
+    declaration:_ ->
+      case GHC.unLoc declaration of
+        GHC.ValD _ GHC.FunBind {GHC.fun_id = name} -> Just $ GHC.unLoc name
+        _ -> Nothing
+    [] -> Nothing
+
+moduleLastSignature :: GHC.HsModule' -> [GHC.RdrName]
+moduleLastSignature m =
+  case reverse $ GHC.hsmodDecls m of
+    declaration:_ ->
+      case GHC.unLoc declaration of
+        GHC.SigD _ (GHC.TypeSig _ names _) -> map GHC.unLoc names
+        _ -> []
+    [] -> []

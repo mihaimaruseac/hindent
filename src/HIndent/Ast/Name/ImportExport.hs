@@ -40,6 +40,7 @@ instance Eq ImportExportName where
 
 instance Ord ImportExportName where
   compare a b = compareIdentifier (getNameString a) (getNameString b)
+
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 mkImportExportName :: GHC.IEWrappedName GHC.GhcPs -> ImportExportName
 mkImportExportName (GHC.IEName _ name) =
@@ -48,6 +49,7 @@ mkImportExportName (GHC.IEPattern _ name) =
   Pattern $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
 mkImportExportName (GHC.IEType _ name) =
   Type $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
+
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkImportExportName (GHC.IEData _ name) =
   Data $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
@@ -64,11 +66,13 @@ mkImportExportName (GHC.IEPattern _ name) =
   Pattern $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
 mkImportExportName (GHC.IEType _ name) =
   Type $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
+
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkImportExportName (GHC.IEData _ name) =
   Data $ mkWithCommentsFromGenLocated $ fmap mkPrefixName name
 #endif
 #endif
+
 getNameString :: ImportExportName -> String
 getNameString n =
   L.unpack $ S.toLazyByteString $ runPrinterStyle defaultConfig $ pretty n

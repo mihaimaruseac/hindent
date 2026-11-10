@@ -18,9 +18,11 @@ import qualified Data.Text.Encoding as Text
 import GHC.Stack
 import HIndent.Config
 import HIndent.Printer
+
 #if MIN_VERSION_GLASGOW_HASKELL(9,6,0,0)
 import Control.Monad
 #endif
+
 -- | This function prints the given string.
 --
 -- The string must not include @\n@s. Use @newline@ to print them.

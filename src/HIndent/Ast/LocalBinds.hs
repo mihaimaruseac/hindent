@@ -7,9 +7,11 @@ module HIndent.Ast.LocalBinds
   ) where
 
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
+
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified GHC.Data.Bag as GHC
 #endif
+
 import HIndent.Ast.LocalBinds.Declaration.Collection
 import HIndent.Ast.LocalBinds.ImplicitBindings
   ( ImplicitBindings
@@ -50,5 +52,6 @@ mkLocalDeclarationCollectionFromValBinds (GHC.ValBinds _ binds sigs) =
 mkLocalDeclarationCollectionFromValBinds (GHC.ValBinds _ bindBag sigs) =
   mkLocalDeclarationCollection sigs (GHC.bagToList bindBag)
 #endif
+
 mkLocalDeclarationCollectionFromValBinds GHC.XValBindsLR {} =
   error "`ghc-lib-parser` never generates this AST node."

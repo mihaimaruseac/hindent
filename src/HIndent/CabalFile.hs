@@ -12,6 +12,7 @@ import Data.Traversable
 import Distribution.ModuleName
 import Distribution.PackageDescription
 import Distribution.PackageDescription.Configuration
+
 #if MIN_VERSION_Cabal(3, 14, 0)
 import Distribution.Utils.Path (interpretSymbolicPathCWD)
 #endif
@@ -23,6 +24,7 @@ import Distribution.PackageDescription.Parsec
 #else
 import Distribution.PackageDescription.Parse
 #endif
+
 import HIndent.Language
 import HIndent.LanguageExtension hiding (defaultExtensions)
 import HIndent.LanguageExtension.Conversion
@@ -63,6 +65,7 @@ mkStanza bi mnames fpaths =
 #else
         hsSourceDirs' = hsSourceDirs
 #endif
+
 -- | Extract @Stanza@s from a package.
 packageStanzas :: PackageDescription -> [Stanza]
 #if MIN_VERSION_Cabal(3, 14, 0)
@@ -123,6 +126,7 @@ packageStanzas pd =
         , benchStanza <$> benchmarks pd
         ]
 #endif
+
 -- | Find cabal files that are "above" the source path
 findCabalFiles :: FilePath -> FilePath -> IO (Maybe ([FilePath], FilePath))
 findCabalFiles dir rel = do
@@ -147,6 +151,7 @@ getGenericPackageDescription cabalPath = do
     ParseOk _ gpd -> return $ Just gpd
     _ -> return Nothing
 #endif
+
 -- | Find the @Stanza@ that refers to this source path.
 getCabalStanza :: FilePath -> IO (Maybe Stanza)
 getCabalStanza srcpath = do

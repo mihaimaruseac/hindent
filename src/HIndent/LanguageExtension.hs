@@ -19,9 +19,11 @@ import HIndent.LanguageExtension.Conversion
 import HIndent.LanguageExtension.Types
 import HIndent.Pragma
 import Text.Regex.TDFA
+
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 import qualified GHC.LanguageExtensions.Type as GLP
 #endif
+
 -- | This function returns a list of extensions that the passed language
 -- (e.g., GHC2021) enables.
 implicitExtensions :: GLP.Language -> [Extension]
@@ -31,6 +33,7 @@ implicitExtensions = fmap EnableExtension . GLP.languageExtensions . Just
 --
 -- For example, @GADTs@ enables @GADTSyntax@ and @RebindableSyntax@
 -- disables @ImplicitPrelude@.
+
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 extensionImplies :: Extension -> [Extension]
 extensionImplies (EnableExtension e) =
@@ -48,6 +51,7 @@ extensionImplies (EnableExtension e) =
     toExtension (_, False, e') = DisableExtension e'
 extensionImplies _ = []
 #endif
+
 -- | Collect pragmas specified in the source code.
 collectLanguageExtensionsFromSource :: String -> [Extension]
 collectLanguageExtensionsFromSource =

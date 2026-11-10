@@ -52,6 +52,7 @@ mkExportEntry (GHC.IEThingWith _ name _ constructors) =
     (mkImportExportName <$> mkWithCommentsFromGenLocated name)
     $ fmap mkImportExportName . mkWithCommentsFromGenLocated <$> constructors
 #endif
+
 mkExportEntry (GHC.IEModuleContents _ name) =
   ByModule $ mkModuleName <$> mkWithCommentsFromGenLocated name
 mkExportEntry GHC.IEGroup {} = neverAppears
