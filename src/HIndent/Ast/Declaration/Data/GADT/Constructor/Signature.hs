@@ -81,7 +81,9 @@ mkConstructorSignature GHC.ConDeclGADT {con_g_args = GHC.RecConGADT xs, ..} =
         , result = mkType <$> mkWithCommentsFromGenLocated con_res_ty
         }
 #endif
+
 mkConstructorSignature GHC.ConDeclH98 {} = Nothing
+
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 buildFunctionType ::
      [GHC.HsConDeclField GHC.GhcPs]
@@ -97,6 +99,8 @@ buildFunctionType ::
 buildFunctionType scaledTypes resultTy =
   mkType <$> mkWithCommentsFromGenLocated (foldr mkFun resultTy scaledTypes)
 #endif
+
+
 
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkFun ::

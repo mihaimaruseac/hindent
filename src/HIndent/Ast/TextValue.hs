@@ -9,9 +9,11 @@ module HIndent.Ast.TextValue
   ) where
 
 import qualified Data.Text as Text
+
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 import qualified GHC.Data.FastString as GHC
 #endif
+
 import qualified GHC.Types.SourceText as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
@@ -39,5 +41,6 @@ mkTextValueFromStringLiteral GHC.StringLiteral {GHC.sl_fs = value} =
 mkTextValueFromStringLiteral literal =
   mkTextValueFromString $ showOutputable literal
 #endif
+
 toText :: TextValue -> Text.Text
 toText (TextValue value) = value

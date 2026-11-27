@@ -12,9 +12,11 @@ module HIndent.Ast.Match
 import Control.Monad (unless, when)
 import qualified GHC.Hs as GHC
 import qualified GHC.Types.Fixity as Fixity
+
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 import qualified GHC.Types.Name.Reader as GHC
 #endif
+
 import qualified GHC.Types.SrcLoc as GHC
 import HIndent.Applicative (whenJust)
 import HIndent.Ast.Declaration.Bind.GuardedRhs
@@ -29,6 +31,7 @@ import HIndent.Ast.Name.Infix (InfixName, mkInfixName)
 import HIndent.Ast.Name.Prefix (PrefixName, mkPrefixName)
 import HIndent.Ast.Pattern (Pattern, mkPattern)
 import HIndent.Ast.Type.Strictness (Strictness, mkStrictness)
+
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import HIndent.Ast.WithComments
   ( WithComments
@@ -44,6 +47,7 @@ import HIndent.Ast.WithComments
   , prettyWith
   )
 #endif
+
 import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 
@@ -101,6 +105,7 @@ instance Pretty Match where
   pretty FunctionInfix {..} = do
     pretty operands
     pretty rhs
+
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkExprMatch :: GHC.Match GHC.GhcPs (GHC.LHsExpr GHC.GhcPs) -> Match
 mkExprMatch GHC.Match {GHC.m_ctxt = GHC.LamAlt GHC.LamSingle, ..} =
@@ -228,6 +233,8 @@ mkExprMatch GHC.Match {GHC.m_ctxt = ctxt@GHC.FunRhs {}, ..} =
         $ fmap (fmap mkPattern . mkWithCommentsFromGenLocated) m_pats
 mkExprMatch _ = error "`ghc-lib-parser` never generates this AST node."
 #endif
+
+
 
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkCmdMatch :: GHC.Match GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> Match

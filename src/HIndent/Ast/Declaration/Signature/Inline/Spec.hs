@@ -27,6 +27,7 @@ mkInlineSpec GHC.Inline {} = Inline
 mkInlineSpec GHC.Inlinable {} = Inlinable
 mkInlineSpec GHC.NoInline {} = NoInline
 mkInlineSpec GHC.NoUserInlinePrag = error "NoUserInlinePrag is not supported"
+
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkInlineSpec GHC.Opaque {} = Opaque
 #endif

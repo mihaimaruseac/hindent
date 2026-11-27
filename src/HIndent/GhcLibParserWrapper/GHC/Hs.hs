@@ -12,17 +12,20 @@ module HIndent.GhcLibParserWrapper.GHC.Hs
 import GHC.Hs
 import HIndent.GhcLibParserWrapper.GHC.Unit.Module.Warnings
 -- | The wrapper for @HsModule@.
+
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 type HsModule' = HsModule GhcPs
 #else
 type HsModule' = HsModule
 #endif
+
 getModuleAnn :: HsModule' -> EpAnn AnnsModule
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 getModuleAnn HsModule {hsmodExt = XModulePs {..}} = hsmodAnn
 #else
 getModuleAnn HsModule {..} = hsmodAnn
 #endif
+
 getDeprecMessage :: HsModule' -> Maybe (LocatedP WarningTxt')
 #if MIN_VERSION_ghc_lib_parser(9, 6, 1)
 getDeprecMessage HsModule {hsmodExt = XModulePs {..}} = hsmodDeprecMessage

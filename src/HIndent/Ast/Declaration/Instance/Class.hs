@@ -16,9 +16,11 @@ import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
+
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified GHC.Data.Bag as GHC
 #endif
+
 data ClassInstance = ClassInstance
   { overlapMode :: Maybe (WithComments OverlapMode)
   , body :: ClassInstanceBody
@@ -72,4 +74,5 @@ mkClassInstance GHC.ClsInstD {cid_inst = GHC.ClsInstDecl {..}} =
               <$> cid_overlap_mode
         }
 #endif
+
 mkClassInstance _ = Nothing

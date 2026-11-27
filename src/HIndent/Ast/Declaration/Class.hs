@@ -18,9 +18,11 @@ import HIndent.Ast.WithComments
 import qualified HIndent.GhcLibParserWrapper.GHC.Hs as GHC
 import HIndent.Pretty
 import HIndent.Pretty.Combinators
+
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import qualified GHC.Data.Bag as GHC
 #endif
+
 data ClassDeclaration = ClassDeclaration
   { context :: Maybe (WithComments Context)
   , nameAndTypeVariables :: NameAndTypeVariables
@@ -71,4 +73,5 @@ mkClassDeclaration x@GHC.ClassDecl {..}
       fmap (fmap mkFunctionalDependency . mkWithCommentsFromGenLocated) tcdFDs
     body = mkClassBody tcdSigs (GHC.bagToList tcdMeths) tcdATs tcdATDefs
 #endif
+
 mkClassDeclaration _ = Nothing

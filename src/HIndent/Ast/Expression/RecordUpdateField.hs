@@ -14,6 +14,7 @@ import HIndent.Ast.WithComments
 import HIndent.Pretty (Pretty(..), pretty)
 import HIndent.Pretty.Combinators
 import HIndent.Printer (Printer)
+
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 import HIndent.Ast.Name.RecordField
   ( FieldName
@@ -33,6 +34,7 @@ import HIndent.Ast.Name.RecordField
   , mkFieldNameFromFieldOcc
   )
 #endif
+
 data RecordUpdateFields = RecordUpdateFields
   { expression :: WithComments Expression
   , fields :: [WithComments Field]
@@ -94,6 +96,8 @@ collectFields GHC.OverloadedRecUpdFields {..} =
 collectFields =
   fmap (fmap mkRegularField . mkWithCommentsFromGenLocated) . either id id
 #endif
+
+
 
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkRegularField ::

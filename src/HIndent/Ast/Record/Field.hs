@@ -47,6 +47,7 @@ instance Pretty PatField where
     whenJust value $ \val -> do
       string " = "
       pretty val
+
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkExprField ::
      GHC.HsFieldBind (GHC.LFieldOcc GHC.GhcPs) (GHC.LHsExpr GHC.GhcPs)
@@ -74,6 +75,8 @@ mkExprField GHC.HsRecField {..} =
                  (mkExpression <$> mkWithCommentsFromGenLocated hsRecFieldArg)
     }
 #endif
+
+
 
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1)
 mkPatField ::

@@ -22,6 +22,7 @@ data RecordField = RecordField
 instance Pretty RecordField where
   pretty RecordField {..} =
     spaced [hCommaSep $ fmap pretty names, string "::", pretty ty]
+
 #if MIN_VERSION_ghc_lib_parser(9, 14, 0)
 mkRecordField :: GHC.HsConDeclRecField GHC.GhcPs -> RecordField
 mkRecordField GHC.HsConDeclRecField {..} = RecordField {..}

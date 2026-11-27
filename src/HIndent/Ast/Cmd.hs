@@ -134,6 +134,7 @@ mkCmd (GHC.HsCmdArrApp _ f arg appKind isFwd) =
     , function = mkExpression <$> mkWithCommentsFromGenLocated f
     , argument = mkExpression <$> mkWithCommentsFromGenLocated arg
     }
+
 #if MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkCmd (GHC.HsCmdArrForm _ f _ args) =
   ArrowForm
@@ -157,11 +158,13 @@ mkCmd (GHC.HsCmdArrForm _ f _ _ args) =
           args
     }
 #endif
+
 mkCmd (GHC.HsCmdApp _ cmd arg) =
   CmdApp
     { cmd = mkCmd <$> mkWithCommentsFromGenLocated cmd
     , argument = mkExpression <$> mkWithCommentsFromGenLocated arg
     }
+
 #if MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkCmd (GHC.HsCmdLam _ GHC.LamSingle matches) =
   Lambda {matches = mkCmdMatchGroup matches}
@@ -179,11 +182,13 @@ mkCmd (GHC.HsCmdPar _ _ cmd _) =
 mkCmd (GHC.HsCmdPar _ cmd) =
   Parenthesized $ mkCmd <$> mkWithCommentsFromGenLocated cmd
 #endif
+
 mkCmd (GHC.HsCmdCase _ expr matches) =
   Case
     { scrutinee = mkExpression <$> mkWithCommentsFromGenLocated expr
     , matches = mkCmdMatchGroup matches
     }
+
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkCmd (GHC.HsCmdLamCase _ _ matches) =
   LambdaCase {usesCases = False, matches = mkCmdMatchGroup matches}
@@ -191,12 +196,14 @@ mkCmd (GHC.HsCmdLamCase _ _ matches) =
 mkCmd (GHC.HsCmdLamCase _ matches) =
   LambdaCase {usesCases = False, matches = mkCmdMatchGroup matches}
 #endif
+
 mkCmd (GHC.HsCmdIf _ _ predicate thenCmd elseCmd) =
   If
     { predicate = mkExpression <$> mkWithCommentsFromGenLocated predicate
     , thenBranch = mkCmd <$> mkWithCommentsFromGenLocated thenCmd
     , elseBranch = mkCmd <$> mkWithCommentsFromGenLocated elseCmd
     }
+
 #if MIN_VERSION_ghc_lib_parser(9, 4, 1) && !MIN_VERSION_ghc_lib_parser(9, 10, 1)
 mkCmd (GHC.HsCmdLet _ _ binds _ cmd) =
   Let
@@ -216,6 +223,7 @@ mkCmd (GHC.HsCmdLet _ binds cmd) =
     , inCommand = mkCmd <$> mkWithCommentsFromGenLocated cmd
     }
 #endif
+
 mkCmd (GHC.HsCmdDo _ stmts) =
   DoBlock
     { statements =

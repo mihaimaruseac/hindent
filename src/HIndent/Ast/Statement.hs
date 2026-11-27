@@ -98,10 +98,12 @@ mkExprStatement GHC.RecStmt {..} =
           (fmap (fmap mkExprStatement . mkWithCommentsFromGenLocated))
           (mkWithCommentsFromGenLocated recS_stmts)
     }
+
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkExprStatement GHC.ApplicativeStmt {} =
   error "`ghc-lib-parser` never generates this AST node."
 #endif
+
 mkCmdStatement ::
      GHC.StmtLR GHC.GhcPs GHC.GhcPs (GHC.LHsCmd GHC.GhcPs) -> CmdStatement
 mkCmdStatement (GHC.LastStmt _ cmd _ _) =
@@ -125,6 +127,7 @@ mkCmdStatement GHC.TransStmt {} =
   error "`ghc-lib-parser` never generates this AST node."
 mkCmdStatement GHC.RecStmt {} =
   error "`ghc-lib-parser` never generates this AST node."
+
 #if !MIN_VERSION_ghc_lib_parser(9, 12, 1)
 mkCmdStatement GHC.ApplicativeStmt {} =
   error "`ghc-lib-parser` never generates this AST node."
